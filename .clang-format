@@ -1,0 +1,5 @@
+BasedOnStyle: LLVM
+PointerAlignment: Left
+ColumnLimit: 120
+IndentWidth: 4
+BreakBeforeBraces: Allman
