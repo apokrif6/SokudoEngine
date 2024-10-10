@@ -16,6 +16,7 @@ if (WIN32)
 endif ()
 
 find_package(glfw3 3.3 REQUIRED)
+find_package(Vulkan REQUIRED)
 
 if (UNIX)
     set(GLFW3_LIBRARY glfw)
@@ -23,5 +24,5 @@ endif ()
 
 include_directories(${GLFW3_INCLUDE_DIR} window tools)
 
-target_link_libraries(SokudoEngine ${GLFW3_LIBRARY})
+target_link_libraries(SokudoEngine ${GLFW3_LIBRARY} Vulkan::Vulkan)
 

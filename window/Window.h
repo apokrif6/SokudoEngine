@@ -1,12 +1,15 @@
 #pragma once
 
+#include <vulkan/vulkan.h>
 #include <GLFW/glfw3.h>
 #include <string>
 
 class Window
 {
   public:
-    bool init(unsigned int width, unsigned int height, std::string title);
+    bool init(int width, int height, const std::string& title);
+
+    bool initVulkan();
 
     void mainLoop();
 
@@ -14,4 +17,18 @@ class Window
 
   private:
     GLFWwindow* CreatedWindow = nullptr;
+
+    std::string ApplicationName;
+
+    VkInstance Instance{};
+
+    VkSurfaceKHR Surface{};
+
+    void handleWindowMoveEvents(int xPosition, int yPosition);
+
+    void handleWindowMinimizedEvents(int minimized);
+
+    void handleWindowMaximizedEvents(int maximized);
+
+    void handleWindowCloseEvents();
 };
