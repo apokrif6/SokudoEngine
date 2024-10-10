@@ -30,5 +30,15 @@ class Window
 
     void handleWindowMaximizedEvents(int maximized);
 
+    void handleWindowResizedEvents(int width, int height);
+
     void handleWindowCloseEvents();
+
+    void handleKeyEvents(int key, int scancode, int action, int mods);
+
+    void handleMouseButtonEvents(int button, int action, int mods);
+
+    void handleMousePositionEvents(double xPosition, double yPosition);
+
+    void handleMouseEnterLeaveEvents(int enter);
 };

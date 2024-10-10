@@ -10,7 +10,7 @@ bool Window::init(int width, int height, const std::string& title)
         return false;
     }
 
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
     ApplicationName = title;
@@ -26,31 +26,66 @@ bool Window::init(int width, int height, const std::string& title)
     glfwSetWindowUserPointer(CreatedWindow, this);
 
     glfwSetWindowPosCallback(CreatedWindow,
-                             [](GLFWwindow* win, int xPosition, int yPosition)
+                             [](GLFWwindow* window, int xPosition, int yPosition)
                              {
-                                 auto thisWindow = static_cast<Window*>(glfwGetWindowUserPointer(win));
-                                 thisWindow->handleWindowMoveEvents(xPosition, yPosition);
+                                 auto currentWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
+                                 currentWindow->handleWindowMoveEvents(xPosition, yPosition);
                              });
 
     glfwSetWindowIconifyCallback(CreatedWindow,
-                                 [](GLFWwindow* win, int minimized)
+                                 [](GLFWwindow* window, int minimized)
                                  {
-                                     auto thisWindow = static_cast<Window*>(glfwGetWindowUserPointer(win));
-                                     thisWindow->handleWindowMinimizedEvents(minimized);
+                                     auto currentWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
+                                     currentWindow->handleWindowMinimizedEvents(minimized);
                                  });
 
     glfwSetWindowMaximizeCallback(CreatedWindow,
-                                  [](GLFWwindow* win, int maximized)
+                                  [](GLFWwindow* window, int maximized)
                                   {
-                                      auto thisWindow = static_cast<Window*>(glfwGetWindowUserPointer(win));
-                                      thisWindow->handleWindowMaximizedEvents(maximized);
+                                      auto currentWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
+                                      currentWindow->handleWindowMaximizedEvents(maximized);
                                   });
 
+    glfwSetWindowSizeCallback(CreatedWindow,
+                              [](GLFWwindow* window, int width, int height)
+                              {
+                                  auto currentWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
+                                  currentWindow->handleWindowResizedEvents(width, height);
+                              });
+
     glfwSetWindowCloseCallback(CreatedWindow,
-                               [](GLFWwindow* win)
+                               [](GLFWwindow* window)
                                {
-                                   auto thisWindow = static_cast<Window*>(glfwGetWindowUserPointer(win));
-                                   thisWindow->handleWindowCloseEvents();
+                                   auto currentWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
+                                   currentWindow->handleWindowCloseEvents();
+                               });
+
+    glfwSetKeyCallback(CreatedWindow,
+                       [](GLFWwindow* window, int key, int scancode, int action, int mode)
+                       {
+                           auto currentWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
+                           currentWindow->handleKeyEvents(key, scancode, action, mode);
+                       });
+
+    glfwSetMouseButtonCallback(CreatedWindow,
+                               [](GLFWwindow* window, int button, int action, int mods)
+                               {
+                                   auto currentWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
+                                   currentWindow->handleMouseButtonEvents(button, action, mods);
+                               });
+
+    glfwSetCursorPosCallback(CreatedWindow,
+                             [](GLFWwindow* window, double xPosition, double yPosition)
+                             {
+                                 auto currentWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
+                                 currentWindow->handleMousePositionEvents(xPosition, yPosition);
+                             });
+
+    glfwSetCursorEnterCallback(CreatedWindow,
+                               [](GLFWwindow* window, int enter)
+                               {
+                                   auto currentWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
+                                   currentWindow->handleMouseEnterLeaveEvents(enter);
                                });
 
     if (!glfwVulkanSupported())
@@ -105,28 +140,28 @@ bool Window::initVulkan()
     CreateInfo.ppEnabledExtensionNames = Extensions;
     CreateInfo.enabledLayerCount = 0;
 
-    VkResult Result = vkCreateInstance(&CreateInfo, nullptr, &Instance);
-    if (Result != VK_SUCCESS)
+    VkResult result = vkCreateInstance(&CreateInfo, nullptr, &Instance);
+    if (result != VK_SUCCESS)
     {
         Logger::log(1, "%s: Could not create Vulkan Instance\n", __FUNCTION__);
         return false;
     }
 
-    uint32_t PhysicalDeviceCount = 0;
-    vkEnumeratePhysicalDevices(Instance, &PhysicalDeviceCount, nullptr);
+    uint32_t physicalDeviceCount = 0;
+    vkEnumeratePhysicalDevices(Instance, &physicalDeviceCount, nullptr);
 
-    if (PhysicalDeviceCount == 0)
+    if (physicalDeviceCount == 0)
     {
         Logger::log(1, "%s: No Vulkan capable GPU found\n", __FUNCTION__);
         return false;
     }
 
     std::vector<VkPhysicalDevice> PhysicalDevices;
-    PhysicalDevices.resize(PhysicalDeviceCount);
-    vkEnumeratePhysicalDevices(Instance, &PhysicalDeviceCount, PhysicalDevices.data());
+    PhysicalDevices.resize(physicalDeviceCount);
+    vkEnumeratePhysicalDevices(Instance, &physicalDeviceCount, PhysicalDevices.data());
 
-    Result = glfwCreateWindowSurface(Instance, CreatedWindow, nullptr, &Surface);
-    if (Result != VK_SUCCESS)
+    result = glfwCreateWindowSurface(Instance, CreatedWindow, nullptr, &Surface);
+    if (result != VK_SUCCESS)
     {
         Logger::log(1, "%s: Could not create Vulkan surface\n", __FUNCTION__);
         return false;
@@ -181,4 +216,87 @@ void Window::handleWindowMaximizedEvents(int maximized)
     }
 }
 
+void Window::handleWindowResizedEvents(int width, int height)
+{
+    Logger::log(1, "%s: Window size has been changed to %lf/%lf\n", __FUNCTION__, width, height);
+}
+
 void Window::handleWindowCloseEvents() { Logger::log(1, "%s: Window has been closed\n", __FUNCTION__); }
+
+void Window::handleKeyEvents(int key, int scancode, int action, int mods)
+{
+    std::string actionName;
+    switch (action)
+    {
+    case GLFW_PRESS:
+        actionName = "pressed";
+        break;
+    case GLFW_RELEASE:
+        actionName = "released";
+        break;
+    case GLFW_REPEAT:
+        actionName = "repeated";
+        break;
+    default:
+        actionName = "invalid";
+        break;
+    }
+
+    const char* keyName = glfwGetKeyName(key, 0);
+    Logger::log(1, "%s: key %s (key %i, scancode %i) %s\n", __FUNCTION__, keyName, key, scancode, actionName.c_str());
+}
+void Window::handleMouseButtonEvents(int button, int action, int mods)
+{
+    std::string actionName;
+    switch (action)
+    {
+    case GLFW_PRESS:
+        actionName = "pressed";
+        break;
+    case GLFW_RELEASE:
+        actionName = "released";
+        break;
+    case GLFW_REPEAT:
+        actionName = "repeated";
+        break;
+    default:
+        actionName = "invalid";
+        break;
+    }
+
+    std::string mouseButtonName;
+    switch (button)
+    {
+    case GLFW_MOUSE_BUTTON_LEFT:
+        mouseButtonName = "left";
+        break;
+    case GLFW_MOUSE_BUTTON_MIDDLE:
+        mouseButtonName = "middle";
+        break;
+    case GLFW_MOUSE_BUTTON_RIGHT:
+        mouseButtonName = "right";
+        break;
+    default:
+        mouseButtonName = "other";
+        break;
+    }
+
+    Logger::log(1, "%s: %s mouse button (%i) %s\n", __FUNCTION__, mouseButtonName.c_str(), button, actionName.c_str());
+}
+
+void Window::handleMousePositionEvents(double xPosition, double yPosition)
+{
+    Logger::log(1, "%s: Mouse cursor has been moved to %lf/%lf\n", __FUNCTION__, xPosition, yPosition);
+}
+
+void Window::handleMouseEnterLeaveEvents(int enter)
+{
+    if (enter)
+    {
+        Logger::log(1, "%s: Mouse entered window\n", __FUNCTION__);
+    }
+    else
+    {
+        Logger::log(1, "%s: Mouse left window\n", __FUNCTION__);
+    }
+}
