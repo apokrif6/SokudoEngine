@@ -8,6 +8,7 @@ file(GLOB SOURCES
         Main.cpp
         window/*.cpp
         tools/*.cpp
+        vk-renderer/*.cpp
 )
 add_executable(SokudoEngine ${SOURCES})
 
@@ -22,7 +23,9 @@ if (UNIX)
     set(GLFW3_LIBRARY glfw)
 endif ()
 
-include_directories(${GLFW3_INCLUDE_DIR} window tools)
+add_subdirectory(vk-bootstrap)
 
-target_link_libraries(SokudoEngine ${GLFW3_LIBRARY} Vulkan::Vulkan)
+include_directories(${GLFW3_INCLUDE_DIR} window tools vk-renderer vk-memory-allocation)
+
+target_link_libraries(SokudoEngine ${GLFW3_LIBRARY} Vulkan::Vulkan vk-bootstrap::vk-bootstrap)
 

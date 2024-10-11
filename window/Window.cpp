@@ -23,6 +23,14 @@ bool Window::init(int width, int height, const std::string& title)
         return false;
     }
 
+    Renderer = std::make_unique<VkRenderer>(CreatedWindow);
+    if (!Renderer->init(width, height))
+    {
+        glfwTerminate();
+        Logger::log(1, "%s error: Could not init Vulkan Renderer\n", __FUNCTION__);
+        return false;
+    }
+
     glfwSetWindowUserPointer(CreatedWindow, this);
 
     glfwSetWindowPosCallback(CreatedWindow,
@@ -174,6 +182,11 @@ void Window::mainLoop()
 {
     while (!glfwWindowShouldClose(CreatedWindow))
     {
+        if (!Renderer->draw())
+        {
+            break;
+        }
+
         glfwPollEvents();
     }
 }

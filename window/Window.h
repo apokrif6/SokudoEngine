@@ -1,8 +1,10 @@
 #pragma once
 
+#include "VkRenderer.h"
 #include <vulkan/vulkan.h>
 #include <GLFW/glfw3.h>
 #include <string>
+#include <iostream>
 
 class Window
 {
@@ -17,6 +19,8 @@ class Window
 
   private:
     GLFWwindow* CreatedWindow = nullptr;
+
+    std::unique_ptr<VkRenderer> Renderer;
 
     std::string ApplicationName;
 
