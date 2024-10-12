@@ -9,6 +9,7 @@ file(GLOB SOURCES
         window/*.cpp
         tools/*.cpp
         vk-renderer/*.cpp
+        model/*.cpp
 )
 add_executable(SokudoEngine ${SOURCES})
 
@@ -23,9 +24,64 @@ if (UNIX)
     set(GLFW3_LIBRARY glfw)
 endif ()
 
+# compile shaders
+if(Vulkan_GLSLC_EXECUTABLE)
+    message("Using glslc to compile shaders")
+    foreach(GLSL ${GLSL_SOURCE_FILES})
+        get_filename_component(FILE_NAME ${GLSL} NAME)
+        set(SPIRV "${CMAKE_SOURCE_DIR}/shaders/${FILE_NAME}.spv")
+        add_custom_command(
+                OUTPUT ${SPIRV}
+                COMMAND ${Vulkan_GLSLC_EXECUTABLE} -o ${SPIRV} ${GLSL}
+                DEPENDS ${GLSL})
+        list(APPEND SPIRV_BINARY_FILES ${SPIRV})
+    endforeach(GLSL)
+elseif (Vulkan_GLSLANG_VALIDATOR_EXECUTABLE)
+    message("Using glslangValidator to compile shaders")
+    foreach(GLSL ${GLSL_SOURCE_FILES})
+        get_filename_component(FILE_NAME ${GLSL} NAME)
+        set(SPIRV "${CMAKE_SOURCE_DIR}/shaders/${FILE_NAME}.spv")
+        add_custom_command(
+                OUTPUT ${SPIRV}
+                COMMAND ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE} -V -o ${SPIRV} ${GLSL}
+                DEPENDS ${GLSL})
+        list(APPEND SPIRV_BINARY_FILES ${SPIRV})
+    endforeach(GLSL)
+endif()
+
+# copy shaders
+add_custom_target(
+        Shaders
+        DEPENDS ${SPIRV_BINARY_FILES}
+)
+add_dependencies(SokudoEngine Shaders)
+
+add_custom_command(TARGET Shaders POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "$<TARGET_PROPERTY:SokudoEngine,SOURCE_DIR>/shaders"
+        "$<TARGET_PROPERTY:SokudoEngine,BINARY_DIR>/shaders"
+)
+
+# copy textures
+file(GLOB TEX_SOURCE_FILES
+        textures/*
+)
+
+add_custom_target(
+        Textures
+        DEPENDS ${TEX_SOURCE_FILES}
+)
+add_dependencies(SokudoEngine Textures)
+
+add_custom_command(TARGET Textures POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "$<TARGET_PROPERTY:SokudoEngine,SOURCE_DIR>/textures"
+        "$<TARGET_PROPERTY:SokudoEngine,BINARY_DIR>/textures"
+)
+
 add_subdirectory(vk-bootstrap)
 
-include_directories(${GLFW3_INCLUDE_DIR} window tools vk-renderer vk-memory-allocation)
+include_directories(${GLFW3_INCLUDE_DIR} window tools vk-renderer vk-memory-allocation include model)
 
 target_link_libraries(SokudoEngine ${GLFW3_LIBRARY} Vulkan::Vulkan vk-bootstrap::vk-bootstrap)
 
