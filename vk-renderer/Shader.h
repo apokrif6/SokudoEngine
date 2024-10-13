@@ -6,8 +6,8 @@
 class Shader
 {
   public:
-    static VkShaderModule loadShader(VkDevice device, std::string shaderFileName);
+    static VkShaderModule loadShader(VkDevice device, const std::string& shaderFileName);
 
   private:
-    static std::string loadFileToString(std::string fileName);
+    static std::string loadFileToString(const std::string& fileName);
 };

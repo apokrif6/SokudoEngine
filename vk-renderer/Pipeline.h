@@ -5,6 +5,8 @@
 class Pipeline
 {
   public:
-    static bool init(VkRenderData& renderData, std::string vertexShaderFilename, std::string fragmentShaderFilename);
-    static void cleanup(VkRenderData& renderData);
+    static bool init(VkRenderData& renderData, VkPipelineLayout& pipelineLayout, VkPipeline& pipeline,
+                     const std::string& vertexShaderFilename, const std::string& fragmentShaderFilename);
+
+    static void cleanup(VkRenderData& renderData, VkPipeline& pipeline);
 };

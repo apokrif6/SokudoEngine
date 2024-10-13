@@ -3,22 +3,9 @@
 #include "Logger.h"
 #include "Shader.h"
 
-bool Pipeline::init(VkRenderData& renderData, std::string vertexShaderFilename, std::string fragmentShaderFilename)
+bool Pipeline::init(VkRenderData& renderData, VkPipelineLayout& pipelineLayout, VkPipeline& pipeline,
+                    const std::string& vertexShaderFilename, const std::string& fragmentShaderFilename)
 {
-    VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
-    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutInfo.setLayoutCount = 1;
-    pipelineLayoutInfo.pSetLayouts = &renderData.rdTextureLayout;
-    pipelineLayoutInfo.pushConstantRangeCount = 0;
-
-    if (vkCreatePipelineLayout(renderData.rdVkbDevice.device, &pipelineLayoutInfo, nullptr,
-                               &renderData.rdPipelineLayout) != VK_SUCCESS)
-    {
-        Logger::log(1, "%s error: could not create pipeline layout\n", __FUNCTION__);
-        return false;
-    }
-
-    /* shader */
     VkShaderModule vertexModule = Shader::loadShader(renderData.rdVkbDevice.device, vertexShaderFilename);
     VkShaderModule fragmentModule = Shader::loadShader(renderData.rdVkbDevice.device, fragmentShaderFilename);
 
@@ -55,19 +42,25 @@ bool Pipeline::init(VkRenderData& renderData, std::string vertexShaderFilename, 
     positionAttribute.format = VK_FORMAT_R32G32B32_SFLOAT;
     positionAttribute.offset = offsetof(VkVertex, position);
 
+    VkVertexInputAttributeDescription colorAttribute{};
+    colorAttribute.binding = 0;
+    colorAttribute.location = 1;
+    colorAttribute.format = VK_FORMAT_R32G32B32_SFLOAT;
+    colorAttribute.offset = offsetof(VkVertex, color);
+
     VkVertexInputAttributeDescription uvAttribute{};
     uvAttribute.binding = 0;
-    uvAttribute.location = 1;
+    uvAttribute.location = 2;
     uvAttribute.format = VK_FORMAT_R32G32_SFLOAT;
     uvAttribute.offset = offsetof(VkVertex, uv);
 
-    VkVertexInputAttributeDescription attributes[] = {positionAttribute, uvAttribute};
+    VkVertexInputAttributeDescription attributes[] = {positionAttribute, colorAttribute, uvAttribute};
 
     VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
     vertexInputInfo.vertexBindingDescriptionCount = 1;
     vertexInputInfo.pVertexBindingDescriptions = &mainBinding;
-    vertexInputInfo.vertexAttributeDescriptionCount = 2;
+    vertexInputInfo.vertexAttributeDescriptionCount = 3;
     vertexInputInfo.pVertexAttributeDescriptions = attributes;
 
     VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo{};
@@ -154,16 +147,16 @@ bool Pipeline::init(VkRenderData& renderData, std::string vertexShaderFilename, 
     pipelineCreateInfo.pColorBlendState = &colorBlendingInfo;
     pipelineCreateInfo.pDepthStencilState = &depthStencilInfo;
     pipelineCreateInfo.pDynamicState = &dynStatesInfo;
-    pipelineCreateInfo.layout = renderData.rdPipelineLayout;
+    pipelineCreateInfo.layout = pipelineLayout;
     pipelineCreateInfo.renderPass = renderData.rdRenderpass;
     pipelineCreateInfo.subpass = 0;
     pipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
 
     if (vkCreateGraphicsPipelines(renderData.rdVkbDevice.device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr,
-                                  &renderData.rdPipeline) != VK_SUCCESS)
+                                  &pipeline) != VK_SUCCESS)
     {
         Logger::log(1, "%s error: could not create rendering pipeline\n", __FUNCTION__);
-        vkDestroyPipelineLayout(renderData.rdVkbDevice.device, renderData.rdPipelineLayout, nullptr);
+        vkDestroyPipelineLayout(renderData.rdVkbDevice.device, pipelineLayout, nullptr);
         return false;
     }
 
@@ -173,8 +166,7 @@ bool Pipeline::init(VkRenderData& renderData, std::string vertexShaderFilename, 
     return true;
 }
 
-void Pipeline::cleanup(VkRenderData& renderData)
+void Pipeline::cleanup(VkRenderData& renderData, VkPipeline& pipeline)
 {
-    vkDestroyPipeline(renderData.rdVkbDevice.device, renderData.rdPipeline, nullptr);
-    vkDestroyPipelineLayout(renderData.rdVkbDevice.device, renderData.rdPipelineLayout, nullptr);
+    vkDestroyPipeline(renderData.rdVkbDevice.device, pipeline, nullptr);
 }

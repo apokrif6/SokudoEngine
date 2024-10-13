@@ -256,7 +256,7 @@ bool Texture::loadTexture(VkRenderData& renderData, std::string textureFilename)
     textureCreateInfo.pBindings = &textureBind;
 
     if (vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &textureCreateInfo, nullptr,
-                                    &renderData.rdTextureLayout) != VK_SUCCESS)
+                                    &renderData.rdTextureDescriptorLayout) != VK_SUCCESS)
     {
         Logger::log(1, "%s error: could not create descriptor set layout\n", __FUNCTION__);
         return false;
@@ -272,7 +272,7 @@ bool Texture::loadTexture(VkRenderData& renderData, std::string textureFilename)
     descriptorPool.pPoolSizes = &poolSize;
     descriptorPool.maxSets = 16;
 
-    if (vkCreateDescriptorPool(renderData.rdVkbDevice.device, &descriptorPool, nullptr, &renderData.rdDescriptorPool) !=
+    if (vkCreateDescriptorPool(renderData.rdVkbDevice.device, &descriptorPool, nullptr, &renderData.rdTextureDescriptorPool) !=
         VK_SUCCESS)
     {
         Logger::log(1, "%s error: could not create descriptor pool\n", __FUNCTION__);
@@ -281,11 +281,11 @@ bool Texture::loadTexture(VkRenderData& renderData, std::string textureFilename)
 
     VkDescriptorSetAllocateInfo descriptorAllocateInfo{};
     descriptorAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    descriptorAllocateInfo.descriptorPool = renderData.rdDescriptorPool;
+    descriptorAllocateInfo.descriptorPool = renderData.rdTextureDescriptorPool;
     descriptorAllocateInfo.descriptorSetCount = 1;
-    descriptorAllocateInfo.pSetLayouts = &renderData.rdTextureLayout;
+    descriptorAllocateInfo.pSetLayouts = &renderData.rdTextureDescriptorLayout;
 
-    if (vkAllocateDescriptorSets(renderData.rdVkbDevice.device, &descriptorAllocateInfo, &renderData.rdDescriptorSet) !=
+    if (vkAllocateDescriptorSets(renderData.rdVkbDevice.device, &descriptorAllocateInfo, &renderData.rdTextureDescriptorSet) !=
         VK_SUCCESS)
     {
         Logger::log(1, "%s error: could not allocate descriptor set\n", __FUNCTION__);
@@ -300,7 +300,7 @@ bool Texture::loadTexture(VkRenderData& renderData, std::string textureFilename)
     VkWriteDescriptorSet writeDescriptorSet{};
     writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    writeDescriptorSet.dstSet = renderData.rdDescriptorSet;
+    writeDescriptorSet.dstSet = renderData.rdTextureDescriptorSet;
     writeDescriptorSet.dstBinding = 0;
     writeDescriptorSet.descriptorCount = 1;
     writeDescriptorSet.pImageInfo = &descriptorImageInfo;
@@ -314,8 +314,8 @@ bool Texture::loadTexture(VkRenderData& renderData, std::string textureFilename)
 
 void Texture::cleanup(VkRenderData& renderData)
 {
-    vkDestroyDescriptorPool(renderData.rdVkbDevice.device, renderData.rdDescriptorPool, nullptr);
-    vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdTextureLayout, nullptr);
+    vkDestroyDescriptorPool(renderData.rdVkbDevice.device, renderData.rdTextureDescriptorPool, nullptr);
+    vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdTextureDescriptorLayout, nullptr);
     vkDestroySampler(renderData.rdVkbDevice.device, renderData.rdTextureSampler, nullptr);
     vkDestroyImageView(renderData.rdVkbDevice.device, renderData.rdTextureImageView, nullptr);
     vmaDestroyImage(renderData.rdAllocator, renderData.rdTextureImage, renderData.rdTextureImageAlloc);

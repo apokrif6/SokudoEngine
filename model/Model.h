@@ -10,5 +10,5 @@ class Model
     VkMesh getVertexData();
 
   private:
-    VkMesh VertexData;
+    VkMesh mVertexData;
 };

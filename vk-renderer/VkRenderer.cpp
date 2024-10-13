@@ -4,6 +4,7 @@
 #include "Logger.h"
 #include "Framebuffer.h"
 #include "Renderpass.h"
+#include "PipelineLayout.h"
 #include "Pipeline.h"
 #include "CommandPool.h"
 #include "CommandBuffer.h"
@@ -67,7 +68,11 @@ bool VkRenderer::init(unsigned int width, unsigned int height)
         return false;
     }
 
-    /* pipeline needs texture layout */
+    if (!createPipelineLayout())
+    {
+        return false;
+    }
+
     if (!createPipeline())
     {
         return false;
@@ -121,7 +126,8 @@ bool VkRenderer::uploadData(VkMesh vertexData)
 
 bool VkRenderer::draw()
 {
-    if (vkWaitForFences(mRenderData.rdVkbDevice.device, 1, &mRenderData.rdRenderFence, VK_TRUE, UINT64_MAX) != VK_SUCCESS)
+    if (vkWaitForFences(mRenderData.rdVkbDevice.device, 1, &mRenderData.rdRenderFence, VK_TRUE, UINT64_MAX) !=
+        VK_SUCCESS)
     {
         Logger::log(1, "%s error: waiting for fence failed\n", __FUNCTION__);
         return false;
@@ -200,15 +206,15 @@ bool VkRenderer::draw()
 
     vkCmdBeginRenderPass(mRenderData.rdCommandBuffer, &rpInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-    vkCmdBindPipeline(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdPipeline);
+    vkCmdBindPipeline(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdBasicPipeline);
 
     vkCmdSetViewport(mRenderData.rdCommandBuffer, 0, 1, &viewport);
     vkCmdSetScissor(mRenderData.rdCommandBuffer, 0, 1, &scissor);
 
     VkDeviceSize offset = 0;
     vkCmdBindVertexBuffers(mRenderData.rdCommandBuffer, 0, 1, &mVertexBuffer, &offset);
-    vkCmdBindDescriptorSets(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdPipelineLayout, 0,
-                            1, &mRenderData.rdDescriptorSet, 0, nullptr);
+    vkCmdBindDescriptorSets(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdPipelineLayout,
+                            0, 1, &mRenderData.rdTextureDescriptorSet, 0, nullptr);
 
     vkCmdDraw(mRenderData.rdCommandBuffer, mTriangleCount * 3, 1, 0, 0);
 
@@ -277,7 +283,8 @@ void VkRenderer::cleanup()
     CommandBuffer::cleanup(mRenderData, mRenderData.rdCommandBuffer);
     CommandPool::cleanup(mRenderData);
     Framebuffer::cleanup(mRenderData);
-    Pipeline::cleanup(mRenderData);
+    Pipeline::cleanup(mRenderData, mRenderData.rdBasicPipeline);
+    PipelineLayout::cleanup(mRenderData, mRenderData.rdPipelineLayout);
     Renderpass::cleanup(mRenderData);
 
     vkDestroyImageView(mRenderData.rdVkbDevice.device, mRenderData.rdDepthImageView, nullptr);
@@ -358,7 +365,8 @@ bool VkRenderer::getQueue()
 }
 bool VkRenderer::createDepthBuffer()
 {
-    VkExtent3D depthImageExtent = {mRenderData.rdVkbSwapchain.extent.width, mRenderData.rdVkbSwapchain.extent.height, 1};
+    VkExtent3D depthImageExtent = {mRenderData.rdVkbSwapchain.extent.width, mRenderData.rdVkbSwapchain.extent.height,
+                                   1};
 
     mRenderData.rdDepthFormat = VK_FORMAT_D32_SFLOAT;
 
@@ -395,8 +403,8 @@ bool VkRenderer::createDepthBuffer()
     depthImageViewinfo.subresourceRange.layerCount = 1;
     depthImageViewinfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
 
-    if (vkCreateImageView(mRenderData.rdVkbDevice.device, &depthImageViewinfo, nullptr, &mRenderData.rdDepthImageView) !=
-        VK_SUCCESS)
+    if (vkCreateImageView(mRenderData.rdVkbDevice.device, &depthImageViewinfo, nullptr,
+                          &mRenderData.rdDepthImageView) != VK_SUCCESS)
     {
         Logger::log(1, "%s error: could not create depth buffer image view\n", __FUNCTION__);
         return false;
@@ -473,11 +481,22 @@ bool VkRenderer::createRenderPass()
     return true;
 }
 
+bool VkRenderer::createPipelineLayout()
+{
+    if (!PipelineLayout::init(mRenderData, mRenderData.rdPipelineLayout))
+    {
+        Logger::log(1, "%s error: could not init pipeline layout\n", __FUNCTION__);
+        return false;
+    }
+    return true;
+}
+
 bool VkRenderer::createPipeline()
 {
     std::string vertexShaderFile = "shaders/basic.vert.spv";
     std::string fragmentShaderFile = "shaders/basic.frag.spv";
-    if (!Pipeline::init(mRenderData, vertexShaderFile, fragmentShaderFile))
+    if (!Pipeline::init(mRenderData, mRenderData.rdPipelineLayout, mRenderData.rdBasicPipeline, vertexShaderFile,
+                        fragmentShaderFile))
     {
         Logger::log(1, "%s error: could not init pipeline\n", __FUNCTION__);
         return false;

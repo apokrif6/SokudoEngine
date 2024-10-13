@@ -2,7 +2,7 @@
 #include "Shader.h"
 #include "Logger.h"
 
-VkShaderModule Shader::loadShader(VkDevice device, std::string shaderFileName)
+VkShaderModule Shader::loadShader(VkDevice device, const std::string& shaderFileName)
 {
     std::string shaderAsText;
     shaderAsText = loadFileToString(shaderFileName);
@@ -22,7 +22,7 @@ VkShaderModule Shader::loadShader(VkDevice device, std::string shaderFileName)
     return shaderModule;
 }
 
-std::string Shader::loadFileToString(std::string fileName)
+std::string Shader::loadFileToString(const std::string& fileName)
 {
     std::ifstream inFile(fileName, std::ios::binary);
     std::string str;
@@ -41,14 +41,14 @@ std::string Shader::loadFileToString(std::string fileName)
     {
         Logger::log(1, "%s error: could not open file %s\n", __FUNCTION__, fileName.c_str());
         Logger::log(1, "%s error: system says '%s'\n", __FUNCTION__, strerror(errno));
-        return std::string();
+        return {};
     }
 
     if (inFile.bad() || inFile.fail())
     {
         Logger::log(1, "%s error: error while reading file %s\n", __FUNCTION__, fileName.c_str());
         inFile.close();
-        return std::string();
+        return {};
     }
 
     inFile.close();

@@ -46,6 +46,8 @@ class VkRenderer
 
     bool createRenderPass();
 
+    bool createPipelineLayout();
+
     bool createPipeline();
 
     bool createFramebuffer();

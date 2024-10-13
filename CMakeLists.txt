@@ -24,10 +24,14 @@ if (UNIX)
     set(GLFW3_LIBRARY glfw)
 endif ()
 
-# compile shaders
-if(Vulkan_GLSLC_EXECUTABLE)
+file(GLOB GLSL_SOURCE_FILES
+        shaders/*.frag
+        shaders/*.vert
+)
+
+if (Vulkan_GLSLC_EXECUTABLE)
     message("Using glslc to compile shaders")
-    foreach(GLSL ${GLSL_SOURCE_FILES})
+    foreach (GLSL ${GLSL_SOURCE_FILES})
         get_filename_component(FILE_NAME ${GLSL} NAME)
         set(SPIRV "${CMAKE_SOURCE_DIR}/shaders/${FILE_NAME}.spv")
         add_custom_command(
@@ -35,10 +39,10 @@ if(Vulkan_GLSLC_EXECUTABLE)
                 COMMAND ${Vulkan_GLSLC_EXECUTABLE} -o ${SPIRV} ${GLSL}
                 DEPENDS ${GLSL})
         list(APPEND SPIRV_BINARY_FILES ${SPIRV})
-    endforeach(GLSL)
+    endforeach (GLSL)
 elseif (Vulkan_GLSLANG_VALIDATOR_EXECUTABLE)
     message("Using glslangValidator to compile shaders")
-    foreach(GLSL ${GLSL_SOURCE_FILES})
+    foreach (GLSL ${GLSL_SOURCE_FILES})
         get_filename_component(FILE_NAME ${GLSL} NAME)
         set(SPIRV "${CMAKE_SOURCE_DIR}/shaders/${FILE_NAME}.spv")
         add_custom_command(
@@ -46,8 +50,8 @@ elseif (Vulkan_GLSLANG_VALIDATOR_EXECUTABLE)
                 COMMAND ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE} -V -o ${SPIRV} ${GLSL}
                 DEPENDS ${GLSL})
         list(APPEND SPIRV_BINARY_FILES ${SPIRV})
-    endforeach(GLSL)
-endif()
+    endforeach (GLSL)
+endif ()
 
 # copy shaders
 add_custom_target(
