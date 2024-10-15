@@ -38,3 +38,6 @@
 
 # CMake
 cmake-build-debug/
+
+# Compiled shaders
+shaders/**/*.spv
