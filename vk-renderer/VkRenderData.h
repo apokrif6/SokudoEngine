@@ -17,6 +17,11 @@ struct VkMesh
     std::vector<VkVertex> vertices;
 };
 
+struct VkUploadMatrices {
+    glm::mat4 viewMatrix;
+    glm::mat4 projectionMatrix;
+};
+
 struct VkRenderData
 {
     VmaAllocator rdAllocator;
@@ -39,6 +44,7 @@ struct VkRenderData
     VkRenderPass rdRenderpass = VK_NULL_HANDLE;
     VkPipelineLayout rdPipelineLayout = VK_NULL_HANDLE;
     VkPipeline rdBasicPipeline = VK_NULL_HANDLE;
+    VkPipeline rdChangedPipeline = VK_NULL_HANDLE;
 
     VkCommandPool rdCommandPool = VK_NULL_HANDLE;
     VkCommandBuffer rdCommandBuffer = VK_NULL_HANDLE;
@@ -55,4 +61,11 @@ struct VkRenderData
     VkDescriptorPool rdTextureDescriptorPool = VK_NULL_HANDLE;
     VkDescriptorSetLayout rdTextureDescriptorLayout = VK_NULL_HANDLE;
     VkDescriptorSet rdTextureDescriptorSet = VK_NULL_HANDLE;
+
+    VkBuffer rdUBOBuffer = VK_NULL_HANDLE;
+    VmaAllocation rdUBOBufferAlloc = nullptr;
+
+    VkDescriptorPool rdUBODescriptorPool = VK_NULL_HANDLE;
+    VkDescriptorSetLayout rdUBODescriptorLayout = VK_NULL_HANDLE;
+    VkDescriptorSet rdUBODescriptorSet = VK_NULL_HANDLE;
 };

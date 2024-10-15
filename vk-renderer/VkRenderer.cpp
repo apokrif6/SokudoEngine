@@ -10,8 +10,15 @@
 #include "CommandBuffer.h"
 #include "SyncObjects.h"
 #include "Texture.h"
+#include "UniformBuffer.h"
+#include <glm/gtc/matrix_transform.hpp>
 
-VkRenderer::VkRenderer(GLFWwindow* inWindow) { mWindow = inWindow; }
+VkRenderer::VkRenderer(GLFWwindow* inWindow)
+{
+    mWindow = inWindow;
+    mMatrices.viewMatrix = glm::mat4(1.0f);
+    mMatrices.projectionMatrix = glm::mat4(1.0f);
+}
 
 bool VkRenderer::init(unsigned int width, unsigned int height)
 {
@@ -41,7 +48,6 @@ bool VkRenderer::init(unsigned int width, unsigned int height)
         return false;
     }
 
-    /* must be done AFTER swapchain as we need data from it */
     if (!createDepthBuffer())
     {
         return false;
@@ -57,8 +63,12 @@ bool VkRenderer::init(unsigned int width, unsigned int height)
         return false;
     }
 
-    /* we need the command pool */
     if (!loadTexture())
+    {
+        return false;
+    }
+
+    if (!createUBO())
     {
         return false;
     }
@@ -73,7 +83,12 @@ bool VkRenderer::init(unsigned int width, unsigned int height)
         return false;
     }
 
-    if (!createPipeline())
+    if (!createBasicPipeline())
+    {
+        return false;
+    }
+
+    if (!createChangedPipeline())
     {
         return false;
     }
@@ -204,17 +219,49 @@ bool VkRenderer::draw()
     scissor.offset = {0, 0};
     scissor.extent = mRenderData.rdVkbSwapchain.extent;
 
+    glm::vec3 cameraPosition = glm::vec3(0.4f, 0.3f, 1.0f);
+    glm::vec3 cameraLookAtPosition = glm::vec3(0.0f, 0.0f, 0.0f);
+    glm::vec3 cameraUpVector = glm::vec3(0.0f, 1.0f, 0.0f);
+
+    mMatrices.projectionMatrix = glm::perspective(glm::radians(90.0f),
+                                                  static_cast<float>(mRenderData.rdVkbSwapchain.extent.width) /
+                                                      static_cast<float>(mRenderData.rdVkbSwapchain.extent.height),
+                                                  0.1f, 10.0f);
+
+    auto time = static_cast<float>(glfwGetTime());
+    auto model = glm::mat4(1.0f);
+
+    if (mShouldUseChangedShader)
+    {
+        model = glm::rotate(glm::mat4(1.0f), time, glm::vec3(0.0f, 0.0f, 1.0f));
+    }
+    else
+    {
+        model = glm::rotate(glm::mat4(1.0f), -time, glm::vec3(0.0f, 0.0f, 1.0f));
+    }
+    mMatrices.viewMatrix = glm::lookAt(cameraPosition, cameraLookAtPosition, cameraUpVector) * model;
+
     vkCmdBeginRenderPass(mRenderData.rdCommandBuffer, &rpInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-    vkCmdBindPipeline(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdBasicPipeline);
+    if (mShouldUseChangedShader)
+    {
+        vkCmdBindPipeline(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdChangedPipeline);
+    }
+    else
+    {
+        vkCmdBindPipeline(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdBasicPipeline);
+    }
 
     vkCmdSetViewport(mRenderData.rdCommandBuffer, 0, 1, &viewport);
     vkCmdSetScissor(mRenderData.rdCommandBuffer, 0, 1, &scissor);
 
     VkDeviceSize offset = 0;
     vkCmdBindVertexBuffers(mRenderData.rdCommandBuffer, 0, 1, &mVertexBuffer, &offset);
+
     vkCmdBindDescriptorSets(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdPipelineLayout,
                             0, 1, &mRenderData.rdTextureDescriptorSet, 0, nullptr);
+    vkCmdBindDescriptorSets(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdPipelineLayout,
+                            1, 1, &mRenderData.rdUBODescriptorSet, 0, nullptr);
 
     vkCmdDraw(mRenderData.rdCommandBuffer, mTriangleCount * 3, 1, 0, 0);
 
@@ -225,6 +272,8 @@ bool VkRenderer::draw()
         Logger::log(1, "%s error: failed to end command buffer\n", __FUNCTION__);
         return false;
     }
+
+    UniformBuffer::uploadData(mRenderData, mMatrices);
 
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -276,6 +325,8 @@ bool VkRenderer::draw()
 
 void VkRenderer::cleanup()
 {
+    vkDeviceWaitIdle(mRenderData.rdVkbDevice.device);
+
     Texture::cleanup(mRenderData);
     vmaDestroyBuffer(mRenderData.rdAllocator, mVertexBuffer, mVertexBufferAlloc);
 
@@ -284,8 +335,10 @@ void VkRenderer::cleanup()
     CommandPool::cleanup(mRenderData);
     Framebuffer::cleanup(mRenderData);
     Pipeline::cleanup(mRenderData, mRenderData.rdBasicPipeline);
+    Pipeline::cleanup(mRenderData, mRenderData.rdChangedPipeline);
     PipelineLayout::cleanup(mRenderData, mRenderData.rdPipelineLayout);
     Renderpass::cleanup(mRenderData);
+    UniformBuffer::cleanup(mRenderData);
 
     vkDestroyImageView(mRenderData.rdVkbDevice.device, mRenderData.rdDepthImageView, nullptr);
     vmaDestroyImage(mRenderData.rdAllocator, mRenderData.rdDepthImage, mRenderData.rdDepthImageAlloc);
@@ -332,6 +385,10 @@ bool VkRenderer::deviceInit()
 
     Logger::log(1, "%s: found physical device '%s'\n", __FUNCTION__, mPhysicalDevice.name.c_str());
 
+    mMinUniformBufferOffsetAlignment = mPhysicalDevice.properties.limits.minUniformBufferOffsetAlignment;
+    Logger::log(1, "%s: the physical device as a minimal uniform buffer offset of %i bytes\n", __FUNCTION__,
+                mMinUniformBufferOffsetAlignment);
+
     vkb::DeviceBuilder devBuilder{mPhysicalDevice};
     auto devBuilderRet = devBuilder.build();
     if (!devBuilderRet)
@@ -343,6 +400,7 @@ bool VkRenderer::deviceInit()
 
     return true;
 }
+
 bool VkRenderer::getQueue()
 {
     auto graphQueueRet = mRenderData.rdVkbDevice.get_queue(vkb::QueueType::graphics);
@@ -363,6 +421,26 @@ bool VkRenderer::getQueue()
 
     return true;
 }
+
+bool VkRenderer::createSwapchain()
+{
+    vkb::SwapchainBuilder swapChainBuild{mRenderData.rdVkbDevice};
+
+    auto swapChainBuildRet = swapChainBuild.set_old_swapchain(mRenderData.rdVkbSwapchain)
+                                 .set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR)
+                                 .build();
+    if (!swapChainBuildRet)
+    {
+        Logger::log(1, "%s error: could not init swapchain\n", __FUNCTION__);
+        return false;
+    }
+
+    vkb::destroy_swapchain(mRenderData.rdVkbSwapchain);
+    mRenderData.rdVkbSwapchain = swapChainBuildRet.value();
+
+    return true;
+}
+
 bool VkRenderer::createDepthBuffer()
 {
     VkExtent3D depthImageExtent = {mRenderData.rdVkbSwapchain.extent.width, mRenderData.rdVkbSwapchain.extent.height,
@@ -411,27 +489,9 @@ bool VkRenderer::createDepthBuffer()
     }
     return true;
 }
-bool VkRenderer::createSwapchain()
-{
-    vkb::SwapchainBuilder swapChainBuild{mRenderData.rdVkbDevice};
 
-    /* VK_PRESENT_MODE_FIFO_KHR enables vsync */
-    auto swapChainBuildRet = swapChainBuild.set_old_swapchain(mRenderData.rdVkbSwapchain)
-                                 .set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR)
-                                 .build();
-    if (!swapChainBuildRet)
-    {
-        Logger::log(1, "%s error: could not init swapchain\n", __FUNCTION__);
-        return false;
-    }
-
-    vkb::destroy_swapchain(mRenderData.rdVkbSwapchain);
-    mRenderData.rdVkbSwapchain = swapChainBuildRet.value();
-
-    return true;
-}
 bool VkRenderer::recreateSwapchain()
-{ /* handle minimize */
+{
     int width = 0, height = 0;
     glfwGetFramebufferSize(mWindow, &width, &height);
     while (width == 0 || height == 0)
@@ -471,6 +531,16 @@ bool VkRenderer::recreateSwapchain()
     return true;
 }
 
+bool VkRenderer::createUBO()
+{
+    if (!UniformBuffer::init(mRenderData))
+    {
+        Logger::log(1, "%s error: could not create uniform buffers\n", __FUNCTION__);
+        return false;
+    }
+    return true;
+}
+
 bool VkRenderer::createRenderPass()
 {
     if (!Renderpass::init(mRenderData))
@@ -491,11 +561,24 @@ bool VkRenderer::createPipelineLayout()
     return true;
 }
 
-bool VkRenderer::createPipeline()
+bool VkRenderer::createBasicPipeline()
 {
     std::string vertexShaderFile = "shaders/basic.vert.spv";
     std::string fragmentShaderFile = "shaders/basic.frag.spv";
     if (!Pipeline::init(mRenderData, mRenderData.rdPipelineLayout, mRenderData.rdBasicPipeline, vertexShaderFile,
+                        fragmentShaderFile))
+    {
+        Logger::log(1, "%s error: could not init pipeline\n", __FUNCTION__);
+        return false;
+    }
+    return true;
+}
+
+bool VkRenderer::createChangedPipeline()
+{
+    std::string vertexShaderFile = "shaders/changed.vert.spv";
+    std::string fragmentShaderFile = "shaders/changed.frag.spv";
+    if (!Pipeline::init(mRenderData, mRenderData.rdPipelineLayout, mRenderData.rdChangedPipeline, vertexShaderFile,
                         fragmentShaderFile))
     {
         Logger::log(1, "%s error: could not init pipeline\n", __FUNCTION__);
@@ -570,4 +653,119 @@ bool VkRenderer::initVma()
     }
 
     return true;
+}
+
+void VkRenderer::handleWindowMoveEvents(int xPosition, int yPosition)
+{
+    Logger::log(1, "%s: mWindow has been moved to %i/%i\n", __FUNCTION__, xPosition, yPosition);
+}
+
+void VkRenderer::handleWindowMinimizedEvents(int minimized)
+{
+    if (minimized)
+    {
+        Logger::log(1, "%s: mWindow has been minimized\n", __FUNCTION__);
+    }
+    else
+    {
+        Logger::log(1, "%s: mWindow has been restored\n", __FUNCTION__);
+    }
+}
+
+void VkRenderer::handleWindowMaximizedEvents(int maximized)
+{
+    if (maximized)
+    {
+        Logger::log(1, "%s: mWindow has been maximized\n", __FUNCTION__);
+    }
+    else
+    {
+        Logger::log(1, "%s: mWindow has been restored\n", __FUNCTION__);
+    }
+}
+
+void VkRenderer::handleWindowCloseEvents() { Logger::log(1, "%s: mWindow has been closed\n", __FUNCTION__); }
+
+void VkRenderer::handleKeyEvents(int key, int scancode, int action, int mods)
+{
+    if (glfwGetKey(mWindow, GLFW_KEY_Z) == GLFW_PRESS)
+    {
+        mShouldUseChangedShader = !mShouldUseChangedShader;
+        Logger::log(1, "%s: Toggle mShouldUseChangedShader!\n", __FUNCTION__);
+    }
+
+    std::string actionName;
+    switch (action)
+    {
+    case GLFW_PRESS:
+        actionName = "pressed";
+        break;
+    case GLFW_RELEASE:
+        actionName = "released";
+        break;
+    case GLFW_REPEAT:
+        actionName = "repeated";
+        break;
+    default:
+        actionName = "invalid";
+        break;
+    }
+
+    const char* keyName = glfwGetKeyName(key, 0);
+    Logger::log(1, "%s: key %s (key %i, scancode %i) %s\n", __FUNCTION__, keyName, key, scancode, actionName.c_str());
+}
+void VkRenderer::handleMouseButtonEvents(int button, int action, int mods)
+{
+    std::string actionName;
+    switch (action)
+    {
+    case GLFW_PRESS:
+        actionName = "pressed";
+        break;
+    case GLFW_RELEASE:
+        actionName = "released";
+        break;
+    case GLFW_REPEAT:
+        actionName = "repeated";
+        break;
+    default:
+        actionName = "invalid";
+        break;
+    }
+
+    std::string mouseButtonName;
+    switch (button)
+    {
+    case GLFW_MOUSE_BUTTON_LEFT:
+        mouseButtonName = "left";
+        break;
+    case GLFW_MOUSE_BUTTON_MIDDLE:
+        mouseButtonName = "middle";
+        break;
+    case GLFW_MOUSE_BUTTON_RIGHT:
+        mouseButtonName = "right";
+        break;
+    default:
+        mouseButtonName = "other";
+        break;
+    }
+
+    Logger::log(1, "%s: %s mouse button (%i) %s\n", __FUNCTION__, mouseButtonName.c_str(), button, actionName.c_str());
+}
+
+void VkRenderer::handleMousePositionEvents(double xPosition, double yPosition)
+{
+    Logger::log(1, "%s: Mouse cursor has been moved to %lf/%lf\n", __FUNCTION__, xPosition, yPosition);
+}
+
+void VkRenderer::handleMouseEnterLeaveEvents(int enter)
+{
+    if (enter)
+    {
+        Logger::log(1, "%s: Mouse entered window\n", __FUNCTION__);
+    }
+    else
+    {
+        Logger::log(1, "%s: Mouse left window\n", __FUNCTION__);
+    }
 }

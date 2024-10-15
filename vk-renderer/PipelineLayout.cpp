@@ -5,10 +5,12 @@
 
 bool PipelineLayout::init(VkRenderData& renderData, VkPipelineLayout& pipelineLayout)
 {
+    VkDescriptorSetLayout layouts[] = {renderData.rdTextureDescriptorLayout, renderData.rdUBODescriptorLayout};
+
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutInfo.setLayoutCount = 1;
-    pipelineLayoutInfo.pSetLayouts = &renderData.rdTextureDescriptorLayout;
+    pipelineLayoutInfo.setLayoutCount = 2;
+    pipelineLayoutInfo.pSetLayouts = layouts;
     pipelineLayoutInfo.pushConstantRangeCount = 0;
 
     if (vkCreatePipelineLayout(renderData.rdVkbDevice.device, &pipelineLayoutInfo, nullptr, &pipelineLayout) !=

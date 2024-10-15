@@ -29,26 +29,26 @@ bool Window::init(int width, int height, const std::string& title)
         return false;
     }
 
-    glfwSetWindowUserPointer(mWindow, this);
+    glfwSetWindowUserPointer(mWindow, mRenderer.get());
 
     glfwSetWindowPosCallback(mWindow,
                              [](GLFWwindow* window, int xPosition, int yPosition)
                              {
-                                 auto CurrentRenderer = static_cast<Window*>(glfwGetWindowUserPointer(window));
+                                 auto CurrentRenderer = static_cast<VkRenderer*>(glfwGetWindowUserPointer(window));
                                  CurrentRenderer->handleWindowMoveEvents(xPosition, yPosition);
                              });
 
     glfwSetWindowIconifyCallback(mWindow,
                                  [](GLFWwindow* window, int minimized)
                                  {
-                                     auto CurrentRenderer = static_cast<Window*>(glfwGetWindowUserPointer(window));
+                                     auto CurrentRenderer = static_cast<VkRenderer*>(glfwGetWindowUserPointer(window));
                                      CurrentRenderer->handleWindowMinimizedEvents(minimized);
                                  });
 
     glfwSetWindowMaximizeCallback(mWindow,
                                   [](GLFWwindow* window, int maximized)
                                   {
-                                      auto CurrentRenderer = static_cast<Window*>(glfwGetWindowUserPointer(window));
+                                      auto CurrentRenderer = static_cast<VkRenderer*>(glfwGetWindowUserPointer(window));
                                       CurrentRenderer->handleWindowMaximizedEvents(maximized);
                                   });
 
@@ -62,35 +62,35 @@ bool Window::init(int width, int height, const std::string& title)
     glfwSetWindowCloseCallback(mWindow,
                                [](GLFWwindow* window)
                                {
-                                   auto CurrentRenderer = static_cast<Window*>(glfwGetWindowUserPointer(window));
+                                   auto CurrentRenderer = static_cast<VkRenderer*>(glfwGetWindowUserPointer(window));
                                    CurrentRenderer->handleWindowCloseEvents();
                                });
 
     glfwSetKeyCallback(mWindow,
                        [](GLFWwindow* window, int key, int scancode, int action, int mode)
                        {
-                           auto CurrentRenderer = static_cast<Window*>(glfwGetWindowUserPointer(window));
+                           auto CurrentRenderer = static_cast<VkRenderer*>(glfwGetWindowUserPointer(window));
                            CurrentRenderer->handleKeyEvents(key, scancode, action, mode);
                        });
 
     glfwSetMouseButtonCallback(mWindow,
                                [](GLFWwindow* window, int button, int action, int mods)
                                {
-                                   auto CurrentRenderer = static_cast<Window*>(glfwGetWindowUserPointer(window));
+                                   auto CurrentRenderer = static_cast<VkRenderer*>(glfwGetWindowUserPointer(window));
                                    CurrentRenderer->handleMouseButtonEvents(button, action, mods);
                                });
 
     glfwSetCursorPosCallback(mWindow,
                              [](GLFWwindow* window, double xPosition, double yPosition)
                              {
-                                 auto CurrentRenderer = static_cast<Window*>(glfwGetWindowUserPointer(window));
+                                 auto CurrentRenderer = static_cast<VkRenderer*>(glfwGetWindowUserPointer(window));
                                  CurrentRenderer->handleMousePositionEvents(xPosition, yPosition);
                              });
 
     glfwSetCursorEnterCallback(mWindow,
                                [](GLFWwindow* window, int enter)
                                {
-                                   auto CurrentRenderer = static_cast<Window*>(glfwGetWindowUserPointer(window));
+                                   auto CurrentRenderer = static_cast<VkRenderer*>(glfwGetWindowUserPointer(window));
                                    CurrentRenderer->handleMouseEnterLeaveEvents(enter);
                                });
 
@@ -129,113 +129,4 @@ void Window::cleanup()
     glfwDestroyWindow(mWindow);
     glfwTerminate();
     Logger::log(1, "%s: Terminating window\n", __FUNCTION__);
-}
-
-void Window::handleWindowMoveEvents(int xPosition, int yPosition)
-{
-    Logger::log(1, "%s: mWindow has been moved to %i/%i\n", __FUNCTION__, xPosition, yPosition);
-}
-
-void Window::handleWindowMinimizedEvents(int minimized)
-{
-    if (minimized)
-    {
-        Logger::log(1, "%s: mWindow has been minimized\n", __FUNCTION__);
-    }
-    else
-    {
-        Logger::log(1, "%s: mWindow has been restored\n", __FUNCTION__);
-    }
-}
-
-void Window::handleWindowMaximizedEvents(int maximized)
-{
-    if (maximized)
-    {
-        Logger::log(1, "%s: mWindow has been maximized\n", __FUNCTION__);
-    }
-    else
-    {
-        Logger::log(1, "%s: mWindow has been restored\n", __FUNCTION__);
-    }
-}
-
-void Window::handleWindowCloseEvents() { Logger::log(1, "%s: mWindow has been closed\n", __FUNCTION__); }
-
-void Window::handleKeyEvents(int key, int scancode, int action, int mods)
-{
-    std::string actionName;
-    switch (action)
-    {
-    case GLFW_PRESS:
-        actionName = "pressed";
-        break;
-    case GLFW_RELEASE:
-        actionName = "released";
-        break;
-    case GLFW_REPEAT:
-        actionName = "repeated";
-        break;
-    default:
-        actionName = "invalid";
-        break;
-    }
-
-    const char* keyName = glfwGetKeyName(key, 0);
-    Logger::log(1, "%s: key %s (key %i, scancode %i) %s\n", __FUNCTION__, keyName, key, scancode, actionName.c_str());
-}
-void Window::handleMouseButtonEvents(int button, int action, int mods)
-{
-    std::string actionName;
-    switch (action)
-    {
-    case GLFW_PRESS:
-        actionName = "pressed";
-        break;
-    case GLFW_RELEASE:
-        actionName = "released";
-        break;
-    case GLFW_REPEAT:
-        actionName = "repeated";
-        break;
-    default:
-        actionName = "invalid";
-        break;
-    }
-
-    std::string mouseButtonName;
-    switch (button)
-    {
-    case GLFW_MOUSE_BUTTON_LEFT:
-        mouseButtonName = "left";
-        break;
-    case GLFW_MOUSE_BUTTON_MIDDLE:
-        mouseButtonName = "middle";
-        break;
-    case GLFW_MOUSE_BUTTON_RIGHT:
-        mouseButtonName = "right";
-        break;
-    default:
-        mouseButtonName = "other";
-        break;
-    }
-
-    Logger::log(1, "%s: %s mouse button (%i) %s\n", __FUNCTION__, mouseButtonName.c_str(), button, actionName.c_str());
-}
-
-void Window::handleMousePositionEvents(double xPosition, double yPosition)
-{
-    Logger::log(1, "%s: Mouse cursor has been moved to %lf/%lf\n", __FUNCTION__, xPosition, yPosition);
-}
-
-void Window::handleMouseEnterLeaveEvents(int enter)
-{
-    if (enter)
-    {
-        Logger::log(1, "%s: Mouse entered window\n", __FUNCTION__);
-    }
-    else
-    {
-        Logger::log(1, "%s: Mouse left window\n", __FUNCTION__);
-    }
 }

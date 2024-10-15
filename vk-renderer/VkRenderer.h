@@ -7,7 +7,7 @@
 class VkRenderer
 {
   public:
-    VkRenderer(GLFWwindow* inWindow);
+    explicit VkRenderer(GLFWwindow* inWindow);
 
     bool init(unsigned int width, unsigned int height);
 
@@ -32,23 +32,34 @@ class VkRenderer
 
     vkb::PhysicalDevice mPhysicalDevice;
 
+    VkDeviceSize mMinUniformBufferOffsetAlignment = 0;
+
     VmaAllocation mVertexBufferAlloc{};
 
+    VkUploadMatrices mMatrices{};
+
+    bool mShouldUseChangedShader = false;
+
+#pragma region VulkanCore
     bool deviceInit();
 
     bool getQueue();
 
-    bool createDepthBuffer();
-
     bool createSwapchain();
 
+    bool createDepthBuffer();
+
     bool recreateSwapchain();
+
+    bool createUBO();
 
     bool createRenderPass();
 
     bool createPipelineLayout();
 
-    bool createPipeline();
+    bool createBasicPipeline();
+
+    bool createChangedPipeline();
 
     bool createFramebuffer();
 
@@ -61,4 +72,24 @@ class VkRenderer
     bool loadTexture();
 
     bool initVma();
+#pragma endregion Renderer
+
+#pragma region HandleGLFWEvents
+  public:
+    void handleWindowMoveEvents(int xPosition, int yPosition);
+
+    void handleWindowMinimizedEvents(int minimized);
+
+    void handleWindowMaximizedEvents(int maximized);
+
+    void handleWindowCloseEvents();
+
+    void handleKeyEvents(int key, int scancode, int action, int mods);
+
+    void handleMouseButtonEvents(int button, int action, int mods);
+
+    void handleMousePositionEvents(double xPosition, double yPosition);
+
+    void handleMouseEnterLeaveEvents(int enter);
+#pragma endregion HandleGLFWEvents
 };
