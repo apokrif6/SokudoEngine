@@ -15,16 +15,16 @@
 
 VkRenderer::VkRenderer(GLFWwindow* inWindow)
 {
-    mWindow = inWindow;
+    mRenderData.rdWindow = inWindow;
     mMatrices.viewMatrix = glm::mat4(1.0f);
     mMatrices.projectionMatrix = glm::mat4(1.0f);
 }
 
 bool VkRenderer::init(unsigned int width, unsigned int height)
 {
-    if (!mWindow)
+    if (!mRenderData.rdWindow)
     {
-        Logger::log(1, "%s error: Can't init Vulkan mRenderer. mWindow is invalid\n", __FUNCTION__);
+        Logger::log(1, "%s error: Can't init Vulkan mRenderer. mRenderData.rdWindow is invalid\n", __FUNCTION__);
         return false;
     }
 
@@ -103,12 +103,23 @@ bool VkRenderer::init(unsigned int width, unsigned int height)
         return false;
     }
 
+    if (!initUserInterface())
+    {
+        return false;
+    }
+
+    mRenderData.rdWidth = width;
+    mRenderData.rdHeight = height;
+
     Logger::log(1, "%s: Vulkan renderer initialized to %ix%i\n", __FUNCTION__, width, height);
     return true;
 }
 
 void VkRenderer::setSize(unsigned int width, unsigned int height)
 {
+    mRenderData.rdWidth = width;
+    mRenderData.rdHeight = height;
+
     Logger::log(1, "%s: resized window to %ix%i\n", __FUNCTION__, width, height);
 }
 
@@ -134,7 +145,7 @@ bool VkRenderer::uploadData(VkMesh vertexData)
     std::memcpy(data, vertexData.vertices.data(), vertexData.vertices.size() * sizeof(VkVertex));
     vmaUnmapMemory(mRenderData.rdAllocator, mVertexBufferAlloc);
 
-    mTriangleCount = static_cast<int>(vertexData.vertices.size() / 3);
+    mRenderData.rdTriangleCount = static_cast<int>(vertexData.vertices.size() / 3);
 
     return true;
 }
@@ -263,7 +274,10 @@ bool VkRenderer::draw()
     vkCmdBindDescriptorSets(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdPipelineLayout,
                             1, 1, &mRenderData.rdUBODescriptorSet, 0, nullptr);
 
-    vkCmdDraw(mRenderData.rdCommandBuffer, mTriangleCount * 3, 1, 0, 0);
+    vkCmdDraw(mRenderData.rdCommandBuffer, mRenderData.rdTriangleCount * 3, 1, 0, 0);
+
+    mUserInterface.createFrame(mRenderData);
+    mUserInterface.render(mRenderData);
 
     vkCmdEndRenderPass(mRenderData.rdCommandBuffer);
 
@@ -327,6 +341,8 @@ void VkRenderer::cleanup()
 {
     vkDeviceWaitIdle(mRenderData.rdVkbDevice.device);
 
+    mUserInterface.cleanup(mRenderData);
+
     Texture::cleanup(mRenderData);
     vmaDestroyBuffer(mRenderData.rdAllocator, mVertexBuffer, mVertexBufferAlloc);
 
@@ -366,7 +382,7 @@ bool VkRenderer::deviceInit()
     mRenderData.rdVkbInstance = instRet.value();
 
     VkResult result = VK_ERROR_UNKNOWN;
-    result = glfwCreateWindowSurface(mRenderData.rdVkbInstance, mWindow, nullptr, &mSurface);
+    result = glfwCreateWindowSurface(mRenderData.rdVkbInstance, mRenderData.rdWindow, nullptr, &mSurface);
     if (result != VK_SUCCESS)
     {
         Logger::log(1, "%s error: Could not create Vulkan surface\n", __FUNCTION__);
@@ -492,11 +508,9 @@ bool VkRenderer::createDepthBuffer()
 
 bool VkRenderer::recreateSwapchain()
 {
-    int width = 0, height = 0;
-    glfwGetFramebufferSize(mWindow, &width, &height);
-    while (width == 0 || height == 0)
+    while (mRenderData.rdWidth == 0 || mRenderData.rdHeight == 0)
     {
-        glfwGetFramebufferSize(mWindow, &width, &height);
+        glfwGetFramebufferSize(mRenderData.rdWindow, &mRenderData.rdWidth, &mRenderData.rdHeight);
         glfwWaitEvents();
     }
 
@@ -655,20 +669,30 @@ bool VkRenderer::initVma()
     return true;
 }
 
+bool VkRenderer::initUserInterface()
+{
+    if (!mUserInterface.init(mRenderData))
+    {
+        Logger::log(1, "%s error: could not init ImGui\n", __FUNCTION__);
+        return false;
+    }
+    return true;
+}
+
 void VkRenderer::handleWindowMoveEvents(int xPosition, int yPosition)
 {
-    Logger::log(1, "%s: mWindow has been moved to %i/%i\n", __FUNCTION__, xPosition, yPosition);
+    Logger::log(1, "%s: mRenderData.rdWindow has been moved to %i/%i\n", __FUNCTION__, xPosition, yPosition);
 }
 
 void VkRenderer::handleWindowMinimizedEvents(int minimized)
 {
     if (minimized)
     {
-        Logger::log(1, "%s: mWindow has been minimized\n", __FUNCTION__);
+        Logger::log(1, "%s: mRenderData.rdWindow has been minimized\n", __FUNCTION__);
     }
     else
     {
-        Logger::log(1, "%s: mWindow has been restored\n", __FUNCTION__);
+        Logger::log(1, "%s: mRenderData.rdWindow has been restored\n", __FUNCTION__);
     }
 }
 
@@ -676,19 +700,22 @@ void VkRenderer::handleWindowMaximizedEvents(int maximized)
 {
     if (maximized)
     {
-        Logger::log(1, "%s: mWindow has been maximized\n", __FUNCTION__);
+        Logger::log(1, "%s: mRenderData.rdWindow has been maximized\n", __FUNCTION__);
     }
     else
     {
-        Logger::log(1, "%s: mWindow has been restored\n", __FUNCTION__);
+        Logger::log(1, "%s: mRenderData.rdWindow has been restored\n", __FUNCTION__);
     }
 }
 
-void VkRenderer::handleWindowCloseEvents() { Logger::log(1, "%s: mWindow has been closed\n", __FUNCTION__); }
+void VkRenderer::handleWindowCloseEvents()
+{
+    Logger::log(1, "%s: mRenderData.rdWindow has been closed\n", __FUNCTION__);
+}
 
 void VkRenderer::handleKeyEvents(int key, int scancode, int action, int mods)
 {
-    if (glfwGetKey(mWindow, GLFW_KEY_Z) == GLFW_PRESS)
+    if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_Z) == GLFW_PRESS)
     {
         mShouldUseChangedShader = !mShouldUseChangedShader;
         Logger::log(1, "%s: Toggle mShouldUseChangedShader!\n", __FUNCTION__);

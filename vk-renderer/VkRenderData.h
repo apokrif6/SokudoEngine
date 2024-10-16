@@ -4,6 +4,7 @@
 #include "VkBootstrap.h"
 
 #include <glm/glm.hpp>
+#include <GLFW/glfw3.h>
 
 struct VkVertex
 {
@@ -17,13 +18,21 @@ struct VkMesh
     std::vector<VkVertex> vertices;
 };
 
-struct VkUploadMatrices {
+struct VkUploadMatrices
+{
     glm::mat4 viewMatrix;
     glm::mat4 projectionMatrix;
 };
 
 struct VkRenderData
 {
+    GLFWwindow* rdWindow = nullptr;
+
+    int rdWidth = 0;
+    int rdHeight = 0;
+
+    unsigned int rdTriangleCount = 0;
+
     VmaAllocator rdAllocator;
     vkb::Instance rdVkbInstance{};
     vkb::Device rdVkbDevice{};
@@ -68,4 +77,6 @@ struct VkRenderData
     VkDescriptorPool rdUBODescriptorPool = VK_NULL_HANDLE;
     VkDescriptorSetLayout rdUBODescriptorLayout = VK_NULL_HANDLE;
     VkDescriptorSet rdUBODescriptorSet = VK_NULL_HANDLE;
+
+    VkDescriptorPool rdImguiDescriptorPool = VK_NULL_HANDLE;
 };

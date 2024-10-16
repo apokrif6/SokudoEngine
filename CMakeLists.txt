@@ -10,6 +10,7 @@ file(GLOB SOURCES
         tools/*.cpp
         vk-renderer/*.cpp
         model/*.cpp
+        imgui/*.cpp
 )
 add_executable(SokudoEngine ${SOURCES})
 
@@ -85,7 +86,7 @@ add_custom_command(TARGET Textures POST_BUILD
 
 add_subdirectory(vk-bootstrap)
 
-include_directories(${GLFW3_INCLUDE_DIR} window tools vk-renderer vk-memory-allocation include model)
+include_directories(${GLFW3_INCLUDE_DIR} window tools vk-renderer vk-memory-allocation include model imgui)
 
 target_link_libraries(SokudoEngine ${GLFW3_LIBRARY} Vulkan::Vulkan vk-bootstrap::vk-bootstrap)
 

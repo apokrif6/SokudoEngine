@@ -3,6 +3,7 @@
 #include <vulkan/vulkan.h>
 #include <GLFW/glfw3.h>
 #include "VkRenderData.h"
+#include "UserInterface.h"
 
 class VkRenderer
 {
@@ -20,11 +21,9 @@ class VkRenderer
     void cleanup();
 
   private:
-    GLFWwindow* mWindow = nullptr;
-
-    int mTriangleCount = 0;
-
     VkRenderData mRenderData{};
+
+    UserInterface mUserInterface{};
 
     VkBuffer mVertexBuffer{};
 
@@ -72,6 +71,9 @@ class VkRenderer
     bool loadTexture();
 
     bool initVma();
+
+    bool initUserInterface();
+
 #pragma endregion Renderer
 
 #pragma region HandleGLFWEvents
