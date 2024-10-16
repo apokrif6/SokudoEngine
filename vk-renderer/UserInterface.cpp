@@ -146,6 +146,20 @@ void UserInterface::createFrame(VkRenderData& renderData)
 
     ImGui::Begin("Sokudo Engine", nullptr, imguiWindowFlags);
 
+    static float newFps = 0.0f;
+    if (renderData.rdFrameTime > 0.0)
+    {
+        newFps = 1.0f / renderData.rdFrameTime;
+    }
+
+    mFramesPerSecond = (mAveragingAlpha * mFramesPerSecond) + (1.0f - mAveragingAlpha) * newFps;
+
+    ImGui::Text("Frames per second:");
+    ImGui::SameLine();
+    ImGui::Text("%s", std::to_string(mFramesPerSecond).c_str());
+
+    ImGui::Separator();
+
     ImGui::Text("Triangles:");
     ImGui::SameLine();
     ImGui::Text("%s", std::to_string(renderData.rdTriangleCount).c_str());
@@ -154,12 +168,6 @@ void UserInterface::createFrame(VkRenderData& renderData)
     ImGui::Text("Window Dimensions:");
     ImGui::SameLine();
     ImGui::Text("%s", windowDims.c_str());
-
-    std::string imgWindowPos = std::to_string(static_cast<int>(ImGui::GetWindowPos().x)) + "/" +
-                               std::to_string(static_cast<int>(ImGui::GetWindowPos().y));
-    ImGui::Text("ImGui Window Position:");
-    ImGui::SameLine();
-    ImGui::Text("%s", imgWindowPos.c_str());
 
     ImGui::End();
 }

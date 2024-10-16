@@ -152,6 +152,9 @@ bool VkRenderer::uploadData(VkMesh vertexData)
 
 bool VkRenderer::draw()
 {
+    static float prevFrameStartTime = 0.0;
+    auto frameStartTime = static_cast<float>(glfwGetTime());
+
     if (vkWaitForFences(mRenderData.rdVkbDevice.device, 1, &mRenderData.rdRenderFence, VK_TRUE, UINT64_MAX) !=
         VK_SUCCESS)
     {
@@ -333,6 +336,9 @@ bool VkRenderer::draw()
             return false;
         }
     }
+
+    mRenderData.rdFrameTime = frameStartTime - prevFrameStartTime;
+    prevFrameStartTime = frameStartTime;
 
     return true;
 }

@@ -33,6 +33,10 @@ struct VkRenderData
 
     unsigned int rdTriangleCount = 0;
 
+    float rdFrameTime = 0.0f;
+
+    float rdMillisecondsPerFrameTime = 0.0f;
+
     VmaAllocator rdAllocator;
     vkb::Instance rdVkbInstance{};
     vkb::Device rdVkbDevice{};
