@@ -141,8 +141,11 @@ void UserInterface::createFrame(VkRenderData& renderData)
 
     ImGuiWindowFlags imguiWindowFlags = 0;
     imguiWindowFlags |= ImGuiWindowFlags_NoCollapse;
+    imguiWindowFlags |= ImGuiWindowFlags_AlwaysAutoResize;
 
-    ImGui::SetNextWindowBgAlpha(0.8f);
+    ImGui::SetNextWindowBgAlpha(0.3f);
+
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, IM_COL32(207, 159, 255, 1));
 
     ImGui::Begin("Sokudo Engine", nullptr, imguiWindowFlags);
 
@@ -160,6 +163,38 @@ void UserInterface::createFrame(VkRenderData& renderData)
 
     ImGui::Separator();
 
+    ImGui::Text("Frame Time:");
+    ImGui::SameLine();
+    ImGui::Text("%s", std::to_string(renderData.rdFrameTime).c_str());
+    ImGui::SameLine();
+    ImGui::Text("ms");
+
+    ImGui::Text("Matrix Generation Time:");
+    ImGui::SameLine();
+    ImGui::Text("%s", std::to_string(renderData.rdMatrixGenerateTime).c_str());
+    ImGui::SameLine();
+    ImGui::Text("ms");
+
+    ImGui::Text("Matrix Upload Time:");
+    ImGui::SameLine();
+    ImGui::Text("%s", std::to_string(renderData.rdUploadToUBOTime).c_str());
+    ImGui::SameLine();
+    ImGui::Text("ms");
+
+    ImGui::Text("UI Generation Time:");
+    ImGui::SameLine();
+    ImGui::Text("%s", std::to_string(renderData.rdUIGenerateTime).c_str());
+    ImGui::SameLine();
+    ImGui::Text("ms");
+
+    ImGui::Text("UI Draw Time:");
+    ImGui::SameLine();
+    ImGui::Text("%s", std::to_string(renderData.rdUIDrawTime).c_str());
+    ImGui::SameLine();
+    ImGui::Text("ms");
+
+    ImGui::Separator();
+
     ImGui::Text("Triangles:");
     ImGui::SameLine();
     ImGui::Text("%s", std::to_string(renderData.rdTriangleCount).c_str());
@@ -168,6 +203,8 @@ void UserInterface::createFrame(VkRenderData& renderData)
     ImGui::Text("Window Dimensions:");
     ImGui::SameLine();
     ImGui::Text("%s", windowDims.c_str());
+
+    ImGui::PopStyleColor();
 
     ImGui::End();
 }

@@ -4,6 +4,7 @@
 #include <GLFW/glfw3.h>
 #include "VkRenderData.h"
 #include "UserInterface.h"
+#include "Timer.h"
 
 class VkRenderer
 {
@@ -24,6 +25,12 @@ class VkRenderer
     VkRenderData mRenderData{};
 
     UserInterface mUserInterface{};
+
+    Timer mFrameTimer{};
+    Timer mUIGenerateTimer{};
+    Timer mUIDrawTimer{};
+    Timer mUploadToUBOTimer{};
+    Timer mMatrixGenerateTimer{};
 
     VkBuffer mVertexBuffer{};
 

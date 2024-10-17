@@ -111,6 +111,8 @@ bool VkRenderer::init(unsigned int width, unsigned int height)
     mRenderData.rdWidth = width;
     mRenderData.rdHeight = height;
 
+    mFrameTimer.start();
+
     Logger::log(1, "%s: Vulkan renderer initialized to %ix%i\n", __FUNCTION__, width, height);
     return true;
 }
@@ -152,8 +154,8 @@ bool VkRenderer::uploadData(VkMesh vertexData)
 
 bool VkRenderer::draw()
 {
-    static float prevFrameStartTime = 0.0;
-    auto frameStartTime = static_cast<float>(glfwGetTime());
+    mRenderData.rdFrameTime = mFrameTimer.stop();
+    mFrameTimer.start();
 
     if (vkWaitForFences(mRenderData.rdVkbDevice.device, 1, &mRenderData.rdRenderFence, VK_TRUE, UINT64_MAX) !=
         VK_SUCCESS)
@@ -233,6 +235,7 @@ bool VkRenderer::draw()
     scissor.offset = {0, 0};
     scissor.extent = mRenderData.rdVkbSwapchain.extent;
 
+    mMatrixGenerateTimer.start();
     glm::vec3 cameraPosition = glm::vec3(0.4f, 0.3f, 1.0f);
     glm::vec3 cameraLookAtPosition = glm::vec3(0.0f, 0.0f, 0.0f);
     glm::vec3 cameraUpVector = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -254,6 +257,7 @@ bool VkRenderer::draw()
         model = glm::rotate(glm::mat4(1.0f), -time, glm::vec3(0.0f, 0.0f, 1.0f));
     }
     mMatrices.viewMatrix = glm::lookAt(cameraPosition, cameraLookAtPosition, cameraUpVector) * model;
+    mRenderData.rdMatrixGenerateTime = mMatrixGenerateTimer.stop();
 
     vkCmdBeginRenderPass(mRenderData.rdCommandBuffer, &rpInfo, VK_SUBPASS_CONTENTS_INLINE);
 
@@ -279,8 +283,13 @@ bool VkRenderer::draw()
 
     vkCmdDraw(mRenderData.rdCommandBuffer, mRenderData.rdTriangleCount * 3, 1, 0, 0);
 
+    mUIGenerateTimer.start();
     mUserInterface.createFrame(mRenderData);
+    mRenderData.rdUIGenerateTime = mUIGenerateTimer.stop();
+
+    mUIDrawTimer.start();
     mUserInterface.render(mRenderData);
+    mRenderData.rdUIDrawTime = mUIDrawTimer.stop();
 
     vkCmdEndRenderPass(mRenderData.rdCommandBuffer);
 
@@ -290,7 +299,9 @@ bool VkRenderer::draw()
         return false;
     }
 
+    mUploadToUBOTimer.start();
     UniformBuffer::uploadData(mRenderData, mMatrices);
+    mRenderData.rdUploadToUBOTime = mUploadToUBOTimer.stop();
 
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -336,9 +347,6 @@ bool VkRenderer::draw()
             return false;
         }
     }
-
-    mRenderData.rdFrameTime = frameStartTime - prevFrameStartTime;
-    prevFrameStartTime = frameStartTime;
 
     return true;
 }

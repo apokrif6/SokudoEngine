@@ -34,8 +34,10 @@ struct VkRenderData
     unsigned int rdTriangleCount = 0;
 
     float rdFrameTime = 0.0f;
-
-    float rdMillisecondsPerFrameTime = 0.0f;
+    float rdMatrixGenerateTime = 0.0f;
+    float rdUploadToUBOTime = 0.0f;
+    float rdUIGenerateTime = 0.0f;
+    float rdUIDrawTime = 0.0f;
 
     VmaAllocator rdAllocator;
     vkb::Instance rdVkbInstance{};
