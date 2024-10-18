@@ -44,8 +44,6 @@ class VkRenderer
 
     VkUploadMatrices mMatrices{};
 
-    bool mShouldUseChangedShader = false;
-
 #pragma region VulkanCore
     bool deviceInit();
 

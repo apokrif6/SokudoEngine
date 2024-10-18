@@ -204,6 +204,18 @@ void UserInterface::createFrame(VkRenderData& renderData)
     ImGui::SameLine();
     ImGui::Text("%s", windowDims.c_str());
 
+    ImGui::Separator();
+    if (ImGui::Button("Toggle Shader"))
+    {
+        renderData.rdShouldUseChangedShader = !renderData.rdShouldUseChangedShader;
+    }
+    ImGui::SameLine();
+    ImGui::Text(renderData.rdShouldUseChangedShader ? "Changed Shader" : "Basic Shader");
+
+    ImGui::Text("Field Of View");
+    ImGui::SameLine();
+    ImGui::SliderInt("FOV", &renderData.rdFieldOfView, 40, 150);
+
     ImGui::PopStyleColor();
 
     ImGui::End();

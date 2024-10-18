@@ -240,7 +240,7 @@ bool VkRenderer::draw()
     glm::vec3 cameraLookAtPosition = glm::vec3(0.0f, 0.0f, 0.0f);
     glm::vec3 cameraUpVector = glm::vec3(0.0f, 1.0f, 0.0f);
 
-    mMatrices.projectionMatrix = glm::perspective(glm::radians(90.0f),
+    mMatrices.projectionMatrix = glm::perspective(glm::radians(static_cast<float>(mRenderData.rdFieldOfView)),
                                                   static_cast<float>(mRenderData.rdVkbSwapchain.extent.width) /
                                                       static_cast<float>(mRenderData.rdVkbSwapchain.extent.height),
                                                   0.1f, 10.0f);
@@ -248,7 +248,7 @@ bool VkRenderer::draw()
     auto time = static_cast<float>(glfwGetTime());
     auto model = glm::mat4(1.0f);
 
-    if (mShouldUseChangedShader)
+    if (mRenderData.rdShouldUseChangedShader)
     {
         model = glm::rotate(glm::mat4(1.0f), time, glm::vec3(0.0f, 0.0f, 1.0f));
     }
@@ -261,7 +261,7 @@ bool VkRenderer::draw()
 
     vkCmdBeginRenderPass(mRenderData.rdCommandBuffer, &rpInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-    if (mShouldUseChangedShader)
+    if (mRenderData.rdShouldUseChangedShader)
     {
         vkCmdBindPipeline(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdChangedPipeline);
     }
@@ -731,7 +731,7 @@ void VkRenderer::handleKeyEvents(int key, int scancode, int action, int mods)
 {
     if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_Z) == GLFW_PRESS)
     {
-        mShouldUseChangedShader = !mShouldUseChangedShader;
+        mRenderData.rdShouldUseChangedShader = !mRenderData.rdShouldUseChangedShader;
         Logger::log(1, "%s: Toggle mShouldUseChangedShader!\n", __FUNCTION__);
     }
 

@@ -33,6 +33,10 @@ struct VkRenderData
 
     unsigned int rdTriangleCount = 0;
 
+    bool rdShouldUseChangedShader = false;
+
+    int rdFieldOfView = 90;
+
     float rdFrameTime = 0.0f;
     float rdMatrixGenerateTime = 0.0f;
     float rdUploadToUBOTime = 0.0f;

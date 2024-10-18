@@ -21,16 +21,6 @@ bool Window::init(int width, int height, const std::string& title)
         return false;
     }
 
-    mRenderer = std::make_unique<VkRenderer>(mWindow);
-    if (!mRenderer->init(width, height))
-    {
-        glfwTerminate();
-        Logger::log(1, "%s error: Could not init Vulkan mRenderer\n", __FUNCTION__);
-        return false;
-    }
-
-    glfwSetWindowUserPointer(mWindow, mRenderer.get());
-
     glfwSetWindowPosCallback(mWindow,
                              [](GLFWwindow* window, int xPosition, int yPosition)
                              {
@@ -93,6 +83,16 @@ bool Window::init(int width, int height, const std::string& title)
                                    auto CurrentRenderer = static_cast<VkRenderer*>(glfwGetWindowUserPointer(window));
                                    CurrentRenderer->handleMouseEnterLeaveEvents(enter);
                                });
+
+    mRenderer = std::make_unique<VkRenderer>(mWindow);
+    if (!mRenderer->init(width, height))
+    {
+        glfwTerminate();
+        Logger::log(1, "%s error: Could not init Vulkan mRenderer\n", __FUNCTION__);
+        return false;
+    }
+
+    glfwSetWindowUserPointer(mWindow, mRenderer.get());
 
     if (!glfwVulkanSupported())
     {
