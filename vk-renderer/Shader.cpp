@@ -1,4 +1,5 @@
 #include <fstream>
+#include <cstring>
 #include "Shader.h"
 #include "Logger.h"
 

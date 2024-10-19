@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 project(SokudoEngine)
 file(GLOB SOURCES
-        Main.cpp
+        main.cpp
         window/*.cpp
         tools/*.cpp
         vk-renderer/*.cpp
@@ -88,5 +88,8 @@ add_subdirectory(vk-bootstrap)
 
 include_directories(${GLFW3_INCLUDE_DIR} window tools vk-renderer vk-memory-allocation include model imgui)
 
-target_link_libraries(SokudoEngine ${GLFW3_LIBRARY} Vulkan::Vulkan vk-bootstrap::vk-bootstrap)
-
+if(MSVC)
+    target_link_libraries(SokudoEngine ${GLFW3_LIBRARY} Vulkan::Vulkan vk-bootstrap::vk-bootstrap)
+else()
+    target_link_libraries(SokudoEngine ${GLFW3_LIBRARY} Vulkan::Vulkan vk-bootstrap::vk-bootstrap stdc++ m)
+endif()
