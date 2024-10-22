@@ -456,8 +456,11 @@ bool VkRenderer::createSwapchain()
 {
     vkb::SwapchainBuilder swapChainBuild{mRenderData.rdVkbDevice};
 
+    glfwGetFramebufferSize(mRenderData.rdWindow, &mRenderData.rdWidth, &mRenderData.rdHeight);
+
     auto swapChainBuildRet = swapChainBuild.set_old_swapchain(mRenderData.rdVkbSwapchain)
                                  .set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR)
+                                 .set_desired_extent(mRenderData.rdWidth, mRenderData.rdHeight)
                                  .build();
     if (!swapChainBuildRet)
     {
