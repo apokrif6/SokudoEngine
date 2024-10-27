@@ -195,6 +195,16 @@ void UserInterface::createFrame(VkRenderData& renderData)
 
     ImGui::Separator();
 
+    ImGui::Text("View Yaw:");
+    ImGui::SameLine();
+    ImGui::Text("%s", std::to_string(renderData.rdViewYaw).c_str());
+
+    ImGui::Text("View Pitch:");
+    ImGui::SameLine();
+    ImGui::Text("%s", std::to_string(renderData.rdViewPitch).c_str());
+
+    ImGui::Separator();
+
     ImGui::Text("Triangles:");
     ImGui::SameLine();
     ImGui::Text("%s", std::to_string(renderData.rdTriangleCount).c_str());

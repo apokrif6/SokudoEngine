@@ -6,5 +6,6 @@ class SyncObjects
 {
   public:
     static bool init(VkRenderData& renderData);
+
     static void cleanup(VkRenderData& renderData);
 };

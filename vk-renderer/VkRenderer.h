@@ -5,6 +5,7 @@
 #include "VkRenderData.h"
 #include "UserInterface.h"
 #include "Timer.h"
+#include "Camera.h"
 
 class VkRenderer
 {
@@ -25,6 +26,12 @@ class VkRenderer
     VkRenderData mRenderData{};
 
     UserInterface mUserInterface{};
+
+    Camera mCamera{};
+
+    bool mMouseLock = false;
+    int mMouseXPosition = 0;
+    int mMouseYPosition = 0;
 
     Timer mFrameTimer{};
     Timer mUIGenerateTimer{};

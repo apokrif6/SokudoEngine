@@ -43,6 +43,9 @@ struct VkRenderData
     float rdUIGenerateTime = 0.0f;
     float rdUIDrawTime = 0.0f;
 
+    float rdViewYaw = 320.f;
+    float rdViewPitch = 15.f;
+
     VmaAllocator rdAllocator;
     vkb::Instance rdVkbInstance{};
     vkb::Device rdVkbDevice{};

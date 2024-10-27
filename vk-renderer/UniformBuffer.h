@@ -8,6 +8,8 @@ class UniformBuffer
 {
   public:
     static bool init(VkRenderData& renderData);
+
     static void uploadData(VkRenderData& renderData, VkUploadMatrices matrices);
+
     static void cleanup(VkRenderData& renderData);
 };

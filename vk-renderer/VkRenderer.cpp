@@ -11,6 +11,7 @@
 #include "SyncObjects.h"
 #include "Texture.h"
 #include "UniformBuffer.h"
+#include "imgui.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 VkRenderer::VkRenderer(GLFWwindow* inWindow)
@@ -236,10 +237,6 @@ bool VkRenderer::draw()
     scissor.extent = mRenderData.rdVkbSwapchain.extent;
 
     mMatrixGenerateTimer.start();
-    glm::vec3 cameraPosition = glm::vec3(0.4f, 0.3f, 1.0f);
-    glm::vec3 cameraLookAtPosition = glm::vec3(0.0f, 0.0f, 0.0f);
-    glm::vec3 cameraUpVector = glm::vec3(0.0f, 1.0f, 0.0f);
-
     mMatrices.projectionMatrix = glm::perspective(glm::radians(static_cast<float>(mRenderData.rdFieldOfView)),
                                                   static_cast<float>(mRenderData.rdVkbSwapchain.extent.width) /
                                                       static_cast<float>(mRenderData.rdVkbSwapchain.extent.height),
@@ -256,7 +253,7 @@ bool VkRenderer::draw()
     {
         model = glm::rotate(glm::mat4(1.0f), -time, glm::vec3(0.0f, 0.0f, 1.0f));
     }
-    mMatrices.viewMatrix = glm::lookAt(cameraPosition, cameraLookAtPosition, cameraUpVector) * model;
+    mMatrices.viewMatrix = mCamera.getViewMatrix(mRenderData) * model;
     mRenderData.rdMatrixGenerateTime = mMatrixGenerateTimer.stop();
 
     vkCmdBeginRenderPass(mRenderData.rdCommandBuffer, &rpInfo, VK_SUBPASS_CONTENTS_INLINE);
@@ -758,8 +755,33 @@ void VkRenderer::handleKeyEvents(int key, int scancode, int action, int mods)
     const char* keyName = glfwGetKeyName(key, 0);
     Logger::log(1, "%s: key %s (key %i, scancode %i) %s\n", __FUNCTION__, keyName, key, scancode, actionName.c_str());
 }
+
 void VkRenderer::handleMouseButtonEvents(int button, int action, int mods)
 {
+    ImGuiIO& io = ImGui::GetIO();
+    if (button >= 0 && button < ImGuiMouseButton_COUNT)
+    {
+        io.AddMouseButtonEvent(button, action == GLFW_PRESS);
+    }
+
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
+    {
+        mMouseLock = !mMouseLock;
+
+        if (mMouseLock)
+        {
+            glfwSetInputMode(mRenderData.rdWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            if (glfwRawMouseMotionSupported())
+            {
+                glfwSetInputMode(mRenderData.rdWindow, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+            }
+        }
+        else
+        {
+            glfwSetInputMode(mRenderData.rdWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        }
+    }
+
     std::string actionName;
     switch (action)
     {
@@ -799,6 +821,43 @@ void VkRenderer::handleMouseButtonEvents(int button, int action, int mods)
 
 void VkRenderer::handleMousePositionEvents(double xPosition, double yPosition)
 {
+    ImGuiIO& io = ImGui::GetIO();
+    io.AddMousePosEvent(static_cast<float>(xPosition), static_cast<float>(yPosition));
+
+    if (io.WantCaptureMouse)
+    {
+        return;
+    }
+
+    int mouseMoveRelX = static_cast<int>(xPosition) - mMouseXPosition;
+    int mouseMoveRelY = static_cast<int>(yPosition) - mMouseYPosition;
+
+    if (mMouseLock)
+    {
+        mRenderData.rdViewYaw += static_cast<float>(mouseMoveRelX) / 10.f;
+        if (mRenderData.rdViewYaw < 0.0)
+        {
+            mRenderData.rdViewYaw += 360.0;
+        }
+        if (mRenderData.rdViewYaw >= 360.0)
+        {
+            mRenderData.rdViewYaw -= 360.0;
+        }
+
+        mRenderData.rdViewPitch -= static_cast<float>(mouseMoveRelY) / 10.f;
+        if (mRenderData.rdViewPitch > 89.0)
+        {
+            mRenderData.rdViewPitch = 89.0;
+        }
+        if (mRenderData.rdViewPitch < -89.0)
+        {
+            mRenderData.rdViewPitch = -89.0;
+        }
+    }
+
+    mMouseXPosition = static_cast<int>(xPosition);
+    mMouseYPosition = static_cast<int>(yPosition);
+
     Logger::log(1, "%s: Mouse cursor has been moved to %lf/%lf\n", __FUNCTION__, xPosition, yPosition);
 }
 

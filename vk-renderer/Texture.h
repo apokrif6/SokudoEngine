@@ -9,5 +9,6 @@ class Texture
 {
   public:
     static bool loadTexture(VkRenderData& renderData, std::string textureFilename);
+
     static void cleanup(VkRenderData& renderData);
 };
