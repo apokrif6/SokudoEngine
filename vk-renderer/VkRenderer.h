@@ -27,12 +27,6 @@ class VkRenderer
 
     UserInterface mUserInterface{};
 
-    Camera mCamera{};
-
-    bool mMouseLock = false;
-    int mMouseXPosition = 0;
-    int mMouseYPosition = 0;
-
     Timer mFrameTimer{};
     Timer mUIGenerateTimer{};
     Timer mUIDrawTimer{};
@@ -50,6 +44,18 @@ class VkRenderer
     VmaAllocation mVertexBufferAlloc{};
 
     VkUploadMatrices mMatrices{};
+
+#pragma region Camera
+    Camera mCamera{};
+
+    bool mMouseLock = false;
+    int mMouseXPosition = 0;
+    int mMouseYPosition = 0;
+
+    double mLastTickTime = 0.0;
+
+    void handleCameraMovementKeys();
+#pragma endregion Camera
 
 #pragma region VulkanCore
     bool deviceInit();

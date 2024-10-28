@@ -1,5 +1,8 @@
 #include <string>
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/string_cast.hpp>
+
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
 
@@ -194,6 +197,10 @@ void UserInterface::createFrame(VkRenderData& renderData)
     ImGui::Text("ms");
 
     ImGui::Separator();
+
+    ImGui::Text("Camera Position:");
+    ImGui::SameLine();
+    ImGui::Text("%s", glm::to_string(renderData.rdCameraWorldPosition).c_str());
 
     ImGui::Text("View Yaw:");
     ImGui::SameLine();

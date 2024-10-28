@@ -5,10 +5,23 @@
 
 glm::mat4 Camera::getViewMatrix(VkRenderData& renderData)
 {
-    mViewDirection = glm::normalize(
-        glm::vec3(sin(renderData.rdViewYaw / 180.0 * M_PI) * cos(renderData.rdViewPitch / 180.0 * M_PI),
-                  -sin(renderData.rdViewPitch / 180.0 * M_PI),
-                  -cos(renderData.rdViewYaw / 180.0 * M_PI) * cos(renderData.rdViewPitch / 180.0 * M_PI)));
+    float azimRad = glm::radians(renderData.rdViewYaw);
+    float elevRad = glm::radians(renderData.rdViewPitch);
 
-    return glm::lookAt(mWorldPosition, mWorldPosition + mViewDirection, mWorldUpVector);
+    float sinAzim = glm::sin(azimRad);
+    float cosAzim = glm::cos(azimRad);
+    float sinElev = glm::sin(elevRad);
+    float cosElev = glm::cos(elevRad);
+
+    mViewDirection = glm::normalize(glm::vec3(sinAzim * cosElev, -sinElev, -cosAzim * cosElev));
+
+    mRightDirection = glm::normalize(glm::cross(mViewDirection, mWorldUpVector));
+    mUpDirection = glm::normalize(glm::cross(mRightDirection, mViewDirection));
+
+    renderData.rdCameraWorldPosition += renderData.rdMoveForward * renderData.rdTickDiff * mViewDirection +
+                                        renderData.rdMoveRight * renderData.rdTickDiff * mRightDirection +
+                                        renderData.rdMoveUp * renderData.rdTickDiff * mUpDirection;
+
+    return glm::lookAt(renderData.rdCameraWorldPosition, renderData.rdCameraWorldPosition + mViewDirection,
+                       mUpDirection);
 }

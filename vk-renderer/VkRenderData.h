@@ -46,6 +46,14 @@ struct VkRenderData
     float rdViewYaw = 320.f;
     float rdViewPitch = 15.f;
 
+    glm::vec3 rdCameraWorldPosition = glm::vec3(0.5f, 0.25f, 1.0f);
+
+    float rdMoveForward = 0;
+    float rdMoveRight = 0;
+    float rdMoveUp = 0;
+
+    float rdTickDiff = 0.f;
+
     VmaAllocator rdAllocator;
     vkb::Instance rdVkbInstance{};
     vkb::Device rdVkbDevice{};

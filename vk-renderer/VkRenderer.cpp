@@ -155,8 +155,13 @@ bool VkRenderer::uploadData(VkMesh vertexData)
 
 bool VkRenderer::draw()
 {
+    double tickTime = glfwGetTime();
+    mRenderData.rdTickDiff = static_cast<float>(tickTime - mLastTickTime);
+
     mRenderData.rdFrameTime = mFrameTimer.stop();
     mFrameTimer.start();
+
+    handleCameraMovementKeys();
 
     if (vkWaitForFences(mRenderData.rdVkbDevice.device, 1, &mRenderData.rdRenderFence, VK_TRUE, UINT64_MAX) !=
         VK_SUCCESS)
@@ -344,6 +349,8 @@ bool VkRenderer::draw()
             return false;
         }
     }
+
+    mLastTickTime = tickTime;
 
     return true;
 }
@@ -870,5 +877,44 @@ void VkRenderer::handleMouseEnterLeaveEvents(int enter)
     else
     {
         Logger::log(1, "%s: Mouse left window\n", __FUNCTION__);
+    }
+}
+
+void VkRenderer::handleCameraMovementKeys()
+{
+    ImGuiIO& io = ImGui::GetIO();
+    if (io.WantCaptureKeyboard)
+    {
+        return;
+    }
+
+    mRenderData.rdMoveForward = 0.f;
+    if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_W) == GLFW_PRESS)
+    {
+        mRenderData.rdMoveForward += 1.f;
+    }
+    if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_S) == GLFW_PRESS)
+    {
+        mRenderData.rdMoveForward -= 1.f;
+    }
+
+    mRenderData.rdMoveRight = 0.f;
+    if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_D) == GLFW_PRESS)
+    {
+        mRenderData.rdMoveRight += 1;
+    }
+    if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_A) == GLFW_PRESS)
+    {
+        mRenderData.rdMoveRight -= 1.f;
+    }
+
+    mRenderData.rdMoveUp = 0.f;
+    if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_E) == GLFW_PRESS)
+    {
+        mRenderData.rdMoveUp -= 1.f;
+    }
+    if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_Q) == GLFW_PRESS)
+    {
+        mRenderData.rdMoveUp += 1.f;
     }
 }
