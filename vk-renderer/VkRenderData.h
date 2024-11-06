@@ -33,12 +33,11 @@ struct VkRenderData
 
     unsigned int rdTriangleCount = 0;
 
-    bool rdShouldUseChangedShader = false;
-
     int rdFieldOfView = 90;
 
     float rdFrameTime = 0.0f;
     float rdMatrixGenerateTime = 0.0f;
+    float rdUploadToVBOTime = 0.0f;
     float rdUploadToUBOTime = 0.0f;
     float rdUIGenerateTime = 0.0f;
     float rdUIDrawTime = 0.0f;
@@ -48,6 +47,13 @@ struct VkRenderData
 
     glm::vec3 rdCameraWorldPosition = glm::vec3(0.5f, 0.25f, 1.0f);
 
+    bool rdDrawModelCoordArrows = true;
+    bool rdResetAngles = false;
+
+    int rdRotXAngle = 0;
+    int rdRotYAngle = 0;
+    int rdRotZAngle = 0;
+
     float rdMoveForward = 0;
     float rdMoveRight = 0;
     float rdMoveUp = 0;
@@ -55,7 +61,9 @@ struct VkRenderData
     float rdTickDiff = 0.f;
 
     VmaAllocator rdAllocator;
+
     vkb::Instance rdVkbInstance{};
+    vkb::PhysicalDevice rdVkbPhysicalDevice{};
     vkb::Device rdVkbDevice{};
     vkb::Swapchain rdVkbSwapchain{};
 
@@ -74,7 +82,7 @@ struct VkRenderData
     VkRenderPass rdRenderpass = VK_NULL_HANDLE;
     VkPipelineLayout rdPipelineLayout = VK_NULL_HANDLE;
     VkPipeline rdBasicPipeline = VK_NULL_HANDLE;
-    VkPipeline rdChangedPipeline = VK_NULL_HANDLE;
+    VkPipeline rdLinePipeline = VK_NULL_HANDLE;
 
     VkCommandPool rdCommandPool = VK_NULL_HANDLE;
     VkCommandBuffer rdCommandBuffer = VK_NULL_HANDLE;
@@ -91,6 +99,12 @@ struct VkRenderData
     VkDescriptorPool rdTextureDescriptorPool = VK_NULL_HANDLE;
     VkDescriptorSetLayout rdTextureDescriptorLayout = VK_NULL_HANDLE;
     VkDescriptorSet rdTextureDescriptorSet = VK_NULL_HANDLE;
+
+    unsigned int rdVertexBufferSize = 2048;
+    VkBuffer rdVertexBuffer = VK_NULL_HANDLE;
+    VmaAllocation rdVertexBufferAlloc = nullptr;
+    VkBuffer rdVertexStagingBuffer = VK_NULL_HANDLE;
+    VmaAllocation rdVertexStagingBufferAlloc = nullptr;
 
     VkBuffer rdUBOBuffer = VK_NULL_HANDLE;
     VmaAllocation rdUBOBufferAlloc = nullptr;

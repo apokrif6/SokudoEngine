@@ -10,6 +10,13 @@ bool Window::init(int width, int height, const std::string& title)
         return false;
     }
 
+    if (!glfwVulkanSupported())
+    {
+        Logger::log(1, "%s: Vulkan is not supported\n", __FUNCTION__);
+        glfwTerminate();
+        return false;
+    }
+
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
@@ -94,24 +101,12 @@ bool Window::init(int width, int height, const std::string& title)
                                    CurrentRenderer->handleMouseEnterLeaveEvents(enter);
                                });
 
-    if (!glfwVulkanSupported())
-    {
-        Logger::log(1, "%s: Vulkan is not supported\n", __FUNCTION__);
-        glfwTerminate();
-        return false;
-    }
-
-    mModel = std::make_unique<Model>();
-    mModel->init();
-
     Logger::log(1, "%s: window successfully initialized\n", __FUNCTION__);
     return true;
 }
 
 void Window::mainLoop()
 {
-    mRenderer->uploadData(mModel->getVertexData());
-
     while (!glfwWindowShouldClose(mWindow))
     {
         if (!mRenderer->draw())

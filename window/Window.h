@@ -20,6 +20,4 @@ class Window
     GLFWwindow* mWindow = nullptr;
 
     std::unique_ptr<VkRenderer> mRenderer;
-
-    std::unique_ptr<Model> mModel;
 };

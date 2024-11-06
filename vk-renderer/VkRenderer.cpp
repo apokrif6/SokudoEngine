@@ -12,6 +12,7 @@
 #include "Texture.h"
 #include "UniformBuffer.h"
 #include "imgui.h"
+#include "VertexBuffer.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 VkRenderer::VkRenderer(GLFWwindow* inWindow)
@@ -74,6 +75,11 @@ bool VkRenderer::init(unsigned int width, unsigned int height)
         return false;
     }
 
+    if (!createVBO())
+    {
+        return false;
+    }
+
     if (!createRenderPass())
     {
         return false;
@@ -89,7 +95,7 @@ bool VkRenderer::init(unsigned int width, unsigned int height)
         return false;
     }
 
-    if (!createChangedPipeline())
+    if (!createLinePipeline())
     {
         return false;
     }
@@ -109,8 +115,16 @@ bool VkRenderer::init(unsigned int width, unsigned int height)
         return false;
     }
 
-    mRenderData.rdWidth = width;
-    mRenderData.rdHeight = height;
+    mRenderData.rdWidth = static_cast<int>(width);
+    mRenderData.rdHeight = static_cast<int>(height);
+
+    mModel = std::make_unique<Model>();
+
+    mEulerModelMesh = std::make_unique<VkMesh>();
+    Logger::log(1, "%s: model mesh storage initialized\n", __FUNCTION__);
+
+    mAllMeshes = std::make_unique<VkMesh>();
+    Logger::log(1, "%s: global mesh storage initialized\n", __FUNCTION__);
 
     mFrameTimer.start();
 
@@ -126,33 +140,6 @@ void VkRenderer::setSize(unsigned int width, unsigned int height)
     Logger::log(1, "%s: resized window to %ix%i\n", __FUNCTION__, width, height);
 }
 
-bool VkRenderer::uploadData(VkMesh vertexData)
-{
-    VkBufferCreateInfo bufferInfo{};
-    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    bufferInfo.size = vertexData.vertices.size() * sizeof(VkVertex);
-    bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-
-    VmaAllocationCreateInfo vmaAllocInfo{};
-    vmaAllocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
-
-    if (vmaCreateBuffer(mRenderData.rdAllocator, &bufferInfo, &vmaAllocInfo, &mVertexBuffer, &mVertexBufferAlloc,
-                        nullptr) != VK_SUCCESS)
-    {
-        Logger::log(1, "%s error: could not allocate vertex buffer via VMA\n", __FUNCTION__);
-        return false;
-    }
-
-    void* data;
-    vmaMapMemory(mRenderData.rdAllocator, mVertexBufferAlloc, &data);
-    std::memcpy(data, vertexData.vertices.data(), vertexData.vertices.size() * sizeof(VkVertex));
-    vmaUnmapMemory(mRenderData.rdAllocator, mVertexBufferAlloc);
-
-    mRenderData.rdTriangleCount = static_cast<int>(vertexData.vertices.size() / 3);
-
-    return true;
-}
-
 bool VkRenderer::draw()
 {
     double tickTime = glfwGetTime();
@@ -162,6 +149,8 @@ bool VkRenderer::draw()
     mFrameTimer.start();
 
     handleCameraMovementKeys();
+
+    mAllMeshes->vertices.clear();
 
     if (vkWaitForFences(mRenderData.rdVkbDevice.device, 1, &mRenderData.rdRenderFence, VK_TRUE, UINT64_MAX) !=
         VK_SUCCESS)
@@ -247,43 +236,77 @@ bool VkRenderer::draw()
                                                       static_cast<float>(mRenderData.rdVkbSwapchain.extent.height),
                                                   0.1f, 10.0f);
 
-    auto time = static_cast<float>(glfwGetTime());
-    auto model = glm::mat4(1.0f);
-
-    if (mRenderData.rdShouldUseChangedShader)
-    {
-        model = glm::rotate(glm::mat4(1.0f), time, glm::vec3(0.0f, 0.0f, 1.0f));
-    }
-    else
-    {
-        model = glm::rotate(glm::mat4(1.0f), -time, glm::vec3(0.0f, 0.0f, 1.0f));
-    }
-    mMatrices.viewMatrix = mCamera.getViewMatrix(mRenderData) * model;
+    mMatrices.viewMatrix = mCamera.getViewMatrix(mRenderData);
     mRenderData.rdMatrixGenerateTime = mMatrixGenerateTimer.stop();
 
-    vkCmdBeginRenderPass(mRenderData.rdCommandBuffer, &rpInfo, VK_SUBPASS_CONTENTS_INLINE);
+    if (mRenderData.rdResetAngles)
+    {
+        mRenderData.rdResetAngles = false;
 
-    if (mRenderData.rdShouldUseChangedShader)
-    {
-        vkCmdBindPipeline(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdChangedPipeline);
+        mRenderData.rdRotXAngle = 0;
+        mRenderData.rdRotYAngle = 0;
+        mRenderData.rdRotZAngle = 0;
     }
-    else
+
+    mRotYMat = glm::rotate(glm::mat4(1.0f), glm::radians(static_cast<float>(mRenderData.rdRotYAngle)), mRotYAxis);
+    mRotZMat = glm::rotate(mRotYMat, glm::radians(static_cast<float>(mRenderData.rdRotZAngle)), mRotZAxis);
+    mEulerRotMatrix = glm::rotate(mRotZMat, glm::radians(static_cast<float>(mRenderData.rdRotXAngle)), mRotXAxis);
+
+    mCoordArrowsMesh.vertices.clear();
+    mEulerCoordArrowsMesh.vertices.clear();
+
+    if (mRenderData.rdDrawModelCoordArrows)
     {
-        vkCmdBindPipeline(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdBasicPipeline);
+        mEulerCoordArrowsMesh = mCoordinateArrowsModel.getVertexData();
+        std::for_each(mEulerCoordArrowsMesh.vertices.begin(), mEulerCoordArrowsMesh.vertices.end(),
+                      [this](VkVertex& n)
+                      {
+                          n.position = mEulerRotMatrix * n.position;
+                          n.position += mEulerModelDist;
+                      });
+        mAllMeshes->vertices.insert(mAllMeshes->vertices.end(), mEulerCoordArrowsMesh.vertices.begin(),
+                                    mEulerCoordArrowsMesh.vertices.end());
     }
+
+    *mEulerModelMesh = mModel->getVertexData();
+    mRenderData.rdTriangleCount = mEulerModelMesh->vertices.size() / 3;
+    std::for_each(mEulerModelMesh->vertices.begin(), mEulerModelMesh->vertices.end(),
+                  [this](VkVertex& n)
+                  {
+                      n.position = mEulerRotMatrix * n.position;
+                      n.position += mEulerModelDist;
+                  });
+    mAllMeshes->vertices.insert(mAllMeshes->vertices.end(), mEulerModelMesh->vertices.begin(),
+                                mEulerModelMesh->vertices.end());
+
+    mLineIndexCount = mCoordArrowsMesh.vertices.size() + mEulerCoordArrowsMesh.vertices.size();
+
+    mUploadToVBOTimer.start();
+    VertexBuffer::uploadData(mRenderData, *mAllMeshes);
+    mRenderData.rdUploadToVBOTime = mUploadToVBOTimer.stop();
+
+    vkCmdBeginRenderPass(mRenderData.rdCommandBuffer, &rpInfo, VK_SUBPASS_CONTENTS_INLINE);
 
     vkCmdSetViewport(mRenderData.rdCommandBuffer, 0, 1, &viewport);
     vkCmdSetScissor(mRenderData.rdCommandBuffer, 0, 1, &scissor);
 
     VkDeviceSize offset = 0;
-    vkCmdBindVertexBuffers(mRenderData.rdCommandBuffer, 0, 1, &mVertexBuffer, &offset);
+    vkCmdBindVertexBuffers(mRenderData.rdCommandBuffer, 0, 1, &mRenderData.rdVertexBuffer, &offset);
 
     vkCmdBindDescriptorSets(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdPipelineLayout,
                             0, 1, &mRenderData.rdTextureDescriptorSet, 0, nullptr);
     vkCmdBindDescriptorSets(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdPipelineLayout,
                             1, 1, &mRenderData.rdUBODescriptorSet, 0, nullptr);
 
-    vkCmdDraw(mRenderData.rdCommandBuffer, mRenderData.rdTriangleCount * 3, 1, 0, 0);
+    if (mLineIndexCount > 0)
+    {
+        vkCmdBindPipeline(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdLinePipeline);
+        vkCmdSetLineWidth(mRenderData.rdCommandBuffer, 3.0f);
+        vkCmdDraw(mRenderData.rdCommandBuffer, mLineIndexCount, 1, 0, 0);
+    }
+
+    vkCmdBindPipeline(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdBasicPipeline);
+    vkCmdDraw(mRenderData.rdCommandBuffer, mRenderData.rdTriangleCount * 3, 1, mLineIndexCount, 0);
 
     mUIGenerateTimer.start();
     mUserInterface.createFrame(mRenderData);
@@ -368,11 +391,12 @@ void VkRenderer::cleanup()
     CommandBuffer::cleanup(mRenderData, mRenderData.rdCommandBuffer);
     CommandPool::cleanup(mRenderData);
     Framebuffer::cleanup(mRenderData);
+    Pipeline::cleanup(mRenderData, mRenderData.rdLinePipeline);
     Pipeline::cleanup(mRenderData, mRenderData.rdBasicPipeline);
-    Pipeline::cleanup(mRenderData, mRenderData.rdChangedPipeline);
     PipelineLayout::cleanup(mRenderData, mRenderData.rdPipelineLayout);
     Renderpass::cleanup(mRenderData);
     UniformBuffer::cleanup(mRenderData);
+    VertexBuffer::cleanup(mRenderData);
 
     vkDestroyImageView(mRenderData.rdVkbDevice.device, mRenderData.rdDepthImageView, nullptr);
     vmaDestroyImage(mRenderData.rdAllocator, mRenderData.rdDepthImage, mRenderData.rdDepthImageAlloc);
@@ -409,21 +433,34 @@ bool VkRenderer::deviceInit()
 
     /* just get the first available device */
     vkb::PhysicalDeviceSelector physicalDevSel{mRenderData.rdVkbInstance};
-    auto physicalDevSelRet = physicalDevSel.set_surface(mSurface).select();
-    if (!physicalDevSelRet)
+    auto firstPhysicalDevSelRet = physicalDevSel.set_surface(mSurface).select();
+    if (!firstPhysicalDevSelRet)
     {
         Logger::log(1, "%s error: could not get physical devices\n", __FUNCTION__);
         return false;
     }
-    mPhysicalDevice = physicalDevSelRet.value();
 
-    Logger::log(1, "%s: found physical device '%s'\n", __FUNCTION__, mPhysicalDevice.name.c_str());
+    VkPhysicalDeviceFeatures physicalFeatures;
+    vkGetPhysicalDeviceFeatures(firstPhysicalDevSelRet.value(), &physicalFeatures);
 
-    mMinUniformBufferOffsetAlignment = mPhysicalDevice.properties.limits.minUniformBufferOffsetAlignment;
+    auto secondPhysicalDevSelRet =
+        physicalDevSel.set_surface(mSurface).set_required_features(physicalFeatures).select();
+    if (!secondPhysicalDevSelRet)
+    {
+        Logger::log(1, "%s error: could not get physical devices\n", __FUNCTION__);
+        return false;
+    }
+
+    mRenderData.rdVkbPhysicalDevice = secondPhysicalDevSelRet.value();
+
+    Logger::log(1, "%s: found physical device '%s'\n", __FUNCTION__, mRenderData.rdVkbPhysicalDevice.name.c_str());
+
+    mMinUniformBufferOffsetAlignment =
+        mRenderData.rdVkbPhysicalDevice.properties.limits.minUniformBufferOffsetAlignment;
     Logger::log(1, "%s: the physical device as a minimal uniform buffer offset of %i bytes\n", __FUNCTION__,
                 mMinUniformBufferOffsetAlignment);
 
-    vkb::DeviceBuilder devBuilder{mPhysicalDevice};
+    vkb::DeviceBuilder devBuilder{mRenderData.rdVkbPhysicalDevice};
     auto devBuilderRet = devBuilder.build();
     if (!devBuilderRet)
     {
@@ -576,6 +613,16 @@ bool VkRenderer::createUBO()
     return true;
 }
 
+bool VkRenderer::createVBO()
+{
+    if (!VertexBuffer::init(mRenderData))
+    {
+        Logger::log(1, "%s error: could not create vertex buffer\n", __FUNCTION__);
+        return false;
+    }
+    return true;
+}
+
 bool VkRenderer::createRenderPass()
 {
     if (!Renderpass::init(mRenderData))
@@ -600,8 +647,8 @@ bool VkRenderer::createBasicPipeline()
 {
     std::string vertexShaderFile = "shaders/basic.vert.spv";
     std::string fragmentShaderFile = "shaders/basic.frag.spv";
-    if (!Pipeline::init(mRenderData, mRenderData.rdPipelineLayout, mRenderData.rdBasicPipeline, vertexShaderFile,
-                        fragmentShaderFile))
+    if (!Pipeline::init(mRenderData, mRenderData.rdPipelineLayout, mRenderData.rdBasicPipeline,
+                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile))
     {
         Logger::log(1, "%s error: could not init pipeline\n", __FUNCTION__);
         return false;
@@ -609,14 +656,14 @@ bool VkRenderer::createBasicPipeline()
     return true;
 }
 
-bool VkRenderer::createChangedPipeline()
+bool VkRenderer::createLinePipeline()
 {
-    std::string vertexShaderFile = "shaders/changed.vert.spv";
-    std::string fragmentShaderFile = "shaders/changed.frag.spv";
-    if (!Pipeline::init(mRenderData, mRenderData.rdPipelineLayout, mRenderData.rdChangedPipeline, vertexShaderFile,
-                        fragmentShaderFile))
+    std::string vertexShaderFile = "shaders/line.vert.spv";
+    std::string fragmentShaderFile = "shaders/line.frag.spv";
+    if (!Pipeline::init(mRenderData, mRenderData.rdPipelineLayout, mRenderData.rdLinePipeline,
+                        VK_PRIMITIVE_TOPOLOGY_LINE_LIST, vertexShaderFile, fragmentShaderFile))
     {
-        Logger::log(1, "%s error: could not init pipeline\n", __FUNCTION__);
+        Logger::log(1, "%s error: could not init line shader pipeline\n", __FUNCTION__);
         return false;
     }
     return true;
@@ -678,7 +725,7 @@ bool VkRenderer::loadTexture()
 bool VkRenderer::initVma()
 {
     VmaAllocatorCreateInfo allocatorInfo{};
-    allocatorInfo.physicalDevice = mPhysicalDevice.physical_device;
+    allocatorInfo.physicalDevice = mRenderData.rdVkbPhysicalDevice.physical_device;
     allocatorInfo.device = mRenderData.rdVkbDevice.device;
     allocatorInfo.instance = mRenderData.rdVkbInstance.instance;
     if (vmaCreateAllocator(&allocatorInfo, &mRenderData.rdAllocator) != VK_SUCCESS)
@@ -736,12 +783,6 @@ void VkRenderer::handleWindowCloseEvents()
 
 void VkRenderer::handleKeyEvents(int key, int scancode, int action, int mods)
 {
-    if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_Z) == GLFW_PRESS)
-    {
-        mRenderData.rdShouldUseChangedShader = !mRenderData.rdShouldUseChangedShader;
-        Logger::log(1, "%s: Toggle mShouldUseChangedShader!\n", __FUNCTION__);
-    }
-
     std::string actionName;
     switch (action)
     {

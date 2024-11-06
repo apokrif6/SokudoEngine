@@ -6,6 +6,8 @@
 #include "UserInterface.h"
 #include "Timer.h"
 #include "Camera.h"
+#include "Model.h"
+#include "CoordinateArrowModel.h"
 
 class VkRenderer
 {
@@ -16,8 +18,6 @@ class VkRenderer
 
     void setSize(unsigned int width, unsigned int height);
 
-    bool uploadData(VkMesh vertexData);
-
     bool draw();
 
     void cleanup();
@@ -27,17 +27,35 @@ class VkRenderer
 
     UserInterface mUserInterface{};
 
+    CoordinateArrowModel mCoordinateArrowsModel{};
+    VkMesh mCoordArrowsMesh{};
+    VkMesh mEulerCoordArrowsMesh{};
+
+    std::unique_ptr<Model> mModel = nullptr;
+    std::unique_ptr<VkMesh> mEulerModelMesh = nullptr;
+    std::unique_ptr<VkMesh> mAllMeshes = nullptr;
+    unsigned int mLineIndexCount = 0;
+
+    glm::mat4 mRotYMat = glm::mat4(1.0f);
+    glm::mat4 mRotZMat = glm::mat4(1.0f);
+
+    glm::vec3 mRotXAxis = glm::vec3(1.0f, 0.0f, 0.0f);
+    glm::vec3 mRotYAxis = glm::vec3(0.0f, 1.0f, 0.0f);
+    glm::vec3 mRotZAxis = glm::vec3(0.0f, 0.0f, 1.0f);
+
+    glm::mat3 mEulerRotMatrix = glm::mat3(1.0f);
+    glm::vec3 mEulerModelDist = glm::vec3(-2.5f, 0.0f, 0.0f);
+
     Timer mFrameTimer{};
     Timer mUIGenerateTimer{};
     Timer mUIDrawTimer{};
+    Timer mUploadToVBOTimer{};
     Timer mUploadToUBOTimer{};
     Timer mMatrixGenerateTimer{};
 
     VkBuffer mVertexBuffer{};
 
     VkSurfaceKHR mSurface = VK_NULL_HANDLE;
-
-    vkb::PhysicalDevice mPhysicalDevice;
 
     VkDeviceSize mMinUniformBufferOffsetAlignment = 0;
 
@@ -70,13 +88,15 @@ class VkRenderer
 
     bool createUBO();
 
+    bool createVBO();
+
     bool createRenderPass();
 
     bool createPipelineLayout();
 
     bool createBasicPipeline();
 
-    bool createChangedPipeline();
+    bool createLinePipeline();
 
     bool createFramebuffer();
 

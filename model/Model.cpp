@@ -140,4 +140,12 @@ void Model::init()
     Logger::log(1, "%s: loaded %d vertices\n", __FUNCTION__, mVertexData.vertices.size());
 }
 
-VkMesh Model::getVertexData() { return mVertexData; }
+VkMesh Model::getVertexData()
+{
+    if (mVertexData.vertices.empty())
+    {
+        init();
+    }
+
+    return mVertexData;
+}

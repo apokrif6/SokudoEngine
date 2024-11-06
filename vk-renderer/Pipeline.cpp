@@ -4,7 +4,8 @@
 #include "Shader.h"
 
 bool Pipeline::init(VkRenderData& renderData, VkPipelineLayout& pipelineLayout, VkPipeline& pipeline,
-                    const std::string& vertexShaderFilename, const std::string& fragmentShaderFilename)
+                    VkPrimitiveTopology topology, const std::string& vertexShaderFilename,
+                    const std::string& fragmentShaderFilename)
 {
     VkShaderModule vertexModule = Shader::loadShader(renderData.rdVkbDevice.device, vertexShaderFilename);
     VkShaderModule fragmentModule = Shader::loadShader(renderData.rdVkbDevice.device, fragmentShaderFilename);
@@ -65,7 +66,7 @@ bool Pipeline::init(VkRenderData& renderData, VkPipelineLayout& pipelineLayout, 
 
     VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo{};
     inputAssemblyInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-    inputAssemblyInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    inputAssemblyInfo.topology = topology;
     inputAssemblyInfo.primitiveRestartEnable = VK_FALSE;
 
     VkViewport viewport{};
@@ -128,7 +129,8 @@ bool Pipeline::init(VkRenderData& renderData, VkPipelineLayout& pipelineLayout, 
     depthStencilInfo.maxDepthBounds = 1.0f;
     depthStencilInfo.stencilTestEnable = VK_FALSE;
 
-    std::vector<VkDynamicState> dynStates = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
+    std::vector<VkDynamicState> dynStates = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR,
+                                             VK_DYNAMIC_STATE_LINE_WIDTH};
 
     VkPipelineDynamicStateCreateInfo dynStatesInfo{};
     dynStatesInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
