@@ -121,6 +121,7 @@ bool VkRenderer::init(unsigned int width, unsigned int height)
     mModel = std::make_unique<Model>();
 
     mEulerModelMesh = std::make_unique<VkMesh>();
+    mQuaternionModelMesh = std::make_unique<VkMesh>();
     Logger::log(1, "%s: model mesh storage initialized\n", __FUNCTION__);
 
     mAllMeshes = std::make_unique<VkMesh>();
@@ -182,22 +183,6 @@ bool VkRenderer::draw()
         }
     }
 
-    if (vkResetCommandBuffer(mRenderData.rdCommandBuffer, 0) != VK_SUCCESS)
-    {
-        Logger::log(1, "%s error: failed to reset command buffer\n", __FUNCTION__);
-        return false;
-    }
-
-    VkCommandBufferBeginInfo cmdBeginInfo{};
-    cmdBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    cmdBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-    if (vkBeginCommandBuffer(mRenderData.rdCommandBuffer, &cmdBeginInfo) != VK_SUCCESS)
-    {
-        Logger::log(1, "%s error: failed to begin command buffer\n", __FUNCTION__);
-        return false;
-    }
-
     VkClearValue colorClearValue;
     colorClearValue.color = {{0.1f, 0.1f, 0.1f, 1.0f}};
 
@@ -246,40 +231,111 @@ bool VkRenderer::draw()
         mRenderData.rdRotXAngle = 0;
         mRenderData.rdRotYAngle = 0;
         mRenderData.rdRotZAngle = 0;
+
+        mEulerRotMatrix = glm::mat3(1.f);
+        mQuaternionModelOrientation = glm::quat();
     }
 
     mRotYMat = glm::rotate(glm::mat4(1.0f), glm::radians(static_cast<float>(mRenderData.rdRotYAngle)), mRotYAxis);
     mRotZMat = glm::rotate(mRotYMat, glm::radians(static_cast<float>(mRenderData.rdRotZAngle)), mRotZAxis);
     mEulerRotMatrix = glm::rotate(mRotZMat, glm::radians(static_cast<float>(mRenderData.rdRotXAngle)), mRotXAxis);
 
-    mCoordArrowsMesh.vertices.clear();
-    mEulerCoordArrowsMesh.vertices.clear();
+    mQuaternionModelOrientation =
+        glm::normalize(glm::quat(glm::vec3(glm::radians(static_cast<float>(mRenderData.rdRotXAngle)),
+                                           glm::radians(static_cast<float>(mRenderData.rdRotYAngle)),
+                                           glm::radians(static_cast<float>(mRenderData.rdRotZAngle)))));
 
-    if (mRenderData.rdDrawModelCoordArrows)
+    mQuaternionModelOrientationConjugate = glm::conjugate(mQuaternionModelOrientation);
+
+    mCoordinateArrowsMesh.vertices.clear();
+
+    if (mRenderData.rdDrawWorldCoordinateArrows)
     {
-        mEulerCoordArrowsMesh = mCoordinateArrowsModel.getVertexData();
-        std::for_each(mEulerCoordArrowsMesh.vertices.begin(), mEulerCoordArrowsMesh.vertices.end(),
-                      [this](VkVertex& n)
+        mCoordinateArrowsMesh = mCoordinateArrowsModel.getVertexData();
+        std::for_each(mCoordinateArrowsMesh.vertices.begin(), mCoordinateArrowsMesh.vertices.end(),
+                      [this](VkVertex& vertex) { vertex.color /= 2.f; });
+
+        mAllMeshes->vertices.insert(mAllMeshes->vertices.end(), mCoordinateArrowsMesh.vertices.begin(),
+                                    mCoordinateArrowsMesh.vertices.end());
+    }
+
+    mEulerCoordinateArrowsMesh.vertices.clear();
+    mQuaternionArrowMesh.vertices.clear();
+
+    if (mRenderData.rdDrawModelCoordinateArrows)
+    {
+        mEulerCoordinateArrowsMesh = mCoordinateArrowsModel.getVertexData();
+        std::for_each(mEulerCoordinateArrowsMesh.vertices.begin(), mEulerCoordinateArrowsMesh.vertices.end(),
+                      [this](VkVertex& vertex)
                       {
-                          n.position = mEulerRotMatrix * n.position;
-                          n.position += mEulerModelDist;
+                          vertex.position = mEulerRotMatrix * vertex.position;
+                          vertex.position += mEulerModelDist;
                       });
-        mAllMeshes->vertices.insert(mAllMeshes->vertices.end(), mEulerCoordArrowsMesh.vertices.begin(),
-                                    mEulerCoordArrowsMesh.vertices.end());
+
+        mAllMeshes->vertices.insert(mAllMeshes->vertices.end(), mEulerCoordinateArrowsMesh.vertices.begin(),
+                                    mEulerCoordinateArrowsMesh.vertices.end());
+
+        mQuaternionArrowMesh = mArrowModel.getVertexData();
+        std::for_each(mQuaternionArrowMesh.vertices.begin(), mQuaternionArrowMesh.vertices.end(),
+                      [this](VkVertex& vertex)
+                      {
+                          glm::quat position = glm::quat(0.f, vertex.position.x, vertex.position.y, vertex.position.z);
+                          glm::quat newPosition =
+                              mQuaternionModelOrientation * position * mQuaternionModelOrientationConjugate;
+                          vertex.position.x = newPosition.x;
+                          vertex.position.y = newPosition.y;
+                          vertex.position.z = newPosition.z;
+                          vertex.position += mQuaternionModelDist;
+                      });
+        mAllMeshes->vertices.insert(mAllMeshes->vertices.end(), mQuaternionArrowMesh.vertices.begin(),
+                                    mQuaternionArrowMesh.vertices.end());
     }
 
     *mEulerModelMesh = mModel->getVertexData();
     mRenderData.rdTriangleCount = mEulerModelMesh->vertices.size() / 3;
     std::for_each(mEulerModelMesh->vertices.begin(), mEulerModelMesh->vertices.end(),
-                  [this](VkVertex& n)
+                  [this](VkVertex& vertex)
                   {
-                      n.position = mEulerRotMatrix * n.position;
-                      n.position += mEulerModelDist;
+                      vertex.position = mEulerRotMatrix * vertex.position;
+                      vertex.position += mEulerModelDist;
                   });
     mAllMeshes->vertices.insert(mAllMeshes->vertices.end(), mEulerModelMesh->vertices.begin(),
                                 mEulerModelMesh->vertices.end());
 
-    mLineIndexCount = mCoordArrowsMesh.vertices.size() + mEulerCoordArrowsMesh.vertices.size();
+    *mQuaternionModelMesh = mModel->getVertexData();
+    mRenderData.rdTriangleCount += mQuaternionModelMesh->vertices.size() / 3;
+    std::for_each(mQuaternionModelMesh->vertices.begin(), mQuaternionModelMesh->vertices.end(),
+                  [this](VkVertex& vertex)
+                  {
+                      glm::quat position = glm::quat(0.f, vertex.position.x, vertex.position.y, vertex.position.z);
+                      glm::quat newPosition =
+                          mQuaternionModelOrientation * position * mQuaternionModelOrientationConjugate;
+                      vertex.position.x = newPosition.x;
+                      vertex.position.y = newPosition.y;
+                      vertex.position.z = newPosition.z;
+                      vertex.position += mQuaternionModelDist;
+                  });
+    mAllMeshes->vertices.insert(mAllMeshes->vertices.end(), mQuaternionModelMesh->vertices.begin(),
+                                mQuaternionModelMesh->vertices.end());
+
+    mLineIndexCount = mCoordinateArrowsMesh.vertices.size() + mEulerCoordinateArrowsMesh.vertices.size() +
+                      mQuaternionArrowMesh.vertices.size();
+
+    if (vkResetCommandBuffer(mRenderData.rdCommandBuffer, 0) != VK_SUCCESS)
+    {
+        Logger::log(1, "%s error: failed to reset command buffer\n", __FUNCTION__);
+        return false;
+    }
+
+    VkCommandBufferBeginInfo cmdBeginInfo{};
+    cmdBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    cmdBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+    if (vkBeginCommandBuffer(mRenderData.rdCommandBuffer, &cmdBeginInfo) != VK_SUCCESS)
+    {
+        Logger::log(1, "%s error: failed to begin command buffer\n", __FUNCTION__);
+        return false;
+    }
 
     mUploadToVBOTimer.start();
     VertexBuffer::uploadData(mRenderData, *mAllMeshes);
@@ -517,8 +573,8 @@ bool VkRenderer::createSwapchain()
 
 bool VkRenderer::createDepthBuffer()
 {
-    VkExtent3D depthImageExtent = {mRenderData.rdVkbSwapchain.extent.width, mRenderData.rdVkbSwapchain.extent.height,
-                                   1};
+    const VkExtent3D depthImageExtent = {mRenderData.rdVkbSwapchain.extent.width,
+                                         mRenderData.rdVkbSwapchain.extent.height, 1};
 
     mRenderData.rdDepthFormat = VK_FORMAT_D32_SFLOAT;
 
@@ -544,18 +600,18 @@ bool VkRenderer::createDepthBuffer()
         return false;
     }
 
-    VkImageViewCreateInfo depthImageViewinfo{};
-    depthImageViewinfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-    depthImageViewinfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    depthImageViewinfo.image = mRenderData.rdDepthImage;
-    depthImageViewinfo.format = mRenderData.rdDepthFormat;
-    depthImageViewinfo.subresourceRange.baseMipLevel = 0;
-    depthImageViewinfo.subresourceRange.levelCount = 1;
-    depthImageViewinfo.subresourceRange.baseArrayLayer = 0;
-    depthImageViewinfo.subresourceRange.layerCount = 1;
-    depthImageViewinfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+    VkImageViewCreateInfo depthImageViewInfo{};
+    depthImageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    depthImageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    depthImageViewInfo.image = mRenderData.rdDepthImage;
+    depthImageViewInfo.format = mRenderData.rdDepthFormat;
+    depthImageViewInfo.subresourceRange.baseMipLevel = 0;
+    depthImageViewInfo.subresourceRange.levelCount = 1;
+    depthImageViewInfo.subresourceRange.baseArrayLayer = 0;
+    depthImageViewInfo.subresourceRange.layerCount = 1;
+    depthImageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
 
-    if (vkCreateImageView(mRenderData.rdVkbDevice.device, &depthImageViewinfo, nullptr,
+    if (vkCreateImageView(mRenderData.rdVkbDevice.device, &depthImageViewInfo, nullptr,
                           &mRenderData.rdDepthImageView) != VK_SUCCESS)
     {
         Logger::log(1, "%s error: could not create depth buffer image view\n", __FUNCTION__);
@@ -645,8 +701,8 @@ bool VkRenderer::createPipelineLayout()
 
 bool VkRenderer::createBasicPipeline()
 {
-    std::string vertexShaderFile = "shaders/basic.vert.spv";
-    std::string fragmentShaderFile = "shaders/basic.frag.spv";
+    const std::string vertexShaderFile = "shaders/basic.vert.spv";
+    const std::string fragmentShaderFile = "shaders/basic.frag.spv";
     if (!Pipeline::init(mRenderData, mRenderData.rdPipelineLayout, mRenderData.rdBasicPipeline,
                         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile))
     {
@@ -658,8 +714,8 @@ bool VkRenderer::createBasicPipeline()
 
 bool VkRenderer::createLinePipeline()
 {
-    std::string vertexShaderFile = "shaders/line.vert.spv";
-    std::string fragmentShaderFile = "shaders/line.frag.spv";
+    const std::string vertexShaderFile = "shaders/line.vert.spv";
+    const std::string fragmentShaderFile = "shaders/line.frag.spv";
     if (!Pipeline::init(mRenderData, mRenderData.rdPipelineLayout, mRenderData.rdLinePipeline,
                         VK_PRIMITIVE_TOPOLOGY_LINE_LIST, vertexShaderFile, fragmentShaderFile))
     {

@@ -9,6 +9,9 @@
 #include "Model.h"
 #include "CoordinateArrowModel.h"
 
+#include <ArrowModel.h>
+#include <glm/detail/type_quat.hpp>
+
 class VkRenderer
 {
   public:
@@ -28,23 +31,31 @@ class VkRenderer
     UserInterface mUserInterface{};
 
     CoordinateArrowModel mCoordinateArrowsModel{};
-    VkMesh mCoordArrowsMesh{};
-    VkMesh mEulerCoordArrowsMesh{};
+    VkMesh mCoordinateArrowsMesh{};
+    VkMesh mEulerCoordinateArrowsMesh{};
+
+    ArrowModel mArrowModel{};
+    VkMesh mQuaternionArrowMesh{};
 
     std::unique_ptr<Model> mModel = nullptr;
     std::unique_ptr<VkMesh> mEulerModelMesh = nullptr;
+    std::unique_ptr<VkMesh> mQuaternionModelMesh = nullptr;
     std::unique_ptr<VkMesh> mAllMeshes = nullptr;
     unsigned int mLineIndexCount = 0;
 
     glm::mat4 mRotYMat = glm::mat4(1.0f);
     glm::mat4 mRotZMat = glm::mat4(1.0f);
 
+    glm::vec3 mEulerModelDist = glm::vec3(-2.5f, 0.f, 0.f);
+    glm::vec3 mQuaternionModelDist = glm::vec3(2.5f, 0.f, 0.f);
+
     glm::vec3 mRotXAxis = glm::vec3(1.0f, 0.0f, 0.0f);
     glm::vec3 mRotYAxis = glm::vec3(0.0f, 1.0f, 0.0f);
     glm::vec3 mRotZAxis = glm::vec3(0.0f, 0.0f, 1.0f);
 
     glm::mat3 mEulerRotMatrix = glm::mat3(1.0f);
-    glm::vec3 mEulerModelDist = glm::vec3(-2.5f, 0.0f, 0.0f);
+    glm::quat mQuaternionModelOrientation = glm::quat();
+    glm::quat mQuaternionModelOrientationConjugate = glm::quat();
 
     Timer mFrameTimer{};
     Timer mUIGenerateTimer{};

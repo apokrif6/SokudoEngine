@@ -229,7 +229,8 @@ void UserInterface::createFrame(VkRenderData& renderData)
 
     if (ImGui::CollapsingHeader("Angles"))
     {
-        ImGui::Checkbox("Draw Model Coordinate Arrows", &renderData.rdDrawModelCoordArrows);
+        ImGui::Checkbox("Draw World Coordinate Arrows", &renderData.rdDrawWorldCoordinateArrows);
+        ImGui::Checkbox("Draw Model Coordinate Arrows", &renderData.rdDrawModelCoordinateArrows);
 
         if (ImGui::Button("Reset Rotation"))
         {
