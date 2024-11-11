@@ -1,5 +1,5 @@
 #include "Model.h"
-#include "Logger.h"
+#include "tools/Logger.h"
 
 void Model::init()
 {

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include "VkRenderData.h"
+#include "vk-renderer/VkRenderData.h"
 
 class Camera
 {

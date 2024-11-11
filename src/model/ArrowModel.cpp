@@ -1,10 +1,9 @@
 #include "ArrowModel.h"
-
-#include <Logger.h>
+#include "tools/Logger.h"
 
 VkMesh ArrowModel::getVertexData()
 {
-    if (mVertexData.vertices.size() == 0)
+    if (mVertexData.vertices.empty())
     {
         init();
     }

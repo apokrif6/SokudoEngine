@@ -3,7 +3,7 @@
 
 #include "CommandBuffer.h"
 #include "Texture.h"
-#include "Logger.h"
+#include "tools/Logger.h"
 
 bool Texture::loadTexture(VkRenderData& renderData, std::string textureFilename)
 {

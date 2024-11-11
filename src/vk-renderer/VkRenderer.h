@@ -4,9 +4,9 @@
 #include <GLFW/glfw3.h>
 #include "VkRenderData.h"
 #include "UserInterface.h"
-#include "Timer.h"
-#include "Camera.h"
-#include "Model.h"
+#include "tools/Timer.h"
+#include "tools/Camera.h"
+#include "model/Model.h"
 #include "CoordinateArrowModel.h"
 
 #include <ArrowModel.h>

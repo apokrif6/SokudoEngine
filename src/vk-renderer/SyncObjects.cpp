@@ -1,5 +1,5 @@
 #include "SyncObjects.h"
-#include "Logger.h"
+#include "tools/Logger.h"
 
 bool SyncObjects::init(VkRenderData& renderData)
 {

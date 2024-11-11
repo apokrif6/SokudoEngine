@@ -1,13 +1,12 @@
 #pragma once
 
-#include "VkRenderer.h"
 #include <vulkan/vulkan.h>
 #include <GLFW/glfw3.h>
 #include <string>
 #include <iostream>
 #include "Model.h"
-
-#include <InputHandler.h>
+#include "vk-renderer/VkRenderer.h"
+#include "tools/InputHandler.h"
 
 class Window
 {

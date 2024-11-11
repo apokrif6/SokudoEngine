@@ -1,13 +1,14 @@
 #pragma once
 
-#include "VkRenderData.h"
+#include "vk-renderer/VkRenderData.h"
 
-class ArrowModel
+class CoordinateArrowModel
 {
   public:
     VkMesh getVertexData();
 
   private:
     void init();
+
     VkMesh mVertexData;
 };

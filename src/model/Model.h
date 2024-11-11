@@ -1,6 +1,6 @@
 #pragma once
 
-#include "VkRenderData.h"
+#include "vk-renderer/VkRenderData.h"
 
 class Model
 {

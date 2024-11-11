@@ -1,7 +1,7 @@
 #include <fstream>
 #include <cstring>
 #include "Shader.h"
-#include "Logger.h"
+#include "tools/Logger.h"
 
 VkShaderModule Shader::loadShader(VkDevice device, const std::string& shaderFileName)
 {

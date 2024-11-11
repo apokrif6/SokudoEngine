@@ -1,6 +1,6 @@
-#include "Logger.h"
-#include "Window.h"
 #include <iostream>
+#include "window/Window.h"
+#include "tools/Logger.h"
 
 int main()
 {

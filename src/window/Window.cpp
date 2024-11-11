@@ -1,6 +1,6 @@
 #include <vector>
 #include "Window.h"
-#include "Logger.h"
+#include "tools/Logger.h"
 
 bool Window::init(int width, int height, const std::string& title)
 {

@@ -8,7 +8,7 @@
 
 #include "UserInterface.h"
 #include "CommandBuffer.h"
-#include "Logger.h"
+#include "tools/Logger.h"
 
 bool UserInterface::init(VkRenderData& renderData)
 {

@@ -4,15 +4,13 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 project(SokudoEngine)
-file(GLOB SOURCES
+file(GLOB_RECURSE SOURCES
         main.cpp
-        window/*.cpp
-        tools/*.cpp
-        vk-renderer/*.cpp
-        model/*.cpp
+        src/*.cpp
         imgui/*.cpp
 )
-add_executable(SokudoEngine ${SOURCES})
+add_executable(SokudoEngine ${SOURCES}
+        src/window/Window.cpp)
 
 if (WIN32)
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
@@ -69,7 +67,7 @@ add_custom_command(TARGET Shaders POST_BUILD
 
 # copy textures
 file(GLOB TEX_SOURCE_FILES
-        textures/*
+        media/*
 )
 
 add_custom_target(
@@ -80,16 +78,16 @@ add_dependencies(SokudoEngine Textures)
 
 add_custom_command(TARGET Textures POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "$<TARGET_PROPERTY:SokudoEngine,SOURCE_DIR>/textures"
-        "$<TARGET_PROPERTY:SokudoEngine,BINARY_DIR>/textures"
+        "$<TARGET_PROPERTY:SokudoEngine,SOURCE_DIR>/media/textures"
+        "$<TARGET_PROPERTY:SokudoEngine,BINARY_DIR>/media/textures"
 )
 
 add_subdirectory(vk-bootstrap)
 
-include_directories(${GLFW3_INCLUDE_DIR} window tools vk-renderer vk-memory-allocation include model imgui)
+include_directories(${GLFW3_INCLUDE_DIR} src vk-memory-allocation include src/model imgui)
 
-if(MSVC)
+if (MSVC)
     target_link_libraries(SokudoEngine ${GLFW3_LIBRARY} Vulkan::Vulkan vk-bootstrap::vk-bootstrap)
-else()
+else ()
     target_link_libraries(SokudoEngine ${GLFW3_LIBRARY} Vulkan::Vulkan vk-bootstrap::vk-bootstrap stdc++ m)
-endif()
+endif ()

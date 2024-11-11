@@ -1,6 +1,6 @@
 #include <cstring>
 #include "VertexBuffer.h"
-#include "Logger.h"
+#include "tools/Logger.h"
 
 bool VertexBuffer::init(VkRenderData& renderData)
 {

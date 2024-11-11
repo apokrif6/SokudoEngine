@@ -1,6 +1,5 @@
 #include "InputHandler.h"
-
-#include <Logger.h>
+#include "tools/Logger.h"
 #include <imgui.h>
 #include <string>
 #include <GLFW/glfw3.h>

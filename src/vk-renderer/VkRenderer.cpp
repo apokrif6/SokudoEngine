@@ -1,7 +1,7 @@
 #define VMA_IMPLEMENTATION
 #include "vk_mem_alloc.h"
 #include "VkRenderer.h"
-#include "Logger.h"
+#include "tools/Logger.h"
 #include "Framebuffer.h"
 #include "Renderpass.h"
 #include "PipelineLayout.h"
@@ -850,8 +850,8 @@ void VkRenderer::handleMousePositionEvents(double xPosition, double yPosition)
     const int mouseMoveRelX = static_cast<int>(xPosition) - mMouseXPosition;
     const int mouseMoveRelY = static_cast<int>(yPosition) - mMouseYPosition;
 
-    //TODO
-    //should be fixed, check InputHandler class
+    // TODO
+    // should be fixed, check InputHandler class
     if (false)
     {
         mRenderData.rdViewYaw += static_cast<float>(mouseMoveRelX) / 10.f;

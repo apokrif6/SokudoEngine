@@ -1,22 +1,26 @@
 #include "CoordinateArrowModel.h"
-#include "Logger.h"
+#include "tools/Logger.h"
 
-VkMesh CoordinateArrowModel::getVertexData() {
-    if (mVertexData.vertices.size() == 0) {
+VkMesh CoordinateArrowModel::getVertexData()
+{
+    if (mVertexData.vertices.empty())
+    {
         init();
     }
+
     return mVertexData;
 }
 
-void CoordinateArrowModel::init() {
+void CoordinateArrowModel::init()
+{
     mVertexData.vertices.resize(18);
 
     /*  X axis - red */
-    mVertexData.vertices[0].position = glm::vec3(0.0f, 0.0f,  0.0f);
-    mVertexData.vertices[1].position = glm::vec3(1.0f, 0.0f,  0.0f);
-    mVertexData.vertices[2].position = glm::vec3(1.0f, 0.0f,  0.0f);
-    mVertexData.vertices[3].position = glm::vec3(0.8f, 0.0f,  0.075f);
-    mVertexData.vertices[4].position = glm::vec3(1.0f, 0.0f,  0.0f);
+    mVertexData.vertices[0].position = glm::vec3(0.0f, 0.0f, 0.0f);
+    mVertexData.vertices[1].position = glm::vec3(1.0f, 0.0f, 0.0f);
+    mVertexData.vertices[2].position = glm::vec3(1.0f, 0.0f, 0.0f);
+    mVertexData.vertices[3].position = glm::vec3(0.8f, 0.0f, 0.075f);
+    mVertexData.vertices[4].position = glm::vec3(1.0f, 0.0f, 0.0f);
     mVertexData.vertices[5].position = glm::vec3(0.8f, 0.0f, -0.075f);
 
     mVertexData.vertices[0].color = glm::vec3(0.8f, 0.0f, 0.0f);
@@ -27,11 +31,11 @@ void CoordinateArrowModel::init() {
     mVertexData.vertices[5].color = glm::vec3(0.8f, 0.0f, 0.0f);
 
     /*  Y axis - green */
-    mVertexData.vertices[6].position = glm::vec3(0.0f, 0.0f,  0.0f);
-    mVertexData.vertices[7].position = glm::vec3(0.0f, 1.0f,  0.0f);
-    mVertexData.vertices[8].position = glm::vec3(0.0f, 1.0f,  0.0f);
-    mVertexData.vertices[9].position = glm::vec3(0.0f, 0.8f,  0.075f);
-    mVertexData.vertices[10].position = glm::vec3(0.0f, 1.0f,  0.0f);
+    mVertexData.vertices[6].position = glm::vec3(0.0f, 0.0f, 0.0f);
+    mVertexData.vertices[7].position = glm::vec3(0.0f, 1.0f, 0.0f);
+    mVertexData.vertices[8].position = glm::vec3(0.0f, 1.0f, 0.0f);
+    mVertexData.vertices[9].position = glm::vec3(0.0f, 0.8f, 0.075f);
+    mVertexData.vertices[10].position = glm::vec3(0.0f, 1.0f, 0.0f);
     mVertexData.vertices[11].position = glm::vec3(0.0f, 0.8f, -0.075f);
 
     mVertexData.vertices[6].color = glm::vec3(0.0f, 0.8f, 0.0f);
@@ -42,11 +46,11 @@ void CoordinateArrowModel::init() {
     mVertexData.vertices[11].color = glm::vec3(0.0f, 0.8f, 0.0f);
 
     /*  Z axis - blue */
-    mVertexData.vertices[12].position = glm::vec3( 0.0f,   0.0f, 0.0f);
-    mVertexData.vertices[13].position = glm::vec3( 0.0f,   0.0f, 1.0f);
-    mVertexData.vertices[14].position = glm::vec3( 0.0f,   0.0f, 1.0f);
-    mVertexData.vertices[15].position = glm::vec3( 0.075f, 0.0f, 0.8f);
-    mVertexData.vertices[16].position = glm::vec3( 0.0f,   0.0f, 1.0f);
+    mVertexData.vertices[12].position = glm::vec3(0.0f, 0.0f, 0.0f);
+    mVertexData.vertices[13].position = glm::vec3(0.0f, 0.0f, 1.0f);
+    mVertexData.vertices[14].position = glm::vec3(0.0f, 0.0f, 1.0f);
+    mVertexData.vertices[15].position = glm::vec3(0.075f, 0.0f, 0.8f);
+    mVertexData.vertices[16].position = glm::vec3(0.0f, 0.0f, 1.0f);
     mVertexData.vertices[17].position = glm::vec3(-0.075f, 0.0f, 0.8f);
 
     mVertexData.vertices[12].color = glm::vec3(0.0f, 0.0f, 0.8f);
@@ -58,4 +62,3 @@ void CoordinateArrowModel::init() {
 
     Logger::log(1, "%s: CoordinateArrowModel - loaded %d vertices\n", __FUNCTION__, mVertexData.vertices.size());
 }
-
