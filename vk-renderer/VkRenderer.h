@@ -77,7 +77,6 @@ class VkRenderer
 #pragma region Camera
     Camera mCamera{};
 
-    bool mMouseLock = false;
     int mMouseXPosition = 0;
     int mMouseYPosition = 0;
 

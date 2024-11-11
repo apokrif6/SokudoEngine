@@ -768,7 +768,7 @@ bool VkRenderer::createSyncObjects()
 
 bool VkRenderer::loadTexture()
 {
-    std::string textureFileName = "textures/default.png";
+    const std::string textureFileName = "textures/default.png";
     if (!Texture::loadTexture(mRenderData, textureFileName))
     {
         Logger::log(1, "%s error: could not load texture\n", __FUNCTION__);
@@ -837,92 +837,6 @@ void VkRenderer::handleWindowCloseEvents()
     Logger::log(1, "%s: mRenderData.rdWindow has been closed\n", __FUNCTION__);
 }
 
-void VkRenderer::handleKeyEvents(int key, int scancode, int action, int mods)
-{
-    std::string actionName;
-    switch (action)
-    {
-    case GLFW_PRESS:
-        actionName = "pressed";
-        break;
-    case GLFW_RELEASE:
-        actionName = "released";
-        break;
-    case GLFW_REPEAT:
-        actionName = "repeated";
-        break;
-    default:
-        actionName = "invalid";
-        break;
-    }
-
-    const char* keyName = glfwGetKeyName(key, 0);
-    Logger::log(1, "%s: key %s (key %i, scancode %i) %s\n", __FUNCTION__, keyName, key, scancode, actionName.c_str());
-}
-
-void VkRenderer::handleMouseButtonEvents(int button, int action, int mods)
-{
-    ImGuiIO& io = ImGui::GetIO();
-    if (button >= 0 && button < ImGuiMouseButton_COUNT)
-    {
-        io.AddMouseButtonEvent(button, action == GLFW_PRESS);
-    }
-
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
-    {
-        mMouseLock = !mMouseLock;
-
-        if (mMouseLock)
-        {
-            glfwSetInputMode(mRenderData.rdWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-            if (glfwRawMouseMotionSupported())
-            {
-                glfwSetInputMode(mRenderData.rdWindow, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
-            }
-        }
-        else
-        {
-            glfwSetInputMode(mRenderData.rdWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-        }
-    }
-
-    std::string actionName;
-    switch (action)
-    {
-    case GLFW_PRESS:
-        actionName = "pressed";
-        break;
-    case GLFW_RELEASE:
-        actionName = "released";
-        break;
-    case GLFW_REPEAT:
-        actionName = "repeated";
-        break;
-    default:
-        actionName = "invalid";
-        break;
-    }
-
-    std::string mouseButtonName;
-    switch (button)
-    {
-    case GLFW_MOUSE_BUTTON_LEFT:
-        mouseButtonName = "left";
-        break;
-    case GLFW_MOUSE_BUTTON_MIDDLE:
-        mouseButtonName = "middle";
-        break;
-    case GLFW_MOUSE_BUTTON_RIGHT:
-        mouseButtonName = "right";
-        break;
-    default:
-        mouseButtonName = "other";
-        break;
-    }
-
-    Logger::log(1, "%s: %s mouse button (%i) %s\n", __FUNCTION__, mouseButtonName.c_str(), button, actionName.c_str());
-}
-
 void VkRenderer::handleMousePositionEvents(double xPosition, double yPosition)
 {
     ImGuiIO& io = ImGui::GetIO();
@@ -933,10 +847,12 @@ void VkRenderer::handleMousePositionEvents(double xPosition, double yPosition)
         return;
     }
 
-    int mouseMoveRelX = static_cast<int>(xPosition) - mMouseXPosition;
-    int mouseMoveRelY = static_cast<int>(yPosition) - mMouseYPosition;
+    const int mouseMoveRelX = static_cast<int>(xPosition) - mMouseXPosition;
+    const int mouseMoveRelY = static_cast<int>(yPosition) - mMouseYPosition;
 
-    if (mMouseLock)
+    //TODO
+    //should be fixed, check InputHandler class
+    if (false)
     {
         mRenderData.rdViewYaw += static_cast<float>(mouseMoveRelX) / 10.f;
         if (mRenderData.rdViewYaw < 0.0)

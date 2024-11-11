@@ -7,6 +7,8 @@
 #include <iostream>
 #include "Model.h"
 
+#include <InputHandler.h>
+
 class Window
 {
   public:
@@ -20,4 +22,6 @@ class Window
     GLFWwindow* mWindow = nullptr;
 
     std::unique_ptr<VkRenderer> mRenderer;
+
+    std::unique_ptr<InputHandler> mInputHandler;
 };
