@@ -1,10 +1,13 @@
 #include "InputHandler.h"
 #include "tools/Logger.h"
+#include "events/input-events/MouseMovementEvent.h"
 #include <imgui.h>
 #include <string>
 #include <GLFW/glfw3.h>
 
 InputHandler::InputHandler(GLFWwindow* inWindow) { mWindow = inWindow; }
+
+void InputHandler::subscribeToEvents(EventListener* listener) { mEventDispatcher.subscribe(listener); }
 
 void InputHandler::handleKeyEvents(int key, int scancode, int action, int mods)
 {
@@ -93,4 +96,28 @@ void InputHandler::handleMouseButtonEvents(int button, int action, int mods)
     }
 
     Logger::log(1, "%s: %s mouse button (%i) %s\n", __FUNCTION__, mouseButtonName.c_str(), button, actionName.c_str());
+}
+
+void InputHandler::handleMousePositionEvents(double xPosition, double yPosition)
+{
+    ImGuiIO& io = ImGui::GetIO();
+    io.AddMousePosEvent(static_cast<float>(xPosition), static_cast<float>(yPosition));
+
+    if (io.WantCaptureMouse)
+    {
+        return;
+    }
+
+    const int deltaX = static_cast<int>(xPosition) - mMouseXPosition;
+    const int deltaY = static_cast<int>(yPosition) - mMouseYPosition;
+
+    if (mMouseLock)
+    {
+        mEventDispatcher.dispatch(MouseMovementEvent(deltaX, deltaY));
+    }
+
+    mMouseXPosition = static_cast<int>(xPosition);
+    mMouseYPosition = static_cast<int>(yPosition);
+
+    Logger::log(1, "%s: Mouse cursor has been moved to %lf/%lf\n", __FUNCTION__, xPosition, yPosition);
 }

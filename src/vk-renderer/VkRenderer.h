@@ -8,11 +8,12 @@
 #include "tools/Camera.h"
 #include "model/Model.h"
 #include "CoordinateArrowModel.h"
-
-#include <ArrowModel.h>
+#include "events/EventListener.h"
+#include "ArrowModel.h"
+#include "events/EventDispatcher.h"
 #include <glm/detail/type_quat.hpp>
 
-class VkRenderer
+class VkRenderer : public EventListener
 {
   public:
     explicit VkRenderer(GLFWwindow* inWindow);
@@ -20,6 +21,10 @@ class VkRenderer
     bool init(unsigned int width, unsigned int height);
 
     void setSize(unsigned int width, unsigned int height);
+
+    void subscribeToInputEvents(EventDispatcher& eventDispatcher);
+
+    void onEvent(const Event& event) override;
 
     bool draw();
 
@@ -77,9 +82,6 @@ class VkRenderer
 #pragma region Camera
     Camera mCamera{};
 
-    int mMouseXPosition = 0;
-    int mMouseYPosition = 0;
-
     double mLastTickTime = 0.0;
 
     void handleCameraMovementKeys();
@@ -133,12 +135,6 @@ class VkRenderer
     void handleWindowMaximizedEvents(int maximized);
 
     void handleWindowCloseEvents();
-
-    void handleKeyEvents(int key, int scancode, int action, int mods);
-
-    void handleMouseButtonEvents(int button, int action, int mods);
-
-    void handleMousePositionEvents(double xPosition, double yPosition);
 
     void handleMouseEnterLeaveEvents(int enter);
 #pragma endregion HandleGLFWEvents

@@ -13,6 +13,7 @@
 #include "UniformBuffer.h"
 #include "imgui.h"
 #include "VertexBuffer.h"
+#include "events/input-events/MouseMovementEvent.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 VkRenderer::VkRenderer(GLFWwindow* inWindow)
@@ -139,6 +140,35 @@ void VkRenderer::setSize(unsigned int width, unsigned int height)
     mRenderData.rdHeight = height;
 
     Logger::log(1, "%s: resized window to %ix%i\n", __FUNCTION__, width, height);
+}
+
+// maybe move to some global functions?
+void VkRenderer::subscribeToInputEvents(EventDispatcher& eventDispatcher) { eventDispatcher.subscribe(this); }
+
+void VkRenderer::onEvent(const Event& event)
+{
+    if (const auto* mouseEvent = dynamic_cast<const MouseMovementEvent*>(&event))
+    {
+        mRenderData.rdViewYaw += static_cast<float>(mouseEvent->deltaX) / 10.f;
+        if (mRenderData.rdViewYaw < 0.f)
+        {
+            mRenderData.rdViewYaw += 360.f;
+        }
+        if (mRenderData.rdViewYaw >= 360.f)
+        {
+            mRenderData.rdViewYaw -= 360.f;
+        }
+
+        mRenderData.rdViewPitch -= static_cast<float>(mouseEvent->deltaY) / 10.f;
+        if (mRenderData.rdViewPitch > 89.f)
+        {
+            mRenderData.rdViewPitch = 89.f;
+        }
+        if (mRenderData.rdViewPitch < -89.f)
+        {
+            mRenderData.rdViewPitch = -89.f;
+        }
+    }
 }
 
 bool VkRenderer::draw()
@@ -835,50 +865,6 @@ void VkRenderer::handleWindowMaximizedEvents(int maximized)
 void VkRenderer::handleWindowCloseEvents()
 {
     Logger::log(1, "%s: mRenderData.rdWindow has been closed\n", __FUNCTION__);
-}
-
-void VkRenderer::handleMousePositionEvents(double xPosition, double yPosition)
-{
-    ImGuiIO& io = ImGui::GetIO();
-    io.AddMousePosEvent(static_cast<float>(xPosition), static_cast<float>(yPosition));
-
-    if (io.WantCaptureMouse)
-    {
-        return;
-    }
-
-    const int mouseMoveRelX = static_cast<int>(xPosition) - mMouseXPosition;
-    const int mouseMoveRelY = static_cast<int>(yPosition) - mMouseYPosition;
-
-    // TODO
-    // should be fixed, check InputHandler class
-    if (false)
-    {
-        mRenderData.rdViewYaw += static_cast<float>(mouseMoveRelX) / 10.f;
-        if (mRenderData.rdViewYaw < 0.0)
-        {
-            mRenderData.rdViewYaw += 360.0;
-        }
-        if (mRenderData.rdViewYaw >= 360.0)
-        {
-            mRenderData.rdViewYaw -= 360.0;
-        }
-
-        mRenderData.rdViewPitch -= static_cast<float>(mouseMoveRelY) / 10.f;
-        if (mRenderData.rdViewPitch > 89.0)
-        {
-            mRenderData.rdViewPitch = 89.0;
-        }
-        if (mRenderData.rdViewPitch < -89.0)
-        {
-            mRenderData.rdViewPitch = -89.0;
-        }
-    }
-
-    mMouseXPosition = static_cast<int>(xPosition);
-    mMouseYPosition = static_cast<int>(yPosition);
-
-    Logger::log(1, "%s: Mouse cursor has been moved to %lf/%lf\n", __FUNCTION__, xPosition, yPosition);
 }
 
 void VkRenderer::handleMouseEnterLeaveEvents(int enter)

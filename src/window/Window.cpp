@@ -44,6 +44,8 @@ bool Window::init(int width, int height, const std::string& title)
         return false;
     }
 
+    mRenderer->subscribeToInputEvents(mInputHandler->getDispatcher());
+
     glfwSetWindowUserPointer(mWindow, this);
 
     glfwSetWindowPosCallback(mWindow,
@@ -99,7 +101,7 @@ bool Window::init(int width, int height, const std::string& title)
                              [](GLFWwindow* window, double xPosition, double yPosition)
                              {
                                  const auto CurrentWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
-                                 CurrentWindow->mRenderer->handleMousePositionEvents(xPosition, yPosition);
+                                 CurrentWindow->mInputHandler->handleMousePositionEvents(xPosition, yPosition);
                              });
 
     glfwSetCursorEnterCallback(mWindow,
