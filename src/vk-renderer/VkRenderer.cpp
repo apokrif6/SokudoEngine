@@ -101,6 +101,11 @@ bool VkRenderer::init(unsigned int width, unsigned int height)
         return false;
     }
 
+    if (!createGridPipeline())
+    {
+        return false;
+    }
+
     if (!createFramebuffer())
     {
         return false;
@@ -394,6 +399,9 @@ bool VkRenderer::draw()
     vkCmdBindPipeline(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdBasicPipeline);
     vkCmdDraw(mRenderData.rdCommandBuffer, mRenderData.rdTriangleCount * 3, 1, mLineIndexCount, 0);
 
+    vkCmdBindPipeline(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdGridPipeline);
+    vkCmdDraw(mRenderData.rdCommandBuffer, 9, 1, 0, 0);
+
     mUIGenerateTimer.start();
     mUserInterface.createFrame(mRenderData);
     mRenderData.rdUIGenerateTime = mUIGenerateTimer.stop();
@@ -477,6 +485,7 @@ void VkRenderer::cleanup()
     CommandBuffer::cleanup(mRenderData, mRenderData.rdCommandBuffer);
     CommandPool::cleanup(mRenderData);
     Framebuffer::cleanup(mRenderData);
+    Pipeline::cleanup(mRenderData, mRenderData.rdGridPipeline);
     Pipeline::cleanup(mRenderData, mRenderData.rdLinePipeline);
     Pipeline::cleanup(mRenderData, mRenderData.rdBasicPipeline);
     PipelineLayout::cleanup(mRenderData, mRenderData.rdPipelineLayout);
@@ -750,6 +759,19 @@ bool VkRenderer::createLinePipeline()
                         VK_PRIMITIVE_TOPOLOGY_LINE_LIST, vertexShaderFile, fragmentShaderFile))
     {
         Logger::log(1, "%s error: could not init line shader pipeline\n", __FUNCTION__);
+        return false;
+    }
+    return true;
+}
+
+bool VkRenderer::createGridPipeline()
+{
+    const std::string vertexShaderFile = "shaders/grid.vert.spv";
+    const std::string fragmentShaderFile = "shaders/grid.frag.spv";
+    if (!Pipeline::init(mRenderData, mRenderData.rdPipelineLayout, mRenderData.rdGridPipeline,
+                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile))
+    {
+        Logger::log(1, "%s error: could not init grid shader pipeline\n", __FUNCTION__);
         return false;
     }
     return true;

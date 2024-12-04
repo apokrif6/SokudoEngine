@@ -7,12 +7,13 @@ layout (location = 0) out vec4 texColor;
 layout (location = 1) out vec2 texCoord;
 
 layout (set = 1, binding = 0) uniform Matrices {
-  mat4 view;
-  mat4 projection;
+    mat4 view;
+    mat4 projection;
+    vec3 position;
 };
 
 void main() {
-  gl_Position = projection * view * vec4(aPos, 1.0);
-  texColor = vec4(aColor, 1.0);
-  texCoord = aTexCoord;
+    gl_Position = projection * view * vec4(aPos, 1.0);
+    texColor = vec4(aColor, 1.0);
+    texCoord = aTexCoord;
 }

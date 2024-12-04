@@ -119,5 +119,7 @@ void InputHandler::handleMousePositionEvents(double xPosition, double yPosition)
     mMouseXPosition = static_cast<int>(xPosition);
     mMouseYPosition = static_cast<int>(yPosition);
 
-    Logger::log(1, "%s: Mouse cursor has been moved to %lf/%lf\n", __FUNCTION__, xPosition, yPosition);
+    //TODO
+    //log category
+    //Logger::log(1, "%s: Mouse cursor has been moved to %lf/%lf\n", __FUNCTION__, xPosition, yPosition);
 }

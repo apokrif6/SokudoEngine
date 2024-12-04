@@ -55,6 +55,21 @@ bool Pipeline::init(VkRenderData& renderData, VkPipelineLayout& pipelineLayout, 
     uvAttribute.format = VK_FORMAT_R32G32_SFLOAT;
     uvAttribute.offset = offsetof(VkVertex, uv);
 
+    /*
+    VkVertexInputAttributeDescription nearPointAttribute{};;
+    uvAttribute.binding = 0;
+    uvAttribute.location = 3;
+    uvAttribute.format = VK_FORMAT_R32G32B32_SFLOAT;
+    uvAttribute.offset = offsetof(VkVertex, nearPoint);
+
+    VkVertexInputAttributeDescription farPointAttribute{};;
+    uvAttribute.binding = 0;
+    uvAttribute.location = 4;
+    uvAttribute.format = VK_FORMAT_R32G32B32_SFLOAT;
+    uvAttribute.offset = offsetof(VkVertex, farPoint);
+*/
+
+    //VkVertexInputAttributeDescription attributes[] = {positionAttribute, colorAttribute, uvAttribute, nearPointAttribute, farPointAttribute};
     VkVertexInputAttributeDescription attributes[] = {positionAttribute, colorAttribute, uvAttribute};
 
     VkPipelineVertexInputStateCreateInfo vertexInputInfo{};

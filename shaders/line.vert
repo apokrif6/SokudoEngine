@@ -9,6 +9,7 @@ layout (location = 1) out vec2 texCoord;
 layout (set = 1, binding = 0) uniform Matrices {
     mat4 view;
     mat4 projection;
+    vec3 position;
 };
 
 void main() {

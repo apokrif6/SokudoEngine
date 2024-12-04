@@ -11,6 +11,8 @@ struct VkVertex
     glm::vec3 position;
     glm::vec3 color;
     glm::vec2 uv;
+    glm::vec3 nearPoint;
+    glm::vec3 farPoint;
 };
 
 struct VkMesh
@@ -22,6 +24,7 @@ struct VkUploadMatrices
 {
     glm::mat4 viewMatrix;
     glm::mat4 projectionMatrix;
+    glm::vec3 position;
 };
 
 struct VkRenderData
@@ -42,10 +45,10 @@ struct VkRenderData
     float rdUIGenerateTime = 0.0f;
     float rdUIDrawTime = 0.0f;
 
-    float rdViewYaw = 320.f;
-    float rdViewPitch = 15.f;
+    float rdViewYaw = 180.f;
+    float rdViewPitch = 0.f;
 
-    glm::vec3 rdCameraWorldPosition = glm::vec3(0.5f, 0.25f, 1.0f);
+    glm::vec3 rdCameraWorldPosition = glm::vec3(0.0f, 0.0f, -0.5f);
 
     bool rdDrawWorldCoordinateArrows = true;
     bool rdDrawModelCoordinateArrows = true;
@@ -84,6 +87,7 @@ struct VkRenderData
     VkPipelineLayout rdPipelineLayout = VK_NULL_HANDLE;
     VkPipeline rdBasicPipeline = VK_NULL_HANDLE;
     VkPipeline rdLinePipeline = VK_NULL_HANDLE;
+    VkPipeline rdGridPipeline = VK_NULL_HANDLE;
 
     VkCommandPool rdCommandPool = VK_NULL_HANDLE;
     VkCommandBuffer rdCommandBuffer = VK_NULL_HANDLE;
