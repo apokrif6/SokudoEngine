@@ -30,37 +30,13 @@ bool Pipeline::init(VkRenderData& renderData, VkPipelineLayout& pipelineLayout, 
 
     VkPipelineShaderStageCreateInfo shaderStagesInfo[] = {vertexStageInfo, fragmentStageInfo};
 
-    /* assemble the graphics pipeline itself */
-
-    VkVertexInputBindingDescription mainBinding{};
-    mainBinding.binding = 0;
-    mainBinding.stride = sizeof(VkVertex);
-    mainBinding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-    VkVertexInputAttributeDescription positionAttribute{};
-    positionAttribute.binding = 0;
-    positionAttribute.location = 0;
-    positionAttribute.format = VK_FORMAT_R32G32B32_SFLOAT;
-    positionAttribute.offset = offsetof(VkVertex, position);
-
-    VkVertexInputAttributeDescription colorAttribute{};
-    colorAttribute.binding = 0;
-    colorAttribute.location = 1;
-    colorAttribute.format = VK_FORMAT_R32G32B32_SFLOAT;
-    colorAttribute.offset = offsetof(VkVertex, color);
-
-    VkVertexInputAttributeDescription uvAttribute{};
-    uvAttribute.binding = 0;
-    uvAttribute.location = 2;
-    uvAttribute.format = VK_FORMAT_R32G32_SFLOAT;
-    uvAttribute.offset = offsetof(VkVertex, uv);
-
     /*
     VkVertexInputAttributeDescription nearPointAttribute{};;
     uvAttribute.binding = 0;
     uvAttribute.location = 3;
     uvAttribute.format = VK_FORMAT_R32G32B32_SFLOAT;
     uvAttribute.offset = offsetof(VkVertex, nearPoint);
+
 
     VkVertexInputAttributeDescription farPointAttribute{};;
     uvAttribute.binding = 0;
@@ -69,15 +45,15 @@ bool Pipeline::init(VkRenderData& renderData, VkPipelineLayout& pipelineLayout, 
     uvAttribute.offset = offsetof(VkVertex, farPoint);
 */
 
-    //VkVertexInputAttributeDescription attributes[] = {positionAttribute, colorAttribute, uvAttribute, nearPointAttribute, farPointAttribute};
-    VkVertexInputAttributeDescription attributes[] = {positionAttribute, colorAttribute, uvAttribute};
+    auto bindingDescription = VkVertex::getBindingDescription();
+    auto attributeDescriptions = VkVertex::getAttributeDescriptions();
 
     VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
     vertexInputInfo.vertexBindingDescriptionCount = 1;
-    vertexInputInfo.pVertexBindingDescriptions = &mainBinding;
-    vertexInputInfo.vertexAttributeDescriptionCount = 3;
-    vertexInputInfo.pVertexAttributeDescriptions = attributes;
+    vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+    vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+    vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
     VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo{};
     inputAssemblyInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
