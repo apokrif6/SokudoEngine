@@ -11,6 +11,7 @@
 #include "events/EventListener.h"
 #include "ArrowModel.h"
 #include "events/EventDispatcher.h"
+#include "GridModel.h"
 #include <glm/detail/type_quat.hpp>
 
 class VkRenderer : public EventListener
@@ -34,6 +35,9 @@ class VkRenderer : public EventListener
     VkRenderData mRenderData{};
 
     UserInterface mUserInterface{};
+
+    GridModel mGridModel{};
+    VkMesh mGridMesh{};
 
     CoordinateArrowModel mCoordinateArrowsModel{};
     VkMesh mCoordinateArrowsMesh{};

@@ -282,6 +282,19 @@ bool VkRenderer::draw()
 
     mQuaternionModelOrientationConjugate = glm::conjugate(mQuaternionModelOrientation);
 
+
+    mGridMesh.vertices.clear();
+    /*   mGridMesh = mGridModel.getVertexData();
+        //std::for_each(mGridMesh.vertices.begin(), mGridMesh.vertices.end(),
+        //              [this](VkVertex& vertex) { vertex.color /= 2.f; });
+
+    mAllMeshes->vertices.insert(mAllMeshes->vertices.end(), mGridMesh.vertices.begin(),
+                                mGridMesh.vertices.end());*/
+   //
+
+    //
+
+
     mCoordinateArrowsMesh.vertices.clear();
 
     if (mRenderData.rdDrawWorldCoordinateArrows)
@@ -400,7 +413,7 @@ bool VkRenderer::draw()
     vkCmdDraw(mRenderData.rdCommandBuffer, mRenderData.rdTriangleCount * 3, 1, mLineIndexCount, 0);
 
     vkCmdBindPipeline(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdGridPipeline);
-    vkCmdDraw(mRenderData.rdCommandBuffer, 9, 1, 0, 0);
+    vkCmdDraw(mRenderData.rdCommandBuffer, 6, 1, 0, 0);
 
     mUIGenerateTimer.start();
     mUserInterface.createFrame(mRenderData);

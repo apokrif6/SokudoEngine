@@ -6,13 +6,16 @@ layout(set = 1, binding = 0) uniform Matrices  {
     vec3 position;
 };
 
-layout(location = 3) out vec3 nearPoint;
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec3 aColor;
+layout (location = 2) in vec2 aTexCoord;
 
-layout(location = 4) out vec3 farPoint;
+layout(location = 0) out vec3 nearPoint;
+layout(location = 1) out vec3 farPoint;
 
 vec3 gridPlane[6] = vec3[](
-    vec3(1, 1, 0), vec3(-1, -1, 0), vec3(-1, 1, 0),
-    vec3(-1, -1, 0), vec3(1, 1, 0), vec3(1, -1, 0)
+vec3(1, 1, 0), vec3(-1, -1, 0), vec3(-1, 1, 0),
+vec3(-1, -1, 0), vec3(1, 1, 0), vec3(1, -1, 0)
 );
 
 vec3 UnprojectPoint(float x, float y, float z, mat4 view, mat4 projection) {
