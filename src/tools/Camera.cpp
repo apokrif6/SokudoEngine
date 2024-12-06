@@ -13,7 +13,7 @@ glm::mat4 Camera::getViewMatrix(VkRenderData& renderData)
     float sinElev = glm::sin(elevRad);
     float cosElev = glm::cos(elevRad);
 
-    mViewDirection = glm::normalize(glm::vec3(sinAzim * cosElev, -sinElev, -cosAzim * cosElev));
+    mViewDirection = glm::normalize(glm::vec3(sinAzim * cosElev, sinElev, -cosAzim * cosElev));
 
     mRightDirection = glm::normalize(glm::cross(mViewDirection, mWorldUpVector));
     mUpDirection = glm::normalize(glm::cross(mRightDirection, mViewDirection));

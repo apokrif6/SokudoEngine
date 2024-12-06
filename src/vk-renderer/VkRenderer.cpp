@@ -240,9 +240,10 @@ bool VkRenderer::draw()
 
     VkViewport viewport{};
     viewport.x = 0.0f;
-    viewport.y = 0.0f;
+    viewport.y = static_cast<float>(mRenderData.rdVkbSwapchain.extent.height);
     viewport.width = static_cast<float>(mRenderData.rdVkbSwapchain.extent.width);
-    viewport.height = static_cast<float>(mRenderData.rdVkbSwapchain.extent.height);
+    /* invert viewport from OpenGL */
+    viewport.height = -static_cast<float>(mRenderData.rdVkbSwapchain.extent.height);
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
 
@@ -284,16 +285,6 @@ bool VkRenderer::draw()
 
 
     mGridMesh.vertices.clear();
-    /*   mGridMesh = mGridModel.getVertexData();
-        //std::for_each(mGridMesh.vertices.begin(), mGridMesh.vertices.end(),
-        //              [this](VkVertex& vertex) { vertex.color /= 2.f; });
-
-    mAllMeshes->vertices.insert(mAllMeshes->vertices.end(), mGridMesh.vertices.begin(),
-                                mGridMesh.vertices.end());*/
-   //
-
-    //
-
 
     mCoordinateArrowsMesh.vertices.clear();
 
@@ -945,10 +936,10 @@ void VkRenderer::handleCameraMovementKeys()
     mRenderData.rdMoveUp = 0.f;
     if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_E) == GLFW_PRESS)
     {
-        mRenderData.rdMoveUp -= 1.f;
+        mRenderData.rdMoveUp += 1.f;
     }
     if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_Q) == GLFW_PRESS)
     {
-        mRenderData.rdMoveUp += 1.f;
+        mRenderData.rdMoveUp -= 1.f;
     }
 }
