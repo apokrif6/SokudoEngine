@@ -219,7 +219,7 @@ bool VkRenderer::draw()
     }
 
     VkClearValue colorClearValue;
-    colorClearValue.color = {{0.1f, 0.1f, 0.1f, 1.0f}};
+    colorClearValue.color = {{0.f, 0.f, 0.f, 1.0f}};
 
     VkClearValue depthValue;
     depthValue.depthStencil.depth = 1.0f;
