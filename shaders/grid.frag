@@ -9,7 +9,6 @@ layout(set = 1, binding = 0) uniform Matrices {
 layout(location = 0) out vec4 outColor;
 
 layout(location = 0) in vec3 nearPoint;
-
 layout(location = 1) in vec3 farPoint;
 
 float near = 0.1;

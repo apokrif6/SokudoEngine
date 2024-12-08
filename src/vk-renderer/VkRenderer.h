@@ -12,6 +12,7 @@
 #include "ArrowModel.h"
 #include "events/EventDispatcher.h"
 #include "GridModel.h"
+#include "GltfModel.h"
 #include <glm/detail/type_quat.hpp>
 
 class VkRenderer : public EventListener
@@ -33,6 +34,7 @@ class VkRenderer : public EventListener
 
   private:
     VkRenderData mRenderData{};
+    VkGltfRenderData mGltfRenderData{};
 
     UserInterface mUserInterface{};
 
@@ -51,6 +53,8 @@ class VkRenderer : public EventListener
     std::unique_ptr<VkMesh> mQuaternionModelMesh = nullptr;
     std::unique_ptr<VkMesh> mAllMeshes = nullptr;
     unsigned int mLineIndexCount = 0;
+
+    std::shared_ptr<GltfModel> mGltfModel = nullptr;
 
     glm::mat4 mRotYMat = glm::mat4(1.0f);
     glm::mat4 mRotZMat = glm::mat4(1.0f);
@@ -82,6 +86,8 @@ class VkRenderer : public EventListener
     VmaAllocation mVertexBufferAlloc{};
 
     VkUploadMatrices mMatrices{};
+
+    unsigned int VertexBufferSize = 2000;
 
 #pragma region Camera
     Camera mCamera{};
@@ -116,6 +122,10 @@ class VkRenderer : public EventListener
 
     bool createGridPipeline();
 
+    bool createGltfPipelineLayout();
+
+    bool createGltfPipeline();
+
     bool createFramebuffer();
 
     bool createCommandPool();
@@ -129,6 +139,8 @@ class VkRenderer : public EventListener
     bool initVma();
 
     bool initUserInterface();
+
+    bool loadGltfModel();
 
 #pragma endregion Renderer
 

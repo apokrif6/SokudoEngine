@@ -14,6 +14,7 @@
 #include "imgui.h"
 #include "VertexBuffer.h"
 #include "events/input-events/MouseMovementEvent.h"
+#include "GltfPipeline.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 VkRenderer::VkRenderer(GLFWwindow* inWindow)
@@ -102,6 +103,21 @@ bool VkRenderer::init(unsigned int width, unsigned int height)
     }
 
     if (!createGridPipeline())
+    {
+        return false;
+    }
+
+    if (!loadGltfModel())
+    {
+        return false;
+    }
+
+    if (!createGltfPipelineLayout())
+    {
+        return false;
+    }
+
+    if (!createGltfPipeline())
     {
         return false;
     }
@@ -283,7 +299,6 @@ bool VkRenderer::draw()
 
     mQuaternionModelOrientationConjugate = glm::conjugate(mQuaternionModelOrientation);
 
-
     mGridMesh.vertices.clear();
 
     mCoordinateArrowsMesh.vertices.clear();
@@ -377,7 +392,11 @@ bool VkRenderer::draw()
     }
 
     mUploadToVBOTimer.start();
-    VertexBuffer::uploadData(mRenderData, *mAllMeshes);
+    VertexBuffer::uploadData(mRenderData, mRenderData.rdVertexBufferData, *mAllMeshes);
+
+    mGltfModel->uploadVertexBuffers(mRenderData, mGltfRenderData);
+    mGltfModel->uploadIndexBuffer(mRenderData, mGltfRenderData);
+
     mRenderData.rdUploadToVBOTime = mUploadToVBOTimer.stop();
 
     vkCmdBeginRenderPass(mRenderData.rdCommandBuffer, &rpInfo, VK_SUBPASS_CONTENTS_INLINE);
@@ -385,13 +404,13 @@ bool VkRenderer::draw()
     vkCmdSetViewport(mRenderData.rdCommandBuffer, 0, 1, &viewport);
     vkCmdSetScissor(mRenderData.rdCommandBuffer, 0, 1, &scissor);
 
-    VkDeviceSize offset = 0;
-    vkCmdBindVertexBuffers(mRenderData.rdCommandBuffer, 0, 1, &mRenderData.rdVertexBuffer, &offset);
-
     vkCmdBindDescriptorSets(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdPipelineLayout,
-                            0, 1, &mRenderData.rdTextureDescriptorSet, 0, nullptr);
+                            0, 1, &mRenderData.rdModelTexture.texTextureDescriptorSet, 0, nullptr);
     vkCmdBindDescriptorSets(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdPipelineLayout,
                             1, 1, &mRenderData.rdUBODescriptorSet, 0, nullptr);
+
+    VkDeviceSize offset = 0;
+    vkCmdBindVertexBuffers(mRenderData.rdCommandBuffer, 0, 1, &mRenderData.rdVertexBufferData.rdVertexBuffer, &offset);
 
     if (mLineIndexCount > 0)
     {
@@ -405,6 +424,8 @@ bool VkRenderer::draw()
 
     vkCmdBindPipeline(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdGridPipeline);
     vkCmdDraw(mRenderData.rdCommandBuffer, 6, 1, 0, 0);
+
+    mGltfModel->draw(mRenderData, mGltfRenderData);
 
     mUIGenerateTimer.start();
     mUserInterface.createFrame(mRenderData);
@@ -480,22 +501,25 @@ void VkRenderer::cleanup()
 {
     vkDeviceWaitIdle(mRenderData.rdVkbDevice.device);
 
-    mUserInterface.cleanup(mRenderData);
+    mGltfModel->cleanup(mRenderData, mGltfRenderData);
+    mGltfModel.reset();
 
-    Texture::cleanup(mRenderData);
-    vmaDestroyBuffer(mRenderData.rdAllocator, mVertexBuffer, mVertexBufferAlloc);
+    mUserInterface.cleanup(mRenderData);
 
     SyncObjects::cleanup(mRenderData);
     CommandBuffer::cleanup(mRenderData, mRenderData.rdCommandBuffer);
     CommandPool::cleanup(mRenderData);
     Framebuffer::cleanup(mRenderData);
+    GltfPipeline::cleanup(mRenderData, mRenderData.rdGltfPipeline);
     Pipeline::cleanup(mRenderData, mRenderData.rdGridPipeline);
     Pipeline::cleanup(mRenderData, mRenderData.rdLinePipeline);
     Pipeline::cleanup(mRenderData, mRenderData.rdBasicPipeline);
     PipelineLayout::cleanup(mRenderData, mRenderData.rdPipelineLayout);
+    PipelineLayout::cleanup(mRenderData, mRenderData.rdGltfPipelineLayout);
     Renderpass::cleanup(mRenderData);
     UniformBuffer::cleanup(mRenderData);
-    VertexBuffer::cleanup(mRenderData);
+    VertexBuffer::cleanup(mRenderData, mRenderData.rdVertexBufferData);
+    Texture::cleanup(mRenderData, mRenderData.rdModelTexture);
 
     vkDestroyImageView(mRenderData.rdVkbDevice.device, mRenderData.rdDepthImageView, nullptr);
     vmaDestroyImage(mRenderData.rdAllocator, mRenderData.rdDepthImage, mRenderData.rdDepthImageAlloc);
@@ -714,7 +738,7 @@ bool VkRenderer::createUBO()
 
 bool VkRenderer::createVBO()
 {
-    if (!VertexBuffer::init(mRenderData))
+    if (!VertexBuffer::init(mRenderData, mRenderData.rdVertexBufferData, VertexBufferSize))
     {
         Logger::log(1, "%s error: could not create vertex buffer\n", __FUNCTION__);
         return false;
@@ -734,7 +758,7 @@ bool VkRenderer::createRenderPass()
 
 bool VkRenderer::createPipelineLayout()
 {
-    if (!PipelineLayout::init(mRenderData, mRenderData.rdPipelineLayout))
+    if (!PipelineLayout::init(mRenderData, mRenderData.rdModelTexture, mRenderData.rdPipelineLayout))
     {
         Logger::log(1, "%s error: could not init pipeline layout\n", __FUNCTION__);
         return false;
@@ -776,6 +800,29 @@ bool VkRenderer::createGridPipeline()
                         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile))
     {
         Logger::log(1, "%s error: could not init grid shader pipeline\n", __FUNCTION__);
+        return false;
+    }
+    return true;
+}
+
+bool VkRenderer::createGltfPipelineLayout()
+{
+    if (!PipelineLayout::init(mRenderData, mGltfRenderData.rdGltfModelTexture, mRenderData.rdGltfPipelineLayout))
+    {
+        Logger::log(1, "%s error: could not init pipeline layout\n", __FUNCTION__);
+        return false;
+    }
+    return true;
+}
+
+bool VkRenderer::createGltfPipeline()
+{
+    std::string vertexShaderFile = "shaders/gltf.vert.spv";
+    std::string fragmentShaderFile = "shaders/gltf.frag.spv";
+    if (!GltfPipeline::init(mRenderData, mRenderData.rdGltfPipelineLayout, mRenderData.rdGltfPipeline,
+                            VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile))
+    {
+        Logger::log(1, "%s error: could not init gltf shader pipeline\n", __FUNCTION__);
         return false;
     }
     return true;
@@ -825,7 +872,7 @@ bool VkRenderer::createSyncObjects()
 bool VkRenderer::loadTexture()
 {
     const std::string textureFileName = "textures/default.png";
-    if (!Texture::loadTexture(mRenderData, textureFileName))
+    if (!Texture::loadTexture(mRenderData, mRenderData.rdModelTexture, textureFileName))
     {
         Logger::log(1, "%s error: could not load texture\n", __FUNCTION__);
         return false;
@@ -854,6 +901,19 @@ bool VkRenderer::initUserInterface()
     if (!mUserInterface.init(mRenderData))
     {
         Logger::log(1, "%s error: could not init ImGui\n", __FUNCTION__);
+        return false;
+    }
+    return true;
+}
+
+bool VkRenderer::loadGltfModel()
+{
+    mGltfModel = std::make_shared<GltfModel>();
+    std::string modelFilename = "assets/Woman.gltf";
+    std::string modelTexFilename = "textures/Woman.png";
+    if (!mGltfModel->loadModel(mRenderData, mGltfRenderData, modelFilename, modelTexFilename))
+    {
+        Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename.c_str());
         return false;
     }
     return true;

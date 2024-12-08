@@ -12,8 +12,6 @@ struct VkVertex
     glm::vec3 position;
     glm::vec3 color;
     glm::vec2 uv;
-    //glm::vec3 nearPoint;
-    // glm::vec3 farPoint;
 
     static VkVertexInputBindingDescription getBindingDescription()
     {
@@ -25,7 +23,8 @@ struct VkVertex
         return bindingDescription;
     }
 
-    static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions() {
+    static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions()
+    {
         std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
         attributeDescriptions[0].binding = 0;
         attributeDescriptions[0].location = 0;
@@ -58,6 +57,43 @@ struct VkUploadMatrices
     glm::vec3 position;
 };
 
+struct VkTextureData
+{
+    VkImage texTextureImage = VK_NULL_HANDLE;
+    VkImageView texTextureImageView = VK_NULL_HANDLE;
+    VkSampler texTextureSampler = VK_NULL_HANDLE;
+    VmaAllocation texTextureImageAlloc = nullptr;
+
+    VkDescriptorPool texTextureDescriptorPool = VK_NULL_HANDLE;
+    VkDescriptorSetLayout texTextureDescriptorLayout = VK_NULL_HANDLE;
+    VkDescriptorSet texTextureDescriptorSet = VK_NULL_HANDLE;
+};
+
+struct VkVertexBufferData
+{
+    unsigned int rdVertexBufferSize = 0;
+    VkBuffer rdVertexBuffer = VK_NULL_HANDLE;
+    VmaAllocation rdVertexBufferAlloc = nullptr;
+    VkBuffer rdStagingBuffer = VK_NULL_HANDLE;
+    VmaAllocation rdStagingBufferAlloc = nullptr;
+};
+
+struct VkIndexBufferData
+{
+    unsigned int rdIndexBufferSize = 0;
+    VkBuffer rdIndexBuffer = VK_NULL_HANDLE;
+    VmaAllocation rdIndexBufferAlloc = nullptr;
+    VkBuffer rdStagingBuffer = VK_NULL_HANDLE;
+    VmaAllocation rdStagingBufferAlloc = nullptr;
+};
+
+struct VkGltfRenderData
+{
+    std::vector<VkVertexBufferData> rdGltfVertexBufferData{};
+    VkIndexBufferData rdGltfIndexBufferData{};
+    VkTextureData rdGltfModelTexture{};
+};
+
 struct VkRenderData
 {
     GLFWwindow* rdWindow = nullptr;
@@ -66,6 +102,7 @@ struct VkRenderData
     int rdHeight = 0;
 
     unsigned int rdTriangleCount = 0;
+    unsigned int rdGltfTriangleCount = 0;
 
     int rdFieldOfView = 90;
 
@@ -119,6 +156,8 @@ struct VkRenderData
     VkPipeline rdBasicPipeline = VK_NULL_HANDLE;
     VkPipeline rdLinePipeline = VK_NULL_HANDLE;
     VkPipeline rdGridPipeline = VK_NULL_HANDLE;
+    VkPipelineLayout rdGltfPipelineLayout = VK_NULL_HANDLE;
+    VkPipeline rdGltfPipeline = VK_NULL_HANDLE;
 
     VkCommandPool rdCommandPool = VK_NULL_HANDLE;
     VkCommandBuffer rdCommandBuffer = VK_NULL_HANDLE;
@@ -127,20 +166,9 @@ struct VkRenderData
     VkSemaphore rdRenderSemaphore = VK_NULL_HANDLE;
     VkFence rdRenderFence = VK_NULL_HANDLE;
 
-    VkImage rdTextureImage = VK_NULL_HANDLE;
-    VkImageView rdTextureImageView = VK_NULL_HANDLE;
-    VkSampler rdTextureSampler = VK_NULL_HANDLE;
-    VmaAllocation rdTextureImageAlloc = VK_NULL_HANDLE;
+    VkTextureData rdModelTexture{};
 
-    VkDescriptorPool rdTextureDescriptorPool = VK_NULL_HANDLE;
-    VkDescriptorSetLayout rdTextureDescriptorLayout = VK_NULL_HANDLE;
-    VkDescriptorSet rdTextureDescriptorSet = VK_NULL_HANDLE;
-
-    unsigned int rdVertexBufferSize = 2048;
-    VkBuffer rdVertexBuffer = VK_NULL_HANDLE;
-    VmaAllocation rdVertexBufferAlloc = nullptr;
-    VkBuffer rdVertexStagingBuffer = VK_NULL_HANDLE;
-    VmaAllocation rdVertexStagingBufferAlloc = nullptr;
+    VkVertexBufferData rdVertexBufferData{};
 
     VkBuffer rdUBOBuffer = VK_NULL_HANDLE;
     VmaAllocation rdUBOBufferAlloc = nullptr;

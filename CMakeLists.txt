@@ -8,6 +8,7 @@ file(GLOB_RECURSE SOURCES
         main.cpp
         src/*.cpp
         imgui/*.cpp
+        tinygltf/*.cc
 )
 add_executable(SokudoEngine ${SOURCES}
         src/window/Window.cpp)
@@ -67,7 +68,7 @@ add_custom_command(TARGET Shaders POST_BUILD
 
 # copy textures
 file(GLOB TEX_SOURCE_FILES
-        media/*
+        textures/*
 )
 
 add_custom_target(
@@ -78,13 +79,32 @@ add_dependencies(SokudoEngine Textures)
 
 add_custom_command(TARGET Textures POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "$<TARGET_PROPERTY:SokudoEngine,SOURCE_DIR>/media/textures"
-        "$<TARGET_PROPERTY:SokudoEngine,BINARY_DIR>/media/textures"
+        "$<TARGET_PROPERTY:SokudoEngine,SOURCE_DIR>/textures"
+        "$<TARGET_PROPERTY:SokudoEngine,BINARY_DIR>/textures"
 )
 
+# copy assets
+file(GLOB ASSET_SOURCE_FILES
+        assets/*
+)
+
+add_custom_target(
+        Assets
+        DEPENDS ${ASSET_SOURCE_FILES}
+)
+
+add_dependencies(SokudoEngine Assets)
+
+add_custom_command(TARGET Assets POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "$<TARGET_PROPERTY:SokudoEngine,SOURCE_DIR>/assets"
+        "$<TARGET_PROPERTY:SokudoEngine,BINARY_DIR>/assets"
+)
+
+# includes
 add_subdirectory(vk-bootstrap)
 
-include_directories(${GLFW3_INCLUDE_DIR} src vk-memory-allocation include src/model imgui)
+include_directories(${GLFW3_INCLUDE_DIR} src vk-memory-allocation include src/model imgui tinygltf)
 
 if (MSVC)
     target_link_libraries(SokudoEngine ${GLFW3_LIBRARY} Vulkan::Vulkan vk-bootstrap::vk-bootstrap)
