@@ -6,12 +6,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 project(SokudoEngine)
 file(GLOB_RECURSE SOURCES
         main.cpp
-        src/*.cpp
-        imgui/*.cpp
-        tinygltf/*.cc
+        source/*.cpp
+        external/imgui/*.cpp
+        external/tinygltf/*.cc
 )
 add_executable(SokudoEngine ${SOURCES}
-        src/window/Window.cpp)
+        source/window/Window.cpp)
 
 if (WIN32)
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
@@ -102,9 +102,9 @@ add_custom_command(TARGET Assets POST_BUILD
 )
 
 # includes
-add_subdirectory(vk-bootstrap)
+add_subdirectory(external/vk-bootstrap)
 
-include_directories(${GLFW3_INCLUDE_DIR} src vk-memory-allocation include src/model imgui tinygltf)
+include_directories(${GLFW3_INCLUDE_DIR} source external/vk-memory-allocation external/include source/model external/imgui external/tinygltf)
 
 if (MSVC)
     target_link_libraries(SokudoEngine ${GLFW3_LIBRARY} Vulkan::Vulkan vk-bootstrap::vk-bootstrap)
