@@ -538,7 +538,11 @@ void VkRenderer::cleanup()
 bool VkRenderer::deviceInit()
 {
     vkb::InstanceBuilder instBuild;
-    auto instRet = instBuild.use_default_debug_messenger().request_validation_layers().build();
+    auto instRet = instBuild.use_default_debug_messenger()
+                       .request_validation_layers()
+                       .set_minimum_instance_version(VKB_VK_API_VERSION_1_1)
+                       .require_api_version(VKB_VK_API_VERSION_1_3)
+                       .build();
     if (!instRet)
     {
         Logger::log(1, "%s error: could not build vkb instance\n", __FUNCTION__);

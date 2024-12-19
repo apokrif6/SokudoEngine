@@ -10,7 +10,7 @@ class EventDispatcher
 
     void unsubscribe(EventListener* listener)
     {
-        mListeners.erase(std::remove(mListeners.begin(), mListeners.end(), listener), mListeners.end());
+        std::erase(mListeners, listener);
     }
 
     void dispatch(const Event& event)
