@@ -25,7 +25,7 @@ bool UniformBuffer::init(VkRenderData& renderData)
     uboBind.binding = 0;
     uboBind.descriptorCount = 1;
     uboBind.pImmutableSamplers = nullptr;
-    uboBind.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    uboBind.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
     VkDescriptorSetLayoutCreateInfo uboCreateInfo{};
     uboCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
