@@ -5,7 +5,7 @@
 #include "stb_image.h"
 
 bool GltfModel::loadModel(VkRenderData& renderData, VkGltfRenderData& gltfRenderData, std::string modelFilename,
-                          std::string textureFilename)
+                          const std::string& textureFilename)
 {
     if (!Texture::loadTexture(renderData, gltfRenderData.rdGltfModelTexture, textureFilename))
     {
@@ -124,8 +124,8 @@ void GltfModel::createVertexBuffers(VkRenderData& renderData, VkGltfRenderData& 
         const tinygltf::BufferView& bufferView = mModel->bufferViews.at(accessor.bufferView);
         const tinygltf::Buffer& buffer = mModel->buffers.at(bufferView.buffer);
 
-        if ((attribType.compare("POSITION") != 0) && (attribType.compare("NORMAL") != 0) &&
-            (attribType.compare("TEXCOORD_0") != 0))
+        if ((attribType != "POSITION") && (attribType != "NORMAL") &&
+            (attribType != "TEXCOORD_0"))
         {
             Logger::log(1, "%s: skipping attribute type %s\n", __FUNCTION__, attribType.c_str());
             continue;

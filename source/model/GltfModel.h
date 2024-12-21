@@ -12,7 +12,7 @@ class GltfModel
 {
   public:
     bool loadModel(VkRenderData& renderData, VkGltfRenderData& gltfRenderData, std::string modelFilename,
-                   std::string textureFilename);
+                   const std::string& textureFilename);
 
     void draw(VkRenderData& renderData, VkGltfRenderData& gltfRenderData);
 

@@ -3,7 +3,6 @@
 layout(set = 1, binding = 0) uniform Matrices {
     mat4 view;
     mat4 projection;
-    vec3 position;
 };
 
 layout(location = 0) out vec4 outColor;
