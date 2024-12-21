@@ -5,10 +5,10 @@ layout(set = 1, binding = 0) uniform Matrices {
     mat4 projection;
 };
 
-layout(location = 0) out vec4 outColor;
-
 layout(location = 0) in vec3 nearPoint;
 layout(location = 1) in vec3 farPoint;
+
+layout(location = 0) out vec4 outColor;
 
 float near = 0.1;
 float far  = 100.0;
@@ -49,6 +49,12 @@ void main() {
     if (t > 0.0 && t < 1.0) {
         gl_FragDepth = computeDepth(fragPos3D);
         outColor = grid(fragPos3D, 10);
+
+        float linearDepth = computeLinearDepth(fragPos3D);
+        float fading = max(0, (0.5 - linearDepth));
+
+        outColor = (grid(fragPos3D, 10) + grid(fragPos3D, 1)) * float(t > 0);
+        outColor.a *= fading;
     } else {
         discard;
     }
