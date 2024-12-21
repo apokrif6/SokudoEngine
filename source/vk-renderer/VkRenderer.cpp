@@ -276,6 +276,9 @@ bool VkRenderer::draw()
     mMatrices.viewMatrix = mCamera.getViewMatrix(mRenderData);
     mRenderData.rdMatrixGenerateTime = mMatrixGenerateTimer.stop();
 
+    mMatrices.lightPosition = mRenderData.rdLightPosition;
+    mMatrices.lightColor = mRenderData.rdLightColor;
+
     if (mRenderData.rdResetAngles)
     {
         mRenderData.rdResetAngles = false;

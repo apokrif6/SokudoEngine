@@ -2,6 +2,7 @@
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
@@ -254,6 +255,17 @@ void UserInterface::createFrame(VkRenderData& renderData)
         ImGui::PopStyleColor();
         ImGui::SameLine();
         ImGui::SliderInt("##ROTZ", &renderData.rdRotZAngle, 0, 360);
+    }
+
+    if (ImGui::CollapsingHeader("Light Parameters"))
+    {
+        ImGui::Text("Light Position");
+        ImGui::SameLine();
+        ImGui::SliderFloat3("##LPP", glm::value_ptr(renderData.rdLightPosition), -360, 360);
+
+        ImGui::Text("Light Color");
+        ImGui::SameLine();
+        ImGui::SliderFloat3("##LPC", glm::value_ptr(renderData.rdLightColor), 0.f, 1.f);
     }
 
     ImGui::PopStyleColor();

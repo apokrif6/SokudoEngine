@@ -50,11 +50,14 @@ struct VkMesh
     std::vector<VkVertex> vertices;
 };
 
-struct VkUploadMatrices
+struct alignas(16) VkUploadMatrices
 {
     glm::mat4 viewMatrix;
     glm::mat4 projectionMatrix;
     glm::vec3 position;
+
+    glm::vec3 lightPosition;
+    glm::vec3 lightColor;
 };
 
 struct VkTextureData
@@ -125,6 +128,9 @@ struct VkRenderData
     int rdRotXAngle = 0;
     int rdRotYAngle = 0;
     int rdRotZAngle = 0;
+
+    glm::vec3 rdLightPosition = glm::vec3(4.f, 5.f, -3.f);
+    glm::vec3 rdLightColor = glm::vec3(0.5f, 0.5f, 0.5f);
 
     float rdMoveForward = 0;
     float rdMoveRight = 0;

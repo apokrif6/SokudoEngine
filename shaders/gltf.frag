@@ -7,11 +7,19 @@ layout (location = 0) out vec4 FragColor;
 
 layout (set = 0, binding = 0) uniform sampler2D tex;
 
-vec3 lightPos = vec3(4.0, 5.0, -3.0);
-vec3 lightColor = vec3(0.5, 0.5, 0.5);
+layout (set = 1, binding = 0) uniform Matrices {
+    mat4 view;
+    mat4 projection;
+    vec3 position;
+    vec3 lightPos;
+    vec3 lightColor;
+};
+vec3 newLightCol = vec3(0.5, 0.5, 0.5);
+
 float ambientLight = 0.3;
 
 void main() {
     float lightAngle = max(dot(normalize(normal), normalize(lightPos)), 0.0);
-    FragColor = texture(tex, textCoord) * vec4((ambientLight + 0.7 * lightAngle) * lightColor, 1.0);
+    //FragColor = texture(tex, textCoord) * vec4((ambientLight + 0.7 * lightAngle) * lightColor, 1.0);
+    FragColor = vec4(lightColor, 1);
 }
