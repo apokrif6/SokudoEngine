@@ -1,3 +1,4 @@
+#define GLM_ENABLE_EXPERIMENTAL
 #include <iostream>
 #include "window/Window.h"
 #include "tools/Logger.h"

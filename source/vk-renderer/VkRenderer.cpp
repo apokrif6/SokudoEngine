@@ -1,4 +1,5 @@
 #define VMA_IMPLEMENTATION
+#define GLM_ENABLE_EXPERIMENTAL
 #include "vk_mem_alloc.h"
 #include "VkRenderer.h"
 #include "tools/Logger.h"
@@ -15,6 +16,7 @@
 #include "VertexBuffer.h"
 #include "events/input-events/MouseMovementEvent.h"
 #include "GltfPipeline.h"
+#include "GltfSkeletonPipeline.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 VkRenderer::VkRenderer(GLFWwindow* inWindow)
@@ -122,6 +124,11 @@ bool VkRenderer::init(unsigned int width, unsigned int height)
         return false;
     }
 
+    if (!createGltfSkeletonPipeline())
+    {
+        return false;
+    }
+
     if (!createFramebuffer())
     {
         return false;
@@ -145,6 +152,9 @@ bool VkRenderer::init(unsigned int width, unsigned int height)
     mEulerModelMesh = std::make_unique<VkMesh>();
     mQuaternionModelMesh = std::make_unique<VkMesh>();
     Logger::log(1, "%s: model mesh storage initialized\n", __FUNCTION__);
+
+    mSkeletonMesh = std::make_shared<VkMesh>();
+    Logger::log(1, "%s: skeleton mesh storage initialized\n", __FUNCTION__);
 
     mAllMeshes = std::make_unique<VkMesh>();
     Logger::log(1, "%s: global mesh storage initialized\n", __FUNCTION__);
@@ -279,6 +289,10 @@ bool VkRenderer::draw()
     mMatrices.lightPosition = mRenderData.rdLightPosition;
     mMatrices.lightColor = mRenderData.rdLightColor;
 
+    mGltfModel->applyVertexSkinning(mRenderData.rdEnableVertexSkinning);
+
+    mSkeletonMesh = mGltfModel->getSkeleton(mRenderData.rdEnableVertexSkinning);
+
     if (mRenderData.rdResetAngles)
     {
         mRenderData.rdResetAngles = false;
@@ -348,6 +362,9 @@ bool VkRenderer::draw()
                                     mQuaternionArrowMesh.vertices.end());
     }
 
+    mAllMeshes->vertices.insert(mAllMeshes->vertices.end(), mSkeletonMesh->vertices.begin(),
+                                mSkeletonMesh->vertices.end());
+
     *mEulerModelMesh = mModel->getVertexData();
     mRenderData.rdTriangleCount = mEulerModelMesh->vertices.size() / 3;
     std::for_each(mEulerModelMesh->vertices.begin(), mEulerModelMesh->vertices.end(),
@@ -378,6 +395,8 @@ bool VkRenderer::draw()
     mLineIndexCount = mCoordinateArrowsMesh.vertices.size() + mEulerCoordinateArrowsMesh.vertices.size() +
                       mQuaternionArrowMesh.vertices.size();
 
+    mSkeletonLineIndexCount = mSkeletonMesh->vertices.size();
+
     if (vkResetCommandBuffer(mRenderData.rdCommandBuffer, 0) != VK_SUCCESS)
     {
         Logger::log(1, "%s error: failed to reset command buffer\n", __FUNCTION__);
@@ -398,6 +417,7 @@ bool VkRenderer::draw()
     VertexBuffer::uploadData(mRenderData, mRenderData.rdVertexBufferData, *mAllMeshes);
 
     mGltfModel->uploadVertexBuffers(mRenderData, mGltfRenderData);
+    mGltfModel->uploadPositionBuffer(mRenderData, mGltfRenderData);
     mGltfModel->uploadIndexBuffer(mRenderData, mGltfRenderData);
 
     mRenderData.rdUploadToVBOTime = mUploadToVBOTimer.stop();
@@ -422,13 +442,32 @@ bool VkRenderer::draw()
         vkCmdDraw(mRenderData.rdCommandBuffer, mLineIndexCount, 1, 0, 0);
     }
 
+    // draw box
     vkCmdBindPipeline(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdBasicPipeline);
-    vkCmdDraw(mRenderData.rdCommandBuffer, mRenderData.rdTriangleCount * 3, 1, mLineIndexCount, 0);
+    vkCmdDraw(mRenderData.rdCommandBuffer, mRenderData.rdTriangleCount * 3, 1,
+              mLineIndexCount + mSkeletonLineIndexCount, 0);
 
+    // draw grid
     vkCmdBindPipeline(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdGridPipeline);
     vkCmdDraw(mRenderData.rdCommandBuffer, 6, 1, 0, 0);
 
-    mGltfModel->draw(mRenderData, mGltfRenderData);
+    // draw glTF model
+    if (mRenderData.rdDrawGltfModel)
+    {
+        mGltfModel->draw(mRenderData, mGltfRenderData);
+    }
+
+    // draw skeleton
+    if (mSkeletonLineIndexCount > 0 && mRenderData.rdDrawSkeleton)
+    {
+        vkCmdBindVertexBuffers(mRenderData.rdCommandBuffer, 0, 1, &mRenderData.rdVertexBufferData.rdVertexBuffer,
+                               &offset);
+
+        vkCmdBindPipeline(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                          mRenderData.rdGltfSkeletonPipeline);
+        vkCmdSetLineWidth(mRenderData.rdCommandBuffer, 3.0f);
+        vkCmdDraw(mRenderData.rdCommandBuffer, mSkeletonLineIndexCount, 1, mLineIndexCount, 0);
+    }
 
     mUIGenerateTimer.start();
     mUserInterface.createFrame(mRenderData);
@@ -513,6 +552,7 @@ void VkRenderer::cleanup()
     CommandBuffer::cleanup(mRenderData, mRenderData.rdCommandBuffer);
     CommandPool::cleanup(mRenderData);
     Framebuffer::cleanup(mRenderData);
+    GltfSkeletonPipeline::cleanup(mRenderData, mRenderData.rdGltfSkeletonPipeline);
     GltfPipeline::cleanup(mRenderData, mRenderData.rdGltfPipeline);
     Pipeline::cleanup(mRenderData, mRenderData.rdGridPipeline);
     Pipeline::cleanup(mRenderData, mRenderData.rdLinePipeline);
@@ -830,6 +870,19 @@ bool VkRenderer::createGltfPipeline()
                             VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile))
     {
         Logger::log(1, "%s error: could not init gltf shader pipeline\n", __FUNCTION__);
+        return false;
+    }
+    return true;
+}
+
+bool VkRenderer::createGltfSkeletonPipeline()
+{
+    std::string vertexShaderFile = "shaders/line.vert.spv";
+    std::string fragmentShaderFile = "shaders/line.frag.spv";
+    if (!GltfSkeletonPipeline::init(mRenderData, mRenderData.rdGltfPipelineLayout, mRenderData.rdGltfSkeletonPipeline,
+                                    VK_PRIMITIVE_TOPOLOGY_LINE_LIST, vertexShaderFile, fragmentShaderFile))
+    {
+        Logger::log(1, "%s error: could not init gltf skeleton shader pipeline\n", __FUNCTION__);
         return false;
     }
     return true;

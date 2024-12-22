@@ -54,6 +54,9 @@ class VkRenderer : public EventListener
     std::unique_ptr<VkMesh> mAllMeshes = nullptr;
     unsigned int mLineIndexCount = 0;
 
+    std::shared_ptr<VkMesh> mSkeletonMesh = nullptr;
+    unsigned int mSkeletonLineIndexCount = 0;
+
     std::shared_ptr<GltfModel> mGltfModel = nullptr;
 
     glm::mat4 mRotYMat = glm::mat4(1.0f);
@@ -121,6 +124,8 @@ class VkRenderer : public EventListener
     bool createGltfPipelineLayout();
 
     bool createGltfPipeline();
+
+    bool createGltfSkeletonPipeline();
 
     bool createFramebuffer();
 

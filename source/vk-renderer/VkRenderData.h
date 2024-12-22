@@ -128,6 +128,10 @@ struct VkRenderData
     int rdRotYAngle = 0;
     int rdRotZAngle = 0;
 
+    bool rdDrawGltfModel = true;
+    bool rdDrawSkeleton = true;
+    bool rdEnableVertexSkinning = true;
+
     glm::vec3 rdLightPosition = glm::vec3(4.f, 5.f, -3.f);
     glm::vec3 rdLightColor = glm::vec3(0.5f, 0.5f, 0.5f);
 
@@ -163,6 +167,7 @@ struct VkRenderData
     VkPipeline rdGridPipeline = VK_NULL_HANDLE;
     VkPipelineLayout rdGltfPipelineLayout = VK_NULL_HANDLE;
     VkPipeline rdGltfPipeline = VK_NULL_HANDLE;
+    VkPipeline rdGltfSkeletonPipeline = VK_NULL_HANDLE;
 
     VkCommandPool rdCommandPool = VK_NULL_HANDLE;
     VkCommandBuffer rdCommandBuffer = VK_NULL_HANDLE;

@@ -13,5 +13,8 @@ class VertexBuffer
     static bool uploadData(VkRenderData& renderData, VkVertexBufferData& vertexBufferData,
                            const tinygltf::Buffer& buffer, const tinygltf::BufferView& bufferView);
 
+    static bool uploadData(VkRenderData& renderData, VkVertexBufferData& vertexBufferData,
+                           std::vector<glm::vec3> vertexData);
+
     static void cleanup(VkRenderData& renderData, VkVertexBufferData& vertexBufferData);
 };

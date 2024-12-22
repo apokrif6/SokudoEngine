@@ -257,6 +257,13 @@ void UserInterface::createFrame(VkRenderData& renderData)
         ImGui::SliderInt("##ROTZ", &renderData.rdRotZAngle, 0, 360);
     }
 
+    if (ImGui::CollapsingHeader("glTF Model"))
+    {
+        ImGui::Checkbox("Draw Model", &renderData.rdDrawGltfModel);
+        ImGui::Checkbox("Draw Skeleton", &renderData.rdDrawSkeleton);
+        ImGui::Checkbox("Enable Vertex Skinning", &renderData.rdEnableVertexSkinning);
+    }
+
     if (ImGui::CollapsingHeader("Light Parameters"))
     {
         ImGui::Text("Light Position");
