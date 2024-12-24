@@ -117,10 +117,10 @@ struct VkRenderData
     float rdUIGenerateTime = 0.0f;
     float rdUIDrawTime = 0.0f;
 
-    float rdViewYaw = 180.f;
+    float rdViewYaw = 0.f;
     float rdViewPitch = 0.f;
 
-    glm::vec3 rdCameraWorldPosition = glm::vec3(0.0f, 0.0f, -0.5f);
+    glm::vec3 rdCameraWorldPosition = glm::vec3(0.f, 3.f, 4.5f);
 
     bool rdDrawWorldCoordinateArrows = true;
     bool rdDrawModelCoordinateArrows = true;

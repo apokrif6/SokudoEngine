@@ -26,7 +26,7 @@ Core::Renderer::VkRenderer::VkRenderer(GLFWwindow* inWindow)
     mMatrices.projectionMatrix = glm::mat4(1.0f);
 }
 
-bool Core::Renderer::VkRenderer::init(unsigned int width, unsigned int height)
+bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned int height)
 {
     if (!mRenderData.rdWindow)
     {
@@ -705,7 +705,7 @@ bool Core::Renderer::VkRenderer::createDepthBuffer()
 
     VmaAllocationCreateInfo depthAllocInfo{};
     depthAllocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-    depthAllocInfo.requiredFlags = VkMemoryPropertyFlags(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    depthAllocInfo.requiredFlags = static_cast<VkMemoryPropertyFlags>(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
     if (vmaCreateImage(mRenderData.rdAllocator, &depthImageInfo, &depthAllocInfo, &mRenderData.rdDepthImage,
                        &mRenderData.rdDepthImageAlloc, nullptr) != VK_SUCCESS)
@@ -864,8 +864,8 @@ bool Core::Renderer::VkRenderer::createGltfPipelineLayout()
 
 bool Core::Renderer::VkRenderer::createGltfPipeline()
 {
-    std::string vertexShaderFile = "shaders/gltf.vert.spv";
-    std::string fragmentShaderFile = "shaders/gltf.frag.spv";
+    const std::string vertexShaderFile = "shaders/gltf.vert.spv";
+    const std::string fragmentShaderFile = "shaders/gltf.frag.spv";
     if (!GltfPipeline::init(mRenderData, mRenderData.rdGltfPipelineLayout, mRenderData.rdGltfPipeline,
                             VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile))
     {
@@ -877,8 +877,8 @@ bool Core::Renderer::VkRenderer::createGltfPipeline()
 
 bool Core::Renderer::VkRenderer::createGltfSkeletonPipeline()
 {
-    std::string vertexShaderFile = "shaders/line.vert.spv";
-    std::string fragmentShaderFile = "shaders/line.frag.spv";
+    const std::string vertexShaderFile = "shaders/line.vert.spv";
+    const std::string fragmentShaderFile = "shaders/line.frag.spv";
     if (!GltfSkeletonPipeline::init(mRenderData, mRenderData.rdGltfPipelineLayout, mRenderData.rdGltfSkeletonPipeline,
                                     VK_PRIMITIVE_TOPOLOGY_LINE_LIST, vertexShaderFile, fragmentShaderFile))
     {
@@ -969,8 +969,8 @@ bool Core::Renderer::VkRenderer::initUserInterface()
 bool Core::Renderer::VkRenderer::loadGltfModel()
 {
     mGltfModel = std::make_shared<Core::Model::GltfModel>();
-    std::string modelFilename = "assets/Woman.gltf";
-    std::string modelTexFilename = "textures/Woman.png";
+    const std::string modelFilename = "assets/Woman.gltf";
+    const std::string modelTexFilename = "textures/Woman.png";
     if (!mGltfModel->loadModel(mRenderData, mGltfRenderData, modelFilename, modelTexFilename))
     {
         Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename.c_str());
