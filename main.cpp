@@ -1,11 +1,11 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <iostream>
-#include "window/Window.h"
-#include "tools/Logger.h"
+#include "core/window/Window.h"
+#include "core/tools/Logger.h"
 
 int main()
 {
-    std::unique_ptr<Window> ApplicationWindow = std::make_unique<Window>();
+    std::unique_ptr<Core::Application::Window> ApplicationWindow = std::make_unique<Core::Application::Window>();
 
     if (!ApplicationWindow->init(1280, 900, "Sokudo Engine"))
     {

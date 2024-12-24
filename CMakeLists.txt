@@ -11,7 +11,7 @@ file(GLOB_RECURSE SOURCES
         external/tinygltf/*.cc
 )
 add_executable(SokudoEngine ${SOURCES}
-        source/window/Window.cpp)
+        source/core/window/Window.cpp)
 
 if (WIN32)
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
@@ -104,7 +104,7 @@ add_custom_command(TARGET Assets POST_BUILD
 # includes
 add_subdirectory(external/vk-bootstrap)
 
-include_directories(${GLFW3_INCLUDE_DIR} source external/vk-memory-allocation external/include source/model external/imgui external/tinygltf)
+include_directories(${GLFW3_INCLUDE_DIR} source external/vk-memory-allocation external/include source/core/model external/imgui external/tinygltf)
 
 if (MSVC)
     target_link_libraries(SokudoEngine ${GLFW3_LIBRARY} Vulkan::Vulkan vk-bootstrap::vk-bootstrap)
