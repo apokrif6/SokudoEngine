@@ -1,7 +1,7 @@
 #include "CoordinateArrowModel.h"
 #include "core/tools/Logger.h"
 
-Core::Renderer::VkMesh CoordinateArrowModel::getVertexData()
+Core::Renderer::VkMesh Core::Model::CoordinateArrowModel::getVertexData()
 {
     if (mVertexData.vertices.empty())
     {
@@ -11,7 +11,7 @@ Core::Renderer::VkMesh CoordinateArrowModel::getVertexData()
     return mVertexData;
 }
 
-void CoordinateArrowModel::init()
+void Core::Model::CoordinateArrowModel::init()
 {
     mVertexData.vertices.resize(18);
 

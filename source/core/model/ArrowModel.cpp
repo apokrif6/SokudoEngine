@@ -1,7 +1,7 @@
 #include "ArrowModel.h"
 #include "core/tools/Logger.h"
 
-Core::Renderer::VkMesh ArrowModel::getVertexData()
+Core::Renderer::VkMesh Core::Model::ArrowModel::getVertexData()
 {
     if (mVertexData.vertices.empty())
     {
@@ -11,7 +11,7 @@ Core::Renderer::VkMesh ArrowModel::getVertexData()
     return mVertexData;
 }
 
-void ArrowModel::init()
+void Core::Model::ArrowModel::init()
 {
     mVertexData.vertices.resize(6);
 

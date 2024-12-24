@@ -3,7 +3,7 @@
 
 #include <VkBootstrap.h>
 
-bool Core::Renderer::UniformBuffer::init(Core::Renderer::VkRenderData renderData)
+bool Core::Renderer::UniformBuffer::init(Core::Renderer::VkRenderData& renderData)
 {
     VkBufferCreateInfo bufferInfo{};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -87,7 +87,7 @@ bool Core::Renderer::UniformBuffer::init(Core::Renderer::VkRenderData renderData
     return true;
 }
 
-void Core::Renderer::UniformBuffer::uploadData(Core::Renderer::VkRenderData renderData, VkUploadMatrices matrices)
+void Core::Renderer::UniformBuffer::uploadData(Core::Renderer::VkRenderData& renderData, VkUploadMatrices matrices)
 {
     void* data;
     vmaMapMemory(renderData.rdAllocator, renderData.rdUBOBufferAlloc, &data);
@@ -95,7 +95,7 @@ void Core::Renderer::UniformBuffer::uploadData(Core::Renderer::VkRenderData rend
     vmaUnmapMemory(renderData.rdAllocator, renderData.rdUBOBufferAlloc);
 }
 
-void Core::Renderer::UniformBuffer::cleanup(Core::Renderer::VkRenderData renderData)
+void Core::Renderer::UniformBuffer::cleanup(Core::Renderer::VkRenderData& renderData)
 {
     vkDestroyDescriptorPool(renderData.rdVkbDevice.device, renderData.rdUBODescriptorPool, nullptr);
     vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdUBODescriptorLayout, nullptr);

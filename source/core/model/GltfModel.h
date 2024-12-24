@@ -9,64 +9,67 @@
 #include "core/vk-renderer/VkRenderData.h"
 #include "GltfNode.h"
 
+namespace Core::Model
+{
 class GltfModel
 {
-  public:
-    bool loadModel(Core::Renderer::VkRenderData& renderData, Core::Renderer::VkGltfRenderData& gltfRenderData, const std::string& modelFilename,
-                   const std::string& textureFilename);
+public:
+  bool loadModel(Core::Renderer::VkRenderData& renderData, Core::Renderer::VkGltfRenderData& gltfRenderData, const std::string& modelFilename,
+                 const std::string& textureFilename);
 
-    void draw(Core::Renderer::VkRenderData& renderData, Core::Renderer::VkGltfRenderData& gltfRenderData);
+  void draw(Core::Renderer::VkRenderData& renderData, Core::Renderer::VkGltfRenderData& gltfRenderData);
 
-    void cleanup(Core::Renderer::VkRenderData& renderData, Core::Renderer::VkGltfRenderData& gltfRenderData);
+  void cleanup(Core::Renderer::VkRenderData& renderData, Core::Renderer::VkGltfRenderData& gltfRenderData);
 
-    void uploadVertexBuffers(Core::Renderer::VkRenderData& renderData, Core::Renderer::VkGltfRenderData& gltfRenderData);
+  void uploadVertexBuffers(Core::Renderer::VkRenderData& renderData, Core::Renderer::VkGltfRenderData& gltfRenderData);
 
-    void uploadPositionBuffer(Core::Renderer::VkRenderData& renderData, Core::Renderer::VkGltfRenderData& gltfRenderData);
+  void uploadPositionBuffer(Core::Renderer::VkRenderData& renderData, Core::Renderer::VkGltfRenderData& gltfRenderData);
 
-    void applyVertexSkinning(bool enableSkinning);
+  void applyVertexSkinning(bool enableSkinning);
 
-    void uploadIndexBuffer(Core::Renderer::VkRenderData& renderData, Core::Renderer::VkGltfRenderData& gltfRenderData);
+  void uploadIndexBuffer(Core::Renderer::VkRenderData& renderData, Core::Renderer::VkGltfRenderData& gltfRenderData);
 
-    std::shared_ptr<Core::Renderer::VkMesh> getSkeleton(bool enableSkinning);
+  std::shared_ptr<Core::Renderer::VkMesh> getSkeleton(bool enableSkinning);
 
-  private:
-    void createVertexBuffers(Core::Renderer::VkRenderData& renderData, Core::Renderer::VkGltfRenderData& gltfRenderData);
+private:
+  void createVertexBuffers(Core::Renderer::VkRenderData& renderData, Core::Renderer::VkGltfRenderData& gltfRenderData);
 
-    void createIndexBuffer(Core::Renderer::VkRenderData& renderData, Core::Renderer::VkGltfRenderData& gltfRenderData);
+  void createIndexBuffer(Core::Renderer::VkRenderData& renderData, Core::Renderer::VkGltfRenderData& gltfRenderData);
 
-    int getTriangleCount();
+  int getTriangleCount();
 
-    void getSkeletonPerNode(std::shared_ptr<GltfNode> treeNode, bool enableSkinning);
+  void getSkeletonPerNode(std::shared_ptr<GltfNode> treeNode, bool enableSkinning);
 
-    void getJointData();
+  void getJointData();
 
-    void getWeightData();
+  void getWeightData();
 
-    void getInvBindMatrices();
+  void getInvBindMatrices();
 
-    void getNodes(std::shared_ptr<GltfNode> treeNode);
+  void getNodes(std::shared_ptr<GltfNode> treeNode);
 
-    void getNodeData(std::shared_ptr<GltfNode> treeNode, glm::mat4 parentNodeMatrix);
+  void getNodeData(std::shared_ptr<GltfNode> treeNode, glm::mat4 parentNodeMatrix);
 
-    std::vector<glm::tvec4<uint16_t>> mJointVec{};
+  std::vector<glm::tvec4<uint16_t>> mJointVec{};
 
-    std::vector<glm::vec4> mWeightVec{};
+  std::vector<glm::vec4> mWeightVec{};
 
-    std::vector<glm::mat4> mInverseBindMatrices{};
+  std::vector<glm::mat4> mInverseBindMatrices{};
 
-    std::vector<glm::mat4> mJointMatrices{};
+  std::vector<glm::mat4> mJointMatrices{};
 
-    std::vector<int> mAttribAccessors{};
+  std::vector<int> mAttribAccessors{};
 
-    std::vector<int> mNodeToJoint{};
+  std::vector<int> mNodeToJoint{};
 
-    std::vector<glm::vec3> mAlteredPositions{};
+  std::vector<glm::vec3> mAlteredPositions{};
 
-    std::shared_ptr<GltfNode> mRootNode = nullptr;
+  std::shared_ptr<GltfNode> mRootNode = nullptr;
 
-    std::shared_ptr<tinygltf::Model> mModel = nullptr;
+  std::shared_ptr<tinygltf::Model> mModel = nullptr;
 
-    std::shared_ptr<Core::Renderer::VkMesh> mSkeletonMesh = nullptr;
+  std::shared_ptr<Core::Renderer::VkMesh> mSkeletonMesh = nullptr;
 
-    std::map<std::string, GLint> attributes = {{"POSITION", 0}, {"NORMAL", 1}, {"TEXCOORD_0", 2}};
+  std::map<std::string, GLint> attributes = {{"POSITION", 0}, {"NORMAL", 1}, {"TEXCOORD_0", 2}};
 };
+}

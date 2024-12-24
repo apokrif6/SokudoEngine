@@ -1,7 +1,7 @@
 #include "Model.h"
 #include "core/tools/Logger.h"
 
-void Model::init()
+void Core::Model::Model::init()
 {
     mVertexData.vertices.resize(36);
 
@@ -140,7 +140,7 @@ void Model::init()
     Logger::log(1, "%s: loaded %d vertices\n", __FUNCTION__, mVertexData.vertices.size());
 }
 
-Core::Renderer::VkMesh Model::getVertexData()
+Core::Renderer::VkMesh Core::Model::Model::getVertexData()
 {
     if (mVertexData.vertices.empty())
     {

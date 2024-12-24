@@ -4,7 +4,7 @@
 #include "core/tools/Logger.h"
 #include "Shader.h"
 
-bool Core::Renderer::GltfSkeletonPipeline::init(Core::Renderer::VkRenderData renderData, VkPipelineLayout& pipelineLayout, VkPipeline& pipeline,
+bool Core::Renderer::GltfSkeletonPipeline::init(Core::Renderer::VkRenderData& renderData, VkPipelineLayout& pipelineLayout, VkPipeline& pipeline,
                                 VkPrimitiveTopology topology, const std::string& vertexShaderFilename,
                                 const std::string& fragmentShaderFilename)
 {
@@ -169,7 +169,7 @@ bool Core::Renderer::GltfSkeletonPipeline::init(Core::Renderer::VkRenderData ren
     return true;
 }
 
-void Core::Renderer::GltfSkeletonPipeline::cleanup(Core::Renderer::VkRenderData renderData, VkPipeline& pipeline)
+void Core::Renderer::GltfSkeletonPipeline::cleanup(Core::Renderer::VkRenderData& renderData, VkPipeline& pipeline)
 {
     vkDestroyPipeline(renderData.rdVkbDevice.device, pipeline, nullptr);
 }

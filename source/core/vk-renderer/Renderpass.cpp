@@ -1,7 +1,7 @@
 #include "Renderpass.h"
 #include "core/tools/Logger.h"
 
-bool Core::Renderer::Renderpass::init(Core::Renderer::VkRenderData renderData)
+bool Core::Renderer::Renderpass::init(Core::Renderer::VkRenderData& renderData)
 {
     VkAttachmentDescription colorAtt{};
     colorAtt.format = renderData.rdVkbSwapchain.image_format;
@@ -76,7 +76,7 @@ bool Core::Renderer::Renderpass::init(Core::Renderer::VkRenderData renderData)
     return true;
 }
 
-void Core::Renderer::Renderpass::cleanup(Core::Renderer::VkRenderData renderData)
+void Core::Renderer::Renderpass::cleanup(Core::Renderer::VkRenderData& renderData)
 {
     /* could not be done in a destructor */
     vkDestroyRenderPass(renderData.rdVkbDevice.device, renderData.rdRenderpass, nullptr);

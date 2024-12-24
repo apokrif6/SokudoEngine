@@ -3,7 +3,7 @@
 
 #include <VkBootstrap.h>
 
-bool Core::Renderer::PipelineLayout::init(Core::Renderer::VkRenderData renderData, VkTextureData& textureData, VkPipelineLayout& pipelineLayout)
+bool Core::Renderer::PipelineLayout::init(Core::Renderer::VkRenderData& renderData, VkTextureData& textureData, VkPipelineLayout& pipelineLayout)
 {
     VkDescriptorSetLayout layouts[] = {textureData.texTextureDescriptorLayout, renderData.rdUBODescriptorLayout};
 
@@ -22,7 +22,7 @@ bool Core::Renderer::PipelineLayout::init(Core::Renderer::VkRenderData renderDat
     return true;
 }
 
-void Core::Renderer::PipelineLayout::cleanup(Core::Renderer::VkRenderData renderData, VkPipelineLayout& pipelineLayout)
+void Core::Renderer::PipelineLayout::cleanup(Core::Renderer::VkRenderData& renderData, VkPipelineLayout& pipelineLayout)
 {
     vkDestroyPipelineLayout(renderData.rdVkbDevice.device, pipelineLayout, nullptr);
 }

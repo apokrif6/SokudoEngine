@@ -10,11 +10,11 @@ namespace Core::Renderer
 class IndexBuffer
 {
   public:
-    static bool init(Core::Renderer::VkRenderData renderData, VkIndexBufferData& indexBufferData, unsigned int bufferSize);
+    static bool init(Core::Renderer::VkRenderData& renderData, VkIndexBufferData& indexBufferData, unsigned int bufferSize);
 
-    static bool uploadData(Core::Renderer::VkRenderData renderData, VkIndexBufferData& indexBufferData, const tinygltf::Buffer& buffer,
+    static bool uploadData(Core::Renderer::VkRenderData& renderData, VkIndexBufferData& indexBufferData, const tinygltf::Buffer& buffer,
                            const tinygltf::BufferView& bufferView);
 
-    static void cleanup(Core::Renderer::VkRenderData renderData, VkIndexBufferData& IndexBufferData);
+    static void cleanup(Core::Renderer::VkRenderData& renderData, VkIndexBufferData& IndexBufferData);
 };
 }

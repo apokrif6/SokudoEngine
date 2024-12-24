@@ -4,7 +4,7 @@
 #include "Texture.h"
 #include "core/tools/Logger.h"
 
-bool Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderData renderData, VkTextureData& textureData, std::string textureFilename)
+bool Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderData& renderData, VkTextureData& textureData, std::string textureFilename)
 {
     int texWidth;
     int texHeight;
@@ -310,7 +310,7 @@ bool Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderData renderDat
     return true;
 }
 
-void Core::Renderer::Texture::cleanup(Core::Renderer::VkRenderData renderData, VkTextureData& textureData)
+void Core::Renderer::Texture::cleanup(Core::Renderer::VkRenderData& renderData, VkTextureData& textureData)
 {
     vkDestroyDescriptorPool(renderData.rdVkbDevice.device, textureData.texTextureDescriptorPool, nullptr);
     vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, textureData.texTextureDescriptorLayout, nullptr);

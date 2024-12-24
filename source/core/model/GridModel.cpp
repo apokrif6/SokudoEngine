@@ -1,7 +1,7 @@
 #include "GridModel.h"
 #include "core/tools/Logger.h"
 
-Core::Renderer::VkMesh GridModel::getVertexData()
+Core::Renderer::VkMesh Core::Model::GridModel::getVertexData()
 {
     if (mVertexData.vertices.empty())
     {
@@ -11,7 +11,7 @@ Core::Renderer::VkMesh GridModel::getVertexData()
     return mVertexData;
 }
 
-void GridModel::init()
+void Core::Model::GridModel::init()
 {
     mVertexData.vertices.resize(36);
 

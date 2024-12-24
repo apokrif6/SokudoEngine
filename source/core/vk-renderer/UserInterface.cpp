@@ -11,7 +11,7 @@
 #include "CommandBuffer.h"
 #include "core/tools/Logger.h"
 
-bool Core::Renderer::UserInterface::init(Core::Renderer::VkRenderData renderData)
+bool Core::Renderer::UserInterface::init(Core::Renderer::VkRenderData& renderData)
 {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -137,7 +137,7 @@ bool Core::Renderer::UserInterface::init(Core::Renderer::VkRenderData renderData
     return true;
 }
 
-void Core::Renderer::UserInterface::createFrame(Core::Renderer::VkRenderData renderData)
+void Core::Renderer::UserInterface::createFrame(Core::Renderer::VkRenderData& renderData)
 {
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -280,13 +280,13 @@ void Core::Renderer::UserInterface::createFrame(Core::Renderer::VkRenderData ren
     ImGui::End();
 }
 
-void Core::Renderer::UserInterface::render(Core::Renderer::VkRenderData renderData)
+void Core::Renderer::UserInterface::render(Core::Renderer::VkRenderData& renderData)
 {
     ImGui::Render();
     ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), renderData.rdCommandBuffer);
 }
 
-void Core::Renderer::UserInterface::cleanup(Core::Renderer::VkRenderData renderData)
+void Core::Renderer::UserInterface::cleanup(Core::Renderer::VkRenderData& renderData)
 {
     vkDestroyDescriptorPool(renderData.rdVkbDevice.device, renderData.rdImguiDescriptorPool, nullptr);
     ImGui_ImplVulkan_Shutdown();

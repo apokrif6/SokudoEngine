@@ -2,7 +2,7 @@
 #include "VertexBuffer.h"
 #include "core/tools/Logger.h"
 
-bool Core::Renderer::VertexBuffer::init(Core::Renderer::VkRenderData renderData, VkVertexBufferData& vertexBufferData, unsigned int bufferSize)
+bool Core::Renderer::VertexBuffer::init(Core::Renderer::VkRenderData& renderData, VkVertexBufferData& vertexBufferData, unsigned int bufferSize)
 {
     VkBufferCreateInfo bufferInfo{};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -41,7 +41,7 @@ bool Core::Renderer::VertexBuffer::init(Core::Renderer::VkRenderData renderData,
     return true;
 }
 
-bool Core::Renderer::VertexBuffer::uploadData(Core::Renderer::VkRenderData renderData, VkVertexBufferData& vertexBufferData, Core::Renderer::VkMesh vertexData)
+bool Core::Renderer::VertexBuffer::uploadData(Core::Renderer::VkRenderData& renderData, VkVertexBufferData& vertexBufferData, Core::Renderer::VkMesh vertexData)
 {
     unsigned int vertexDataSize = vertexData.vertices.size() * sizeof(VkVertex);
 
@@ -88,7 +88,7 @@ bool Core::Renderer::VertexBuffer::uploadData(Core::Renderer::VkRenderData rende
     return true;
 }
 
-bool Core::Renderer::VertexBuffer::uploadData(Core::Renderer::VkRenderData renderData, VkVertexBufferData& vertexBufferData,
+bool Core::Renderer::VertexBuffer::uploadData(Core::Renderer::VkRenderData& renderData, VkVertexBufferData& vertexBufferData,
                               const tinygltf::Buffer& buffer, const tinygltf::BufferView& bufferView)
 {
     /* buffer too small, resize */
@@ -136,7 +136,7 @@ bool Core::Renderer::VertexBuffer::uploadData(Core::Renderer::VkRenderData rende
 }
 
 
-bool Core::Renderer::VertexBuffer::uploadData(Core::Renderer::VkRenderData renderData, VkVertexBufferData &vertexBufferData,
+bool Core::Renderer::VertexBuffer::uploadData(Core::Renderer::VkRenderData& renderData, VkVertexBufferData &vertexBufferData,
                               std::vector<glm::vec3> vertexData) {
     unsigned int vertexDataSize = vertexData.size() * sizeof(glm::vec3);
 
@@ -181,7 +181,7 @@ bool Core::Renderer::VertexBuffer::uploadData(Core::Renderer::VkRenderData rende
     return true;
 }
 
-void Core::Renderer::VertexBuffer::cleanup(Core::Renderer::VkRenderData renderData, VkVertexBufferData& vertexBufferData)
+void Core::Renderer::VertexBuffer::cleanup(Core::Renderer::VkRenderData& renderData, VkVertexBufferData& vertexBufferData)
 {
     vmaDestroyBuffer(renderData.rdAllocator, vertexBufferData.rdStagingBuffer, vertexBufferData.rdStagingBufferAlloc);
     vmaDestroyBuffer(renderData.rdAllocator, vertexBufferData.rdVertexBuffer, vertexBufferData.rdVertexBufferAlloc);

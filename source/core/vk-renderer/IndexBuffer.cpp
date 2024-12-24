@@ -4,7 +4,7 @@
 #include "CommandBuffer.h"
 #include "core/tools/Logger.h"
 
-bool Core::Renderer::IndexBuffer::init(Core::Renderer::VkRenderData renderData, VkIndexBufferData& indexBufferData, unsigned int bufferSize)
+bool Core::Renderer::IndexBuffer::init(Core::Renderer::VkRenderData& renderData, VkIndexBufferData& indexBufferData, unsigned int bufferSize)
 {
     VkBufferCreateInfo bufferInfo{};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -41,7 +41,7 @@ bool Core::Renderer::IndexBuffer::init(Core::Renderer::VkRenderData renderData, 
     return true;
 }
 
-bool Core::Renderer::IndexBuffer::uploadData(Core::Renderer::VkRenderData renderData, VkIndexBufferData& indexBufferData,
+bool Core::Renderer::IndexBuffer::uploadData(Core::Renderer::VkRenderData& renderData, VkIndexBufferData& indexBufferData,
                              const tinygltf::Buffer& buffer, const tinygltf::BufferView& bufferView)
 {
     /* buffer too small, resize */
@@ -88,7 +88,7 @@ bool Core::Renderer::IndexBuffer::uploadData(Core::Renderer::VkRenderData render
     return true;
 }
 
-void Core::Renderer::IndexBuffer::cleanup(Core::Renderer::VkRenderData renderData, VkIndexBufferData& indexBufferData)
+void Core::Renderer::IndexBuffer::cleanup(Core::Renderer::VkRenderData& renderData, VkIndexBufferData& indexBufferData)
 {
     vmaDestroyBuffer(renderData.rdAllocator, indexBufferData.rdStagingBuffer, indexBufferData.rdStagingBufferAlloc);
     vmaDestroyBuffer(renderData.rdAllocator, indexBufferData.rdIndexBuffer, indexBufferData.rdIndexBufferAlloc);

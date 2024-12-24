@@ -147,7 +147,7 @@ bool Core::Renderer::VkRenderer::init(unsigned int width, unsigned int height)
     mRenderData.rdWidth = static_cast<int>(width);
     mRenderData.rdHeight = static_cast<int>(height);
 
-    mModel = std::make_unique<Model>();
+    mModel = std::make_unique<Core::Model::Model>();
 
     mEulerModelMesh = std::make_unique<Core::Renderer::VkMesh>();
     mQuaternionModelMesh = std::make_unique<Core::Renderer::VkMesh>();
@@ -968,7 +968,7 @@ bool Core::Renderer::VkRenderer::initUserInterface()
 
 bool Core::Renderer::VkRenderer::loadGltfModel()
 {
-    mGltfModel = std::make_shared<GltfModel>();
+    mGltfModel = std::make_shared<Core::Model::GltfModel>();
     std::string modelFilename = "assets/Woman.gltf";
     std::string modelTexFilename = "textures/Woman.png";
     if (!mGltfModel->loadModel(mRenderData, mGltfRenderData, modelFilename, modelTexFilename))

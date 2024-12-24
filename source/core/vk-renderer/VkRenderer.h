@@ -17,7 +17,7 @@
 
 namespace Core::Renderer
 {
-class VkRenderer : public EventListener
+class VkRenderer final : public EventListener
 {
   public:
     explicit VkRenderer(GLFWwindow* inWindow);
@@ -35,22 +35,22 @@ class VkRenderer : public EventListener
     void cleanup();
 
   private:
-    VkRenderData mRenderData{};
-    VkGltfRenderData mGltfRenderData{};
+    Core::Renderer::VkRenderData mRenderData{};
+    Core::Renderer::VkGltfRenderData mGltfRenderData{};
 
-    UserInterface mUserInterface{};
+    Core::Renderer::UserInterface mUserInterface{};
 
-    GridModel mGridModel{};
+    Core::Model::GridModel mGridModel{};
     Core::Renderer::VkMesh mGridMesh{};
 
-    CoordinateArrowModel mCoordinateArrowsModel{};
+    Core::Model::CoordinateArrowModel mCoordinateArrowsModel{};
     Core::Renderer::VkMesh mCoordinateArrowsMesh{};
     Core::Renderer::VkMesh mEulerCoordinateArrowsMesh{};
 
-    ArrowModel mArrowModel{};
+    Core::Model::ArrowModel mArrowModel{};
     Core::Renderer::VkMesh mQuaternionArrowMesh{};
 
-    std::unique_ptr<Model> mModel = nullptr;
+    std::unique_ptr<Core::Model::Model> mModel = nullptr;
     std::unique_ptr<Core::Renderer::VkMesh> mEulerModelMesh = nullptr;
     std::unique_ptr<Core::Renderer::VkMesh> mQuaternionModelMesh = nullptr;
     std::unique_ptr<Core::Renderer::VkMesh> mAllMeshes = nullptr;
@@ -59,7 +59,7 @@ class VkRenderer : public EventListener
     std::shared_ptr<Core::Renderer::VkMesh> mSkeletonMesh = nullptr;
     unsigned int mSkeletonLineIndexCount = 0;
 
-    std::shared_ptr<GltfModel> mGltfModel = nullptr;
+    std::shared_ptr<Core::Model::GltfModel> mGltfModel = nullptr;
 
     glm::mat4 mRotYMat = glm::mat4(1.0f);
     glm::mat4 mRotZMat = glm::mat4(1.0f);
@@ -144,7 +144,6 @@ class VkRenderer : public EventListener
     bool initUserInterface();
 
     bool loadGltfModel();
-
 #pragma endregion Renderer
 
 #pragma region HandleGLFWEvents
@@ -160,4 +159,4 @@ class VkRenderer : public EventListener
     void handleMouseEnterLeaveEvents(int enter);
 #pragma endregion HandleGLFWEvents
 };
-} // namespace Core::Renderer
+}
