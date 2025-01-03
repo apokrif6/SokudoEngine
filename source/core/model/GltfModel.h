@@ -17,7 +17,7 @@ public:
   bool loadModel(Core::Renderer::VkRenderData& renderData, Core::Renderer::VkGltfRenderData& gltfRenderData, const std::string& modelFilename,
                  const std::string& textureFilename);
 
-  void draw(Core::Renderer::VkRenderData& renderData, Core::Renderer::VkGltfRenderData& gltfRenderData);
+  void draw(const Core::Renderer::VkRenderData& renderData, const Core::Renderer::VkGltfRenderData& gltfRenderData);
 
   void cleanup(Core::Renderer::VkRenderData& renderData, Core::Renderer::VkGltfRenderData& gltfRenderData);
 
@@ -38,7 +38,7 @@ private:
 
   int getTriangleCount();
 
-  void getSkeletonPerNode(std::shared_ptr<GltfNode> treeNode, bool enableSkinning);
+  void getSkeletonPerNode(const std::shared_ptr<GltfNode>& treeNode, bool enableSkinning);
 
   void getJointData();
 
@@ -46,9 +46,9 @@ private:
 
   void getInvBindMatrices();
 
-  void getNodes(std::shared_ptr<GltfNode> treeNode);
+  void getNodes(const std::shared_ptr<GltfNode>& treeNode);
 
-  void getNodeData(std::shared_ptr<GltfNode> treeNode, glm::mat4 parentNodeMatrix);
+  void getNodeData(const std::shared_ptr<GltfNode>& treeNode, const glm::mat4& parentNodeMatrix);
 
   std::vector<glm::tvec4<uint16_t>> mJointVec{};
 

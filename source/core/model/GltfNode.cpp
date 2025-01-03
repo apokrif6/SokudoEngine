@@ -46,7 +46,7 @@ void Core::Model::GltfNode::printTree()
 void Core::Model::GltfNode::printNodes(const std::shared_ptr<Core::Model::GltfNode>& startNode, const int indent)
 {
     std::string indentString;
-    for (int i = 0; i < indent; ++i)
+    for (size_t i = 0; i < indent; ++i)
     {
         indentString += " ";
     }

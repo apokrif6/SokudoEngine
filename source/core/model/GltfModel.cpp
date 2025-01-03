@@ -82,7 +82,7 @@ void Core::Model::GltfModel::getJointData()
     const tinygltf::BufferView& bufferView = mModel->bufferViews.at(accessor.bufferView);
     const tinygltf::Buffer& buffer = mModel->buffers.at(bufferView.buffer);
 
-    int jointVecSize = accessor.count;
+    int jointVecSize = static_cast<int>(accessor.count);
     Logger::log(1, "%s: %i short vec4 in JOINTS_0\n", __FUNCTION__, jointVecSize);
     mJointVec.resize(jointVecSize);
 
@@ -91,10 +91,10 @@ void Core::Model::GltfModel::getJointData()
     mNodeToJoint.resize(mModel->nodes.size());
 
     const tinygltf::Skin& skin = mModel->skins.at(0);
-    for (int i = 0; i < skin.joints.size(); ++i)
+    for (size_t i = 0; i < skin.joints.size(); ++i)
     {
         int destinationNode = skin.joints.at(i);
-        mNodeToJoint.at(destinationNode) = i;
+        mNodeToJoint.at(destinationNode) = static_cast<int>(i);
         Logger::log(2, "%s: joint %i affects node %i\n", __FUNCTION__, i, destinationNode);
     }
 }
@@ -141,7 +141,7 @@ std::shared_ptr<Core::Renderer::VkMesh> Core::Model::GltfModel::getSkeleton(bool
     return mSkeletonMesh;
 }
 
-void Core::Model::GltfModel::getSkeletonPerNode(std::shared_ptr<GltfNode> treeNode, bool enableSkinning)
+void Core::Model::GltfModel::getSkeletonPerNode(const std::shared_ptr<GltfNode>& treeNode, bool enableSkinning)
 {
     glm::vec3 parentPos = glm::vec3(0.0f);
     if (enableSkinning)
@@ -153,7 +153,7 @@ void Core::Model::GltfModel::getSkeletonPerNode(std::shared_ptr<GltfNode> treeNo
         glm::mat4 bindMatrix = glm::inverse(mInverseBindMatrices.at(mNodeToJoint.at(treeNode->getNodeNum())));
         parentPos = bindMatrix * treeNode->getNodeMatrix() * glm::vec4(1.0f);
     }
-    Core::Renderer::VkVertex parentVertex;
+    Core::Renderer::VkVertex parentVertex{};
     parentVertex.position = parentPos;
     parentVertex.color = glm::vec3(0.0f, 1.0f, 1.0f);
 
@@ -179,7 +179,7 @@ void Core::Model::GltfModel::getSkeletonPerNode(std::shared_ptr<GltfNode> treeNo
     }
 }
 
-void Core::Model::GltfModel::getNodes(std::shared_ptr<GltfNode> treeNode)
+void Core::Model::GltfModel::getNodes(const std::shared_ptr<GltfNode>& treeNode)
 {
     int nodeNum = treeNode->getNodeNum();
     std::vector<int> childNodes = mModel->nodes.at(nodeNum).children;
@@ -199,7 +199,7 @@ void Core::Model::GltfModel::getNodes(std::shared_ptr<GltfNode> treeNode)
     }
 }
 
-void Core::Model::GltfModel::getNodeData(std::shared_ptr<GltfNode> treeNode, glm::mat4 parentNodeMatrix)
+void Core::Model::GltfModel::getNodeData(const std::shared_ptr<GltfNode>& treeNode, const glm::mat4& parentNodeMatrix)
 {
     int nodeNum = treeNode->getNodeNum();
     const tinygltf::Node& node = mModel->nodes.at(nodeNum);
@@ -225,7 +225,8 @@ void Core::Model::GltfModel::getNodeData(std::shared_ptr<GltfNode> treeNode, glm
         treeNode->getNodeMatrix() * mInverseBindMatrices.at(mNodeToJoint.at(nodeNum));
 }
 
-void Core::Model::GltfModel::draw(Core::Renderer::VkRenderData& renderData, Core::Renderer::VkGltfRenderData& gltfRenderData)
+void Core::Model::GltfModel::draw(const Core::Renderer::VkRenderData& renderData,
+                                  const Core::Renderer::VkGltfRenderData& gltfRenderData)
 {
     const tinygltf::Primitive& primitives = mModel->meshes.at(0).primitives.at(0);
     const tinygltf::Accessor& indexAccessor = mModel->accessors.at(primitives.indices);
@@ -237,7 +238,7 @@ void Core::Model::GltfModel::draw(Core::Renderer::VkRenderData& renderData, Core
 
     /* vertex buffer */
     VkDeviceSize offset = 0;
-    for (int i = 0; i < 3; ++i)
+    for (size_t i = 0; i < 3; ++i)
     {
         vkCmdBindVertexBuffers(renderData.rdCommandBuffer, i, 1,
                                &gltfRenderData.rdGltfVertexBufferData.at(i).rdVertexBuffer, &offset);
@@ -253,7 +254,7 @@ void Core::Model::GltfModel::draw(Core::Renderer::VkRenderData& renderData, Core
 
 void Core::Model::GltfModel::cleanup(Core::Renderer::VkRenderData& renderData, Core::Renderer::VkGltfRenderData& gltfRenderData)
 {
-    for (int i = 0; i < 3; ++i)
+    for (size_t i = 0; i < 3; ++i)
     {
         Core::Renderer::VertexBuffer::cleanup(renderData, gltfRenderData.rdGltfVertexBufferData.at(i));
     }
@@ -267,7 +268,7 @@ void Core::Model::GltfModel::cleanup(Core::Renderer::VkRenderData& renderData, C
 void Core::Model::GltfModel::uploadVertexBuffers(Core::Renderer::VkRenderData& renderData,
                                     Core::Renderer::VkGltfRenderData& gltfRenderData)
 {
-    for (int i = 0; i < 3; ++i)
+    for (size_t i = 0; i < 3; ++i)
     {
         const tinygltf::Accessor& accessor = mModel->accessors.at(mAttribAccessors.at(i));
         const tinygltf::BufferView& bufferView = mModel->bufferViews.at(accessor.bufferView);
@@ -299,7 +300,7 @@ void Core::Model::GltfModel::applyVertexSkinning(bool enableSkinning)
 
     if (enableSkinning)
     {
-        for (int i = 0; i < mJointVec.size(); ++i)
+        for (size_t i = 0; i < mJointVec.size(); ++i)
         {
             glm::ivec4 jointIndex = glm::make_vec4(mJointVec.at(i));
             glm::vec4 weightIndex = glm::make_vec4(mWeightVec.at(i));
