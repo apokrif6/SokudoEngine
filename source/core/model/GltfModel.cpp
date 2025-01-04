@@ -9,10 +9,13 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <algorithm>
 
-bool Core::Model::GltfModel::loadModel(Core::Renderer::VkRenderData& renderData, Core::Renderer::VkGltfRenderData& gltfRenderData,
-                          const std::string& modelFilename, const std::string& textureFilename)
+bool Core::Model::GltfModel::loadModel(Core::Renderer::VkRenderData& renderData,
+                                       Core::Renderer::VkGltfRenderData& gltfRenderData,
+                                       const std::string& modelFilename, const std::string& textureFilename)
 {
-    if (!Core::Renderer::Texture::loadTexture(renderData, gltfRenderData.rdGltfModelTexture, textureFilename))
+    std::future<bool> textureLoadFuture =
+        Core::Renderer::Texture::loadTexture(renderData, gltfRenderData.rdGltfModelTexture, textureFilename);
+    if (!textureLoadFuture.get())
     {
         Logger::log(1, "%s: texture loading failed\n", __FUNCTION__);
         return false;
@@ -44,17 +47,14 @@ bool Core::Model::GltfModel::loadModel(Core::Renderer::VkRenderData& renderData,
         return false;
     }
 
-    /* extract position, normal, texture coords, and indices */
     createVertexBuffers(renderData, gltfRenderData);
     createIndexBuffer(renderData, gltfRenderData);
 
-    /* extract joints, weights, and invers bind matrices*/
     getJointData();
     getWeightData();
     getInvBindMatrices();
 
-    /* build model tree */
-    int nodeCount = mModel->nodes.size();
+    int nodeCount = static_cast<int>(mModel->nodes.size());
     int rootNode = mModel->scenes.at(0).nodes.at(0);
     Logger::log(1, "%s: model has %i nodes, root node is %i\n", __FUNCTION__, nodeCount, rootNode);
 
@@ -62,7 +62,6 @@ bool Core::Model::GltfModel::loadModel(Core::Renderer::VkRenderData& renderData,
     getNodeData(mRootNode, glm::mat4(1.0f));
     getNodes(mRootNode);
 
-    /* get Skeleton data */
     mSkeletonMesh = std::make_shared<Core::Renderer::VkMesh>();
 
     mRootNode->printTree();
@@ -109,7 +108,7 @@ void Core::Model::GltfModel::getWeightData()
     const tinygltf::BufferView& bufferView = mModel->bufferViews.at(accessor.bufferView);
     const tinygltf::Buffer& buffer = mModel->buffers.at(bufferView.buffer);
 
-    int weightVecSize = accessor.count;
+    int weightVecSize = static_cast<int>(accessor.count);
     Logger::log(1, "%s: %i vec4 in WEIGHTS_0\n", __FUNCTION__, weightVecSize);
     mWeightVec.resize(weightVecSize);
 
@@ -143,7 +142,7 @@ std::shared_ptr<Core::Renderer::VkMesh> Core::Model::GltfModel::getSkeleton(bool
 
 void Core::Model::GltfModel::getSkeletonPerNode(const std::shared_ptr<GltfNode>& treeNode, bool enableSkinning)
 {
-    glm::vec3 parentPos = glm::vec3(0.0f);
+    auto parentPos = glm::vec3(0.0f);
     if (enableSkinning)
     {
         parentPos = glm::vec3(treeNode->getNodeMatrix() * glm::vec4(1.0f));
@@ -159,7 +158,7 @@ void Core::Model::GltfModel::getSkeletonPerNode(const std::shared_ptr<GltfNode>&
 
     for (const auto& childNode : treeNode->getChildren())
     {
-        glm::vec3 childPos = glm::vec3(0.0f);
+        auto childPos = glm::vec3(0.0f);
         if (enableSkinning)
         {
             childPos = glm::vec3(childNode->getNodeMatrix() * glm::vec4(1.0f));
@@ -169,7 +168,7 @@ void Core::Model::GltfModel::getSkeletonPerNode(const std::shared_ptr<GltfNode>&
             glm::mat4 bindMatrix = glm::inverse(mInverseBindMatrices.at(mNodeToJoint.at(childNode->getNodeNum())));
             childPos = bindMatrix * childNode->getNodeMatrix() * glm::vec4(1.0f);
         }
-        Core::Renderer::VkVertex childVertex;
+        Core::Renderer::VkVertex childVertex{};
         childVertex.position = childPos;
         childVertex.color = glm::vec3(0.0f, 0.0f, 1.0f);
         mSkeletonMesh->vertices.emplace_back(parentVertex);
@@ -205,15 +204,15 @@ void Core::Model::GltfModel::getNodeData(const std::shared_ptr<GltfNode>& treeNo
     const tinygltf::Node& node = mModel->nodes.at(nodeNum);
     treeNode->setNodeName(node.name);
 
-    if (node.translation.size())
+    if (!node.translation.empty())
     {
         treeNode->setTranslation(glm::make_vec3(node.translation.data()));
     }
-    if (node.rotation.size())
+    if (!node.rotation.empty())
     {
         treeNode->setRotation(glm::make_quat(node.rotation.data()));
     }
-    if (node.scale.size())
+    if (!node.scale.empty())
     {
         treeNode->setScale(glm::make_vec3(node.scale.data()));
     }
@@ -252,7 +251,8 @@ void Core::Model::GltfModel::draw(const Core::Renderer::VkRenderData& renderData
     vkCmdDrawIndexed(renderData.rdCommandBuffer, static_cast<uint32_t>(renderData.rdGltfTriangleCount * 3), 1, 0, 0, 0);
 }
 
-void Core::Model::GltfModel::cleanup(Core::Renderer::VkRenderData& renderData, Core::Renderer::VkGltfRenderData& gltfRenderData)
+void Core::Model::GltfModel::cleanup(Core::Renderer::VkRenderData& renderData,
+                                     Core::Renderer::VkGltfRenderData& gltfRenderData)
 {
     for (size_t i = 0; i < 3; ++i)
     {
@@ -266,7 +266,7 @@ void Core::Model::GltfModel::cleanup(Core::Renderer::VkRenderData& renderData, C
 }
 
 void Core::Model::GltfModel::uploadVertexBuffers(Core::Renderer::VkRenderData& renderData,
-                                    Core::Renderer::VkGltfRenderData& gltfRenderData)
+                                                 Core::Renderer::VkGltfRenderData& gltfRenderData)
 {
     for (size_t i = 0; i < 3; ++i)
     {
@@ -280,7 +280,7 @@ void Core::Model::GltfModel::uploadVertexBuffers(Core::Renderer::VkRenderData& r
 }
 
 void Core::Model::GltfModel::uploadPositionBuffer(Core::Renderer::VkRenderData& renderData,
-                                     Core::Renderer::VkGltfRenderData& gltfRenderData)
+                                                  Core::Renderer::VkGltfRenderData& gltfRenderData)
 {
     const tinygltf::Accessor& accessor = mModel->accessors.at(mAttribAccessors.at(0));
     const tinygltf::BufferView& bufferView = mModel->bufferViews.at(accessor.bufferView);
@@ -313,7 +313,7 @@ void Core::Model::GltfModel::applyVertexSkinning(bool enableSkinning)
 }
 
 void Core::Model::GltfModel::uploadIndexBuffer(Core::Renderer::VkRenderData& renderData,
-                                  Core::Renderer::VkGltfRenderData& gltfRenderData)
+                                               Core::Renderer::VkGltfRenderData& gltfRenderData)
 {
     const tinygltf::Primitive& primitives = mModel->meshes.at(0).primitives.at(0);
     const tinygltf::Accessor& indexAccessor = mModel->accessors.at(primitives.indices);
@@ -325,7 +325,7 @@ void Core::Model::GltfModel::uploadIndexBuffer(Core::Renderer::VkRenderData& ren
 }
 
 void Core::Model::GltfModel::createVertexBuffers(Core::Renderer::VkRenderData& renderData,
-                                    Core::Renderer::VkGltfRenderData& gltfRenderData)
+                                                 Core::Renderer::VkGltfRenderData& gltfRenderData)
 {
     const tinygltf::Primitive& primitives = mModel->meshes.at(0).primitives.at(0);
     gltfRenderData.rdGltfVertexBufferData.resize(primitives.attributes.size());
@@ -363,7 +363,7 @@ void Core::Model::GltfModel::createVertexBuffers(Core::Renderer::VkRenderData& r
 }
 
 void Core::Model::GltfModel::createIndexBuffer(Core::Renderer::VkRenderData& renderData,
-                                  Core::Renderer::VkGltfRenderData& gltfRenderData)
+                                               Core::Renderer::VkGltfRenderData& gltfRenderData)
 {
     /* buffer for vertex indices */
     const tinygltf::Primitive& primitives = mModel->meshes.at(0).primitives.at(0);

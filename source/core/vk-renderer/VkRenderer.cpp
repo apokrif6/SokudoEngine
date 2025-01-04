@@ -174,7 +174,10 @@ void Core::Renderer::VkRenderer::setSize(unsigned int width, unsigned int height
 }
 
 // maybe move to some global functions?
-void Core::Renderer::VkRenderer::subscribeToInputEvents(EventDispatcher& eventDispatcher) { eventDispatcher.subscribe(this); }
+void Core::Renderer::VkRenderer::subscribeToInputEvents(EventDispatcher& eventDispatcher)
+{
+    eventDispatcher.subscribe(this);
+}
 
 void Core::Renderer::VkRenderer::onEvent(const Event& event)
 {
@@ -854,7 +857,8 @@ bool Core::Renderer::VkRenderer::createGridPipeline()
 
 bool Core::Renderer::VkRenderer::createGltfPipelineLayout()
 {
-    if (!Core::Renderer::PipelineLayout::init(mRenderData, mGltfRenderData.rdGltfModelTexture, mRenderData.rdGltfPipelineLayout))
+    if (!Core::Renderer::PipelineLayout::init(mRenderData, mGltfRenderData.rdGltfModelTexture,
+                                              mRenderData.rdGltfPipelineLayout))
     {
         Logger::log(1, "%s error: could not init pipeline layout\n", __FUNCTION__);
         return false;
@@ -932,7 +936,9 @@ bool Core::Renderer::VkRenderer::createSyncObjects()
 bool Core::Renderer::VkRenderer::loadTexture()
 {
     const std::string textureFileName = "textures/default.png";
-    if (!Core::Renderer::Texture::loadTexture(mRenderData, mRenderData.rdModelTexture, textureFileName))
+    std::future<bool> textureLoadFuture =
+        Core::Renderer::Texture::loadTexture(mRenderData, mRenderData.rdModelTexture, textureFileName);
+    if (!textureLoadFuture.get())
     {
         Logger::log(1, "%s error: could not load texture\n", __FUNCTION__);
         return false;
