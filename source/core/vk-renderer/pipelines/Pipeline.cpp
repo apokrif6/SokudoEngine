@@ -1,12 +1,11 @@
 #include <vector>
-
-#include "GltfPipeline.h"
-#include "Shader.h"
+#include "Pipeline.h"
 #include "core/tools/Logger.h"
+#include "core/vk-renderer/Shader.h"
 
-bool Core::Renderer::GltfPipeline::init(Core::Renderer::VkRenderData& renderData, VkPipelineLayout& pipelineLayout, VkPipeline& pipeline,
-                        VkPrimitiveTopology topology, const std::string& vertexShaderFilename,
-                        const std::string& fragmentShaderFilename)
+bool Core::Renderer::Pipeline::init(Core::Renderer::VkRenderData& renderData, VkPipelineLayout& pipelineLayout, VkPipeline& pipeline,
+                    VkPrimitiveTopology topology, const std::string& vertexShaderFilename,
+                    const std::string& fragmentShaderFilename)
 {
     VkShaderModule vertexModule = Core::Renderer::Shader::loadShader(renderData.rdVkbDevice.device, vertexShaderFilename);
     VkShaderModule fragmentModule = Core::Renderer::Shader::loadShader(renderData.rdVkbDevice.device, fragmentShaderFilename);
@@ -31,44 +30,15 @@ bool Core::Renderer::GltfPipeline::init(Core::Renderer::VkRenderData& renderData
 
     VkPipelineShaderStageCreateInfo shaderStagesInfo[] = {vertexStageInfo, fragmentStageInfo};
 
-    /* assemble the graphics pipeline itself */
-    VkVertexInputBindingDescription vertexBindings[3];
-    vertexBindings[0].binding = 0;
-    vertexBindings[0].stride = sizeof(glm::vec3);
-    vertexBindings[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-    vertexBindings[1].binding = 1;
-    vertexBindings[1].stride = sizeof(glm::vec3);
-    vertexBindings[1].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-    vertexBindings[2].binding = 2;
-    vertexBindings[2].stride = sizeof(glm::vec2);
-    vertexBindings[2].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-    VkVertexInputAttributeDescription positionAttribute{};
-    positionAttribute.binding = 0;
-    positionAttribute.location = 0;
-    positionAttribute.format = VK_FORMAT_R32G32B32_SFLOAT;
-    positionAttribute.offset = 0;
-
-    VkVertexInputAttributeDescription normalAttribute{};
-    normalAttribute.binding = 1;
-    normalAttribute.location = 1;
-    normalAttribute.format = VK_FORMAT_R32G32B32_SFLOAT;
-    normalAttribute.offset = 0;
-
-    VkVertexInputAttributeDescription uvAttribute{};
-    uvAttribute.binding = 2;
-    uvAttribute.location = 2;
-    uvAttribute.format = VK_FORMAT_R32G32_SFLOAT;
-    uvAttribute.offset = 0;
-
-    VkVertexInputAttributeDescription attributes[] = {positionAttribute, normalAttribute, uvAttribute};
+    auto bindingDescription = VkVertex::getBindingDescription();
+    auto attributeDescriptions = VkVertex::getAttributeDescriptions();
 
     VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    vertexInputInfo.vertexBindingDescriptionCount = 3;
-    vertexInputInfo.pVertexBindingDescriptions = vertexBindings;
-    vertexInputInfo.vertexAttributeDescriptionCount = 3;
-    vertexInputInfo.pVertexAttributeDescriptions = attributes;
+    vertexInputInfo.vertexBindingDescriptionCount = 1;
+    vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+    vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+    vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
     VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo{};
     inputAssemblyInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -116,10 +86,6 @@ bool Core::Renderer::GltfPipeline::init(Core::Renderer::VkRenderData& renderData
     colorBlendAttachment.blendEnable = VK_TRUE;
     colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
     colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-    colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
-    colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-    colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-    colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
 
     VkPipelineColorBlendStateCreateInfo colorBlendingInfo{};
     colorBlendingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -135,9 +101,11 @@ bool Core::Renderer::GltfPipeline::init(Core::Renderer::VkRenderData& renderData
     VkPipelineDepthStencilStateCreateInfo depthStencilInfo{};
     depthStencilInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
     depthStencilInfo.depthTestEnable = VK_TRUE;
-    depthStencilInfo.depthWriteEnable = VK_TRUE;
-    depthStencilInfo.depthCompareOp = VK_COMPARE_OP_LESS;
+    depthStencilInfo.depthWriteEnable = VK_FALSE;
+    depthStencilInfo.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
     depthStencilInfo.depthBoundsTestEnable = VK_FALSE;
+    depthStencilInfo.minDepthBounds = 0.0f;
+    depthStencilInfo.maxDepthBounds = 1.0f;
     depthStencilInfo.stencilTestEnable = VK_FALSE;
 
     std::vector<VkDynamicState> dynStates = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR,
@@ -179,7 +147,7 @@ bool Core::Renderer::GltfPipeline::init(Core::Renderer::VkRenderData& renderData
     return true;
 }
 
-void Core::Renderer::GltfPipeline::cleanup(Core::Renderer::VkRenderData& renderData, VkPipeline& pipeline)
+void Core::Renderer::Pipeline::cleanup(Core::Renderer::VkRenderData& renderData, VkPipeline& pipeline)
 {
     vkDestroyPipeline(renderData.rdVkbDevice.device, pipeline, nullptr);
 }

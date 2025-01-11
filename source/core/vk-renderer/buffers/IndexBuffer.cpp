@@ -1,7 +1,7 @@
 #include <cstring>
 
 #include "IndexBuffer.h"
-#include "CommandBuffer.h"
+#include "core/vk-renderer/buffers/CommandBuffer.h"
 #include "core/tools/Logger.h"
 
 bool Core::Renderer::IndexBuffer::init(Core::Renderer::VkRenderData& renderData, VkIndexBufferData& indexBufferData, unsigned int bufferSize)

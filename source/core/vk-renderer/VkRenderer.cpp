@@ -6,24 +6,26 @@
 #include "Framebuffer.h"
 #include "Renderpass.h"
 #include "PipelineLayout.h"
-#include "Pipeline.h"
+#include "core/vk-renderer/pipelines/Pipeline.h"
 #include "CommandPool.h"
-#include "CommandBuffer.h"
+#include "core/vk-renderer/buffers/CommandBuffer.h"
 #include "SyncObjects.h"
 #include "Texture.h"
-#include "UniformBuffer.h"
+#include "core/vk-renderer/buffers/UniformBuffer.h"
 #include "imgui.h"
-#include "VertexBuffer.h"
+#include "core/vk-renderer/buffers/VertexBuffer.h"
 #include "core/events/input-events/MouseMovementEvent.h"
-#include "GltfPipeline.h"
-#include "GltfSkeletonPipeline.h"
+#include "core/vk-renderer/pipelines/GltfPipeline.h"
+#include "core/vk-renderer/pipelines/GltfSkeletonPipeline.h"
+#include "core/vk-renderer/buffers/ShaderStorageBuffer.h"
+#include "core/vk-renderer/pipelines/GltfGPUPipeline.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 Core::Renderer::VkRenderer::VkRenderer(GLFWwindow* inWindow)
 {
     mRenderData.rdWindow = inWindow;
-    mMatrices.viewMatrix = glm::mat4(1.0f);
-    mMatrices.projectionMatrix = glm::mat4(1.0f);
+    mPerspectiveViewMatrices.emplace_back(1.0f);
+    mPerspectiveViewMatrices.emplace_back(1.0f);
 }
 
 bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned int height)
@@ -79,6 +81,22 @@ bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned i
         return false;
     }
 
+    if (!createUBO())
+    {
+        return false;
+    }
+
+    // should be loaded before ssbo to properly init joint matrices
+    if (!loadGltfModel())
+    {
+        return false;
+    }
+
+    if (!createSSBO())
+    {
+        return false;
+    }
+
     if (!createVBO())
     {
         return false;
@@ -109,22 +127,17 @@ bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned i
         return false;
     }
 
-    if (!loadGltfModel())
-    {
-        return false;
-    }
-
-    if (!createGltfPipelineLayout())
-    {
-        return false;
-    }
-
     if (!createGltfPipeline())
     {
         return false;
     }
 
     if (!createGltfSkeletonPipeline())
+    {
+        return false;
+    }
+
+    if (!createGltfGPUPipeline())
     {
         return false;
     }
@@ -281,20 +294,23 @@ bool Core::Renderer::VkRenderer::draw()
     scissor.extent = mRenderData.rdVkbSwapchain.extent;
 
     mMatrixGenerateTimer.start();
-    mMatrices.projectionMatrix = glm::perspective(glm::radians(static_cast<float>(mRenderData.rdFieldOfView)),
-                                                  static_cast<float>(mRenderData.rdVkbSwapchain.extent.width) /
-                                                      static_cast<float>(mRenderData.rdVkbSwapchain.extent.height),
-                                                  0.1f, 10.0f);
+    mPerspectiveViewMatrices.at(0) = mCamera.getViewMatrix(mRenderData);
+    mPerspectiveViewMatrices.at(1) = glm::perspective(glm::radians(static_cast<float>(mRenderData.rdFieldOfView)),
+                                                      static_cast<float>(mRenderData.rdVkbSwapchain.extent.width) /
+                                                          static_cast<float>(mRenderData.rdVkbSwapchain.extent.height),
+                                                      0.01f, 50.0f);
 
-    mMatrices.viewMatrix = mCamera.getViewMatrix(mRenderData);
+    if (mRenderData.rdDrawSkeleton)
+    {
+        mSkeletonMesh = mGltfModel->getSkeleton(true);
+    }
+
+    // TODO
+    // fix after ubo changes
+    /* mPerspectiveViewMatrices.lightPosition = mRenderData.rdLightPosition;
+    mPerspectiveViewMatrices.lightColor = mRenderData.rdLightColor;*/
+
     mRenderData.rdMatrixGenerateTime = mMatrixGenerateTimer.stop();
-
-    mMatrices.lightPosition = mRenderData.rdLightPosition;
-    mMatrices.lightColor = mRenderData.rdLightColor;
-
-    mGltfModel->applyVertexSkinning(mRenderData.rdEnableVertexSkinning);
-
-    mSkeletonMesh = mGltfModel->getSkeleton(mRenderData.rdEnableVertexSkinning);
 
     if (mRenderData.rdResetAngles)
     {
@@ -365,8 +381,11 @@ bool Core::Renderer::VkRenderer::draw()
                                     mQuaternionArrowMesh.vertices.end());
     }
 
-    mAllMeshes->vertices.insert(mAllMeshes->vertices.end(), mSkeletonMesh->vertices.begin(),
-                                mSkeletonMesh->vertices.end());
+    if (mRenderData.rdDrawSkeleton)
+    {
+        mAllMeshes->vertices.insert(mAllMeshes->vertices.end(), mSkeletonMesh->vertices.begin(),
+                                    mSkeletonMesh->vertices.end());
+    }
 
     *mEulerModelMesh = mModel->getVertexData();
     mRenderData.rdTriangleCount = mEulerModelMesh->vertices.size() / 3;
@@ -398,7 +417,7 @@ bool Core::Renderer::VkRenderer::draw()
     mLineIndexCount = mCoordinateArrowsMesh.vertices.size() + mEulerCoordinateArrowsMesh.vertices.size() +
                       mQuaternionArrowMesh.vertices.size();
 
-    mSkeletonLineIndexCount = mSkeletonMesh->vertices.size();
+    mSkeletonLineIndexCount = mRenderData.rdDrawSkeleton ? mSkeletonMesh->vertices.size() : 0;
 
     if (vkResetCommandBuffer(mRenderData.rdCommandBuffer, 0) != VK_SUCCESS)
     {
@@ -417,11 +436,27 @@ bool Core::Renderer::VkRenderer::draw()
     }
 
     mUploadToVBOTimer.start();
+
     Core::Renderer::VertexBuffer::uploadData(mRenderData, mRenderData.rdVertexBufferData, *mAllMeshes);
 
-    mGltfModel->uploadVertexBuffers(mRenderData, mGltfRenderData);
-    mGltfModel->uploadPositionBuffer(mRenderData, mGltfRenderData);
-    mGltfModel->uploadIndexBuffer(mRenderData, mGltfRenderData);
+    /* upload required data only when switching GPU and CPU */
+    static bool lastGPURenderState = mRenderData.rdGPUVertexSkinning;
+
+    if (lastGPURenderState != mRenderData.rdGPUVertexSkinning) {
+        mModelUploadRequired = true;
+        lastGPURenderState = mRenderData.rdGPUVertexSkinning;
+    }
+
+    if (mModelUploadRequired) {
+        mGltfModel->uploadVertexBuffers(mRenderData, mGltfRenderData);
+        mGltfModel->uploadIndexBuffer(mRenderData, mGltfRenderData);
+        mModelUploadRequired = false;
+    }
+
+    if (!mRenderData.rdGPUVertexSkinning) {
+        /* glTF vertex skinning, overwrites position buffer, needs upload on every frame */
+        mGltfModel->applyVertexSkinning(mRenderData, mGltfRenderData);
+    }
 
     mRenderData.rdUploadToVBOTime = mUploadToVBOTimer.stop();
 
@@ -430,10 +465,17 @@ bool Core::Renderer::VkRenderer::draw()
     vkCmdSetViewport(mRenderData.rdCommandBuffer, 0, 1, &viewport);
     vkCmdSetScissor(mRenderData.rdCommandBuffer, 0, 1, &scissor);
 
-    vkCmdBindDescriptorSets(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdPipelineLayout,
-                            0, 1, &mRenderData.rdModelTexture.texTextureDescriptorSet, 0, nullptr);
-    vkCmdBindDescriptorSets(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdPipelineLayout,
-                            1, 1, &mRenderData.rdUBODescriptorSet, 0, nullptr);
+    vkCmdBindDescriptorSets(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                            mRenderData.rdPipelineLayout,0, 1,
+                            &mRenderData.rdModelTexture.texTextureDescriptorSet, 0, nullptr);
+
+    vkCmdBindDescriptorSets(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                            mRenderData.rdPipelineLayout,1, 1,
+                            &mRenderData.rdPerspectiveViewMatrixUBO.rdUBODescriptorSet, 0, nullptr);
+
+    vkCmdBindDescriptorSets(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                            mRenderData.rdPipelineLayout,2, 1,
+                            &mRenderData.rdJointMatrixSSBO.rdSSBODescriptorSet, 0, nullptr);
 
     VkDeviceSize offset = 0;
     vkCmdBindVertexBuffers(mRenderData.rdCommandBuffer, 0, 1, &mRenderData.rdVertexBufferData.rdVertexBuffer, &offset);
@@ -489,7 +531,13 @@ bool Core::Renderer::VkRenderer::draw()
     }
 
     mUploadToUBOTimer.start();
-    Core::Renderer::UniformBuffer::uploadData(mRenderData, mMatrices);
+
+    Core::Renderer::UniformBuffer::uploadData(mRenderData, mRenderData.rdPerspectiveViewMatrixUBO,
+                                              mPerspectiveViewMatrices);
+
+    Core::Renderer::ShaderStorageBuffer::uploadData(mRenderData, mRenderData.rdJointMatrixSSBO,
+                                                    mGltfModel->getJointMatrices());
+
     mRenderData.rdUploadToUBOTime = mUploadToUBOTimer.stop();
 
     VkSubmitInfo submitInfo{};
@@ -555,15 +603,17 @@ void Core::Renderer::VkRenderer::cleanup()
     Core::Renderer::CommandBuffer::cleanup(mRenderData, mRenderData.rdCommandBuffer);
     Core::Renderer::CommandPool::cleanup(mRenderData);
     Core::Renderer::Framebuffer::cleanup(mRenderData);
+    Core::Renderer::GltfGPUPipeline::cleanup(mRenderData, mRenderData.rdGltfGPUPipeline);
     Core::Renderer::GltfSkeletonPipeline::cleanup(mRenderData, mRenderData.rdGltfSkeletonPipeline);
     Core::Renderer::GltfPipeline::cleanup(mRenderData, mRenderData.rdGltfPipeline);
     Core::Renderer::Pipeline::cleanup(mRenderData, mRenderData.rdGridPipeline);
     Core::Renderer::Pipeline::cleanup(mRenderData, mRenderData.rdLinePipeline);
     Core::Renderer::Pipeline::cleanup(mRenderData, mRenderData.rdBasicPipeline);
     Core::Renderer::PipelineLayout::cleanup(mRenderData, mRenderData.rdPipelineLayout);
-    Core::Renderer::PipelineLayout::cleanup(mRenderData, mRenderData.rdGltfPipelineLayout);
+    Core::Renderer::PipelineLayout::cleanup(mRenderData, mRenderData.rdPipelineLayout);
     Core::Renderer::Renderpass::cleanup(mRenderData);
-    Core::Renderer::UniformBuffer::cleanup(mRenderData);
+    Core::Renderer::UniformBuffer::cleanup(mRenderData, mRenderData.rdPerspectiveViewMatrixUBO);
+    Core::Renderer::ShaderStorageBuffer::cleanup(mRenderData, mRenderData.rdJointMatrixSSBO);
     Core::Renderer::VertexBuffer::cleanup(mRenderData, mRenderData.rdVertexBufferData);
     Core::Renderer::Texture::cleanup(mRenderData, mRenderData.rdModelTexture);
 
@@ -778,7 +828,21 @@ bool Core::Renderer::VkRenderer::recreateSwapchain()
 
 bool Core::Renderer::VkRenderer::createUBO()
 {
-    if (!Core::Renderer::UniformBuffer::init(mRenderData))
+    size_t matrixSize = mPerspectiveViewMatrices.size() * sizeof(glm::mat4);
+
+    if (!Core::Renderer::UniformBuffer::init(mRenderData, mRenderData.rdPerspectiveViewMatrixUBO, matrixSize))
+    {
+        Logger::log(1, "%s error: could not create uniform buffers\n", __FUNCTION__);
+        return false;
+    }
+    return true;
+}
+
+bool Core::Renderer::VkRenderer::createSSBO()
+{
+    size_t matrixSize = mGltfModel->getJointMatrices().size() * sizeof(glm::mat4);
+
+    if (!Core::Renderer::ShaderStorageBuffer::init(mRenderData, mRenderData.rdJointMatrixSSBO, matrixSize))
     {
         Logger::log(1, "%s error: could not create uniform buffers\n", __FUNCTION__);
         return false;
@@ -855,22 +919,11 @@ bool Core::Renderer::VkRenderer::createGridPipeline()
     return true;
 }
 
-bool Core::Renderer::VkRenderer::createGltfPipelineLayout()
-{
-    if (!Core::Renderer::PipelineLayout::init(mRenderData, mGltfRenderData.rdGltfModelTexture,
-                                              mRenderData.rdGltfPipelineLayout))
-    {
-        Logger::log(1, "%s error: could not init pipeline layout\n", __FUNCTION__);
-        return false;
-    }
-    return true;
-}
-
 bool Core::Renderer::VkRenderer::createGltfPipeline()
 {
     const std::string vertexShaderFile = "shaders/gltf.vert.spv";
     const std::string fragmentShaderFile = "shaders/gltf.frag.spv";
-    if (!GltfPipeline::init(mRenderData, mRenderData.rdGltfPipelineLayout, mRenderData.rdGltfPipeline,
+    if (!GltfPipeline::init(mRenderData, mRenderData.rdPipelineLayout, mRenderData.rdGltfPipeline,
                             VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile))
     {
         Logger::log(1, "%s error: could not init gltf shader pipeline\n", __FUNCTION__);
@@ -883,10 +936,23 @@ bool Core::Renderer::VkRenderer::createGltfSkeletonPipeline()
 {
     const std::string vertexShaderFile = "shaders/line.vert.spv";
     const std::string fragmentShaderFile = "shaders/line.frag.spv";
-    if (!GltfSkeletonPipeline::init(mRenderData, mRenderData.rdGltfPipelineLayout, mRenderData.rdGltfSkeletonPipeline,
+    if (!GltfSkeletonPipeline::init(mRenderData, mRenderData.rdPipelineLayout, mRenderData.rdGltfSkeletonPipeline,
                                     VK_PRIMITIVE_TOPOLOGY_LINE_LIST, vertexShaderFile, fragmentShaderFile))
     {
         Logger::log(1, "%s error: could not init gltf skeleton shader pipeline\n", __FUNCTION__);
+        return false;
+    }
+    return true;
+}
+
+bool Core::Renderer::VkRenderer::createGltfGPUPipeline()
+{
+    const std::string vertexShaderFile = "shaders/gltf_gpu.vert.spv";
+    const std::string fragmentShaderFile = "shaders/gltf_gpu.frag.spv";
+    if (!GltfGPUPipeline::init(mRenderData, mRenderData.rdPipelineLayout, mRenderData.rdGltfGPUPipeline,
+                               VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile))
+    {
+        Logger::log(1, "%s error: could not init gltf GPU shader pipeline\n", __FUNCTION__);
         return false;
     }
     return true;

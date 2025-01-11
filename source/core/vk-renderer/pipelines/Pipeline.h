@@ -1,13 +1,10 @@
 #pragma once
 
-#include <string>
-#include <vulkan/vulkan.h>
-
-#include "VkRenderData.h"
+#include "core/vk-renderer/VkRenderData.h"
 
 namespace Core::Renderer
 {
-class GltfSkeletonPipeline
+class Pipeline
 {
   public:
     static bool init(Core::Renderer::VkRenderData& renderData, VkPipelineLayout& pipelineLayout, VkPipeline& pipeline,

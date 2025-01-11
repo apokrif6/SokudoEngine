@@ -23,13 +23,13 @@ public:
 
   void uploadVertexBuffers(Core::Renderer::VkRenderData& renderData, Core::Renderer::VkGltfRenderData& gltfRenderData);
 
-  void uploadPositionBuffer(Core::Renderer::VkRenderData& renderData, Core::Renderer::VkGltfRenderData& gltfRenderData);
-
-  void applyVertexSkinning(bool enableSkinning);
+  void applyVertexSkinning(Core::Renderer::VkRenderData &renderData, Core::Renderer::VkGltfRenderData& gltfRenderData);
 
   void uploadIndexBuffer(Core::Renderer::VkRenderData& renderData, Core::Renderer::VkGltfRenderData& gltfRenderData);
 
   std::shared_ptr<Core::Renderer::VkMesh> getSkeleton(bool enableSkinning);
+
+  [[nodiscard]] std::vector<glm::mat4> getJointMatrices() const { return mJointMatrices; }
 
 private:
   void createVertexBuffers(Core::Renderer::VkRenderData& renderData, Core::Renderer::VkGltfRenderData& gltfRenderData);
@@ -70,6 +70,7 @@ private:
 
   std::shared_ptr<Core::Renderer::VkMesh> mSkeletonMesh = nullptr;
 
-  std::map<std::string, GLint> attributes = {{"POSITION", 0}, {"NORMAL", 1}, {"TEXCOORD_0", 2}};
+  std::map<std::string, GLint> attributes = {{"POSITION", 0}, {"NORMAL", 1}, {"TEXCOORD_0", 2},
+                                             {"JOINTS_0", 3}, {"WEIGHTS_0", 4}};
 };
 }

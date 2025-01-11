@@ -1,20 +1,21 @@
 #include "UniformBuffer.h"
 #include "core/tools/Logger.h"
 
-#include <VkBootstrap.h>
+#include "VkBootstrap.h"
 
-bool Core::Renderer::UniformBuffer::init(Core::Renderer::VkRenderData& renderData)
+bool Core::Renderer::UniformBuffer::init(Core::Renderer::VkRenderData& renderData, VkUniformBufferData &UBOData,
+                                         size_t bufferSize)
 {
     VkBufferCreateInfo bufferInfo{};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    bufferInfo.size = sizeof(VkUploadMatrices);
+    bufferInfo.size = bufferSize;
     bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 
     VmaAllocationCreateInfo vmaAllocInfo{};
     vmaAllocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
 
-    if (vmaCreateBuffer(renderData.rdAllocator, &bufferInfo, &vmaAllocInfo, &renderData.rdUBOBuffer,
-                        &renderData.rdUBOBufferAlloc, nullptr) != VK_SUCCESS)
+    if (vmaCreateBuffer(renderData.rdAllocator, &bufferInfo, &vmaAllocInfo,
+                        &UBOData.rdUniformBuffer,&UBOData.rdUniformBufferAlloc, nullptr) != VK_SUCCESS)
     {
         Logger::log(1, "%s error: could not allocate uniform buffer via VMA\n", __FUNCTION__);
         return false;
@@ -33,7 +34,7 @@ bool Core::Renderer::UniformBuffer::init(Core::Renderer::VkRenderData& renderDat
     uboCreateInfo.pBindings = &uboBind;
 
     if (vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &uboCreateInfo, nullptr,
-                                    &renderData.rdUBODescriptorLayout) != VK_SUCCESS)
+                                    &UBOData.rdUBODescriptorLayout) != VK_SUCCESS)
     {
         Logger::log(1, "%s error: could not create UBO descriptor set layout\n", __FUNCTION__);
         return false;
@@ -50,7 +51,7 @@ bool Core::Renderer::UniformBuffer::init(Core::Renderer::VkRenderData& renderDat
     descriptorPool.maxSets = 1;
 
     if (vkCreateDescriptorPool(renderData.rdVkbDevice.device, &descriptorPool, nullptr,
-                               &renderData.rdUBODescriptorPool) != VK_SUCCESS)
+                               &UBOData.rdUBODescriptorPool) != VK_SUCCESS)
     {
         Logger::log(1, "%s error: could not create UBO descriptor pool\n", __FUNCTION__);
         return false;
@@ -58,46 +59,56 @@ bool Core::Renderer::UniformBuffer::init(Core::Renderer::VkRenderData& renderDat
 
     VkDescriptorSetAllocateInfo descriptorAllocateInfo{};
     descriptorAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    descriptorAllocateInfo.descriptorPool = renderData.rdUBODescriptorPool;
+    descriptorAllocateInfo.descriptorPool = UBOData.rdUBODescriptorPool;
     descriptorAllocateInfo.descriptorSetCount = 1;
-    descriptorAllocateInfo.pSetLayouts = &renderData.rdUBODescriptorLayout;
+    descriptorAllocateInfo.pSetLayouts = &UBOData.rdUBODescriptorLayout;
 
     if (vkAllocateDescriptorSets(renderData.rdVkbDevice.device, &descriptorAllocateInfo,
-                                 &renderData.rdUBODescriptorSet) != VK_SUCCESS)
+                                 &UBOData.rdUBODescriptorSet) != VK_SUCCESS)
     {
         Logger::log(1, "%s error: could not allocate UBO descriptor set\n", __FUNCTION__);
         return false;
     }
 
     VkDescriptorBufferInfo uboInfo{};
-    uboInfo.buffer = renderData.rdUBOBuffer;
+    uboInfo.buffer = UBOData.rdUniformBuffer;
     uboInfo.offset = 0;
-    uboInfo.range = sizeof(VkUploadMatrices);
+    uboInfo.range = bufferSize;
 
     VkWriteDescriptorSet writeDescriptorSet{};
     writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    writeDescriptorSet.dstSet = renderData.rdUBODescriptorSet;
+    writeDescriptorSet.dstSet = UBOData.rdUBODescriptorSet;
     writeDescriptorSet.dstBinding = 0;
     writeDescriptorSet.descriptorCount = 1;
     writeDescriptorSet.pBufferInfo = &uboInfo;
 
-    vkUpdateDescriptorSets(renderData.rdVkbDevice.device, 1, &writeDescriptorSet, 0, nullptr);
+    vkUpdateDescriptorSets(renderData.rdVkbDevice.device, 1, &writeDescriptorSet,
+                           0, nullptr);
+
+    UBOData.rdUniformBufferSize = bufferSize;
+
+    Logger::log(1, "%s: created uniform buffer of size %i\n", __FUNCTION__, uboInfo.range);
 
     return true;
 }
 
-void Core::Renderer::UniformBuffer::uploadData(Core::Renderer::VkRenderData& renderData, VkUploadMatrices matrices)
+void Core::Renderer::UniformBuffer::uploadData(Core::Renderer::VkRenderData& renderData, VkUniformBufferData &UBOData,
+                                               std::vector<glm::mat4> matrices)
 {
+    if (matrices.empty()) {
+        return;
+    }
+
     void* data;
-    vmaMapMemory(renderData.rdAllocator, renderData.rdUBOBufferAlloc, &data);
-    std::memcpy(data, &matrices, sizeof(VkUploadMatrices));
-    vmaUnmapMemory(renderData.rdAllocator, renderData.rdUBOBufferAlloc);
+    vmaMapMemory(renderData.rdAllocator, UBOData.rdUniformBufferAlloc, &data);
+    std::memcpy(data, matrices.data(), UBOData.rdUniformBufferSize);
+    vmaUnmapMemory(renderData.rdAllocator, UBOData.rdUniformBufferAlloc);
 }
 
-void Core::Renderer::UniformBuffer::cleanup(Core::Renderer::VkRenderData& renderData)
+void Core::Renderer::UniformBuffer::cleanup(Core::Renderer::VkRenderData& renderData, VkUniformBufferData &UBOData)
 {
-    vkDestroyDescriptorPool(renderData.rdVkbDevice.device, renderData.rdUBODescriptorPool, nullptr);
-    vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdUBODescriptorLayout, nullptr);
-    vmaDestroyBuffer(renderData.rdAllocator, renderData.rdUBOBuffer, renderData.rdUBOBufferAlloc);
+    vkDestroyDescriptorPool(renderData.rdVkbDevice.device, UBOData.rdUBODescriptorPool, nullptr);
+    vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, UBOData.rdUBODescriptorLayout, nullptr);
+    vmaDestroyBuffer(renderData.rdAllocator, UBOData.rdUniformBuffer, UBOData.rdUniformBufferAlloc);
 }

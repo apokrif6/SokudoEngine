@@ -75,7 +75,7 @@ struct VkTextureData
 
 struct VkVertexBufferData
 {
-    unsigned int rdVertexBufferSize = 0;
+    size_t rdVertexBufferSize = 0;
     VkBuffer rdVertexBuffer = VK_NULL_HANDLE;
     VmaAllocation rdVertexBufferAlloc = nullptr;
     VkBuffer rdStagingBuffer = VK_NULL_HANDLE;
@@ -84,11 +84,31 @@ struct VkVertexBufferData
 
 struct VkIndexBufferData
 {
-    unsigned int rdIndexBufferSize = 0;
+    size_t rdIndexBufferSize = 0;
     VkBuffer rdIndexBuffer = VK_NULL_HANDLE;
     VmaAllocation rdIndexBufferAlloc = nullptr;
     VkBuffer rdStagingBuffer = VK_NULL_HANDLE;
     VmaAllocation rdStagingBufferAlloc = nullptr;
+};
+
+struct VkUniformBufferData {
+    size_t rdUniformBufferSize = 0;
+    VkBuffer rdUniformBuffer = VK_NULL_HANDLE;
+    VmaAllocation rdUniformBufferAlloc = nullptr;
+
+    VkDescriptorPool rdUBODescriptorPool = VK_NULL_HANDLE;
+    VkDescriptorSetLayout rdUBODescriptorLayout = VK_NULL_HANDLE;
+    VkDescriptorSet rdUBODescriptorSet = VK_NULL_HANDLE;
+};
+
+struct VkShaderStorageBufferData {
+    size_t rdShaderStorageBufferSize = 0;
+    VkBuffer rdShaderStorageBuffer = VK_NULL_HANDLE;
+    VmaAllocation rdShaderStorageBufferAlloc = nullptr;
+
+    VkDescriptorPool rdSSBODescriptorPool = VK_NULL_HANDLE;
+    VkDescriptorSetLayout rdSSBODescriptorLayout = VK_NULL_HANDLE;
+    VkDescriptorSet rdSSBODescriptorSet = VK_NULL_HANDLE;
 };
 
 struct VkGltfRenderData
@@ -132,7 +152,7 @@ struct VkRenderData
 
     bool rdDrawGltfModel = true;
     bool rdDrawSkeleton = true;
-    bool rdEnableVertexSkinning = true;
+    bool rdGPUVertexSkinning = true;
 
     glm::vec3 rdLightPosition = glm::vec3(4.f, 5.f, -3.f);
     glm::vec3 rdLightColor = glm::vec3(0.5f, 0.5f, 0.5f);
@@ -167,8 +187,8 @@ struct VkRenderData
     VkPipeline rdBasicPipeline = VK_NULL_HANDLE;
     VkPipeline rdLinePipeline = VK_NULL_HANDLE;
     VkPipeline rdGridPipeline = VK_NULL_HANDLE;
-    VkPipelineLayout rdGltfPipelineLayout = VK_NULL_HANDLE;
     VkPipeline rdGltfPipeline = VK_NULL_HANDLE;
+    VkPipeline rdGltfGPUPipeline = VK_NULL_HANDLE;
     VkPipeline rdGltfSkeletonPipeline = VK_NULL_HANDLE;
 
     VkCommandPool rdCommandPool = VK_NULL_HANDLE;
@@ -182,12 +202,8 @@ struct VkRenderData
 
     VkVertexBufferData rdVertexBufferData{};
 
-    VkBuffer rdUBOBuffer = VK_NULL_HANDLE;
-    VmaAllocation rdUBOBufferAlloc = nullptr;
-
-    VkDescriptorPool rdUBODescriptorPool = VK_NULL_HANDLE;
-    VkDescriptorSetLayout rdUBODescriptorLayout = VK_NULL_HANDLE;
-    VkDescriptorSet rdUBODescriptorSet = VK_NULL_HANDLE;
+    VkUniformBufferData rdPerspectiveViewMatrixUBO{};
+    VkShaderStorageBufferData rdJointMatrixSSBO{};
 
     VkDescriptorPool rdImguiDescriptorPool = VK_NULL_HANDLE;
 };

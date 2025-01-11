@@ -1,12 +1,12 @@
 #include <vector>
 
-#include "GltfSkeletonPipeline.h"
+#include "GltfPipeline.h"
+#include "core/vk-renderer/Shader.h"
 #include "core/tools/Logger.h"
-#include "Shader.h"
 
-bool Core::Renderer::GltfSkeletonPipeline::init(Core::Renderer::VkRenderData& renderData, VkPipelineLayout& pipelineLayout, VkPipeline& pipeline,
-                                VkPrimitiveTopology topology, const std::string& vertexShaderFilename,
-                                const std::string& fragmentShaderFilename)
+bool Core::Renderer::GltfPipeline::init(Core::Renderer::VkRenderData& renderData, VkPipelineLayout& pipelineLayout, VkPipeline& pipeline,
+                        VkPrimitiveTopology topology, const std::string& vertexShaderFilename,
+                        const std::string& fragmentShaderFilename)
 {
     VkShaderModule vertexModule = Core::Renderer::Shader::loadShader(renderData.rdVkbDevice.device, vertexShaderFilename);
     VkShaderModule fragmentModule = Core::Renderer::Shader::loadShader(renderData.rdVkbDevice.device, fragmentShaderFilename);
@@ -32,35 +32,41 @@ bool Core::Renderer::GltfSkeletonPipeline::init(Core::Renderer::VkRenderData& re
     VkPipelineShaderStageCreateInfo shaderStagesInfo[] = {vertexStageInfo, fragmentStageInfo};
 
     /* assemble the graphics pipeline itself */
-    VkVertexInputBindingDescription mainBinding{};
-    mainBinding.binding = 0;
-    mainBinding.stride = sizeof(VkVertex);
-    mainBinding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+    VkVertexInputBindingDescription vertexBindings[3];
+    vertexBindings[0].binding = 0;
+    vertexBindings[0].stride = sizeof(glm::vec3);
+    vertexBindings[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+    vertexBindings[1].binding = 1;
+    vertexBindings[1].stride = sizeof(glm::vec3);
+    vertexBindings[1].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+    vertexBindings[2].binding = 2;
+    vertexBindings[2].stride = sizeof(glm::vec2);
+    vertexBindings[2].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
     VkVertexInputAttributeDescription positionAttribute{};
     positionAttribute.binding = 0;
     positionAttribute.location = 0;
     positionAttribute.format = VK_FORMAT_R32G32B32_SFLOAT;
-    positionAttribute.offset = offsetof(VkVertex, position);
+    positionAttribute.offset = 0;
 
-    VkVertexInputAttributeDescription colorAttribute{};
-    colorAttribute.binding = 0;
-    colorAttribute.location = 1;
-    colorAttribute.format = VK_FORMAT_R32G32B32_SFLOAT;
-    colorAttribute.offset = offsetof(VkVertex, color);
+    VkVertexInputAttributeDescription normalAttribute{};
+    normalAttribute.binding = 1;
+    normalAttribute.location = 1;
+    normalAttribute.format = VK_FORMAT_R32G32B32_SFLOAT;
+    normalAttribute.offset = 0;
 
     VkVertexInputAttributeDescription uvAttribute{};
-    uvAttribute.binding = 0;
+    uvAttribute.binding = 2;
     uvAttribute.location = 2;
     uvAttribute.format = VK_FORMAT_R32G32_SFLOAT;
-    uvAttribute.offset = offsetof(VkVertex, uv);
+    uvAttribute.offset = 0;
 
-    VkVertexInputAttributeDescription attributes[] = {positionAttribute, colorAttribute, uvAttribute};
+    VkVertexInputAttributeDescription attributes[] = {positionAttribute, normalAttribute, uvAttribute};
 
     VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    vertexInputInfo.vertexBindingDescriptionCount = 1;
-    vertexInputInfo.pVertexBindingDescriptions = &mainBinding;
+    vertexInputInfo.vertexBindingDescriptionCount = 3;
+    vertexInputInfo.pVertexBindingDescriptions = vertexBindings;
     vertexInputInfo.vertexAttributeDescriptionCount = 3;
     vertexInputInfo.pVertexAttributeDescriptions = attributes;
 
@@ -95,7 +101,7 @@ bool Core::Renderer::GltfSkeletonPipeline::init(Core::Renderer::VkRenderData& re
     rasterizerInfo.polygonMode = VK_POLYGON_MODE_FILL;
     rasterizerInfo.lineWidth = 1.0f;
     rasterizerInfo.cullMode = VK_CULL_MODE_BACK_BIT;
-    /* set to CCW to match the inverted viewport from OpenGL */
+    /* to match inverted viewport from OpenGL */
     rasterizerInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
     rasterizerInfo.depthBiasEnable = VK_FALSE;
 
@@ -107,7 +113,13 @@ bool Core::Renderer::GltfSkeletonPipeline::init(Core::Renderer::VkRenderData& re
     VkPipelineColorBlendAttachmentState colorBlendAttachment{};
     colorBlendAttachment.colorWriteMask =
         VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-    colorBlendAttachment.blendEnable = VK_FALSE;
+    colorBlendAttachment.blendEnable = VK_TRUE;
+    colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+    colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+    colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+    colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+    colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+    colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
 
     VkPipelineColorBlendStateCreateInfo colorBlendingInfo{};
     colorBlendingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -122,12 +134,10 @@ bool Core::Renderer::GltfSkeletonPipeline::init(Core::Renderer::VkRenderData& re
 
     VkPipelineDepthStencilStateCreateInfo depthStencilInfo{};
     depthStencilInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-    depthStencilInfo.depthTestEnable = VK_FALSE;
+    depthStencilInfo.depthTestEnable = VK_TRUE;
     depthStencilInfo.depthWriteEnable = VK_TRUE;
-    depthStencilInfo.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+    depthStencilInfo.depthCompareOp = VK_COMPARE_OP_LESS;
     depthStencilInfo.depthBoundsTestEnable = VK_FALSE;
-    depthStencilInfo.minDepthBounds = 0.0f;
-    depthStencilInfo.maxDepthBounds = 1.0f;
     depthStencilInfo.stencilTestEnable = VK_FALSE;
 
     std::vector<VkDynamicState> dynStates = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR,
@@ -169,7 +179,7 @@ bool Core::Renderer::GltfSkeletonPipeline::init(Core::Renderer::VkRenderData& re
     return true;
 }
 
-void Core::Renderer::GltfSkeletonPipeline::cleanup(Core::Renderer::VkRenderData& renderData, VkPipeline& pipeline)
+void Core::Renderer::GltfPipeline::cleanup(Core::Renderer::VkRenderData& renderData, VkPipeline& pipeline)
 {
     vkDestroyPipeline(renderData.rdVkbDevice.device, pipeline, nullptr);
 }

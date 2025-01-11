@@ -1,11 +1,9 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include "GltfModel.h"
-#include "core/vk-renderer/VertexBuffer.h"
-#include "core/vk-renderer/IndexBuffer.h"
+#include "core/vk-renderer/buffers/VertexBuffer.h"
+#include "core/vk-renderer/buffers/IndexBuffer.h"
 #include "core/tools/Logger.h"
 #include "stb_image.h"
-#include "core/vk-renderer/VertexBuffer.h"
-#include "core/vk-renderer/IndexBuffer.h"
 #include <glm/gtc/type_ptr.hpp>
 #include <algorithm>
 
@@ -227,17 +225,14 @@ void Core::Model::GltfModel::getNodeData(const std::shared_ptr<GltfNode>& treeNo
 void Core::Model::GltfModel::draw(const Core::Renderer::VkRenderData& renderData,
                                   const Core::Renderer::VkGltfRenderData& gltfRenderData)
 {
-    const tinygltf::Primitive& primitives = mModel->meshes.at(0).primitives.at(0);
-    const tinygltf::Accessor& indexAccessor = mModel->accessors.at(primitives.indices);
-
     /* texture */
     vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            renderData.rdGltfPipelineLayout, 0, 1,
+                            renderData.rdPipelineLayout, 0, 1,
                             &gltfRenderData.rdGltfModelTexture.texTextureDescriptorSet, 0, nullptr);
 
     /* vertex buffer */
     VkDeviceSize offset = 0;
-    for (size_t i = 0; i < 3; ++i)
+    for (size_t i = 0; i < 5; ++i)
     {
         vkCmdBindVertexBuffers(renderData.rdCommandBuffer, i, 1,
                                &gltfRenderData.rdGltfVertexBufferData.at(i).rdVertexBuffer, &offset);
@@ -247,14 +242,25 @@ void Core::Model::GltfModel::draw(const Core::Renderer::VkRenderData& renderData
     vkCmdBindIndexBuffer(renderData.rdCommandBuffer, gltfRenderData.rdGltfIndexBufferData.rdIndexBuffer, 0,
                          VK_INDEX_TYPE_UINT16);
 
-    vkCmdBindPipeline(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdGltfPipeline);
-    vkCmdDrawIndexed(renderData.rdCommandBuffer, static_cast<uint32_t>(renderData.rdGltfTriangleCount * 3), 1, 0, 0, 0);
+    if (renderData.rdGPUVertexSkinning)
+    {
+        vkCmdBindPipeline(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                          renderData.rdGltfGPUPipeline);
+    }
+    else
+    {
+        vkCmdBindPipeline(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                          renderData.rdGltfPipeline);
+    }
+
+    vkCmdDrawIndexed(renderData.rdCommandBuffer,
+                     static_cast<uint32_t>(renderData.rdGltfTriangleCount * 3), 1, 0, 0, 0);
 }
 
 void Core::Model::GltfModel::cleanup(Core::Renderer::VkRenderData& renderData,
                                      Core::Renderer::VkGltfRenderData& gltfRenderData)
 {
-    for (size_t i = 0; i < 3; ++i)
+    for (size_t i = 0; i < 5; ++i)
     {
         Core::Renderer::VertexBuffer::cleanup(renderData, gltfRenderData.rdGltfVertexBufferData.at(i));
     }
@@ -268,7 +274,7 @@ void Core::Model::GltfModel::cleanup(Core::Renderer::VkRenderData& renderData,
 void Core::Model::GltfModel::uploadVertexBuffers(Core::Renderer::VkRenderData& renderData,
                                                  Core::Renderer::VkGltfRenderData& gltfRenderData)
 {
-    for (size_t i = 0; i < 3; ++i)
+    for (size_t i = 0; i < 5; ++i)
     {
         const tinygltf::Accessor& accessor = mModel->accessors.at(mAttribAccessors.at(i));
         const tinygltf::BufferView& bufferView = mModel->bufferViews.at(accessor.bufferView);
@@ -279,18 +285,8 @@ void Core::Model::GltfModel::uploadVertexBuffers(Core::Renderer::VkRenderData& r
     }
 }
 
-void Core::Model::GltfModel::uploadPositionBuffer(Core::Renderer::VkRenderData& renderData,
-                                                  Core::Renderer::VkGltfRenderData& gltfRenderData)
-{
-    const tinygltf::Accessor& accessor = mModel->accessors.at(mAttribAccessors.at(0));
-    const tinygltf::BufferView& bufferView = mModel->bufferViews.at(accessor.bufferView);
-    const tinygltf::Buffer& buffer = mModel->buffers.at(bufferView.buffer);
-
-    Core::Renderer::VertexBuffer::uploadData(renderData, gltfRenderData.rdGltfVertexBufferData.at(0),
-                                             mAlteredPositions);
-}
-
-void Core::Model::GltfModel::applyVertexSkinning(bool enableSkinning)
+void Core::Model::GltfModel::applyVertexSkinning(Core::Renderer::VkRenderData& renderData,
+                                                 Core::Renderer::VkGltfRenderData& gltfRenderData)
 {
     const tinygltf::Accessor& accessor = mModel->accessors.at(mAttribAccessors.at(0));
     const tinygltf::BufferView& bufferView = mModel->bufferViews.at(accessor.bufferView);
@@ -298,18 +294,19 @@ void Core::Model::GltfModel::applyVertexSkinning(bool enableSkinning)
 
     std::memcpy(mAlteredPositions.data(), &buffer.data.at(0) + bufferView.byteOffset, bufferView.byteLength);
 
-    if (enableSkinning)
+    for (size_t i = 0; i < mJointVec.size(); ++i)
     {
-        for (size_t i = 0; i < mJointVec.size(); ++i)
-        {
-            glm::ivec4 jointIndex = glm::make_vec4(mJointVec.at(i));
-            glm::vec4 weightIndex = glm::make_vec4(mWeightVec.at(i));
-            glm::mat4 skinMat =
-                weightIndex.x * mJointMatrices.at(jointIndex.x) + weightIndex.y * mJointMatrices.at(jointIndex.y) +
-                weightIndex.z * mJointMatrices.at(jointIndex.z) + weightIndex.w * mJointMatrices.at(jointIndex.w);
-            mAlteredPositions.at(i) = skinMat * glm::vec4(mAlteredPositions.at(i), 1.0f);
-        }
+        glm::ivec4 jointIndex = glm::make_vec4(mJointVec.at(i));
+        glm::vec4 weightIndex = glm::make_vec4(mWeightVec.at(i));
+        glm::mat4 skinMat = weightIndex.x * mJointMatrices.at(jointIndex.x) +
+                            weightIndex.y * mJointMatrices.at(jointIndex.y) +
+                            weightIndex.z * mJointMatrices.at(jointIndex.z) +
+                            weightIndex.w * mJointMatrices.at(jointIndex.w);
+        mAlteredPositions.at(i) = skinMat * glm::vec4(mAlteredPositions.at(i), 1.0f);
     }
+
+    Core::Renderer::VertexBuffer::uploadData(renderData, gltfRenderData.rdGltfVertexBufferData.at(0),
+                                             mAlteredPositions);
 }
 
 void Core::Model::GltfModel::uploadIndexBuffer(Core::Renderer::VkRenderData& renderData,
@@ -340,7 +337,8 @@ void Core::Model::GltfModel::createVertexBuffers(Core::Renderer::VkRenderData& r
         const tinygltf::BufferView& bufferView = mModel->bufferViews.at(accessor.bufferView);
         const tinygltf::Buffer& buffer = mModel->buffers.at(bufferView.buffer);
 
-        if ((attribType != "POSITION") && (attribType != "NORMAL") && (attribType != "TEXCOORD_0"))
+        if ((attribType != "POSITION") && (attribType != "NORMAL") && (attribType != "TEXCOORD_0")
+            && (attribType != "JOINTS_0") && (attribType != "WEIGHTS_0"))
         {
             Logger::log(1, "%s: skipping attribute type %s\n", __FUNCTION__, attribType.c_str());
             continue;

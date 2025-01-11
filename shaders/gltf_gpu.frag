@@ -15,7 +15,7 @@ layout (set = 1, binding = 0) uniform Matrices {
 };
 
 float ambientLight = 0.3;
-vec3 lightPos =  vec3(0.0, 0.0, 0.0);
+vec3 lightPos = vec3(4.0, 5.0, -3.0);
 vec3 lightColor = vec3(1.0, 1.0, 1.0);
 
 void main() {

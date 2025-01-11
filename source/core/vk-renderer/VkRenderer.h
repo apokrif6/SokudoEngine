@@ -60,6 +60,7 @@ class VkRenderer final : public EventListener
     unsigned int mSkeletonLineIndexCount = 0;
 
     std::shared_ptr<Core::Model::GltfModel> mGltfModel = nullptr;
+    bool mModelUploadRequired = true;
 
     glm::mat4 mRotYMat = glm::mat4(1.0f);
     glm::mat4 mRotZMat = glm::mat4(1.0f);
@@ -86,7 +87,7 @@ class VkRenderer final : public EventListener
 
     VkDeviceSize mMinUniformBufferOffsetAlignment = 0;
 
-    VkUploadMatrices mMatrices{};
+    std::vector<glm::mat4> mPerspectiveViewMatrices{};
 
     unsigned int VertexBufferSize = 2000;
 
@@ -111,6 +112,8 @@ class VkRenderer final : public EventListener
 
     bool createUBO();
 
+    bool createSSBO();
+
     bool createVBO();
 
     bool createRenderPass();
@@ -123,11 +126,11 @@ class VkRenderer final : public EventListener
 
     bool createGridPipeline();
 
-    bool createGltfPipelineLayout();
-
     bool createGltfPipeline();
 
     bool createGltfSkeletonPipeline();
+
+    bool createGltfGPUPipeline();
 
     bool createFramebuffer();
 

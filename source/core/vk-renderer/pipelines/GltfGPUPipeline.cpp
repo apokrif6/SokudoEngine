@@ -1,14 +1,18 @@
 #include <vector>
-#include "Pipeline.h"
-#include "core/tools/Logger.h"
-#include "Shader.h"
 
-bool Core::Renderer::Pipeline::init(Core::Renderer::VkRenderData& renderData, VkPipelineLayout& pipelineLayout, VkPipeline& pipeline,
-                    VkPrimitiveTopology topology, const std::string& vertexShaderFilename,
-                    const std::string& fragmentShaderFilename)
+#include "GltfGPUPipeline.h"
+#include "core/vk-renderer/Shader.h"
+#include "core/tools/Logger.h"
+
+bool Core::Renderer::GltfGPUPipeline::init(Core::Renderer::VkRenderData& renderData, VkPipelineLayout& pipelineLayout,
+                                           VkPipeline& pipeline, VkPrimitiveTopology topology,
+                                           const std::string& vertexShaderFilename,
+                                           const std::string& fragmentShaderFilename)
 {
-    VkShaderModule vertexModule = Core::Renderer::Shader::loadShader(renderData.rdVkbDevice.device, vertexShaderFilename);
-    VkShaderModule fragmentModule = Core::Renderer::Shader::loadShader(renderData.rdVkbDevice.device, fragmentShaderFilename);
+    VkShaderModule vertexModule =
+        Core::Renderer::Shader::loadShader(renderData.rdVkbDevice.device, vertexShaderFilename);
+    VkShaderModule fragmentModule =
+        Core::Renderer::Shader::loadShader(renderData.rdVkbDevice.device, fragmentShaderFilename);
 
     if (vertexModule == VK_NULL_HANDLE || fragmentModule == VK_NULL_HANDLE)
     {
@@ -30,15 +34,63 @@ bool Core::Renderer::Pipeline::init(Core::Renderer::VkRenderData& renderData, Vk
 
     VkPipelineShaderStageCreateInfo shaderStagesInfo[] = {vertexStageInfo, fragmentStageInfo};
 
-    auto bindingDescription = VkVertex::getBindingDescription();
-    auto attributeDescriptions = VkVertex::getAttributeDescriptions();
+    /* assemble the graphics pipeline itself */
+    VkVertexInputBindingDescription vertexBindings[5];
+    vertexBindings[0].binding = 0;
+    vertexBindings[0].stride = sizeof(glm::vec3);
+    vertexBindings[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+    vertexBindings[1].binding = 1;
+    vertexBindings[1].stride = sizeof(glm::vec3);
+    vertexBindings[1].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+    vertexBindings[2].binding = 2;
+    vertexBindings[2].stride = sizeof(glm::vec2);
+    vertexBindings[2].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+    vertexBindings[3].binding = 3;
+    vertexBindings[3].stride = sizeof(uint16_t) * 4;
+    vertexBindings[3].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+    vertexBindings[4].binding = 4;
+    vertexBindings[4].stride = sizeof(glm::vec4);
+    vertexBindings[4].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+    VkVertexInputAttributeDescription positionAttribute{};
+    positionAttribute.binding = 0;
+    positionAttribute.location = 0;
+    positionAttribute.format = VK_FORMAT_R32G32B32_SFLOAT;
+    positionAttribute.offset = 0;
+
+    VkVertexInputAttributeDescription normalAttribute{};
+    normalAttribute.binding = 1;
+    normalAttribute.location = 1;
+    normalAttribute.format = VK_FORMAT_R32G32B32_SFLOAT;
+    normalAttribute.offset = 0;
+
+    VkVertexInputAttributeDescription uvAttribute{};
+    uvAttribute.binding = 2;
+    uvAttribute.location = 2;
+    uvAttribute.format = VK_FORMAT_R32G32_SFLOAT;
+    uvAttribute.offset = 0;
+
+    VkVertexInputAttributeDescription jointsAttribute{};
+    jointsAttribute.binding = 3;
+    jointsAttribute.location = 3;
+    jointsAttribute.format = VK_FORMAT_R16G16B16A16_UINT;
+    jointsAttribute.offset = 0;
+
+    VkVertexInputAttributeDescription weightAttribute{};
+    weightAttribute.binding = 4;
+    weightAttribute.location = 4;
+    weightAttribute.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+    weightAttribute.offset = 0;
+
+    VkVertexInputAttributeDescription attributes[] = {positionAttribute, normalAttribute, uvAttribute,
+                                                      jointsAttribute,weightAttribute};
 
     VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    vertexInputInfo.vertexBindingDescriptionCount = 1;
-    vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
-    vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
-    vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
+    vertexInputInfo.vertexBindingDescriptionCount = 5;
+    vertexInputInfo.pVertexBindingDescriptions = vertexBindings;
+    vertexInputInfo.vertexAttributeDescriptionCount = 5;
+    vertexInputInfo.pVertexAttributeDescriptions = attributes;
 
     VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo{};
     inputAssemblyInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -86,6 +138,10 @@ bool Core::Renderer::Pipeline::init(Core::Renderer::VkRenderData& renderData, Vk
     colorBlendAttachment.blendEnable = VK_TRUE;
     colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
     colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+    colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+    colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+    colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+    colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
 
     VkPipelineColorBlendStateCreateInfo colorBlendingInfo{};
     colorBlendingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -101,11 +157,9 @@ bool Core::Renderer::Pipeline::init(Core::Renderer::VkRenderData& renderData, Vk
     VkPipelineDepthStencilStateCreateInfo depthStencilInfo{};
     depthStencilInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
     depthStencilInfo.depthTestEnable = VK_TRUE;
-    depthStencilInfo.depthWriteEnable = VK_FALSE;
-    depthStencilInfo.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+    depthStencilInfo.depthWriteEnable = VK_TRUE;
+    depthStencilInfo.depthCompareOp = VK_COMPARE_OP_LESS;
     depthStencilInfo.depthBoundsTestEnable = VK_FALSE;
-    depthStencilInfo.minDepthBounds = 0.0f;
-    depthStencilInfo.maxDepthBounds = 1.0f;
     depthStencilInfo.stencilTestEnable = VK_FALSE;
 
     std::vector<VkDynamicState> dynStates = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR,
@@ -147,7 +201,7 @@ bool Core::Renderer::Pipeline::init(Core::Renderer::VkRenderData& renderData, Vk
     return true;
 }
 
-void Core::Renderer::Pipeline::cleanup(Core::Renderer::VkRenderData& renderData, VkPipeline& pipeline)
+void Core::Renderer::GltfGPUPipeline::cleanup(Core::Renderer::VkRenderData& renderData, VkPipeline& pipeline)
 {
     vkDestroyPipeline(renderData.rdVkbDevice.device, pipeline, nullptr);
 }

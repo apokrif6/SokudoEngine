@@ -1,6 +1,6 @@
 #include <stb_image.h>
 
-#include "CommandBuffer.h"
+#include "core/vk-renderer/buffers/CommandBuffer.h"
 #include "Texture.h"
 #include "core/tools/Logger.h"
 

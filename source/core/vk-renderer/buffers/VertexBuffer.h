@@ -1,6 +1,6 @@
 #pragma once
 
-#include "VkRenderData.h"
+#include "core/vk-renderer/VkRenderData.h"
 #include "tiny_gltf.h"
 
 namespace Core::Renderer

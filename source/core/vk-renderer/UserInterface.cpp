@@ -8,7 +8,7 @@
 #include <imgui_impl_vulkan.h>
 
 #include "UserInterface.h"
-#include "CommandBuffer.h"
+#include "core/vk-renderer/buffers/CommandBuffer.h"
 #include "core/tools/Logger.h"
 
 bool Core::Renderer::UserInterface::init(Core::Renderer::VkRenderData& renderData)
@@ -261,7 +261,7 @@ void Core::Renderer::UserInterface::createFrame(Core::Renderer::VkRenderData& re
     {
         ImGui::Checkbox("Draw Model", &renderData.rdDrawGltfModel);
         ImGui::Checkbox("Draw Skeleton", &renderData.rdDrawSkeleton);
-        ImGui::Checkbox("Enable Vertex Skinning", &renderData.rdEnableVertexSkinning);
+        ImGui::Checkbox("Enable GPU Vertex Skinning", &renderData.rdGPUVertexSkinning);
     }
 
     if (ImGui::CollapsingHeader("Light Parameters"))
