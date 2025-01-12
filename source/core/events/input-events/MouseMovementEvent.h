@@ -2,9 +2,9 @@
 
 #include "core/events/Event.h"
 
-struct MouseMovementEvent : public Event
+struct MouseMovementEvent final : public Event
 {
-    MouseMovementEvent(int inDeltaX, int inDeltaY) : deltaX(inDeltaX), deltaY(inDeltaY) {}
+    MouseMovementEvent(const int inDeltaX, const int inDeltaY) : deltaX(inDeltaX), deltaY(inDeltaY) {}
 
     int deltaX;
     int deltaY;

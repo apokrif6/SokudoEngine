@@ -19,6 +19,8 @@
 #include "core/vk-renderer/pipelines/GltfSkeletonPipeline.h"
 #include "core/vk-renderer/buffers/ShaderStorageBuffer.h"
 #include "core/vk-renderer/pipelines/GltfGPUPipeline.h"
+
+#include <core/events/input-events/MouseLockEvent.h>
 #include <glm/gtc/matrix_transform.hpp>
 
 Core::Renderer::VkRenderer::VkRenderer(GLFWwindow* inWindow)
@@ -194,9 +196,9 @@ void Core::Renderer::VkRenderer::subscribeToInputEvents(EventDispatcher& eventDi
 
 void Core::Renderer::VkRenderer::onEvent(const Event& event)
 {
-    if (const auto* mouseEvent = dynamic_cast<const MouseMovementEvent*>(&event))
+    if (const auto* mouseMovementEvent = dynamic_cast<const MouseMovementEvent*>(&event))
     {
-        mRenderData.rdViewYaw += static_cast<float>(mouseEvent->deltaX) / 10.f;
+        mRenderData.rdViewYaw += static_cast<float>(mouseMovementEvent->deltaX) / 10.f;
         if (mRenderData.rdViewYaw < 0.f)
         {
             mRenderData.rdViewYaw += 360.f;
@@ -206,7 +208,7 @@ void Core::Renderer::VkRenderer::onEvent(const Event& event)
             mRenderData.rdViewYaw -= 360.f;
         }
 
-        mRenderData.rdViewPitch -= static_cast<float>(mouseEvent->deltaY) / 10.f;
+        mRenderData.rdViewPitch -= static_cast<float>(mouseMovementEvent->deltaY) / 10.f;
         if (mRenderData.rdViewPitch > 89.f)
         {
             mRenderData.rdViewPitch = 89.f;
@@ -214,6 +216,21 @@ void Core::Renderer::VkRenderer::onEvent(const Event& event)
         if (mRenderData.rdViewPitch < -89.f)
         {
             mRenderData.rdViewPitch = -89.f;
+        }
+    }
+    else if (const auto* mouseLockEvent = dynamic_cast<const MouseLockEvent*>(&event))
+    {
+        if (mouseLockEvent->isLocked)
+        {
+            glfwSetInputMode(mRenderData.rdWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            if (glfwRawMouseMotionSupported())
+            {
+                glfwSetInputMode(mRenderData.rdWindow, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+            }
+        }
+        else
+        {
+            glfwSetInputMode(mRenderData.rdWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         }
     }
 }
