@@ -156,7 +156,7 @@ void Core::Renderer::UserInterface::createFrame(Core::Renderer::VkRenderData& re
     static float newFps = 0.0f;
     if (renderData.rdFrameTime > 0.0)
     {
-        newFps = 1.0f / renderData.rdFrameTime;
+        newFps = 1.0f / renderData.rdFrameTime * 1000.f;
     }
 
     mFramesPerSecond = (mAveragingAlpha * mFramesPerSecond) + (1.0f - mAveragingAlpha) * newFps;
