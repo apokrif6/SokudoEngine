@@ -1,6 +1,7 @@
 #include "InputHandler.h"
 #include "core/tools/Logger.h"
 #include "core/events/input-events/MouseMovementEvent.h"
+#include "core/events/input-events/MouseLockEvent.h"
 #include <imgui.h>
 #include <string>
 #include <GLFW/glfw3.h>
@@ -42,23 +43,9 @@ void InputHandler::handleMouseButtonEvents(int button, int action, int mods)
 
     if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
     {
-        // TODO
-        // write delegate MouseLocked
-        // vk renderer should bind and change camera mode
         mMouseLock = !mMouseLock;
 
-        if (mMouseLock)
-        {
-            glfwSetInputMode(mWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-            if (glfwRawMouseMotionSupported())
-            {
-                glfwSetInputMode(mWindow, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
-            }
-        }
-        else
-        {
-            glfwSetInputMode(mWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-        }
+        mEventDispatcher.dispatch(MouseLockEvent(mMouseLock));
     }
 
     std::string actionName;
@@ -119,7 +106,5 @@ void InputHandler::handleMousePositionEvents(double xPosition, double yPosition)
     mMouseXPosition = static_cast<int>(xPosition);
     mMouseYPosition = static_cast<int>(yPosition);
 
-    // TODO
-    // log category
-    // Logger::log(1, "%s: Mouse cursor has been moved to %lf/%lf\n", __FUNCTION__, xPosition, yPosition);
+    Logger::log(1, "%s: Mouse cursor has been moved to %lf/%lf\n", __FUNCTION__, xPosition, yPosition);
 }

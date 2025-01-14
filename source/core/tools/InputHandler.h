@@ -12,7 +12,7 @@ class InputHandler
 
     EventDispatcher& getDispatcher() { return mEventDispatcher; }
 
-    void handleKeyEvents(int key, int scancode, int action, int mods);
+    static void handleKeyEvents(int key, int scancode, int action, int mods);
 
     void handleMouseButtonEvents(int button, int action, int mods);
 
