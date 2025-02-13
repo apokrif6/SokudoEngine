@@ -9,6 +9,13 @@
 
 namespace Core::Renderer
 {
+struct NewVertex {
+    glm::vec3 pos;
+    glm::vec3 normal;
+    glm::vec2 uv;
+    glm::vec3 color;
+};
+
 struct VkVertex
 {
     glm::vec3 position;
@@ -118,6 +125,13 @@ struct VkGltfRenderData
     VkTextureData rdGltfModelTexture{};
 };
 
+struct VkGltfSphereRenderData
+{
+    std::vector<VkVertexBufferData> rdGltfVertexBufferData{};
+    VkIndexBufferData rdGltfIndexBufferData{};
+    VkTextureData rdGltfModelTexture{};
+};
+
 struct VkRenderData
 {
     GLFWwindow* rdWindow = nullptr;
@@ -127,6 +141,7 @@ struct VkRenderData
 
     unsigned int rdTriangleCount = 0;
     unsigned int rdGltfTriangleCount = 0;
+    unsigned int rdGltfSphereTriangleCount = 0;
 
     int rdFieldOfView = 90;
 
@@ -184,12 +199,14 @@ struct VkRenderData
 
     VkRenderPass rdRenderpass = VK_NULL_HANDLE;
     VkPipelineLayout rdPipelineLayout = VK_NULL_HANDLE;
+    VkPipelineLayout rdGltfPipelineLayout = VK_NULL_HANDLE;
     VkPipeline rdBasicPipeline = VK_NULL_HANDLE;
     VkPipeline rdLinePipeline = VK_NULL_HANDLE;
     VkPipeline rdGridPipeline = VK_NULL_HANDLE;
     VkPipeline rdGltfPipeline = VK_NULL_HANDLE;
     VkPipeline rdGltfGPUPipeline = VK_NULL_HANDLE;
     VkPipeline rdGltfSkeletonPipeline = VK_NULL_HANDLE;
+    VkPipeline rdGltfSpherePipeline = VK_NULL_HANDLE;
 
     VkCommandPool rdCommandPool = VK_NULL_HANDLE;
     VkCommandBuffer rdCommandBuffer = VK_NULL_HANDLE;

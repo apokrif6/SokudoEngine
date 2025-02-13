@@ -19,6 +19,7 @@ endif ()
 
 find_package(glfw3 3.3 REQUIRED)
 find_package(Vulkan REQUIRED)
+find_package(assimp REQUIRED)
 
 if (UNIX)
     set(GLFW3_LIBRARY glfw)
@@ -107,7 +108,7 @@ add_subdirectory(external/vk-bootstrap)
 include_directories(${GLFW3_INCLUDE_DIR} source external/vk-memory-allocation external/include source/core/model external/imgui external/tinygltf)
 
 if (MSVC)
-    target_link_libraries(SokudoEngine ${GLFW3_LIBRARY} Vulkan::Vulkan vk-bootstrap::vk-bootstrap)
+    target_link_libraries(SokudoEngine ${GLFW3_LIBRARY} Vulkan::Vulkan vk-bootstrap::vk-bootstrap assimp::assimp)
 else ()
     target_link_libraries(SokudoEngine ${GLFW3_LIBRARY} Vulkan::Vulkan vk-bootstrap::vk-bootstrap stdc++ m)
 endif ()

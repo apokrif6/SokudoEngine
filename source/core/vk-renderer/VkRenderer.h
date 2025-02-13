@@ -13,6 +13,7 @@
 #include "core/events/EventDispatcher.h"
 #include "GridModel.h"
 #include "GltfModel.h"
+#include "GltfSphere.h"
 #include <glm/detail/type_quat.hpp>
 
 namespace Core::Renderer
@@ -37,6 +38,7 @@ class VkRenderer final : public EventListener
   private:
     Core::Renderer::VkRenderData mRenderData{};
     Core::Renderer::VkGltfRenderData mGltfRenderData{};
+    Core::Renderer::VkGltfSphereRenderData mGltfSphereRenderData{};
 
     Core::Renderer::UserInterface mUserInterface{};
 
@@ -60,6 +62,7 @@ class VkRenderer final : public EventListener
     unsigned int mSkeletonLineIndexCount = 0;
 
     std::shared_ptr<Core::Model::GltfModel> mGltfModel = nullptr;
+    std::shared_ptr<Core::Model::GltfSphere> mGltfSphereModel = nullptr;
     bool mModelUploadRequired = true;
 
     glm::mat4 mRotYMat = glm::mat4(1.0f);
@@ -126,11 +129,15 @@ class VkRenderer final : public EventListener
 
     bool createGridPipeline();
 
+    bool createGltfPipelineLayout();
+
     bool createGltfPipeline();
 
     bool createGltfSkeletonPipeline();
 
     bool createGltfGPUPipeline();
+
+    bool createGltfSpherePipeline();
 
     bool createFramebuffer();
 
@@ -147,6 +154,9 @@ class VkRenderer final : public EventListener
     bool initUserInterface();
 
     bool loadGltfModel();
+
+    bool loadGltfSphereModel();
+
 #pragma endregion Renderer
 
 #pragma region HandleGLFWEvents

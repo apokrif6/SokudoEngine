@@ -94,6 +94,11 @@ bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned i
         return false;
     }
 
+    if (!loadGltfSphereModel())
+    {
+            return false;
+    }
+
     if (!createSSBO())
     {
         return false;
@@ -129,7 +134,17 @@ bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned i
         return false;
     }
 
+    if (!createGltfPipelineLayout())
+    {
+        return false;
+    }
+
     if (!createGltfPipeline())
+    {
+        return false;
+    }
+
+    if (!createGltfSpherePipeline())
     {
         return false;
     }
@@ -143,7 +158,6 @@ bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned i
     {
         return false;
     }
-
     if (!createFramebuffer())
     {
         return false;
@@ -464,16 +478,19 @@ bool Core::Renderer::VkRenderer::draw()
         lastGPURenderState = mRenderData.rdGPUVertexSkinning;
     }
 
-    if (mModelUploadRequired) {
+    /*if (mModelUploadRequired) {
         mGltfModel->uploadVertexBuffers(mRenderData, mGltfRenderData);
         mGltfModel->uploadIndexBuffer(mRenderData, mGltfRenderData);
         mModelUploadRequired = false;
-    }
+    }*/
 
-    if (!mRenderData.rdGPUVertexSkinning) {
-        /* glTF vertex skinning, overwrites position buffer, needs upload on every frame */
+    mGltfSphereModel->uploadVertexBuffers(mRenderData, mGltfSphereRenderData);
+    mGltfSphereModel->uploadIndexBuffer(mRenderData, mGltfSphereRenderData);
+
+  /*  if (!mRenderData.rdGPUVertexSkinning) {
+        *//* glTF vertex skinning, overwrites position buffer, needs upload on every frame *//*
         mGltfModel->applyVertexSkinning(mRenderData, mGltfRenderData);
-    }
+    }*/
 
     mRenderData.rdUploadToVBOTime = mUploadToVBOTimer.stop();
 
@@ -514,10 +531,12 @@ bool Core::Renderer::VkRenderer::draw()
     vkCmdDraw(mRenderData.rdCommandBuffer, 6, 1, 0, 0);
 
     // draw glTF model
-    if (mRenderData.rdDrawGltfModel)
+  /*  if (mRenderData.rdDrawGltfModel)
     {
         mGltfModel->draw(mRenderData, mGltfRenderData);
     }
+*/
+    mGltfSphereModel->draw(mRenderData, mGltfSphereRenderData);
 
     // draw skeleton
     if (mSkeletonLineIndexCount > 0 && mRenderData.rdDrawSkeleton)
@@ -611,9 +630,12 @@ void Core::Renderer::VkRenderer::cleanup()
 {
     vkDeviceWaitIdle(mRenderData.rdVkbDevice.device);
 
-    mGltfModel->cleanup(mRenderData, mGltfRenderData);
-    mGltfModel.reset();
+    mGltfSphereModel->cleanup(mRenderData, mGltfSphereRenderData);
+    mGltfSphereModel.reset();
 
+   /* mGltfModel->cleanup(mRenderData, mGltfRenderData);
+    mGltfModel.reset();
+*/
     mUserInterface.cleanup(mRenderData);
 
     Core::Renderer::SyncObjects::cleanup(mRenderData);
@@ -622,12 +644,13 @@ void Core::Renderer::VkRenderer::cleanup()
     Core::Renderer::Framebuffer::cleanup(mRenderData);
     Core::Renderer::GltfGPUPipeline::cleanup(mRenderData, mRenderData.rdGltfGPUPipeline);
     Core::Renderer::GltfSkeletonPipeline::cleanup(mRenderData, mRenderData.rdGltfSkeletonPipeline);
+    Core::Renderer::GltfPipeline::cleanup(mRenderData, mRenderData.rdGltfSpherePipeline);
     Core::Renderer::GltfPipeline::cleanup(mRenderData, mRenderData.rdGltfPipeline);
     Core::Renderer::Pipeline::cleanup(mRenderData, mRenderData.rdGridPipeline);
     Core::Renderer::Pipeline::cleanup(mRenderData, mRenderData.rdLinePipeline);
     Core::Renderer::Pipeline::cleanup(mRenderData, mRenderData.rdBasicPipeline);
     Core::Renderer::PipelineLayout::cleanup(mRenderData, mRenderData.rdPipelineLayout);
-    Core::Renderer::PipelineLayout::cleanup(mRenderData, mRenderData.rdPipelineLayout);
+    Core::Renderer::PipelineLayout::cleanup(mRenderData, mRenderData.rdGltfPipelineLayout);
     Core::Renderer::Renderpass::cleanup(mRenderData);
     Core::Renderer::UniformBuffer::cleanup(mRenderData, mRenderData.rdPerspectiveViewMatrixUBO);
     Core::Renderer::ShaderStorageBuffer::cleanup(mRenderData, mRenderData.rdJointMatrixSSBO);
@@ -936,11 +959,21 @@ bool Core::Renderer::VkRenderer::createGridPipeline()
     return true;
 }
 
+bool Core::Renderer::VkRenderer::createGltfPipelineLayout()
+{
+    if (!Core::Renderer::PipelineLayout::init(mRenderData, mRenderData.rdModelTexture, mRenderData.rdGltfPipelineLayout))
+    {
+            Logger::log(1, "%s error: could not init gltf pipeline layout\n", __FUNCTION__);
+            return false;
+    }
+    return true;
+}
+
 bool Core::Renderer::VkRenderer::createGltfPipeline()
 {
     const std::string vertexShaderFile = "shaders/gltf.vert.spv";
     const std::string fragmentShaderFile = "shaders/gltf.frag.spv";
-    if (!GltfPipeline::init(mRenderData, mRenderData.rdPipelineLayout, mRenderData.rdGltfPipeline,
+    if (!GltfPipeline::init(mRenderData, mRenderData.rdGltfPipelineLayout, mRenderData.rdGltfPipeline,
                             VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile))
     {
         Logger::log(1, "%s error: could not init gltf shader pipeline\n", __FUNCTION__);
@@ -953,7 +986,7 @@ bool Core::Renderer::VkRenderer::createGltfSkeletonPipeline()
 {
     const std::string vertexShaderFile = "shaders/line.vert.spv";
     const std::string fragmentShaderFile = "shaders/line.frag.spv";
-    if (!GltfSkeletonPipeline::init(mRenderData, mRenderData.rdPipelineLayout, mRenderData.rdGltfSkeletonPipeline,
+    if (!GltfSkeletonPipeline::init(mRenderData, mRenderData.rdGltfPipelineLayout, mRenderData.rdGltfSkeletonPipeline,
                                     VK_PRIMITIVE_TOPOLOGY_LINE_LIST, vertexShaderFile, fragmentShaderFile))
     {
         Logger::log(1, "%s error: could not init gltf skeleton shader pipeline\n", __FUNCTION__);
@@ -974,6 +1007,20 @@ bool Core::Renderer::VkRenderer::createGltfGPUPipeline()
     }
     return true;
 }
+
+bool Core::Renderer::VkRenderer::createGltfSpherePipeline()
+{
+    const std::string vertexShaderFile = "shaders/gltf_sphere.vert.spv";
+    const std::string fragmentShaderFile = "shaders/gltf_sphere.frag.spv";
+    if (!GltfPipeline::init(mRenderData, mRenderData.rdPipelineLayout, mRenderData.rdGltfSpherePipeline,
+                            VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile))
+    {
+        Logger::log(1, "%s error: could not init gltf sphere shader pipeline\n", __FUNCTION__);
+        return false;
+    }
+    return true;
+}
+
 
 bool Core::Renderer::VkRenderer::createFramebuffer()
 {
@@ -1063,6 +1110,19 @@ bool Core::Renderer::VkRenderer::loadGltfModel()
     if (!mGltfModel->loadModel(mRenderData, mGltfRenderData, modelFilename, modelTexFilename))
     {
         Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename.c_str());
+        return false;
+    }
+    return true;
+}
+
+bool Core::Renderer::VkRenderer::loadGltfSphereModel()
+{
+    mGltfSphereModel = std::make_shared<Core::Model::GltfSphere>();
+    const std::string modelFilename = "assets/BoxWithSpaces.gltf";
+    const std::string modelTexFilename = "textures/default.png";
+    if (!mGltfSphereModel->loadModel(mRenderData, mGltfSphereRenderData, modelFilename, modelTexFilename))
+    {
+        Logger::log(1, "%s: loading sphere model failed\n", __FUNCTION__);
         return false;
     }
     return true;

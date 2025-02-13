@@ -1,0 +1,9 @@
+{
+  "name" : "sokudoengine",
+  "version-string" : "1.0.0",
+  "builtin-baseline" : "05bd9f6f9f8d7d1d506e6eba5a6f005928954196",
+  "dependencies" : [ {
+    "name" : "assimp",
+    "version>=" : "5.4.3"
+  } ]
+}

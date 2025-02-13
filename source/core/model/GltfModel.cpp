@@ -40,7 +40,7 @@ bool Core::Model::GltfModel::loadModel(Core::Renderer::VkRenderData& renderData,
     if (!result)
     {
         perror("Error");
-        Logger::log(1, "%s error: could not load file '%s', because of '%s'\n", __FUNCTION__, textureFilename.c_str(),
+        Logger::log(1, "%s error: could not load model '%s', because of '%s'\n", __FUNCTION__, modelFilename.c_str(),
                     stbi_failure_reason());
         return false;
     }
@@ -227,7 +227,7 @@ void Core::Model::GltfModel::draw(const Core::Renderer::VkRenderData& renderData
 {
     /* texture */
     vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            renderData.rdPipelineLayout, 0, 1,
+                            renderData.rdGltfPipelineLayout, 0, 1,
                             &gltfRenderData.rdGltfModelTexture.texTextureDescriptorSet, 0, nullptr);
 
     /* vertex buffer */
@@ -244,7 +244,7 @@ void Core::Model::GltfModel::draw(const Core::Renderer::VkRenderData& renderData
 
     if (renderData.rdGPUVertexSkinning)
     {
-        vkCmdBindPipeline(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+       vkCmdBindPipeline(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                           renderData.rdGltfGPUPipeline);
     }
     else
@@ -337,8 +337,7 @@ void Core::Model::GltfModel::createVertexBuffers(Core::Renderer::VkRenderData& r
         const tinygltf::BufferView& bufferView = mModel->bufferViews.at(accessor.bufferView);
         const tinygltf::Buffer& buffer = mModel->buffers.at(bufferView.buffer);
 
-        if ((attribType != "POSITION") && (attribType != "NORMAL") && (attribType != "TEXCOORD_0")
-            && (attribType != "JOINTS_0") && (attribType != "WEIGHTS_0"))
+        if (!attributes.contains(attribType))
         {
             Logger::log(1, "%s: skipping attribute type %s\n", __FUNCTION__, attribType.c_str());
             continue;
@@ -347,7 +346,7 @@ void Core::Model::GltfModel::createVertexBuffers(Core::Renderer::VkRenderData& r
         Logger::log(1, "%s: data for %s uses accessor %i\n", __FUNCTION__, attribType.c_str(), accessorNum);
         if (attribType == "POSITION")
         {
-            int numPositionEntries = accessor.count;
+            size_t numPositionEntries = accessor.count;
             mAlteredPositions.resize(numPositionEntries);
             Logger::log(1, "%s: loaded %i vertices from glTF file\n", __FUNCTION__, numPositionEntries);
         }

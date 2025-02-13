@@ -12,11 +12,7 @@ layout (set = 1, binding = 0) uniform Matrices {
     mat4 projection;
 };
 
-float ambientLight = 0.3;
-vec3 lightPos =  vec3(0.0, 0.0, 0.0);
-vec3 lightColor = vec3(1.0, 1.0, 1.0);
 
 void main() {
-    float lightAngle = max(dot(normalize(normal), normalize(lightPos)), 0.0);
-    FragColor = texture(tex, textCoord) * vec4((ambientLight + 0.7 * lightAngle) * lightColor, 1.0);
+    FragColor = vec4(1.0, 1.0, 1.0, 1.0);
 }
