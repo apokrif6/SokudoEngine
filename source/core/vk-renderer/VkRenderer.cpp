@@ -19,6 +19,7 @@
 #include "core/vk-renderer/pipelines/GltfSkeletonPipeline.h"
 #include "core/vk-renderer/buffers/ShaderStorageBuffer.h"
 #include "core/vk-renderer/pipelines/GltfGPUPipeline.h"
+#include "core/utils/ShapeUtils.h"
 
 #include <core/events/input-events/MouseLockEvent.h>
 #include <glm/gtc/matrix_transform.hpp>
@@ -94,11 +95,6 @@ bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned i
         return false;
     }
 
-    if (!loadGltfSphereModel())
-    {
-            return false;
-    }
-
     if (!createSSBO())
     {
         return false;
@@ -158,6 +154,12 @@ bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned i
     {
         return false;
     }
+
+    if (!loadMeshWithAssimp())
+    {
+        return false;
+    }
+
     if (!createFramebuffer())
     {
         return false;
@@ -473,7 +475,8 @@ bool Core::Renderer::VkRenderer::draw()
     /* upload required data only when switching GPU and CPU */
     static bool lastGPURenderState = mRenderData.rdGPUVertexSkinning;
 
-    if (lastGPURenderState != mRenderData.rdGPUVertexSkinning) {
+    if (lastGPURenderState != mRenderData.rdGPUVertexSkinning)
+    {
         mModelUploadRequired = true;
         lastGPURenderState = mRenderData.rdGPUVertexSkinning;
     }
@@ -484,13 +487,11 @@ bool Core::Renderer::VkRenderer::draw()
         mModelUploadRequired = false;
     }*/
 
-    mGltfSphereModel->uploadVertexBuffers(mRenderData, mGltfSphereRenderData);
-    mGltfSphereModel->uploadIndexBuffer(mRenderData, mGltfSphereRenderData);
-
-  /*  if (!mRenderData.rdGPUVertexSkinning) {
-        *//* glTF vertex skinning, overwrites position buffer, needs upload on every frame *//*
-        mGltfModel->applyVertexSkinning(mRenderData, mGltfRenderData);
-    }*/
+    /*  if (!mRenderData.rdGPUVertexSkinning) {
+     */
+    /* glTF vertex skinning, overwrites position buffer, needs upload on every frame */ /*
+   mGltfModel->applyVertexSkinning(mRenderData, mGltfRenderData);
+}*/
 
     mRenderData.rdUploadToVBOTime = mUploadToVBOTimer.stop();
 
@@ -499,17 +500,14 @@ bool Core::Renderer::VkRenderer::draw()
     vkCmdSetViewport(mRenderData.rdCommandBuffer, 0, 1, &viewport);
     vkCmdSetScissor(mRenderData.rdCommandBuffer, 0, 1, &scissor);
 
-    vkCmdBindDescriptorSets(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            mRenderData.rdPipelineLayout,0, 1,
-                            &mRenderData.rdModelTexture.texTextureDescriptorSet, 0, nullptr);
+    vkCmdBindDescriptorSets(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdPipelineLayout,
+                            0, 1, &mRenderData.rdModelTexture.texTextureDescriptorSet, 0, nullptr);
 
-    vkCmdBindDescriptorSets(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            mRenderData.rdPipelineLayout,1, 1,
-                            &mRenderData.rdPerspectiveViewMatrixUBO.rdUBODescriptorSet, 0, nullptr);
+    vkCmdBindDescriptorSets(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdPipelineLayout,
+                            1, 1, &mRenderData.rdPerspectiveViewMatrixUBO.rdUBODescriptorSet, 0, nullptr);
 
-    vkCmdBindDescriptorSets(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            mRenderData.rdPipelineLayout,2, 1,
-                            &mRenderData.rdJointMatrixSSBO.rdSSBODescriptorSet, 0, nullptr);
+    vkCmdBindDescriptorSets(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdPipelineLayout,
+                            2, 1, &mRenderData.rdJointMatrixSSBO.rdSSBODescriptorSet, 0, nullptr);
 
     VkDeviceSize offset = 0;
     vkCmdBindVertexBuffers(mRenderData.rdCommandBuffer, 0, 1, &mRenderData.rdVertexBufferData.rdVertexBuffer, &offset);
@@ -531,12 +529,16 @@ bool Core::Renderer::VkRenderer::draw()
     vkCmdDraw(mRenderData.rdCommandBuffer, 6, 1, 0, 0);
 
     // draw glTF model
-  /*  if (mRenderData.rdDrawGltfModel)
-    {
-        mGltfModel->draw(mRenderData, mGltfRenderData);
-    }
-*/
-    mGltfSphereModel->draw(mRenderData, mGltfSphereRenderData);
+    /*  if (mRenderData.rdDrawGltfModel)
+      {
+          mGltfModel->draw(mRenderData, mGltfRenderData);
+      }
+  */
+
+    boxPrimitive->uploadVertexBuffers(mRenderData, mPrimitiveRenderData);
+    //boxPrimitive->uploadIndexBuffer(mRenderData, mPrimitiveRenderData);
+
+    boxPrimitive->draw(mRenderData, mPrimitiveRenderData);
 
     // draw skeleton
     if (mSkeletonLineIndexCount > 0 && mRenderData.rdDrawSkeleton)
@@ -630,12 +632,9 @@ void Core::Renderer::VkRenderer::cleanup()
 {
     vkDeviceWaitIdle(mRenderData.rdVkbDevice.device);
 
-    mGltfSphereModel->cleanup(mRenderData, mGltfSphereRenderData);
-    mGltfSphereModel.reset();
-
-   /* mGltfModel->cleanup(mRenderData, mGltfRenderData);
-    mGltfModel.reset();
-*/
+    /* mGltfModel->cleanup(mRenderData, mGltfRenderData);
+     mGltfModel.reset();
+ */
     mUserInterface.cleanup(mRenderData);
 
     Core::Renderer::SyncObjects::cleanup(mRenderData);
@@ -644,6 +643,7 @@ void Core::Renderer::VkRenderer::cleanup()
     Core::Renderer::Framebuffer::cleanup(mRenderData);
     Core::Renderer::GltfGPUPipeline::cleanup(mRenderData, mRenderData.rdGltfGPUPipeline);
     Core::Renderer::GltfSkeletonPipeline::cleanup(mRenderData, mRenderData.rdGltfSkeletonPipeline);
+    Core::Renderer::GltfPipeline::cleanup(mRenderData, mRenderData.rdMeshPipeline);
     Core::Renderer::GltfPipeline::cleanup(mRenderData, mRenderData.rdGltfSpherePipeline);
     Core::Renderer::GltfPipeline::cleanup(mRenderData, mRenderData.rdGltfPipeline);
     Core::Renderer::Pipeline::cleanup(mRenderData, mRenderData.rdGridPipeline);
@@ -961,10 +961,11 @@ bool Core::Renderer::VkRenderer::createGridPipeline()
 
 bool Core::Renderer::VkRenderer::createGltfPipelineLayout()
 {
-    if (!Core::Renderer::PipelineLayout::init(mRenderData, mRenderData.rdModelTexture, mRenderData.rdGltfPipelineLayout))
+    if (!Core::Renderer::PipelineLayout::init(mRenderData, mRenderData.rdModelTexture,
+                                              mRenderData.rdGltfPipelineLayout))
     {
-            Logger::log(1, "%s error: could not init gltf pipeline layout\n", __FUNCTION__);
-            return false;
+        Logger::log(1, "%s error: could not init gltf pipeline layout\n", __FUNCTION__);
+        return false;
     }
     return true;
 }
@@ -1020,7 +1021,6 @@ bool Core::Renderer::VkRenderer::createGltfSpherePipeline()
     }
     return true;
 }
-
 
 bool Core::Renderer::VkRenderer::createFramebuffer()
 {
@@ -1115,16 +1115,26 @@ bool Core::Renderer::VkRenderer::loadGltfModel()
     return true;
 }
 
-bool Core::Renderer::VkRenderer::loadGltfSphereModel()
+bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
 {
-    mGltfSphereModel = std::make_shared<Core::Model::GltfSphere>();
-    const std::string modelFilename = "assets/BoxWithSpaces.gltf";
-    const std::string modelTexFilename = "textures/default.png";
-    if (!mGltfSphereModel->loadModel(mRenderData, mGltfSphereRenderData, modelFilename, modelTexFilename))
+    const std::string vertexShaderFile = "shaders/gltf.vert.spv";
+    const std::string fragmentShaderFile = "shaders/gltf.frag.spv";
+    if (!GltfPipeline::init(mRenderData, mRenderData.rdPipelineLayout, mRenderData.rdMeshPipeline,
+                            VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile))
     {
-        Logger::log(1, "%s: loading sphere model failed\n", __FUNCTION__);
+        Logger::log(1, "%s error: could not init gltf sphere shader pipeline\n", __FUNCTION__);
         return false;
     }
+
+    const std::string modelFileName = "assets/BoxWithSpaces.gltf";
+    Core::Utils::ShapeData box = Core::Utils::loadShapeFromFile(modelFileName);
+    std::vector<Core::Renderer::NewVertex> monkeyVertices = Core::Utils::getVerticesFromShapeData(box);
+    std::vector<uint32_t> monkeyIndices = Core::Utils::getIndicesFromShapeData(box);
+
+    boxPrimitive = std::make_shared<Core::Renderer::Primitive>(
+        "Box", sizeof(NewVertex), monkeyVertices, static_cast<int64_t>(monkeyVertices.size()),
+        monkeyIndices, static_cast<int64_t>(monkeyIndices.size()), mRenderData, mPrimitiveRenderData);
+
     return true;
 }
 

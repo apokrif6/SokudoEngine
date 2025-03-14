@@ -9,11 +9,13 @@
 
 namespace Core::Renderer
 {
-struct NewVertex {
-    glm::vec3 pos;
+struct NewVertex
+{
+    glm::vec3 position;
     glm::vec3 normal;
+    glm::vec3 tangent;
+    glm::vec4 color;
     glm::vec2 uv;
-    glm::vec3 color;
 };
 
 struct VkVertex
@@ -59,15 +61,6 @@ struct VkMesh
     std::vector<VkVertex> vertices;
 };
 
-struct VkUploadMatrices
-{
-    glm::mat4 viewMatrix;
-    glm::mat4 projectionMatrix;
-
-    alignas(16) glm::vec3 lightPosition;
-    alignas(16) glm::vec3 lightColor;
-};
-
 struct VkTextureData
 {
     VkImage texTextureImage = VK_NULL_HANDLE;
@@ -98,7 +91,8 @@ struct VkIndexBufferData
     VmaAllocation rdStagingBufferAlloc = nullptr;
 };
 
-struct VkUniformBufferData {
+struct VkUniformBufferData
+{
     size_t rdUniformBufferSize = 0;
     VkBuffer rdUniformBuffer = VK_NULL_HANDLE;
     VmaAllocation rdUniformBufferAlloc = nullptr;
@@ -108,7 +102,8 @@ struct VkUniformBufferData {
     VkDescriptorSet rdUBODescriptorSet = VK_NULL_HANDLE;
 };
 
-struct VkShaderStorageBufferData {
+struct VkShaderStorageBufferData
+{
     size_t rdShaderStorageBufferSize = 0;
     VkBuffer rdShaderStorageBuffer = VK_NULL_HANDLE;
     VmaAllocation rdShaderStorageBufferAlloc = nullptr;
@@ -118,6 +113,8 @@ struct VkShaderStorageBufferData {
     VkDescriptorSet rdSSBODescriptorSet = VK_NULL_HANDLE;
 };
 
+// TODO
+// should be removed
 struct VkGltfRenderData
 {
     std::vector<VkVertexBufferData> rdGltfVertexBufferData{};
@@ -132,6 +129,13 @@ struct VkGltfSphereRenderData
     VkTextureData rdGltfModelTexture{};
 };
 
+struct VkPrimitiveRenderData
+{
+    std::vector<VkVertexBufferData> rdModelVertexBufferData{};
+    VkIndexBufferData rdModelIndexBufferData{};
+    VkTextureData rdModelTexture{};
+};
+
 struct VkRenderData
 {
     GLFWwindow* rdWindow = nullptr;
@@ -142,6 +146,7 @@ struct VkRenderData
     unsigned int rdTriangleCount = 0;
     unsigned int rdGltfTriangleCount = 0;
     unsigned int rdGltfSphereTriangleCount = 0;
+    unsigned int rdPrimitiveTriangleCount = 0;
 
     int rdFieldOfView = 90;
 
@@ -207,6 +212,7 @@ struct VkRenderData
     VkPipeline rdGltfGPUPipeline = VK_NULL_HANDLE;
     VkPipeline rdGltfSkeletonPipeline = VK_NULL_HANDLE;
     VkPipeline rdGltfSpherePipeline = VK_NULL_HANDLE;
+    VkPipeline rdMeshPipeline = VK_NULL_HANDLE;
 
     VkCommandPool rdCommandPool = VK_NULL_HANDLE;
     VkCommandBuffer rdCommandBuffer = VK_NULL_HANDLE;
@@ -224,4 +230,4 @@ struct VkRenderData
 
     VkDescriptorPool rdImguiDescriptorPool = VK_NULL_HANDLE;
 };
-}
+} // namespace Core::Renderer

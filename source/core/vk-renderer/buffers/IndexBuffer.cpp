@@ -4,7 +4,8 @@
 #include "core/vk-renderer/buffers/CommandBuffer.h"
 #include "core/tools/Logger.h"
 
-bool Core::Renderer::IndexBuffer::init(Core::Renderer::VkRenderData& renderData, VkIndexBufferData& indexBufferData, unsigned int bufferSize)
+bool Core::Renderer::IndexBuffer::init(Core::Renderer::VkRenderData& renderData, VkIndexBufferData& indexBufferData,
+                                       unsigned int bufferSize)
 {
     VkBufferCreateInfo bufferInfo{};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -41,8 +42,9 @@ bool Core::Renderer::IndexBuffer::init(Core::Renderer::VkRenderData& renderData,
     return true;
 }
 
-bool Core::Renderer::IndexBuffer::uploadData(Core::Renderer::VkRenderData& renderData, VkIndexBufferData& indexBufferData,
-                             const tinygltf::Buffer& buffer, const tinygltf::BufferView& bufferView)
+bool Core::Renderer::IndexBuffer::uploadData(Core::Renderer::VkRenderData& renderData,
+                                             VkIndexBufferData& indexBufferData, const tinygltf::Buffer& buffer,
+                                             const tinygltf::BufferView& bufferView)
 {
     /* buffer too small, resize */
     if (indexBufferData.rdIndexBufferSize < bufferView.byteLength)
@@ -63,6 +65,53 @@ bool Core::Renderer::IndexBuffer::uploadData(Core::Renderer::VkRenderData& rende
     void* data;
     vmaMapMemory(renderData.rdAllocator, indexBufferData.rdStagingBufferAlloc, &data);
     std::memcpy(data, &buffer.data.at(0) + bufferView.byteOffset, bufferView.byteLength);
+    vmaUnmapMemory(renderData.rdAllocator, indexBufferData.rdStagingBufferAlloc);
+
+    VkBufferMemoryBarrier vertexBufferBarrier{};
+    vertexBufferBarrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+    vertexBufferBarrier.srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
+    vertexBufferBarrier.dstAccessMask = VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT;
+    vertexBufferBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    vertexBufferBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    vertexBufferBarrier.buffer = indexBufferData.rdStagingBuffer;
+    vertexBufferBarrier.offset = 0;
+    vertexBufferBarrier.size = indexBufferData.rdIndexBufferSize;
+
+    VkBufferCopy stagingBufferCopy{};
+    stagingBufferCopy.srcOffset = 0;
+    stagingBufferCopy.dstOffset = 0;
+    stagingBufferCopy.size = indexBufferData.rdIndexBufferSize;
+
+    vkCmdCopyBuffer(renderData.rdCommandBuffer, indexBufferData.rdStagingBuffer, indexBufferData.rdIndexBuffer, 1,
+                    &stagingBufferCopy);
+    vkCmdPipelineBarrier(renderData.rdCommandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_VERTEX_INPUT_BIT,
+                         0, 0, nullptr, 1, &vertexBufferBarrier, 0, nullptr);
+
+    return true;
+}
+
+bool Core::Renderer::IndexBuffer::uploadData(Core::Renderer::VkRenderData& renderData,
+                                             Core::Renderer::VkIndexBufferData& indexBufferData,
+                                             const std::vector<uint32_t>& indexData)
+{
+    const unsigned int bufferSize = indexData.size() * sizeof(uint32_t);
+    /* buffer too small, resize */
+    if (indexBufferData.rdIndexBufferSize < bufferSize)
+    {
+        cleanup(renderData, indexBufferData);
+
+        if (!init(renderData, indexBufferData, bufferSize))
+        {
+            return false;
+        }
+        Logger::log(1, "%s: index buffer resize to %i bytes\n", __FUNCTION__, bufferSize);
+        indexBufferData.rdIndexBufferSize = bufferSize;
+    }
+
+    /* copy data to staging buffer*/
+    void* data;
+    vmaMapMemory(renderData.rdAllocator, indexBufferData.rdStagingBufferAlloc, &data);
+    std::memcpy(data, indexData.data(), bufferSize);
     vmaUnmapMemory(renderData.rdAllocator, indexBufferData.rdStagingBufferAlloc);
 
     VkBufferMemoryBarrier vertexBufferBarrier{};

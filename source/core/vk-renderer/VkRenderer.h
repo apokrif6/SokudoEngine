@@ -14,6 +14,7 @@
 #include "GridModel.h"
 #include "GltfModel.h"
 #include "GltfSphere.h"
+#include "Primitive.h"
 #include <glm/detail/type_quat.hpp>
 
 namespace Core::Renderer
@@ -38,6 +39,7 @@ class VkRenderer final : public EventListener
   private:
     Core::Renderer::VkRenderData mRenderData{};
     Core::Renderer::VkGltfRenderData mGltfRenderData{};
+    Core::Renderer::VkPrimitiveRenderData mPrimitiveRenderData{};
     Core::Renderer::VkGltfSphereRenderData mGltfSphereRenderData{};
 
     Core::Renderer::UserInterface mUserInterface{};
@@ -62,8 +64,9 @@ class VkRenderer final : public EventListener
     unsigned int mSkeletonLineIndexCount = 0;
 
     std::shared_ptr<Core::Model::GltfModel> mGltfModel = nullptr;
-    std::shared_ptr<Core::Model::GltfSphere> mGltfSphereModel = nullptr;
     bool mModelUploadRequired = true;
+
+    std::shared_ptr<Core::Renderer::Primitive> boxPrimitive = nullptr;;
 
     glm::mat4 mRotYMat = glm::mat4(1.0f);
     glm::mat4 mRotZMat = glm::mat4(1.0f);
@@ -155,7 +158,7 @@ class VkRenderer final : public EventListener
 
     bool loadGltfModel();
 
-    bool loadGltfSphereModel();
+    bool loadMeshWithAssimp();
 
 #pragma endregion Renderer
 

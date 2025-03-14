@@ -15,6 +15,8 @@ class IndexBuffer
     static bool uploadData(Core::Renderer::VkRenderData& renderData, VkIndexBufferData& indexBufferData, const tinygltf::Buffer& buffer,
                            const tinygltf::BufferView& bufferView);
 
+    static bool uploadData(Core::Renderer::VkRenderData& renderData, VkIndexBufferData& indexBufferData, const std::vector<uint32_t>& indexData);
+
     static void cleanup(Core::Renderer::VkRenderData& renderData, VkIndexBufferData& IndexBufferData);
 };
 }
