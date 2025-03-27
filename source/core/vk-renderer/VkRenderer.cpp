@@ -20,6 +20,7 @@
 #include "core/vk-renderer/buffers/ShaderStorageBuffer.h"
 #include "core/vk-renderer/pipelines/GltfGPUPipeline.h"
 #include "core/utils/ShapeUtils.h"
+#include "core/vk-renderer/pipelines/MeshPipeline.h"
 
 #include <core/events/input-events/MouseLockEvent.h>
 #include <glm/gtc/matrix_transform.hpp>
@@ -493,6 +494,9 @@ bool Core::Renderer::VkRenderer::draw()
    mGltfModel->applyVertexSkinning(mRenderData, mGltfRenderData);
 }*/
 
+    boxPrimitive->uploadVertexBuffers(mRenderData, mPrimitiveRenderData);
+    boxPrimitive->uploadIndexBuffer(mRenderData, mPrimitiveRenderData);
+
     mRenderData.rdUploadToVBOTime = mUploadToVBOTimer.stop();
 
     vkCmdBeginRenderPass(mRenderData.rdCommandBuffer, &rpInfo, VK_SUBPASS_CONTENTS_INLINE);
@@ -534,9 +538,6 @@ bool Core::Renderer::VkRenderer::draw()
           mGltfModel->draw(mRenderData, mGltfRenderData);
       }
   */
-
-    boxPrimitive->uploadVertexBuffers(mRenderData, mPrimitiveRenderData);
-    //boxPrimitive->uploadIndexBuffer(mRenderData, mPrimitiveRenderData);
 
     boxPrimitive->draw(mRenderData, mPrimitiveRenderData);
 
@@ -1119,7 +1120,7 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
 {
     const std::string vertexShaderFile = "shaders/gltf.vert.spv";
     const std::string fragmentShaderFile = "shaders/gltf.frag.spv";
-    if (!GltfPipeline::init(mRenderData, mRenderData.rdPipelineLayout, mRenderData.rdMeshPipeline,
+    if (!MeshPipeline::init(mRenderData, mRenderData.rdPipelineLayout, mRenderData.rdMeshPipeline,
                             VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile))
     {
         Logger::log(1, "%s error: could not init gltf sphere shader pipeline\n", __FUNCTION__);
