@@ -9,8 +9,7 @@ namespace Core::Renderer
 class Primitive
 {
   public:
-    Primitive(const std::string& primitiveName, int64_t vertexSize,
-              const std::vector<Core::Renderer::NewVertex>& vertexBufferData, int64_t vertexCount,
+    Primitive(const std::string& primitiveName, const std::vector<Core::Renderer::NewVertex>& vertexBufferData,
               const std::vector<uint32_t>& indexBufferData, int64_t indexCount,
               Core::Renderer::VkRenderData& renderData, Core::Renderer::VkPrimitiveRenderData& primitiveRenderData);
 
@@ -31,8 +30,6 @@ class Primitive
                            Core::Renderer::VkPrimitiveRenderData& primitiveRenderData);
 
     std::string mPrimitiveName;
-    int64_t mVertexSize = -1;
-    int64_t mVertexCount = -1;
     int64_t mIndexCount = -1;
 
     std::vector<Core::Renderer::NewVertex> mVertexBufferData;

@@ -494,8 +494,8 @@ bool Core::Renderer::VkRenderer::draw()
    mGltfModel->applyVertexSkinning(mRenderData, mGltfRenderData);
 }*/
 
-    boxPrimitive->uploadVertexBuffers(mRenderData, mPrimitiveRenderData);
-    boxPrimitive->uploadIndexBuffer(mRenderData, mPrimitiveRenderData);
+    mPrimitive->uploadVertexBuffers(mRenderData, mPrimitiveRenderData);
+    mPrimitive->uploadIndexBuffer(mRenderData, mPrimitiveRenderData);
 
     mRenderData.rdUploadToVBOTime = mUploadToVBOTimer.stop();
 
@@ -539,7 +539,7 @@ bool Core::Renderer::VkRenderer::draw()
       }
   */
 
-    boxPrimitive->draw(mRenderData, mPrimitiveRenderData);
+    mPrimitive->draw(mRenderData, mPrimitiveRenderData);
 
     // draw skeleton
     if (mSkeletonLineIndexCount > 0 && mRenderData.rdDrawSkeleton)
@@ -1127,14 +1127,14 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
         return false;
     }
 
-    const std::string modelFileName = "assets/BoxWithSpaces.gltf";
+    const std::string modelFileName = "assets/sphere/Sphere.gltf";
     Core::Utils::ShapeData box = Core::Utils::loadShapeFromFile(modelFileName);
     std::vector<Core::Renderer::NewVertex> monkeyVertices = Core::Utils::getVerticesFromShapeData(box);
     std::vector<uint32_t> monkeyIndices = Core::Utils::getIndicesFromShapeData(box);
 
-    boxPrimitive = std::make_shared<Core::Renderer::Primitive>(
-        "Box", sizeof(NewVertex), monkeyVertices, static_cast<int64_t>(monkeyVertices.size()),
-        monkeyIndices, static_cast<int64_t>(monkeyIndices.size()), mRenderData, mPrimitiveRenderData);
+    mPrimitive = std::make_shared<Core::Renderer::Primitive>("Box", monkeyVertices, monkeyIndices,
+                                                               static_cast<int64_t>(monkeyIndices.size()), mRenderData,
+                                                               mPrimitiveRenderData);
 
     return true;
 }

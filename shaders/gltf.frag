@@ -20,5 +20,6 @@ vec3 lightColor = vec3(1.0, 1.0, 1.0);
 
 void main() {
     float lightAngle = max(dot(normalize(normal), normalize(lightPos)), 0.0);
-    FragColor = texture(tex, textCoord) * vec4((ambientLight + 0.7 * lightAngle) * lightColor, 1.0);
+    //FragColor = texture(tex, textCoord) * vec4((ambientLight + 0.7 * lightAngle) * lightColor, 1.0);
+    FragColor = vec4(1.0, 0.0, 1.0, 1.0);
 }
