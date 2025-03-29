@@ -1118,8 +1118,8 @@ bool Core::Renderer::VkRenderer::loadGltfModel()
 
 bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
 {
-    const std::string vertexShaderFile = "shaders/gltf.vert.spv";
-    const std::string fragmentShaderFile = "shaders/gltf.frag.spv";
+    const std::string vertexShaderFile = "shaders/mesh.vert.spv";
+    const std::string fragmentShaderFile = "shaders/mesh.frag.spv";
     if (!MeshPipeline::init(mRenderData, mRenderData.rdPipelineLayout, mRenderData.rdMeshPipeline,
                             VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile))
     {
@@ -1127,14 +1127,14 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
         return false;
     }
 
-    const std::string modelFileName = "assets/sphere/Sphere.gltf";
+    const std::string modelFileName = "assets/girl/scene.gltf";
     Core::Utils::ShapeData box = Core::Utils::loadShapeFromFile(modelFileName);
     std::vector<Core::Renderer::NewVertex> monkeyVertices = Core::Utils::getVerticesFromShapeData(box);
     std::vector<uint32_t> monkeyIndices = Core::Utils::getIndicesFromShapeData(box);
 
     mPrimitive = std::make_shared<Core::Renderer::Primitive>("Box", monkeyVertices, monkeyIndices,
-                                                               static_cast<int64_t>(monkeyIndices.size()), mRenderData,
-                                                               mPrimitiveRenderData);
+                                                             static_cast<int64_t>(monkeyIndices.size()), mRenderData,
+                                                             mPrimitiveRenderData);
 
     return true;
 }

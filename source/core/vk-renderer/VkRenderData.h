@@ -42,12 +42,12 @@ struct NewVertex
 
         attributeDescriptions[2].binding = 0;
         attributeDescriptions[2].location = 2;
-        attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
+        attributeDescriptions[2].format = VK_FORMAT_R32G32B32_SFLOAT;
         attributeDescriptions[2].offset = offsetof(NewVertex, tangent);
 
         attributeDescriptions[3].binding = 0;
         attributeDescriptions[3].location = 3;
-        attributeDescriptions[3].format = VK_FORMAT_R32G32_SFLOAT;
+        attributeDescriptions[3].format = VK_FORMAT_R32G32B32A32_SFLOAT;
         attributeDescriptions[3].offset = offsetof(NewVertex, color);
 
         attributeDescriptions[4].binding = 0;

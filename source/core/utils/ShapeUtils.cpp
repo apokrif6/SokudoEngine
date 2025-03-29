@@ -3,41 +3,51 @@
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
+#include <glm/gtc/type_ptr.hpp>
 
-void processMesh(Core::Utils::ShapeData& shapeData, aiMesh* mesh, aiNode* node)
+void processMesh(Core::Utils::ShapeData& shapeData, aiMesh* mesh, const glm::mat4& transform)
 {
-    shapeData.vertices.resize(mesh->mNumVertices);
+    size_t indexOffset = shapeData.vertices.size();
+
+    shapeData.vertices.resize(indexOffset + mesh->mNumVertices);
 
     for (size_t i = 0; i < mesh->mNumVertices; ++i)
     {
         if (mesh->HasPositions())
         {
             aiVector3D& position = mesh->mVertices[i];
-            position *= node->mTransformation;
+            glm::vec4 transformedPos = transform * glm::vec4(position.x, position.y, position.z, 1.0f);
 
-            shapeData.vertices[i].position = {position.x, position.y, position.z};
+            shapeData.vertices[indexOffset + i].position = {transformedPos.x, transformedPos.y, transformedPos.z};
         }
 
         if (mesh->HasNormals())
         {
             aiVector3D& normal = mesh->mNormals[i];
-            normal *= node->mTransformation;
+            glm::vec3 transformedNormal = glm::mat3(transform) * glm::vec3(normal.x, normal.y, normal.z);
 
-            shapeData.vertices[i].normal = {normal.x, normal.y, normal.z};
+            shapeData.vertices[indexOffset + i].normal = glm::normalize(transformedNormal);
         }
 
-        if (mesh->HasTextureCoords(0))
+        if (mesh->HasTangentsAndBitangents())
         {
-            aiVector3D& texCoords = mesh->mTextureCoords[0][i];
+            aiVector3D& tangent = mesh->mTangents[i];
 
-            shapeData.vertices[i].uv = {texCoords.x, texCoords.y};
+            shapeData.vertices[indexOffset + i].tangent = {tangent.x, tangent.y, tangent.z};
         }
 
         if (mesh->HasVertexColors(0))
         {
             aiColor4D& vertColor = mesh->mColors[0][i];
 
-            shapeData.vertices[i].color = {vertColor.r, vertColor.g, vertColor.b, vertColor.a};
+            shapeData.vertices[indexOffset + i].color = {vertColor.r, vertColor.g, vertColor.b, vertColor.a};
+        }
+
+        if (mesh->HasTextureCoords(0))
+        {
+            aiVector3D& texCoords = mesh->mTextureCoords[0][i];
+
+            shapeData.vertices[indexOffset + i].uv = {texCoords.x, texCoords.y};
         }
     }
 
@@ -46,23 +56,27 @@ void processMesh(Core::Utils::ShapeData& shapeData, aiMesh* mesh, aiNode* node)
         aiFace& face = mesh->mFaces[i];
         for (size_t j = 0; j < face.mNumIndices; ++j)
         {
-            shapeData.indices.push_back(face.mIndices[j]);
+            shapeData.indices.push_back(face.mIndices[j] + indexOffset);
         }
     }
 }
 
-void processNode(Core::Utils::ShapeData& shapeData, aiNode* node, const aiScene* scene)
+void processNode(Core::Utils::ShapeData& shapeData, aiNode* node, const aiScene* scene,
+                 const glm::mat4& parentTransform)
 {
+    glm::mat4 nodeTransform = glm::transpose(glm::make_mat4(&node->mTransformation.a1));
+    glm::mat4 globalTransform = parentTransform * nodeTransform;
+
     for (size_t i = 0; i < node->mNumMeshes; ++i)
     {
         aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
 
-        processMesh(shapeData, mesh, node);
+        processMesh(shapeData, mesh, globalTransform);
     }
 
     for (size_t i = 0; i < node->mNumChildren; ++i)
     {
-        processNode(shapeData, node->mChildren[i], scene);
+        processNode(shapeData, node->mChildren[i], scene, globalTransform);
     }
 }
 
@@ -80,7 +94,7 @@ Core::Utils::ShapeData Core::Utils::loadShapeFromFile(const std::string& fileNam
     }
 
     Core::Utils::ShapeData shape;
-    processNode(shape, scene->mRootNode, scene);
+    processNode(shape, scene->mRootNode, scene, glm::mat4(1.0f));
     return shape;
 }
 
