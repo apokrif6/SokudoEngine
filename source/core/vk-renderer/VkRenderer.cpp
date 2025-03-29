@@ -141,11 +141,6 @@ bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned i
         return false;
     }
 
-    if (!createGltfSpherePipeline())
-    {
-        return false;
-    }
-
     if (!createGltfSkeletonPipeline())
     {
         return false;
@@ -333,11 +328,12 @@ bool Core::Renderer::VkRenderer::draw()
                                                       static_cast<float>(mRenderData.rdVkbSwapchain.extent.width) /
                                                           static_cast<float>(mRenderData.rdVkbSwapchain.extent.height),
                                                       0.01f, 50.0f);
-
+#if 0
     if (mRenderData.rdDrawSkeleton)
     {
         mSkeletonMesh = mGltfModel->getSkeleton(true);
     }
+#endif
 
     // TODO
     // fix after ubo changes
@@ -482,18 +478,21 @@ bool Core::Renderer::VkRenderer::draw()
         lastGPURenderState = mRenderData.rdGPUVertexSkinning;
     }
 
-    /*if (mModelUploadRequired) {
+#if 0
+    if (mModelUploadRequired)
+    {
         mGltfModel->uploadVertexBuffers(mRenderData, mGltfRenderData);
         mGltfModel->uploadIndexBuffer(mRenderData, mGltfRenderData);
         mModelUploadRequired = false;
-    }*/
+    }
 
-    /*  if (!mRenderData.rdGPUVertexSkinning) {
-     */
-    /* glTF vertex skinning, overwrites position buffer, needs upload on every frame */ /*
-   mGltfModel->applyVertexSkinning(mRenderData, mGltfRenderData);
-}*/
+    if (!mRenderData.rdGPUVertexSkinning)
+    {
 
+        /* glTF vertex skinning, overwrites position buffer, needs upload on every frame */
+        mGltfModel->applyVertexSkinning(mRenderData, mGltfRenderData);
+    }
+#endif
     mPrimitive->uploadVertexBuffers(mRenderData, mPrimitiveRenderData);
     mPrimitive->uploadIndexBuffer(mRenderData, mPrimitiveRenderData);
 
@@ -532,14 +531,12 @@ bool Core::Renderer::VkRenderer::draw()
     vkCmdBindPipeline(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdGridPipeline);
     vkCmdDraw(mRenderData.rdCommandBuffer, 6, 1, 0, 0);
 
+#if 0
     // draw glTF model
-    /*  if (mRenderData.rdDrawGltfModel)
-      {
-          mGltfModel->draw(mRenderData, mGltfRenderData);
-      }
-  */
-
-    mPrimitive->draw(mRenderData, mPrimitiveRenderData);
+    if (mRenderData.rdDrawGltfModel)
+    {
+        mGltfModel->draw(mRenderData, mGltfRenderData);
+    }
 
     // draw skeleton
     if (mSkeletonLineIndexCount > 0 && mRenderData.rdDrawSkeleton)
@@ -552,6 +549,9 @@ bool Core::Renderer::VkRenderer::draw()
         vkCmdSetLineWidth(mRenderData.rdCommandBuffer, 3.0f);
         vkCmdDraw(mRenderData.rdCommandBuffer, mSkeletonLineIndexCount, 1, mLineIndexCount, 0);
     }
+#endif
+
+    mPrimitive->draw(mRenderData, mPrimitiveRenderData);
 
     mUIGenerateTimer.start();
     mUserInterface.createFrame(mRenderData);
@@ -633,9 +633,11 @@ void Core::Renderer::VkRenderer::cleanup()
 {
     vkDeviceWaitIdle(mRenderData.rdVkbDevice.device);
 
-    /* mGltfModel->cleanup(mRenderData, mGltfRenderData);
-     mGltfModel.reset();
- */
+#if 0
+    mGltfModel->cleanup(mRenderData, mGltfRenderData);
+    mGltfModel.reset();
+#endif
+
     mUserInterface.cleanup(mRenderData);
 
     Core::Renderer::SyncObjects::cleanup(mRenderData);
@@ -645,7 +647,6 @@ void Core::Renderer::VkRenderer::cleanup()
     Core::Renderer::GltfGPUPipeline::cleanup(mRenderData, mRenderData.rdGltfGPUPipeline);
     Core::Renderer::GltfSkeletonPipeline::cleanup(mRenderData, mRenderData.rdGltfSkeletonPipeline);
     Core::Renderer::GltfPipeline::cleanup(mRenderData, mRenderData.rdMeshPipeline);
-    Core::Renderer::GltfPipeline::cleanup(mRenderData, mRenderData.rdGltfSpherePipeline);
     Core::Renderer::GltfPipeline::cleanup(mRenderData, mRenderData.rdGltfPipeline);
     Core::Renderer::Pipeline::cleanup(mRenderData, mRenderData.rdGridPipeline);
     Core::Renderer::Pipeline::cleanup(mRenderData, mRenderData.rdLinePipeline);
@@ -1010,19 +1011,6 @@ bool Core::Renderer::VkRenderer::createGltfGPUPipeline()
     return true;
 }
 
-bool Core::Renderer::VkRenderer::createGltfSpherePipeline()
-{
-    const std::string vertexShaderFile = "shaders/gltf_sphere.vert.spv";
-    const std::string fragmentShaderFile = "shaders/gltf_sphere.frag.spv";
-    if (!GltfPipeline::init(mRenderData, mRenderData.rdPipelineLayout, mRenderData.rdGltfSpherePipeline,
-                            VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile))
-    {
-        Logger::log(1, "%s error: could not init gltf sphere shader pipeline\n", __FUNCTION__);
-        return false;
-    }
-    return true;
-}
-
 bool Core::Renderer::VkRenderer::createFramebuffer()
 {
     if (!Core::Renderer::Framebuffer::init(mRenderData))
@@ -1123,18 +1111,19 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
     if (!MeshPipeline::init(mRenderData, mRenderData.rdPipelineLayout, mRenderData.rdMeshPipeline,
                             VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile))
     {
-        Logger::log(1, "%s error: could not init gltf sphere shader pipeline\n", __FUNCTION__);
+        Logger::log(1, "%s error: could not init mesh pipeline\n", __FUNCTION__);
         return false;
     }
 
     const std::string modelFileName = "assets/girl/scene.gltf";
-    Core::Utils::ShapeData box = Core::Utils::loadShapeFromFile(modelFileName);
-    std::vector<Core::Renderer::NewVertex> monkeyVertices = Core::Utils::getVerticesFromShapeData(box);
-    std::vector<uint32_t> monkeyIndices = Core::Utils::getIndicesFromShapeData(box);
+    Core::Utils::ShapeData primitiveShapeData = Core::Utils::loadShapeFromFile(modelFileName, mRenderData);
+    std::vector<Core::Renderer::NewVertex> primitiveVertices =
+        Core::Utils::getVerticesFromShapeData(primitiveShapeData);
+    std::vector<uint32_t> primitiveIndices = Core::Utils::getIndicesFromShapeData(primitiveShapeData);
+    std::vector<Core::Renderer::VkTextureData> primitiveTexture = primitiveShapeData.textures;
 
-    mPrimitive = std::make_shared<Core::Renderer::Primitive>("Box", monkeyVertices, monkeyIndices,
-                                                             static_cast<int64_t>(monkeyIndices.size()), mRenderData,
-                                                             mPrimitiveRenderData);
+    mPrimitive = std::make_shared<Core::Renderer::Primitive>("Box", primitiveVertices, primitiveIndices,
+                                                             primitiveTexture, mRenderData, mPrimitiveRenderData);
 
     return true;
 }

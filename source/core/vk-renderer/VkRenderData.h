@@ -163,13 +163,6 @@ struct VkGltfRenderData
     VkTextureData rdGltfModelTexture{};
 };
 
-struct VkGltfSphereRenderData
-{
-    std::vector<VkVertexBufferData> rdGltfVertexBufferData{};
-    VkIndexBufferData rdGltfIndexBufferData{};
-    VkTextureData rdGltfModelTexture{};
-};
-
 struct VkPrimitiveRenderData
 {
     VkVertexBufferData rdModelVertexBufferData{};
@@ -186,7 +179,6 @@ struct VkRenderData
 
     unsigned int rdTriangleCount = 0;
     unsigned int rdGltfTriangleCount = 0;
-    unsigned int rdGltfSphereTriangleCount = 0;
     unsigned int rdPrimitiveTriangleCount = 0;
 
     int rdFieldOfView = 90;
@@ -252,7 +244,6 @@ struct VkRenderData
     VkPipeline rdGltfPipeline = VK_NULL_HANDLE;
     VkPipeline rdGltfGPUPipeline = VK_NULL_HANDLE;
     VkPipeline rdGltfSkeletonPipeline = VK_NULL_HANDLE;
-    VkPipeline rdGltfSpherePipeline = VK_NULL_HANDLE;
     VkPipeline rdMeshPipeline = VK_NULL_HANDLE;
 
     VkCommandPool rdCommandPool = VK_NULL_HANDLE;

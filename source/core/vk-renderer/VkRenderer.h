@@ -13,7 +13,6 @@
 #include "core/events/EventDispatcher.h"
 #include "GridModel.h"
 #include "GltfModel.h"
-#include "GltfSphere.h"
 #include "Primitive.h"
 #include <glm/detail/type_quat.hpp>
 
@@ -40,7 +39,6 @@ class VkRenderer final : public EventListener
     Core::Renderer::VkRenderData mRenderData{};
     Core::Renderer::VkGltfRenderData mGltfRenderData{};
     Core::Renderer::VkPrimitiveRenderData mPrimitiveRenderData{};
-    Core::Renderer::VkGltfSphereRenderData mGltfSphereRenderData{};
 
     Core::Renderer::UserInterface mUserInterface{};
 
@@ -139,8 +137,6 @@ class VkRenderer final : public EventListener
     bool createGltfSkeletonPipeline();
 
     bool createGltfGPUPipeline();
-
-    bool createGltfSpherePipeline();
 
     bool createFramebuffer();
 

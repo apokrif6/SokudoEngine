@@ -1,11 +1,53 @@
 #include "ShapeUtils.h"
 #include "core/tools/Logger.h"
+#include "core/vk-renderer/Texture.h"
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 #include <glm/gtc/type_ptr.hpp>
 
-void processMesh(Core::Utils::ShapeData& shapeData, aiMesh* mesh, const glm::mat4& transform)
+void processMaterialTextures(Core::Utils::ShapeData& shapeData, const aiMaterial* material, const aiScene* scene,
+                             Core::Renderer::VkRenderData& renderData)
+{
+    unsigned int texIndex = 0;
+
+    aiString texPath;
+
+    for (texIndex = 0; texIndex < material->GetTextureCount(aiTextureType_DIFFUSE); ++texIndex)
+    {
+        material->GetTexture(aiTextureType_DIFFUSE, texIndex, &texPath);
+
+        std::string textureFilePath = texPath.C_Str();
+        Core::Renderer::VkTextureData textureData;
+
+        std::future<bool> textureLoadFuture =
+            Core::Renderer::Texture::loadTexture(renderData, textureData, textureFilePath);
+
+        if (textureLoadFuture.get())
+        {
+            shapeData.textures.push_back(textureData);
+        }
+    }
+
+    for (texIndex = 0; texIndex < material->GetTextureCount(aiTextureType_NORMALS); ++texIndex)
+    {
+        material->GetTexture(aiTextureType_NORMALS, texIndex, &texPath);
+
+        std::string textureFilePath = texPath.C_Str();
+        Core::Renderer::VkTextureData textureData;
+
+        std::future<bool> textureLoadFuture =
+            Core::Renderer::Texture::loadTexture(renderData, textureData, textureFilePath);
+
+        if (textureLoadFuture.get())
+        {
+            shapeData.textures.push_back(textureData);
+        }
+    }
+}
+
+void processMesh(Core::Utils::ShapeData& shapeData, const aiMesh* mesh, const aiScene* scene,
+                 const aiMaterial* material, const glm::mat4& transform, Core::Renderer::VkRenderData& renderData)
 {
     size_t indexOffset = shapeData.vertices.size();
 
@@ -59,28 +101,32 @@ void processMesh(Core::Utils::ShapeData& shapeData, aiMesh* mesh, const glm::mat
             shapeData.indices.push_back(face.mIndices[j] + indexOffset);
         }
     }
+
+    processMaterialTextures(shapeData, material, scene, renderData);
 }
 
 void processNode(Core::Utils::ShapeData& shapeData, aiNode* node, const aiScene* scene,
-                 const glm::mat4& parentTransform)
+                 const glm::mat4& parentTransform, Core::Renderer::VkRenderData& renderData)
 {
     glm::mat4 nodeTransform = glm::transpose(glm::make_mat4(&node->mTransformation.a1));
     glm::mat4 globalTransform = parentTransform * nodeTransform;
 
     for (size_t i = 0; i < node->mNumMeshes; ++i)
     {
-        aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+        const aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+        const aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
-        processMesh(shapeData, mesh, globalTransform);
+        processMesh(shapeData, mesh, scene, material, globalTransform, renderData);
     }
 
     for (size_t i = 0; i < node->mNumChildren; ++i)
     {
-        processNode(shapeData, node->mChildren[i], scene, globalTransform);
+        processNode(shapeData, node->mChildren[i], scene, globalTransform, renderData);
     }
 }
 
-Core::Utils::ShapeData Core::Utils::loadShapeFromFile(const std::string& fileName)
+Core::Utils::ShapeData Core::Utils::loadShapeFromFile(const std::string& fileName,
+                                                      Core::Renderer::VkRenderData& renderData)
 {
     Assimp::Importer importer;
     importer.ReadFile(fileName, aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_JoinIdenticalVertices);
@@ -94,7 +140,7 @@ Core::Utils::ShapeData Core::Utils::loadShapeFromFile(const std::string& fileNam
     }
 
     Core::Utils::ShapeData shape;
-    processNode(shape, scene->mRootNode, scene, glm::mat4(1.0f));
+    processNode(shape, scene->mRootNode, scene, glm::mat4(1.0f), renderData);
     return shape;
 }
 
