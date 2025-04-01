@@ -162,10 +162,7 @@ Core::Renderer::VkTextureArrayData Core::Utils::getTexturesFromShapeData(const C
     std::future<bool> textureLoadFuture =
         Core::Renderer::Texture::loadTextures(renderData, textureData, shapeData.textures);
 
-    if (textureLoadFuture.get())
-    {
-        return textureData;
-    }
+    textureLoadFuture.get();
 
     return textureData;
 }
