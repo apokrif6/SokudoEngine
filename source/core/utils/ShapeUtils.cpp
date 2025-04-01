@@ -6,43 +6,22 @@
 #include <assimp/scene.h>
 #include <glm/gtc/type_ptr.hpp>
 
-void processMaterialTextures(Core::Utils::ShapeData& shapeData, const aiMaterial* material, const aiScene* scene,
-                             Core::Renderer::VkRenderData& renderData)
+void processMaterialTextures(Core::Utils::ShapeData& shapeData, const aiMaterial* material)
 {
-    unsigned int texIndex = 0;
-
     aiString texPath;
 
-    for (texIndex = 0; texIndex < material->GetTextureCount(aiTextureType_DIFFUSE); ++texIndex)
+    for (size_t texIndex = 0; texIndex < material->GetTextureCount(aiTextureType_DIFFUSE); ++texIndex)
     {
         material->GetTexture(aiTextureType_DIFFUSE, texIndex, &texPath);
 
-        std::string textureFilePath = texPath.C_Str();
-        Core::Renderer::VkTextureData textureData;
-
-        std::future<bool> textureLoadFuture =
-            Core::Renderer::Texture::loadTexture(renderData, textureData, textureFilePath);
-
-        if (textureLoadFuture.get())
-        {
-            shapeData.textures.push_back(textureData);
-        }
+        shapeData.textures.emplace_back(texPath.C_Str());
     }
 
-    for (texIndex = 0; texIndex < material->GetTextureCount(aiTextureType_NORMALS); ++texIndex)
+    for (size_t texIndex = 0; texIndex < material->GetTextureCount(aiTextureType_NORMALS); ++texIndex)
     {
         material->GetTexture(aiTextureType_NORMALS, texIndex, &texPath);
 
-        std::string textureFilePath = texPath.C_Str();
-        Core::Renderer::VkTextureData textureData;
-
-        std::future<bool> textureLoadFuture =
-            Core::Renderer::Texture::loadTexture(renderData, textureData, textureFilePath);
-
-        if (textureLoadFuture.get())
-        {
-            shapeData.textures.push_back(textureData);
-        }
+        shapeData.textures.emplace_back(texPath.C_Str());
     }
 }
 
@@ -102,7 +81,7 @@ void processMesh(Core::Utils::ShapeData& shapeData, const aiMesh* mesh, const ai
         }
     }
 
-    processMaterialTextures(shapeData, material, scene, renderData);
+    processMaterialTextures(shapeData, material);
 }
 
 void processNode(Core::Utils::ShapeData& shapeData, aiNode* node, const aiScene* scene,
@@ -150,11 +129,14 @@ std::vector<Core::Renderer::NewVertex> Core::Utils::getVerticesFromShapeData(con
     vertices.reserve(shapeData.vertices.size());
     for (const Core::Utils::VertexData& vertex : shapeData.vertices)
     {
-        vertices.push_back({.position = vertex.position,
-                            .normal = vertex.normal,
-                            .tangent = vertex.tangent,
-                            .color = vertex.color,
-                            .uv = vertex.uv});
+        vertices.push_back({
+            .position = vertex.position,
+            .normal = vertex.normal,
+            .tangent = vertex.tangent,
+            .color = vertex.color,
+            .uv = vertex.uv,
+            .textureIndex = vertex.textureIndex,
+        });
     }
 
     return vertices;
@@ -170,4 +152,20 @@ std::vector<uint32_t> Core::Utils::getIndicesFromShapeData(const Core::Utils::Sh
     }
 
     return indices;
+}
+
+Core::Renderer::VkTextureArrayData Core::Utils::getTexturesFromShapeData(const Core::Utils::ShapeData& shapeData,
+                                                                         Core::Renderer::VkRenderData& renderData)
+{
+    Core::Renderer::VkTextureArrayData textureData;
+
+    std::future<bool> textureLoadFuture =
+        Core::Renderer::Texture::loadTextures(renderData, textureData, shapeData.textures);
+
+    if (textureLoadFuture.get())
+    {
+        return textureData;
+    }
+
+    return textureData;
 }

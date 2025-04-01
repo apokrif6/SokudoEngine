@@ -11,9 +11,8 @@ class Primitive
 {
   public:
     Primitive(const std::string& primitiveName, const std::vector<Core::Renderer::NewVertex>& vertexBufferData,
-              const std::vector<uint32_t>& indexBufferData,
-              const std::vector<Core::Renderer::VkTextureData>& textureData, Core::Renderer::VkRenderData& renderData,
-              Core::Renderer::VkPrimitiveRenderData& primitiveRenderData);
+              const std::vector<uint32_t>& indexBufferData, const Core::Renderer::VkTextureArrayData& textureData,
+              Core::Renderer::VkRenderData& renderData, Core::Renderer::VkPrimitiveRenderData& primitiveRenderData);
 
     void uploadVertexBuffers(Core::Renderer::VkRenderData& renderData,
                              Core::Renderer::VkPrimitiveRenderData& primitiveRenderData);
@@ -23,6 +22,8 @@ class Primitive
 
     void draw(const Core::Renderer::VkRenderData& renderData,
               const Core::Renderer::VkPrimitiveRenderData& primitiveRenderData);
+
+    void cleanup(Core::Renderer::VkRenderData& renderData, Core::Renderer::VkPrimitiveRenderData& primitiveRenderData);
 
   private:
     void createVertexBuffers(Core::Renderer::VkRenderData& renderData,
@@ -39,6 +40,6 @@ class Primitive
 
     std::vector<Core::Renderer::NewVertex> mVertexBufferData;
     std::vector<uint32_t> mIndexBufferData;
-    std::vector<Core::Renderer::VkTextureData> mTextureData;
+    Core::Renderer::VkTextureArrayData mTextureData;
 };
 } // namespace Core::Renderer

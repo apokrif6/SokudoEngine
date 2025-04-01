@@ -16,6 +16,7 @@ struct NewVertex
     glm::vec3 tangent;
     glm::vec4 color;
     glm::vec2 uv;
+    unsigned int textureIndex;
 
     static VkVertexInputBindingDescription getBindingDescription()
     {
@@ -27,9 +28,9 @@ struct NewVertex
         return bindingDescription;
     }
 
-    static std::array<VkVertexInputAttributeDescription, 5> getAttributeDescriptions()
+    static std::array<VkVertexInputAttributeDescription, 6> getAttributeDescriptions()
     {
-        std::array<VkVertexInputAttributeDescription, 5> attributeDescriptions{};
+        std::array<VkVertexInputAttributeDescription, 6> attributeDescriptions{};
         attributeDescriptions[0].binding = 0;
         attributeDescriptions[0].location = 0;
         attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
@@ -54,6 +55,11 @@ struct NewVertex
         attributeDescriptions[4].location = 4;
         attributeDescriptions[4].format = VK_FORMAT_R32G32_SFLOAT;
         attributeDescriptions[4].offset = offsetof(NewVertex, uv);
+
+        attributeDescriptions[5].binding = 0;
+        attributeDescriptions[5].location = 5;
+        attributeDescriptions[5].format = VK_FORMAT_R32G32B32_UINT;
+        attributeDescriptions[5].offset = offsetof(NewVertex, textureIndex);
 
         return attributeDescriptions;
     }
@@ -112,6 +118,18 @@ struct VkTextureData
     VkDescriptorPool texTextureDescriptorPool = VK_NULL_HANDLE;
     VkDescriptorSetLayout texTextureDescriptorLayout = VK_NULL_HANDLE;
     VkDescriptorSet texTextureDescriptorSet = VK_NULL_HANDLE;
+};
+
+struct VkTextureArrayData
+{
+    std::vector<VkImage> texImages;
+    std::vector<VkImageView> texImageViews;
+    std::vector<VkSampler> texSamplers;
+    std::vector<VmaAllocation> texImageAllocs;
+
+    VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
+    VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
+    VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
 };
 
 struct VkVertexBufferData
@@ -179,7 +197,6 @@ struct VkRenderData
 
     unsigned int rdTriangleCount = 0;
     unsigned int rdGltfTriangleCount = 0;
-    unsigned int rdPrimitiveTriangleCount = 0;
 
     int rdFieldOfView = 90;
 
@@ -238,6 +255,7 @@ struct VkRenderData
     VkRenderPass rdRenderpass = VK_NULL_HANDLE;
     VkPipelineLayout rdPipelineLayout = VK_NULL_HANDLE;
     VkPipelineLayout rdGltfPipelineLayout = VK_NULL_HANDLE;
+    VkPipelineLayout rdMeshPipelineLayout = VK_NULL_HANDLE;
     VkPipeline rdBasicPipeline = VK_NULL_HANDLE;
     VkPipeline rdLinePipeline = VK_NULL_HANDLE;
     VkPipeline rdGridPipeline = VK_NULL_HANDLE;

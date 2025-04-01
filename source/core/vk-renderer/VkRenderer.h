@@ -132,8 +132,6 @@ class VkRenderer final : public EventListener
 
     bool createGltfPipelineLayout();
 
-    bool createGltfPipeline();
-
     bool createGltfSkeletonPipeline();
 
     bool createGltfGPUPipeline();
@@ -153,6 +151,8 @@ class VkRenderer final : public EventListener
     bool initUserInterface();
 
     bool loadGltfModel();
+
+    bool createMeshPipelineLayout();
 
     bool loadMeshWithAssimp();
 

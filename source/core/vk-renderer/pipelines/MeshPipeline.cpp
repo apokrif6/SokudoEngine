@@ -7,7 +7,7 @@ bool Core::Renderer::MeshPipeline::init(Core::Renderer::VkRenderData& renderData
                                         const std::string& vertexShaderFilename,
                                         const std::string& fragmentShaderFilename)
 {
-    // TODO
+    // TODOz
     // omg dude whole this shit should be templated
     VkShaderModule vertexModule =
         Core::Renderer::Shader::loadShader(renderData.rdVkbDevice.device, vertexShaderFilename);

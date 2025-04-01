@@ -3,7 +3,7 @@
 Core::Renderer::Primitive::Primitive(const std::string& primitiveName,
                                      const std::vector<Core::Renderer::NewVertex>& vertexBufferData,
                                      const std::vector<uint32_t>& indexBufferData,
-                                     const std::vector<Core::Renderer::VkTextureData>& textureData,
+                                     const Core::Renderer::VkTextureArrayData& textureData,
                                      Core::Renderer::VkRenderData& renderData,
                                      Core::Renderer::VkPrimitiveRenderData& primitiveRenderData)
     : mPrimitiveName(primitiveName), mVertexBufferData(vertexBufferData), mIndexBufferData(indexBufferData),
@@ -11,8 +11,6 @@ Core::Renderer::Primitive::Primitive(const std::string& primitiveName,
 {
     createVertexBuffers(renderData, primitiveRenderData);
     createIndexBuffer(renderData, primitiveRenderData);
-
-    renderData.rdPrimitiveTriangleCount = indexBufferData.size();
 }
 
 void Core::Renderer::Primitive::createVertexBuffers(Core::Renderer::VkRenderData& renderData,
@@ -50,12 +48,18 @@ void Core::Renderer::Primitive::uploadIndexBuffer(Core::Renderer::VkRenderData& 
 void Core::Renderer::Primitive::draw(const Core::Renderer::VkRenderData& renderData,
                                      const Core::Renderer::VkPrimitiveRenderData& primitiveRenderData)
 {
-    for (const Core::Renderer::VkTextureData& textureData : mTextureData)
-    {
-        vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                renderData.rdPipelineLayout, 0, 1, &textureData.texTextureDescriptorSet, 0,
-                                nullptr);
-    }
+    /*   for (const Core::Renderer::VkTextureData& textureData : mTextureData)
+       {
+           vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                   renderData.rdPipelineLayout, 0, 1, &textureData.texTextureDescriptorSet, 0, nullptr);
+       }
+       */
+    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                            renderData.rdMeshPipelineLayout, 0, 1, &mTextureData.descriptorSet, 0, nullptr);
+
+    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                            renderData.rdMeshPipelineLayout, 1, 1,
+                            &renderData.rdPerspectiveViewMatrixUBO.rdUBODescriptorSet, 0, nullptr);
 
     VkDeviceSize offsets[1] = {0};
     vkCmdBindVertexBuffers(renderData.rdCommandBuffer, 0, 1,
@@ -67,4 +71,15 @@ void Core::Renderer::Primitive::draw(const Core::Renderer::VkRenderData& renderD
     vkCmdBindPipeline(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdMeshPipeline);
 
     vkCmdDrawIndexed(renderData.rdCommandBuffer, static_cast<int64_t>(mIndexBufferData.size()), 1, 0, 0, 0);
+}
+
+void Core::Renderer::Primitive::cleanup(Core::Renderer::VkRenderData& renderData,
+                                        Core::Renderer::VkPrimitiveRenderData& primitiveRenderData)
+{
+
+    Core::Renderer::VertexBuffer::cleanup(renderData, primitiveRenderData.rdModelVertexBufferData);
+
+    Core::Renderer::IndexBuffer::cleanup(renderData, primitiveRenderData.rdModelIndexBufferData);
+
+    // Core::Renderer::Texture::cleanup(renderData, gltfRenderData.rdGltfModelTexture);
 }

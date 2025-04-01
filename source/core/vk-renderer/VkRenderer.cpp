@@ -136,11 +136,6 @@ bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned i
         return false;
     }
 
-    if (!createGltfPipeline())
-    {
-        return false;
-    }
-
     if (!createGltfSkeletonPipeline())
     {
         return false;
@@ -150,6 +145,11 @@ bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned i
     {
         return false;
     }
+    /*
+        if (!createMeshPipelineLayout())
+        {
+            return false;
+        }*/
 
     if (!loadMeshWithAssimp())
     {
@@ -633,6 +633,8 @@ void Core::Renderer::VkRenderer::cleanup()
 {
     vkDeviceWaitIdle(mRenderData.rdVkbDevice.device);
 
+    mPrimitive->cleanup(mRenderData, mPrimitiveRenderData);
+
 #if 0
     mGltfModel->cleanup(mRenderData, mGltfRenderData);
     mGltfModel.reset();
@@ -645,14 +647,17 @@ void Core::Renderer::VkRenderer::cleanup()
     Core::Renderer::CommandPool::cleanup(mRenderData);
     Core::Renderer::Framebuffer::cleanup(mRenderData);
     Core::Renderer::GltfGPUPipeline::cleanup(mRenderData, mRenderData.rdGltfGPUPipeline);
+#if 0
     Core::Renderer::GltfSkeletonPipeline::cleanup(mRenderData, mRenderData.rdGltfSkeletonPipeline);
-    Core::Renderer::GltfPipeline::cleanup(mRenderData, mRenderData.rdMeshPipeline);
+#endif
+    Core::Renderer::MeshPipeline::cleanup(mRenderData, mRenderData.rdMeshPipeline);
     Core::Renderer::GltfPipeline::cleanup(mRenderData, mRenderData.rdGltfPipeline);
     Core::Renderer::Pipeline::cleanup(mRenderData, mRenderData.rdGridPipeline);
     Core::Renderer::Pipeline::cleanup(mRenderData, mRenderData.rdLinePipeline);
     Core::Renderer::Pipeline::cleanup(mRenderData, mRenderData.rdBasicPipeline);
     Core::Renderer::PipelineLayout::cleanup(mRenderData, mRenderData.rdPipelineLayout);
     Core::Renderer::PipelineLayout::cleanup(mRenderData, mRenderData.rdGltfPipelineLayout);
+    Core::Renderer::PipelineLayout::cleanup(mRenderData, mRenderData.rdMeshPipelineLayout);
     Core::Renderer::Renderpass::cleanup(mRenderData);
     Core::Renderer::UniformBuffer::cleanup(mRenderData, mRenderData.rdPerspectiveViewMatrixUBO);
     Core::Renderer::ShaderStorageBuffer::cleanup(mRenderData, mRenderData.rdJointMatrixSSBO);
@@ -972,19 +977,6 @@ bool Core::Renderer::VkRenderer::createGltfPipelineLayout()
     return true;
 }
 
-bool Core::Renderer::VkRenderer::createGltfPipeline()
-{
-    const std::string vertexShaderFile = "shaders/gltf.vert.spv";
-    const std::string fragmentShaderFile = "shaders/gltf.frag.spv";
-    if (!GltfPipeline::init(mRenderData, mRenderData.rdGltfPipelineLayout, mRenderData.rdGltfPipeline,
-                            VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile))
-    {
-        Logger::log(1, "%s error: could not init gltf shader pipeline\n", __FUNCTION__);
-        return false;
-    }
-    return true;
-}
-
 bool Core::Renderer::VkRenderer::createGltfSkeletonPipeline()
 {
     const std::string vertexShaderFile = "shaders/line.vert.spv";
@@ -1104,23 +1096,41 @@ bool Core::Renderer::VkRenderer::loadGltfModel()
     return true;
 }
 
-bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
+bool Core::Renderer::VkRenderer::createMeshPipelineLayout()
 {
-    const std::string vertexShaderFile = "shaders/mesh.vert.spv";
-    const std::string fragmentShaderFile = "shaders/mesh.frag.spv";
-    if (!MeshPipeline::init(mRenderData, mRenderData.rdPipelineLayout, mRenderData.rdMeshPipeline,
-                            VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile))
+    if (!Core::Renderer::PipelineLayout::init(mRenderData, mRenderData.rdModelTexture,
+                                              mRenderData.rdMeshPipelineLayout))
     {
-        Logger::log(1, "%s error: could not init mesh pipeline\n", __FUNCTION__);
+        Logger::log(1, "%s error: could not init mesh pipeline layout\n", __FUNCTION__);
         return false;
     }
+    return true;
+}
 
+bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
+{
     const std::string modelFileName = "assets/girl/scene.gltf";
     Core::Utils::ShapeData primitiveShapeData = Core::Utils::loadShapeFromFile(modelFileName, mRenderData);
     std::vector<Core::Renderer::NewVertex> primitiveVertices =
         Core::Utils::getVerticesFromShapeData(primitiveShapeData);
     std::vector<uint32_t> primitiveIndices = Core::Utils::getIndicesFromShapeData(primitiveShapeData);
-    std::vector<Core::Renderer::VkTextureData> primitiveTexture = primitiveShapeData.textures;
+    Core::Renderer::VkTextureArrayData primitiveTexture =
+        Core::Utils::getTexturesFromShapeData(primitiveShapeData, mRenderData);
+
+    if (!Core::Renderer::PipelineLayout::init(mRenderData, primitiveTexture, mRenderData.rdMeshPipelineLayout))
+    {
+        Logger::log(1, "%s error: could not init mesh pipeline layout\n", __FUNCTION__);
+        return false;
+    }
+
+    const std::string vertexShaderFile = "shaders/mesh.vert.spv";
+    const std::string fragmentShaderFile = "shaders/mesh.frag.spv";
+    if (!MeshPipeline::init(mRenderData, mRenderData.rdMeshPipelineLayout, mRenderData.rdMeshPipeline,
+                            VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile))
+    {
+        Logger::log(1, "%s error: could not init mesh pipeline\n", __FUNCTION__);
+        return false;
+    }
 
     mPrimitive = std::make_shared<Core::Renderer::Primitive>("Box", primitiveVertices, primitiveIndices,
                                                              primitiveTexture, mRenderData, mPrimitiveRenderData);
