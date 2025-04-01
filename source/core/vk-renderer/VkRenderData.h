@@ -58,7 +58,7 @@ struct NewVertex
 
         attributeDescriptions[5].binding = 0;
         attributeDescriptions[5].location = 5;
-        attributeDescriptions[5].format = VK_FORMAT_R32G32B32_UINT;
+        attributeDescriptions[5].format = VK_FORMAT_R32_UINT;
         attributeDescriptions[5].offset = offsetof(NewVertex, textureIndex);
 
         return attributeDescriptions;
