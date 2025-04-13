@@ -4,34 +4,22 @@
 #include <glm/fwd.hpp>
 #include "assimp/scene.h"
 #include "core/vk-renderer/VkRenderData.h"
+#include "unordered_map"
 
 namespace Core::Utils
 {
-struct VertexData
+struct PrimitiveData
 {
-    glm::vec3 position;
-    glm::vec3 normal;
-    glm::vec3 tangent;
-    glm::vec3 bitangent;
-    glm::vec2 uv;
-    glm::vec4 color;
-    unsigned int textureIndex;
-};
-
-struct ShapeData
-{
-    std::vector<VertexData> vertices;
+    std::vector<Core::Renderer::NewVertex> vertices;
     std::vector<uint32_t> indices;
-    std::vector<std::string> textures;
-    std::vector<int> textureIndices;
+    std::unordered_map<aiTextureType, Core::Renderer::VkTextureData> textures;
+    Core::Renderer::MaterialInfo material;
 };
 
-ShapeData loadShapeFromFile(const std::string& filename, Core::Renderer::VkRenderData& renderData);
+struct MeshData
+{
+    std::vector<PrimitiveData> primitives;
+};
 
-std::vector<Core::Renderer::NewVertex> getVerticesFromShapeData(const ShapeData& shapeData);
-
-std::vector<uint32_t> getIndicesFromShapeData(const ShapeData& shapeData);
-
-Core::Renderer::VkTextureArrayData getTexturesFromShapeData(const ShapeData& shapeData,
-                                                            Core::Renderer::VkRenderData& renderData);
+MeshData loadMeshFromFile(const std::string& fileName, Core::Renderer::VkRenderData& renderData);
 } // namespace Core::Utils

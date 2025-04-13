@@ -5,7 +5,7 @@
 #include "core/tools/Logger.h"
 #include "Framebuffer.h"
 #include "Renderpass.h"
-#include "PipelineLayout.h"
+#include "core/vk-renderer/pipelines/layouts/PipelineLayout.h"
 #include "core/vk-renderer/pipelines/Pipeline.h"
 #include "CommandPool.h"
 #include "core/vk-renderer/buffers/CommandBuffer.h"
@@ -21,6 +21,7 @@
 #include "core/vk-renderer/pipelines/GltfGPUPipeline.h"
 #include "core/utils/ShapeUtils.h"
 #include "core/vk-renderer/pipelines/MeshPipeline.h"
+#include "core/vk-renderer/pipelines/layouts/MeshPipelineLayout.h"
 
 #include <core/events/input-events/MouseLockEvent.h>
 #include <glm/gtc/matrix_transform.hpp>
@@ -145,11 +146,6 @@ bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned i
     {
         return false;
     }
-    /*
-        if (!createMeshPipelineLayout())
-        {
-            return false;
-        }*/
 
     if (!loadMeshWithAssimp())
     {
@@ -493,8 +489,8 @@ bool Core::Renderer::VkRenderer::draw()
         mGltfModel->applyVertexSkinning(mRenderData, mGltfRenderData);
     }
 #endif
-    mPrimitive->uploadVertexBuffers(mRenderData, mPrimitiveRenderData);
-    mPrimitive->uploadIndexBuffer(mRenderData, mPrimitiveRenderData);
+    mMesh->uploadVertexBuffers(mRenderData);
+    mMesh->uploadIndexBuffers(mRenderData);
 
     mRenderData.rdUploadToVBOTime = mUploadToVBOTimer.stop();
 
@@ -551,7 +547,7 @@ bool Core::Renderer::VkRenderer::draw()
     }
 #endif
 
-    mPrimitive->draw(mRenderData, mPrimitiveRenderData);
+    mMesh->draw(mRenderData);
 
     mUIGenerateTimer.start();
     mUserInterface.createFrame(mRenderData);
@@ -633,7 +629,7 @@ void Core::Renderer::VkRenderer::cleanup()
 {
     vkDeviceWaitIdle(mRenderData.rdVkbDevice.device);
 
-    mPrimitive->cleanup(mRenderData, mPrimitiveRenderData);
+    mMesh->cleanup(mRenderData);
 
 #if 0
     mGltfModel->cleanup(mRenderData, mGltfRenderData);
@@ -657,7 +653,7 @@ void Core::Renderer::VkRenderer::cleanup()
     Core::Renderer::Pipeline::cleanup(mRenderData, mRenderData.rdBasicPipeline);
     Core::Renderer::PipelineLayout::cleanup(mRenderData, mRenderData.rdPipelineLayout);
     Core::Renderer::PipelineLayout::cleanup(mRenderData, mRenderData.rdGltfPipelineLayout);
-    Core::Renderer::PipelineLayout::cleanup(mRenderData, mRenderData.rdMeshPipelineLayout);
+    Core::Renderer::MeshPipelineLayout::cleanup(mRenderData, mRenderData.rdMeshPipelineLayout);
     Core::Renderer::Renderpass::cleanup(mRenderData);
     Core::Renderer::UniformBuffer::cleanup(mRenderData, mRenderData.rdPerspectiveViewMatrixUBO);
     Core::Renderer::ShaderStorageBuffer::cleanup(mRenderData, mRenderData.rdJointMatrixSSBO);
@@ -1096,35 +1092,18 @@ bool Core::Renderer::VkRenderer::loadGltfModel()
     return true;
 }
 
-bool Core::Renderer::VkRenderer::createMeshPipelineLayout()
-{
-    if (!Core::Renderer::PipelineLayout::init(mRenderData, mRenderData.rdModelTexture,
-                                              mRenderData.rdMeshPipelineLayout))
-    {
-        Logger::log(1, "%s error: could not init mesh pipeline layout\n", __FUNCTION__);
-        return false;
-    }
-    return true;
-}
-
 bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
 {
     const std::string modelFileName = "assets/girl/scene.gltf";
-    Core::Utils::ShapeData primitiveShapeData = Core::Utils::loadShapeFromFile(modelFileName, mRenderData);
-    std::vector<Core::Renderer::NewVertex> primitiveVertices =
-        Core::Utils::getVerticesFromShapeData(primitiveShapeData);
-    std::vector<uint32_t> primitiveIndices = Core::Utils::getIndicesFromShapeData(primitiveShapeData);
-    Core::Renderer::VkTextureArrayData primitiveTexture =
-        Core::Utils::getTexturesFromShapeData(primitiveShapeData, mRenderData);
-
-    if (!Core::Renderer::PipelineLayout::init(mRenderData, primitiveTexture, mRenderData.rdMeshPipelineLayout))
+    Core::Utils::MeshData primitiveMeshData = Core::Utils::loadMeshFromFile(modelFileName, mRenderData);
+    if (!Core::Renderer::MeshPipelineLayout::init(mRenderData, mRenderData.rdMeshPipelineLayout))
     {
         Logger::log(1, "%s error: could not init mesh pipeline layout\n", __FUNCTION__);
         return false;
     }
 
-    const std::string vertexShaderFile = "shaders/mesh.vert.spv";
-    const std::string fragmentShaderFile = "shaders/mesh.frag.spv";
+    const std::string vertexShaderFile = "shaders/primitive.vert.spv";
+    const std::string fragmentShaderFile = "shaders/primitive.frag.spv";
     if (!MeshPipeline::init(mRenderData, mRenderData.rdMeshPipelineLayout, mRenderData.rdMeshPipeline,
                             VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile))
     {
@@ -1132,8 +1111,21 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
         return false;
     }
 
-    mPrimitive = std::make_shared<Core::Renderer::Primitive>("Box", primitiveVertices, primitiveIndices,
-                                                             primitiveTexture, mRenderData, mPrimitiveRenderData);
+    mMesh = std::make_shared<Core::Renderer::Mesh>("TestMesh");
+
+    for (auto& primitive : primitiveMeshData.primitives)
+    {
+        // TODO
+        // should be refactored when multiple texture types will be supported
+        // textures should be passed as param, so there will be parameter with whole map or nullptr
+        Core::Renderer::VkTextureData primitiveTexture;
+        auto foundDiffuseTexture = primitive.textures.find(aiTextureType_DIFFUSE);
+        if (foundDiffuseTexture != primitive.textures.end())
+        {
+            primitiveTexture = foundDiffuseTexture->second;
+        }
+        mMesh->addPrimitive(primitive.vertices, primitive.indices, primitiveTexture, mRenderData, primitive.material);
+    }
 
     return true;
 }

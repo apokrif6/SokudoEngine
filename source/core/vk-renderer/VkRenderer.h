@@ -14,6 +14,7 @@
 #include "GridModel.h"
 #include "GltfModel.h"
 #include "Primitive.h"
+#include "Mesh.h"
 #include <glm/detail/type_quat.hpp>
 
 namespace Core::Renderer
@@ -64,7 +65,7 @@ class VkRenderer final : public EventListener
     std::shared_ptr<Core::Model::GltfModel> mGltfModel = nullptr;
     bool mModelUploadRequired = true;
 
-    std::shared_ptr<Core::Renderer::Primitive> mPrimitive = nullptr;;
+    std::shared_ptr<Core::Renderer::Mesh> mMesh = nullptr;;
 
     glm::mat4 mRotYMat = glm::mat4(1.0f);
     glm::mat4 mRotZMat = glm::mat4(1.0f);
@@ -151,8 +152,6 @@ class VkRenderer final : public EventListener
     bool initUserInterface();
 
     bool loadGltfModel();
-
-    bool createMeshPipelineLayout();
 
     bool loadMeshWithAssimp();
 

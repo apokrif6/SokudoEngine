@@ -16,7 +16,6 @@ struct NewVertex
     glm::vec3 tangent;
     glm::vec4 color;
     glm::vec2 uv;
-    unsigned int textureIndex;
 
     static VkVertexInputBindingDescription getBindingDescription()
     {
@@ -28,9 +27,9 @@ struct NewVertex
         return bindingDescription;
     }
 
-    static std::array<VkVertexInputAttributeDescription, 6> getAttributeDescriptions()
+    static std::array<VkVertexInputAttributeDescription, 5> getAttributeDescriptions()
     {
-        std::array<VkVertexInputAttributeDescription, 6> attributeDescriptions{};
+        std::array<VkVertexInputAttributeDescription, 5> attributeDescriptions{};
         attributeDescriptions[0].binding = 0;
         attributeDescriptions[0].location = 0;
         attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
@@ -56,13 +55,14 @@ struct NewVertex
         attributeDescriptions[4].format = VK_FORMAT_R32G32_SFLOAT;
         attributeDescriptions[4].offset = offsetof(NewVertex, uv);
 
-        attributeDescriptions[5].binding = 0;
-        attributeDescriptions[5].location = 5;
-        attributeDescriptions[5].format = VK_FORMAT_R32_UINT;
-        attributeDescriptions[5].offset = offsetof(NewVertex, textureIndex);
-
         return attributeDescriptions;
     }
+};
+
+struct MaterialInfo
+{
+    glm::vec4 baseColorFactor = glm::vec4(1.0f);
+    alignas(16) int useTexture = 0;
 };
 
 struct VkVertex
@@ -110,6 +110,8 @@ struct VkMesh
 
 struct VkTextureData
 {
+    std::string texName;
+
     VkImage texTextureImage = VK_NULL_HANDLE;
     VkImageView texTextureImageView = VK_NULL_HANDLE;
     VkSampler texTextureSampler = VK_NULL_HANDLE;
@@ -118,18 +120,6 @@ struct VkTextureData
     VkDescriptorPool texTextureDescriptorPool = VK_NULL_HANDLE;
     VkDescriptorSetLayout texTextureDescriptorLayout = VK_NULL_HANDLE;
     VkDescriptorSet texTextureDescriptorSet = VK_NULL_HANDLE;
-};
-
-struct VkTextureArrayData
-{
-    std::vector<VkImage> texImages;
-    std::vector<VkImageView> texImageViews;
-    std::vector<VkSampler> texSamplers;
-    std::vector<VmaAllocation> texImageAllocs;
-
-    VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
-    VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
-    VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
 };
 
 struct VkVertexBufferData
@@ -251,6 +241,10 @@ struct VkRenderData
     VkImageView rdDepthImageView = VK_NULL_HANDLE;
     VkFormat rdDepthFormat;
     VmaAllocation rdDepthImageAlloc = VK_NULL_HANDLE;
+
+    VkDescriptorSetLayout rdMeshTextureDescriptorLayout = VK_NULL_HANDLE;
+    VkDescriptorSetLayout rdMeshViewMatrixDescriptorLayout = VK_NULL_HANDLE;
+    VkDescriptorSetLayout rdMeshMaterialDescriptorLayout = VK_NULL_HANDLE;
 
     VkRenderPass rdRenderpass = VK_NULL_HANDLE;
     VkPipelineLayout rdPipelineLayout = VK_NULL_HANDLE;
