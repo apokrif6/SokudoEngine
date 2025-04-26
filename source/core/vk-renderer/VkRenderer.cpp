@@ -1082,8 +1082,8 @@ bool Core::Renderer::VkRenderer::initUserInterface()
 bool Core::Renderer::VkRenderer::loadGltfModel()
 {
     mGltfModel = std::make_shared<Core::Model::GltfModel>();
-    const std::string modelFilename = "assets/Woman.gltf";
-    const std::string modelTexFilename = "textures/Woman.png";
+    const std::string modelFilename = "assets/woman/Woman.gltf";
+    const std::string modelTexFilename = "assets/woman/Woman.png";
     if (!mGltfModel->loadModel(mRenderData, mGltfRenderData, modelFilename, modelTexFilename))
     {
         Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename.c_str());
@@ -1094,7 +1094,7 @@ bool Core::Renderer::VkRenderer::loadGltfModel()
 
 bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
 {
-    const std::string modelFileName = "assets/girl/scene.gltf";
+    const std::string modelFileName = "assets/mixamo/FemaleStandingPose.fbx";
     Core::Utils::MeshData primitiveMeshData = Core::Utils::loadMeshFromFile(modelFileName, mRenderData);
     if (!Core::Renderer::MeshPipelineLayout::init(mRenderData, mRenderData.rdMeshPipelineLayout))
     {

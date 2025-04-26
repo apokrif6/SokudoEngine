@@ -141,7 +141,7 @@ Core::Utils::MeshData Core::Utils::loadMeshFromFile(const std::string& fileName,
 {
     Assimp::Importer importer;
     importer.ReadFile(fileName, aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_JoinIdenticalVertices |
-                                    aiProcess_TransformUVCoords);
+                                    aiProcess_TransformUVCoords | aiProcess_GlobalScale);
 
     const aiScene* scene = importer.GetScene();
 
