@@ -16,6 +16,8 @@ struct NewVertex
     glm::vec3 tangent;
     glm::vec4 color;
     glm::vec2 uv;
+    float weights[4];
+    int boneID[4];
 
     static VkVertexInputBindingDescription getBindingDescription()
     {
@@ -27,9 +29,9 @@ struct NewVertex
         return bindingDescription;
     }
 
-    static std::array<VkVertexInputAttributeDescription, 5> getAttributeDescriptions()
+    static std::array<VkVertexInputAttributeDescription, 7> getAttributeDescriptions()
     {
-        std::array<VkVertexInputAttributeDescription, 5> attributeDescriptions{};
+        std::array<VkVertexInputAttributeDescription, 7> attributeDescriptions{};
         attributeDescriptions[0].binding = 0;
         attributeDescriptions[0].location = 0;
         attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
@@ -54,6 +56,16 @@ struct NewVertex
         attributeDescriptions[4].location = 4;
         attributeDescriptions[4].format = VK_FORMAT_R32G32_SFLOAT;
         attributeDescriptions[4].offset = offsetof(NewVertex, uv);
+
+        attributeDescriptions[5].binding = 0;
+        attributeDescriptions[5].location = 5;
+        attributeDescriptions[5].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+        attributeDescriptions[5].offset = offsetof(NewVertex, weights);
+
+        attributeDescriptions[6].binding = 0;
+        attributeDescriptions[6].location = 6;
+        attributeDescriptions[6].format = VK_FORMAT_R32G32B32A32_SINT;
+        attributeDescriptions[6].offset = offsetof(NewVertex, boneID);
 
         return attributeDescriptions;
     }

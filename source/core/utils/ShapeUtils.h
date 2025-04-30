@@ -5,6 +5,7 @@
 #include "assimp/scene.h"
 #include "core/vk-renderer/VkRenderData.h"
 #include "unordered_map"
+#include "core/animations/AnimationsData.h"
 
 namespace Core::Utils
 {
@@ -14,6 +15,7 @@ struct PrimitiveData
     std::vector<uint32_t> indices;
     std::unordered_map<aiTextureType, Core::Renderer::VkTextureData> textures;
     Core::Renderer::MaterialInfo material;
+    Core::Animations::BoneInfo bones;
 };
 
 struct MeshData

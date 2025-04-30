@@ -6,6 +6,70 @@
 #include <assimp/scene.h>
 #include <glm/gtc/type_ptr.hpp>
 
+// TODO
+// find better place for it
+int boneCounter = 0;
+
+int getBoneID(Core::Utils::PrimitiveData& primitiveData, const aiBone* bone)
+{
+    int boneID;
+    const std::string boneName = bone->mName.C_Str();
+
+    if (!primitiveData.bones.boneNameToIndexMap.contains(boneName))
+    {
+        Core::Animations::Bone newBone;
+        primitiveData.bones.bones.emplace_back(newBone);
+        boneID = boneCounter++;
+    }
+    else
+    {
+        boneID = primitiveData.bones.boneNameToIndexMap[boneName];
+    }
+
+    primitiveData.bones.boneNameToIndexMap[boneName] = boneID;
+
+    return boneID;
+}
+
+void setVertexBoneData(Core::Renderer::NewVertex& vertex, int id, float weight)
+{
+    for (int i = 0; i < 4; i++)
+    {
+        if (vertex.boneID[i] < 0)
+        {
+            vertex.boneID[i] = id;
+            vertex.weights[i] = weight;
+            break;
+        }
+    }
+}
+
+void processSingleBone(Core::Utils::PrimitiveData& primitiveData, const aiBone* bone)
+{
+    Logger::log(1, "Bone '%s': num vertices affected by this bone: %d\n", bone->mName.C_Str(), bone->mNumWeights);
+
+    int boneID = getBoneID(primitiveData, bone);
+    Logger::log(1, "bone id %d\n", boneID);
+
+    aiVertexWeight* weights = bone->mWeights;
+    int vertexID = 0;
+
+    for (int boneWeight = 0; boneWeight < bone->mNumWeights; ++boneWeight)
+    {
+        vertexID = weights[boneWeight].mVertexId;
+        float weight = weights[boneWeight].mWeight;
+        setVertexBoneData(primitiveData.vertices[vertexID], boneID, weight);
+    }
+}
+
+void processBones(Core::Utils::PrimitiveData& primitiveData, const aiMesh* mesh)
+{
+    for (unsigned int i = 0; i < mesh->mNumBones; i++)
+    {
+        processSingleBone(primitiveData, mesh->mBones[i]);
+    }
+}
+
 void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiScene* scene, const aiMaterial* material,
                  const glm::mat4& transform, Core::Renderer::VkRenderData& renderData,
                  std::vector<Core::Renderer::VkTextureData> loadedTextures)
@@ -113,6 +177,11 @@ void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiSc
         }
     }
 
+    if (mesh->HasBones())
+    {
+        processBones(primitiveData, mesh);
+    }
+
     meshData.primitives.emplace_back(primitiveData);
 }
 
@@ -151,6 +220,7 @@ Core::Utils::MeshData Core::Utils::loadMeshFromFile(const std::string& fileName,
         return {};
     }
 
+    boneCounter = 0;
     Core::Utils::MeshData mesh;
     std::vector<Core::Renderer::VkTextureData> loadedTextures;
     processNode(mesh, scene->mRootNode, scene, glm::mat4(1.0f), renderData, loadedTextures);
