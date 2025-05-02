@@ -41,3 +41,9 @@ cmake-build-debug/
 
 # Compiled shaders
 shaders/**/*.spv
+
+# Vcpkg
+vcpkg_installed/
+
+# Build
+build/

@@ -110,5 +110,5 @@ include_directories(${GLFW3_INCLUDE_DIR} source external/vk-memory-allocation ex
 if (MSVC)
     target_link_libraries(SokudoEngine ${GLFW3_LIBRARY} Vulkan::Vulkan vk-bootstrap::vk-bootstrap assimp::assimp)
 else ()
-    target_link_libraries(SokudoEngine ${GLFW3_LIBRARY} Vulkan::Vulkan vk-bootstrap::vk-bootstrap stdc++ m)
+    target_link_libraries(SokudoEngine ${GLFW3_LIBRARY} Vulkan::Vulkan vk-bootstrap::vk-bootstrap assimp::assimp stdc++ m)
 endif ()

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/tools/logger.h"
+#include "core/tools/Logger.h"
 #include "glm/glm.hpp"
 #include <vector>
 #include <map>
