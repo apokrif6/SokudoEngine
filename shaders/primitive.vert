@@ -5,6 +5,8 @@ layout (location = 1) in vec3 aNormal;
 layout (location = 2) in vec3 aTangent;
 layout (location = 3) in vec4 aColor;
 layout (location = 4) in vec2 aUV;
+layout (location = 5) in vec4 aWeights;
+layout (location = 6) in ivec4 aBoneIDs;
 
 layout (location = 0) out vec3 normal;
 layout (location = 1) out vec2 textCoord;
@@ -15,7 +17,20 @@ layout (set = 1, binding = 0) uniform Matrices {
     mat4 projection;
 };
 
+layout (set = 2, binding = 0) uniform Bones {
+    mat4 bones;
+};
+
 void main() {
+/*    mat4 boneTransform = bones[aBoneIDs[0]] * aWeights[0];
+    boneTransform     += bones[aBoneIDs[1]] * aWeights[1];
+    boneTransform     += bones[aBoneIDs[2]] * aWeights[2];
+    boneTransform     += bones[aBoneIDs[3]] * aWeights[3];*/
+
+    //vec4 animPos = BoneTransform * vec4(Position, 1.0);
+
+    //gl_Position = projection * view * animPos;
+
     gl_Position = projection * view * vec4(aPos, 1.0);
     normal = aNormal;
     textCoord = aUV;

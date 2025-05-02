@@ -11,13 +11,24 @@ namespace Core::Renderer
 {
 struct NewVertex
 {
-    glm::vec3 position;
-    glm::vec3 normal;
-    glm::vec3 tangent;
-    glm::vec4 color;
-    glm::vec2 uv;
-    float weights[4];
-    int boneID[4];
+    glm::vec3 position{};
+    glm::vec3 normal{};
+    glm::vec3 tangent{};
+    glm::vec4 color{};
+    glm::vec2 uv{};
+    float weights[4]{};
+    int boneID[4]{};
+
+    NewVertex()
+    {
+        //TODO
+        //replace hardcoded 4 with BONE INFLUENCE?
+        for (int i = 0; i < 4; ++i)
+        {
+            boneID[i] = -1;
+            weights[i] = 0.f;
+        }
+    }
 
     static VkVertexInputBindingDescription getBindingDescription()
     {

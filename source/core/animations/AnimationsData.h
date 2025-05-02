@@ -46,7 +46,6 @@ struct BoneInfo
 {
     std::vector<VertexBoneData> vertexToBone;
     std::map<std::string, int> boneNameToIndexMap;
-    std::vector<glm::mat4> transforms;
     std::vector<Bone> bones;
     std::vector<glm::mat4> finalTransforms;
 };
