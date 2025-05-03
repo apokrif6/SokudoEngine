@@ -42,12 +42,11 @@ struct Bone
     explicit Bone(const glm::mat4& inOffset) : offset(inOffset), finalTransform(glm::mat4(0.0)) {}
 };
 
-struct BoneInfo
+struct BonesInfo
 {
     std::vector<VertexBoneData> vertexToBone;
     std::map<std::string, int> boneNameToIndexMap;
     std::vector<Bone> bones;
     std::vector<glm::mat4> finalTransforms;
 };
-
 } // namespace Core::Animations

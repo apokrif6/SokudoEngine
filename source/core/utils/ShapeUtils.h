@@ -15,7 +15,7 @@ struct PrimitiveData
     std::vector<uint32_t> indices;
     std::unordered_map<aiTextureType, Core::Renderer::VkTextureData> textures;
     Core::Renderer::MaterialInfo material;
-    Core::Animations::BoneInfo bones;
+    Core::Animations::BonesInfo bones;
 };
 
 struct MeshData

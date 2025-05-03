@@ -1,14 +1,16 @@
 #include "Primitive.h"
 #include "core/vk-renderer/buffers/UniformBuffer.h"
 #include "Texture.h"
+#include "Mesh.h"
 
 Core::Renderer::Primitive::Primitive(const std::vector<Core::Renderer::NewVertex>& vertexBufferData,
                                      const std::vector<uint32_t>& indexBufferData,
                                      const Core::Renderer::VkTextureData& textureData,
                                      const Core::Renderer::MaterialInfo& materialInfo,
+                                     const Core::Animations::BonesInfo& bonesInfo,
                                      Core::Renderer::VkRenderData& renderData)
     : mVertexBufferData(vertexBufferData), mIndexBufferData(indexBufferData), mTextureData(textureData),
-      mMaterialInfo(materialInfo)
+      mMaterialInfo(materialInfo), mBonesInfo(bonesInfo)
 {
     createVertexBuffer(renderData);
     createIndexBuffer(renderData);

@@ -268,6 +268,7 @@ struct VkRenderData
     VkDescriptorSetLayout rdMeshTextureDescriptorLayout = VK_NULL_HANDLE;
     VkDescriptorSetLayout rdMeshViewMatrixDescriptorLayout = VK_NULL_HANDLE;
     VkDescriptorSetLayout rdMeshMaterialDescriptorLayout = VK_NULL_HANDLE;
+    VkDescriptorSetLayout rdBonesTransformDescriptorLayout = VK_NULL_HANDLE;
 
     VkRenderPass rdRenderpass = VK_NULL_HANDLE;
     VkPipelineLayout rdPipelineLayout = VK_NULL_HANDLE;

@@ -1,5 +1,6 @@
 #include "MeshPipelineLayout.h"
 #include "core/tools/Logger.h"
+#include "core/animations/AnimationsData.h"
 
 bool Core::Renderer::MeshPipelineLayout::init(Core::Renderer::VkRenderData& renderData,
                                               VkPipelineLayout& pipelineLayout)
@@ -58,13 +59,20 @@ bool Core::Renderer::MeshPipelineLayout::init(Core::Renderer::VkRenderData& rend
         return false;
     }
 
-    VkDescriptorSetLayout layouts[] = {renderData.rdMeshTextureDescriptorLayout,
-                                       renderData.rdMeshViewMatrixDescriptorLayout,
-                                       renderData.rdMeshMaterialDescriptorLayout};
+    if (vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &materialLayoutInfo, nullptr,
+                                    &renderData.rdBonesTransformDescriptorLayout) != VK_SUCCESS)
+    {
+        Logger::log(1, "%s error: failed to create bones descriptor layout\n", __FUNCTION__);
+        return false;
+    }
+
+    VkDescriptorSetLayout layouts[] = {
+        renderData.rdMeshTextureDescriptorLayout, renderData.rdMeshViewMatrixDescriptorLayout,
+        renderData.rdMeshMaterialDescriptorLayout, renderData.rdBonesTransformDescriptorLayout};
 
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutInfo.setLayoutCount = 3;
+    pipelineLayoutInfo.setLayoutCount = ARRAY_SIZE_IN_ELEMENTS(layouts);
     pipelineLayoutInfo.pSetLayouts = layouts;
 
     if (vkCreatePipelineLayout(renderData.rdVkbDevice.device, &pipelineLayoutInfo, nullptr, &pipelineLayout) !=
@@ -83,5 +91,6 @@ void Core::Renderer::MeshPipelineLayout::cleanup(Core::Renderer::VkRenderData& r
     vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdMeshTextureDescriptorLayout, nullptr);
     vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdMeshViewMatrixDescriptorLayout, nullptr);
     vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdMeshMaterialDescriptorLayout, nullptr);
+    vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdBonesTransformDescriptorLayout, nullptr);
     vkDestroyPipelineLayout(renderData.rdVkbDevice.device, pipelineLayout, nullptr);
 }

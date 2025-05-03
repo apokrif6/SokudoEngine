@@ -547,6 +547,9 @@ bool Core::Renderer::VkRenderer::draw()
     }
 #endif
 
+    // TODO
+    // Implement RenderQueue
+    // map with objects which should be rendered
     mMesh->draw(mRenderData);
 
     mUIGenerateTimer.start();
@@ -1124,7 +1127,8 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
         {
             primitiveTexture = foundDiffuseTexture->second;
         }
-        mMesh->addPrimitive(primitive.vertices, primitive.indices, primitiveTexture, mRenderData, primitive.material);
+        mMesh->addPrimitive(primitive.vertices, primitive.indices, primitiveTexture, mRenderData, primitive.material,
+                            primitive.bones);
     }
 
     return true;

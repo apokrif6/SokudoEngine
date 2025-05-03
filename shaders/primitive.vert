@@ -12,26 +12,28 @@ layout (location = 0) out vec3 normal;
 layout (location = 1) out vec2 textCoord;
 layout (location = 2) out vec4 vertColor;
 
+const int MAX_BONES = 200;
+
 layout (set = 1, binding = 0) uniform Matrices {
     mat4 view;
     mat4 projection;
 };
 
-layout (set = 2, binding = 0) uniform Bones {
-    mat4 bones;
+layout (set = 3, binding = 0) uniform Bones {
+    mat4 bones[MAX_BONES];
 };
 
 void main() {
-/*    mat4 boneTransform = bones[aBoneIDs[0]] * aWeights[0];
+    mat4 boneTransform = bones[aBoneIDs[0]] * aWeights[0];
     boneTransform     += bones[aBoneIDs[1]] * aWeights[1];
     boneTransform     += bones[aBoneIDs[2]] * aWeights[2];
-    boneTransform     += bones[aBoneIDs[3]] * aWeights[3];*/
+    boneTransform     += bones[aBoneIDs[3]] * aWeights[3];
 
-    //vec4 animPos = BoneTransform * vec4(Position, 1.0);
+    vec4 animPos = boneTransform * vec4(aPos, 1.0);
 
-    //gl_Position = projection * view * animPos;
+    gl_Position = projection * view * animPos;
 
-    gl_Position = projection * view * vec4(aPos, 1.0);
+    //gl_Position = projection * view * vec4(aPos, 1.0);
     normal = aNormal;
     textCoord = aUV;
 }
