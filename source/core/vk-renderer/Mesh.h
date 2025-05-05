@@ -28,11 +28,15 @@ class Mesh
 
     void uploadIndexBuffers(Core::Renderer::VkRenderData& renderData);
 
-    void draw(const Core::Renderer::VkRenderData& renderData);
+    void draw(Core::Renderer::VkRenderData& renderData);
 
     void cleanup(Core::Renderer::VkRenderData& renderData);
 
-    [[nodiscard]] std::vector<Core::Renderer::Primitive> getPrimitives() const { return mPrimitives; }
+    [[nodiscard]] std::vector<Core::Renderer::Primitive>& getPrimitives() { return mPrimitives; }
+
+    [[nodiscard]] std::string getMeshName() const { return mName; }
+
+    [[nodiscard]] const std::vector<glm::mat4>& getBonesTransform() const { return mBonesTransform; }
 
   private:
     void createBonesTransformBuffer(Core::Renderer::VkRenderData& renderData);

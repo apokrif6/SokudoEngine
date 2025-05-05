@@ -2,10 +2,12 @@
 
 #include <string>
 #include <glm/fwd.hpp>
-#include "assimp/scene.h"
+#include <memory>
 #include "core/vk-renderer/VkRenderData.h"
 #include "unordered_map"
 #include "core/animations/AnimationsData.h"
+#include "assimp/Importer.hpp"
+#include "assimp/material.h"
 
 namespace Core::Utils
 {
@@ -21,6 +23,8 @@ struct PrimitiveData
 struct MeshData
 {
     std::vector<PrimitiveData> primitives;
+
+    std::shared_ptr<Assimp::Importer> importer;
 };
 
 MeshData loadMeshFromFile(const std::string& fileName, Core::Renderer::VkRenderData& renderData);

@@ -22,6 +22,7 @@
 #include "core/utils/ShapeUtils.h"
 #include "core/vk-renderer/pipelines/MeshPipeline.h"
 #include "core/vk-renderer/pipelines/layouts/MeshPipelineLayout.h"
+#include "core/animations/AnimatorSingleton.h"
 
 #include <core/events/input-events/MouseLockEvent.h>
 #include <glm/gtc/matrix_transform.hpp>
@@ -1114,7 +1115,9 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
         return false;
     }
 
-    mMesh = std::make_shared<Core::Renderer::Mesh>("TestMesh");
+    const std::string meshName = "TestMesh";
+    mMesh = std::make_shared<Core::Renderer::Mesh>(meshName);
+    Core::Animations::AnimatorSingleton::getInstance().importers[meshName] = primitiveMeshData.importer;
 
     for (auto& primitive : primitiveMeshData.primitives)
     {

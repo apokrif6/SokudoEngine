@@ -16,9 +16,14 @@ void Core::Renderer::Mesh::addPrimitive(const std::vector<Core::Renderer::NewVer
     }
 }
 
-void Core::Renderer::Mesh::draw(const Core::Renderer::VkRenderData& renderData)
+void Core::Renderer::Mesh::draw(Core::Renderer::VkRenderData& renderData)
 {
     mAnimator->update(this);
+
+    // TODO
+    // should be moved to other place to make "draw" const
+    Core::Renderer::UniformBuffer::uploadData(renderData, mBonesTransformUBO,
+                                              mPrimitives[0].getBonesInfo().finalTransforms);
 
     vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                             renderData.rdMeshPipelineLayout, 3, 1, &mBonesTransformUBO.rdUBODescriptorSet, 0, nullptr);
@@ -40,10 +45,6 @@ void Core::Renderer::Mesh::cleanup(Core::Renderer::VkRenderData& renderData)
 void Core::Renderer::Mesh::createBonesTransformBuffer(Core::Renderer::VkRenderData& renderData)
 {
     Core::Renderer::UniformBuffer::init(renderData, mBonesTransformUBO, sizeof(std::vector<glm::mat4>));
-
-    // TODO
-    // should be moved to uploadUniformBuffers to play animations instead of vertex skinning pose
-    Core::Renderer::UniformBuffer::uploadData(renderData, mBonesTransformUBO, mBonesTransform);
 }
 
 void Core::Renderer::Mesh::uploadVertexBuffers(Core::Renderer::VkRenderData& renderData)
