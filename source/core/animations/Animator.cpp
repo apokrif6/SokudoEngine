@@ -13,7 +13,7 @@ void Core::Animations::Animator::updateBonesTransform(Renderer::Mesh* mesh)
         Animations::BonesInfo& bonesInfo = primitive.getBonesInfo();
         size_t bonesInfoSize = bonesInfo.bones.size();
 
-        bonesInfo.finalTransforms.resize(bonesInfoSize);
+        bonesInfo.finalTransforms.resize(bonesInfoSize, glm::mat4(1.0));
 
         readNodeHierarchy(
             mesh,
