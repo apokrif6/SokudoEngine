@@ -35,9 +35,10 @@ int getBoneID(Core::Utils::PrimitiveData& primitiveData, const aiBone* bone)
 
 void setVertexBoneData(Core::Renderer::NewVertex& vertex, int id, float weight)
 {
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < MAX_NUM_BONES_PER_VERTEX; i++)
     {
-        if (vertex.boneID[i] < 0)
+        //if (vertex.boneID[i] < 0)
+        if (vertex.weights[i] == 0.f)
         {
             vertex.boneID[i] = id;
             vertex.weights[i] = weight;

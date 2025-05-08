@@ -22,7 +22,7 @@ struct VertexBoneData
     {
         for (unsigned int i = 0; i < ARRAY_SIZE_IN_ELEMENTS(boneIDs); i++)
         {
-            if (weights[i] == 0.0)
+            if (weights[i] == 0.f)
             {
                 boneIDs[i] = boneID;
                 weights[i] = weight;

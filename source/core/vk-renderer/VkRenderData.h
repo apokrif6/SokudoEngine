@@ -2,7 +2,7 @@
 
 #include "vk_mem_alloc.h"
 #include "VkBootstrap.h"
-
+#include "core/animations/AnimationsData.h"
 #include <glm/glm.hpp>
 #include <GLFW/glfw3.h>
 #include <array>
@@ -21,13 +21,11 @@ struct NewVertex
 
     NewVertex()
     {
-        //TODO
-        //replace hardcoded 4 with BONE INFLUENCE?
-        for (int i = 0; i < 4; ++i)
+     /*   for (int i = 0; i < MAX_NUM_BONES_PER_VERTEX; ++i)
         {
             boneID[i] = -1;
             weights[i] = 0.f;
-        }
+        }*/
     }
 
     static VkVertexInputBindingDescription getBindingDescription()
@@ -40,6 +38,8 @@ struct NewVertex
         return bindingDescription;
     }
 
+    // TODO
+    // use shader's reflection instead!
     static std::array<VkVertexInputAttributeDescription, 7> getAttributeDescriptions()
     {
         std::array<VkVertexInputAttributeDescription, 7> attributeDescriptions{};

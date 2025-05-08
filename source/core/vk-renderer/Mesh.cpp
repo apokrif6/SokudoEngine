@@ -7,6 +7,11 @@ void Core::Renderer::Mesh::addPrimitive(const std::vector<Core::Renderer::NewVer
                                         const Animations::BonesInfo& bonesInfo)
 {
     mPrimitives.emplace_back(vertexBufferData, indexBufferData, textureData, materialInfo, bonesInfo, renderData);
+}
+
+void Core::Renderer::Mesh::draw(Core::Renderer::VkRenderData& renderData)
+{
+    mAnimator->update(this);
 
     // TODO
     // I don't like it. should be refactored
@@ -14,11 +19,6 @@ void Core::Renderer::Mesh::addPrimitive(const std::vector<Core::Renderer::NewVer
     {
         createBonesTransformBuffer(renderData);
     }
-}
-
-void Core::Renderer::Mesh::draw(Core::Renderer::VkRenderData& renderData)
-{
-    mAnimator->update(this);
 
     // TODO
     // should be moved to other place to make "draw" const
@@ -44,7 +44,8 @@ void Core::Renderer::Mesh::cleanup(Core::Renderer::VkRenderData& renderData)
 
 void Core::Renderer::Mesh::createBonesTransformBuffer(Core::Renderer::VkRenderData& renderData)
 {
-    Core::Renderer::UniformBuffer::init(renderData, mBonesTransformUBO, sizeof(std::vector<glm::mat4>));
+    Core::Renderer::UniformBuffer::init(renderData, mBonesTransformUBO,
+                                        mPrimitives[0].getBonesInfo().finalTransforms.size() * sizeof(glm::mat4));
 }
 
 void Core::Renderer::Mesh::uploadVertexBuffers(Core::Renderer::VkRenderData& renderData)
