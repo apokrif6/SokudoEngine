@@ -19,15 +19,6 @@ struct NewVertex
     float weights[4]{};
     int boneID[4]{};
 
-    NewVertex()
-    {
-     /*   for (int i = 0; i < MAX_NUM_BONES_PER_VERTEX; ++i)
-        {
-            boneID[i] = -1;
-            weights[i] = 0.f;
-        }*/
-    }
-
     static VkVertexInputBindingDescription getBindingDescription()
     {
         VkVertexInputBindingDescription bindingDescription{};

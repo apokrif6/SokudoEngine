@@ -18,6 +18,8 @@ class Primitive
 
     void uploadIndexBuffer(Renderer::VkRenderData& renderData);
 
+    void uploadUniformBuffer(Renderer::VkRenderData& renderData);
+
     void draw(const Renderer::VkRenderData& renderData);
 
     void cleanup(Renderer::VkRenderData& renderData);
@@ -31,6 +33,8 @@ class Primitive
 
     void createMaterialBuffer(Renderer::VkRenderData& renderData);
 
+    void createBonesTransformBuffer(Renderer::VkRenderData& renderData);
+
     Renderer::VkPrimitiveRenderData primitiveRenderData;
 
     std::vector<Renderer::NewVertex> mVertexBufferData;
@@ -40,6 +44,7 @@ class Primitive
     Renderer::VkUniformBufferData mMaterialUBO{};
     Renderer::MaterialInfo mMaterialInfo{};
 
+    Renderer::VkUniformBufferData mBonesTransformUBO{};
     Animations::BonesInfo mBonesInfo{};
 };
 } // namespace Core::Renderer

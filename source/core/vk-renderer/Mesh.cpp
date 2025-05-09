@@ -9,24 +9,19 @@ void Core::Renderer::Mesh::addPrimitive(const std::vector<Core::Renderer::NewVer
     mPrimitives.emplace_back(vertexBufferData, indexBufferData, textureData, materialInfo, bonesInfo, renderData);
 }
 
+void Core::Renderer::Mesh::updateData(Core::Renderer::VkRenderData& renderData)
+{
+    for (auto& primitive : mPrimitives)
+    {
+        primitive.uploadVertexBuffer(renderData);
+        primitive.uploadIndexBuffer(renderData);
+        primitive.uploadUniformBuffer(renderData);
+    }
+}
+
 void Core::Renderer::Mesh::draw(Core::Renderer::VkRenderData& renderData)
 {
     mAnimator->update(this);
-
-    // TODO
-    // I don't like it. should be refactored
-    if (mBonesTransformUBO.rdUniformBuffer == VK_NULL_HANDLE)
-    {
-        createBonesTransformBuffer(renderData);
-    }
-
-    // TODO
-    // should be moved to other place to make "draw" const
-    Core::Renderer::UniformBuffer::uploadData(renderData, mBonesTransformUBO,
-                                              mPrimitives[0].getBonesInfo().finalTransforms);
-
-    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            renderData.rdMeshPipelineLayout, 3, 1, &mBonesTransformUBO.rdUBODescriptorSet, 0, nullptr);
 
     for (auto& primitive : mPrimitives)
     {
@@ -42,12 +37,6 @@ void Core::Renderer::Mesh::cleanup(Core::Renderer::VkRenderData& renderData)
     }
 }
 
-void Core::Renderer::Mesh::createBonesTransformBuffer(Core::Renderer::VkRenderData& renderData)
-{
-    Core::Renderer::UniformBuffer::init(renderData, mBonesTransformUBO,
-                                        mPrimitives[0].getBonesInfo().finalTransforms.size() * sizeof(glm::mat4));
-}
-
 void Core::Renderer::Mesh::uploadVertexBuffers(Core::Renderer::VkRenderData& renderData)
 {
     for (auto& primitive : mPrimitives)
@@ -55,10 +44,18 @@ void Core::Renderer::Mesh::uploadVertexBuffers(Core::Renderer::VkRenderData& ren
         primitive.uploadVertexBuffer(renderData);
     }
 }
+
 void Core::Renderer::Mesh::uploadIndexBuffers(Core::Renderer::VkRenderData& renderData)
 {
     for (auto& primitive : mPrimitives)
     {
         primitive.uploadIndexBuffer(renderData);
+    }
+}
+void Core::Renderer::Mesh::uploadUniformBuffers(Core::Renderer::VkRenderData& renderData)
+{
+    for (auto& primitive : mPrimitives)
+    {
+        primitive.uploadUniformBuffer(renderData);
     }
 }

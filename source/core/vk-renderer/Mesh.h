@@ -24,9 +24,7 @@ class Mesh
                       VkRenderData& renderData, const MaterialInfo& materialInfo,
                       const Animations::BonesInfo& bonesInfo);
 
-    void uploadVertexBuffers(Core::Renderer::VkRenderData& renderData);
-
-    void uploadIndexBuffers(Core::Renderer::VkRenderData& renderData);
+    void updateData(Core::Renderer::VkRenderData& renderData);
 
     void draw(Core::Renderer::VkRenderData& renderData);
 
@@ -36,17 +34,20 @@ class Mesh
 
     [[nodiscard]] std::string getMeshName() const { return mName; }
 
-    [[nodiscard]] const std::vector<glm::mat4>& getBonesTransform() const { return mBonesTransform; }
-
   private:
-    void createBonesTransformBuffer(Core::Renderer::VkRenderData& renderData);
+    // TODO
+    // should this be private?
+    // or there is any optimization to upload only specific buffers instead of all of them in updateData
+    // I don't know (｡•́︿•̀｡)
+    void uploadVertexBuffers(Core::Renderer::VkRenderData& renderData);
+
+    void uploadIndexBuffers(Core::Renderer::VkRenderData& renderData);
+
+    void uploadUniformBuffers(Core::Renderer::VkRenderData& renderData);
 
     std::string mName;
     std::vector<Core::Renderer::Primitive> mPrimitives;
 
     std::unique_ptr<Animations::Animator> mAnimator;
-
-    Renderer::VkUniformBufferData mBonesTransformUBO{};
-    std::vector<glm::mat4> mBonesTransform;
 };
 } // namespace Core::Renderer

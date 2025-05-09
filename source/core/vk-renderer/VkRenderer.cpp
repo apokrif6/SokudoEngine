@@ -490,8 +490,7 @@ bool Core::Renderer::VkRenderer::draw()
         mGltfModel->applyVertexSkinning(mRenderData, mGltfRenderData);
     }
 #endif
-    mMesh->uploadVertexBuffers(mRenderData);
-    mMesh->uploadIndexBuffers(mRenderData);
+    mMesh->updateData(mRenderData);
 
     mRenderData.rdUploadToVBOTime = mUploadToVBOTimer.stop();
 

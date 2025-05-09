@@ -15,6 +15,7 @@ Core::Renderer::Primitive::Primitive(const std::vector<Core::Renderer::NewVertex
     createVertexBuffer(renderData);
     createIndexBuffer(renderData);
     createMaterialBuffer(renderData);
+    createBonesTransformBuffer(renderData);
 }
 
 void Core::Renderer::Primitive::createVertexBuffer(Core::Renderer::VkRenderData& renderData)
@@ -36,6 +37,12 @@ void Core::Renderer::Primitive::createMaterialBuffer(Core::Renderer::VkRenderDat
     Core::Renderer::UniformBuffer::uploadData(renderData, mMaterialUBO, mMaterialInfo);
 }
 
+void Core::Renderer::Primitive::createBonesTransformBuffer(Core::Renderer::VkRenderData& renderData)
+{
+    Core::Renderer::UniformBuffer::init(renderData, mBonesTransformUBO,
+                                        mBonesInfo.finalTransforms.size() * sizeof(glm::mat4));
+}
+
 void Core::Renderer::Primitive::uploadVertexBuffer(Core::Renderer::VkRenderData& renderData)
 {
     Core::Renderer::VertexBuffer::uploadData(renderData, primitiveRenderData.rdModelVertexBufferData,
@@ -45,6 +52,11 @@ void Core::Renderer::Primitive::uploadVertexBuffer(Core::Renderer::VkRenderData&
 void Core::Renderer::Primitive::uploadIndexBuffer(Core::Renderer::VkRenderData& renderData)
 {
     Core::Renderer::IndexBuffer::uploadData(renderData, primitiveRenderData.rdModelIndexBufferData, mIndexBufferData);
+}
+
+void Core::Renderer::Primitive::uploadUniformBuffer(Core::Renderer::VkRenderData& renderData)
+{
+    Core::Renderer::UniformBuffer::uploadData(renderData, mBonesTransformUBO, mBonesInfo.finalTransforms);
 }
 
 void Core::Renderer::Primitive::draw(const Core::Renderer::VkRenderData& renderData)
@@ -69,6 +81,9 @@ void Core::Renderer::Primitive::draw(const Core::Renderer::VkRenderData& renderD
 
     vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                             renderData.rdMeshPipelineLayout, 2, 1, &mMaterialUBO.rdUBODescriptorSet, 0, nullptr);
+
+    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                            renderData.rdMeshPipelineLayout, 3, 1, &mBonesTransformUBO.rdUBODescriptorSet, 0, nullptr);
 
     VkDeviceSize offsets[1] = {0};
     vkCmdBindVertexBuffers(renderData.rdCommandBuffer, 0, 1,

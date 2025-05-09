@@ -37,7 +37,6 @@ void setVertexBoneData(Core::Renderer::NewVertex& vertex, int id, float weight)
 {
     for (int i = 0; i < MAX_NUM_BONES_PER_VERTEX; i++)
     {
-        //if (vertex.boneID[i] < 0)
         if (vertex.weights[i] == 0.f)
         {
             vertex.boneID[i] = id;
@@ -69,6 +68,8 @@ void processBones(Core::Utils::PrimitiveData& primitiveData, const aiMesh* mesh)
     {
         processSingleBone(primitiveData, mesh->mBones[i]);
     }
+
+    primitiveData.bones.finalTransforms.resize(primitiveData.bones.bones.size(), glm::mat4(1.0));
 }
 
 void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiScene* scene, const aiMaterial* material,

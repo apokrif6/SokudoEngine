@@ -1,7 +1,9 @@
 #pragma once
 
-#include <glm/glm.hpp>
 #include "assimp/matrix4x4.h"
+#include <glm/glm.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/quaternion.hpp>
 
 namespace Core::Animations
 {
@@ -30,6 +32,20 @@ class AnimationsUtils
         to[2][3] = from.d3;
         to[3][3] = from.d4;
         return to;
+    }
+
+    static inline glm::vec3 convertVectorToGlm(aiVector3D vec)
+    {
+        glm::vec3 v;
+        v.x = vec.x;
+        v.y = vec.y;
+        v.z = vec.z;
+        return v;
+    }
+
+    static inline glm::quat convertQuaternionToGlm(const aiQuaternion& pOrientation)
+    {
+        return {pOrientation.w, pOrientation.x, pOrientation.y, pOrientation.z};
     }
 };
 } // namespace Core::Animations
