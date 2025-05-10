@@ -1097,7 +1097,7 @@ bool Core::Renderer::VkRenderer::loadGltfModel()
 
 bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
 {
-    const std::string modelFileName = "assets/mixamo/FemaleStandingPose.fbx";
+    const std::string modelFileName = "assets/mixamo/FemaleHipHopDancing.fbx";
     Core::Utils::MeshData primitiveMeshData = Core::Utils::loadMeshFromFile(modelFileName, mRenderData);
     if (!Core::Renderer::MeshPipelineLayout::init(mRenderData, mRenderData.rdMeshPipelineLayout))
     {

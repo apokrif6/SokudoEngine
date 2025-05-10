@@ -21,7 +21,7 @@ void Core::Renderer::Mesh::updateData(Core::Renderer::VkRenderData& renderData)
 
 void Core::Renderer::Mesh::draw(Core::Renderer::VkRenderData& renderData)
 {
-    mAnimator->update(this);
+    mAnimator->update(renderData, this);
 
     for (auto& primitive : mPrimitives)
     {

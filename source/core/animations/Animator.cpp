@@ -1,13 +1,16 @@
 #include <sstream>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
-#include <glm/gtc/type_ptr.hpp>
 #include "Animator.h"
 #include "AnimationsUtils.h"
 #include "AnimatorSingleton.h"
 #include "assimp/Importer.hpp"
 
-void Core::Animations::Animator::update(Renderer::Mesh* mesh) { updateBonesTransform(mesh); }
+void Core::Animations::Animator::update(const Renderer::VkRenderData& renderData, Renderer::Mesh* mesh)
+{
+    updateBonesTransform(mesh);
+    mAnimationTime += renderData.rdTickDiff;
+}
 
 void Core::Animations::Animator::updateBonesTransform(Renderer::Mesh* mesh)
 {
@@ -26,7 +29,7 @@ void Core::Animations::Animator::updateBonesTransform(Renderer::Mesh* mesh)
                 glm::inverse(Core::Animations::AnimationsUtils::convertMatrixToGlm(scene->mRootNode->mTransformation));
 
             const aiAnimation* animation = scene->mAnimations[0];
-            float currentTime = 0.f;
+            float currentTime = mAnimationTime;
             float duration = animation->mDuration;
             float ticksPerSecond = animation->mTicksPerSecond != 0 ? animation->mTicksPerSecond : 30.f;
             float timeInTicks = fmod(currentTime * ticksPerSecond, duration);

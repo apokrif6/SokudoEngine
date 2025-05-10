@@ -18,7 +18,7 @@ namespace Core::Animations
 class Animator
 {
   public:
-    void update(Renderer::Mesh* mesh);
+    void update(const Renderer::VkRenderData& renderData, Renderer::Mesh* mesh);
 
     void updateBonesTransform(Renderer::Mesh* mesh);
 
@@ -35,5 +35,7 @@ class Animator
     glm::vec3 interpolateScaling(const aiNodeAnim* nodeAnim, float animationTime);
 
     glm::mat4 mGlobalInverseTransform;
+
+    float mAnimationTime = 0.f;
 };
 } // namespace Core::Animations
