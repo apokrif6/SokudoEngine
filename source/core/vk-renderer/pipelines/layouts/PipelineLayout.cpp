@@ -7,12 +7,11 @@ bool Core::Renderer::PipelineLayout::init(Core::Renderer::VkRenderData& renderDa
                                           VkPipelineLayout& pipelineLayout)
 {
     VkDescriptorSetLayout layouts[] = {textureData.texTextureDescriptorLayout,
-                                       renderData.rdPerspectiveViewMatrixUBO.rdUBODescriptorLayout,
-                                       renderData.rdJointMatrixSSBO.rdSSBODescriptorLayout};
+                                       renderData.rdPerspectiveViewMatrixUBO.rdUBODescriptorLayout};
 
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutInfo.setLayoutCount = 3;
+    pipelineLayoutInfo.setLayoutCount = std::size(layouts);
     pipelineLayoutInfo.pSetLayouts = layouts;
     pipelineLayoutInfo.pushConstantRangeCount = 0;
 

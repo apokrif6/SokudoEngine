@@ -176,15 +176,6 @@ struct VkShaderStorageBufferData
     VkDescriptorSet rdSSBODescriptorSet = VK_NULL_HANDLE;
 };
 
-// TODO
-// should be removed
-struct VkGltfRenderData
-{
-    std::vector<VkVertexBufferData> rdGltfVertexBufferData{};
-    VkIndexBufferData rdGltfIndexBufferData{};
-    VkTextureData rdGltfModelTexture{};
-};
-
 struct VkPrimitiveRenderData
 {
     VkVertexBufferData rdModelVertexBufferData{};
@@ -200,7 +191,6 @@ struct VkRenderData
     int rdHeight = 0;
 
     unsigned int rdTriangleCount = 0;
-    unsigned int rdGltfTriangleCount = 0;
 
     int rdFieldOfView = 90;
 
@@ -223,10 +213,6 @@ struct VkRenderData
     int rdRotXAngle = 0;
     int rdRotYAngle = 0;
     int rdRotZAngle = 0;
-
-    bool rdDrawGltfModel = true;
-    bool rdDrawSkeleton = true;
-    bool rdGPUVertexSkinning = true;
 
     glm::vec3 rdLightPosition = glm::vec3(4.f, 5.f, -3.f);
     glm::vec3 rdLightColor = glm::vec3(0.5f, 0.5f, 0.5f);
@@ -263,14 +249,10 @@ struct VkRenderData
 
     VkRenderPass rdRenderpass = VK_NULL_HANDLE;
     VkPipelineLayout rdPipelineLayout = VK_NULL_HANDLE;
-    VkPipelineLayout rdGltfPipelineLayout = VK_NULL_HANDLE;
     VkPipelineLayout rdMeshPipelineLayout = VK_NULL_HANDLE;
     VkPipeline rdBasicPipeline = VK_NULL_HANDLE;
     VkPipeline rdLinePipeline = VK_NULL_HANDLE;
     VkPipeline rdGridPipeline = VK_NULL_HANDLE;
-    VkPipeline rdGltfPipeline = VK_NULL_HANDLE;
-    VkPipeline rdGltfGPUPipeline = VK_NULL_HANDLE;
-    VkPipeline rdGltfSkeletonPipeline = VK_NULL_HANDLE;
     VkPipeline rdMeshPipeline = VK_NULL_HANDLE;
 
     VkCommandPool rdCommandPool = VK_NULL_HANDLE;
@@ -285,7 +267,6 @@ struct VkRenderData
     VkVertexBufferData rdVertexBufferData{};
 
     VkUniformBufferData rdPerspectiveViewMatrixUBO{};
-    VkShaderStorageBufferData rdJointMatrixSSBO{};
 
     VkDescriptorPool rdImguiDescriptorPool = VK_NULL_HANDLE;
 };
