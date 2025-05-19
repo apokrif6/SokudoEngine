@@ -264,17 +264,6 @@ void Core::Renderer::UserInterface::createFrame(Core::Renderer::VkRenderData& re
         ImGui::Checkbox("Enable GPU Vertex Skinning", &renderData.rdGPUVertexSkinning);
     }
 
-    if (ImGui::CollapsingHeader("Light Parameters"))
-    {
-        ImGui::Text("Light Position");
-        ImGui::SameLine();
-        ImGui::SliderFloat3("##LPP", glm::value_ptr(renderData.rdLightPosition), -360, 360);
-
-        ImGui::Text("Light Color");
-        ImGui::SameLine();
-        ImGui::SliderFloat3("##LPC", glm::value_ptr(renderData.rdLightColor), 0.f, 1.f);
-    }
-
     ImGui::PopStyleColor();
 
     ImGui::End();

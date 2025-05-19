@@ -332,11 +332,6 @@ bool Core::Renderer::VkRenderer::draw()
     }
 #endif
 
-    // TODO
-    // fix after ubo changes
-    /* mPerspectiveViewMatrices.lightPosition = mRenderData.rdLightPosition;
-    mPerspectiveViewMatrices.lightColor = mRenderData.rdLightColor;*/
-
     mRenderData.rdMatrixGenerateTime = mMatrixGenerateTimer.stop();
 
     if (mRenderData.rdResetAngles)

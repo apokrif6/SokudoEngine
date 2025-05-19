@@ -11,8 +11,6 @@ layout (set = 0, binding = 0) uniform sampler2D tex;
 layout (set = 1, binding = 0) uniform Matrices {
     mat4 view;
     mat4 projection;
-//vec3 lightPos;
-//vec3 lightColor;
 };
 
 layout (set = 2, binding = 0) uniform Material {

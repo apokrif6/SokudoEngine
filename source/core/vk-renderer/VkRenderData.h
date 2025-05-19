@@ -228,9 +228,6 @@ struct VkRenderData
     bool rdDrawSkeleton = true;
     bool rdGPUVertexSkinning = true;
 
-    glm::vec3 rdLightPosition = glm::vec3(4.f, 5.f, -3.f);
-    glm::vec3 rdLightColor = glm::vec3(0.5f, 0.5f, 0.5f);
-
     float rdMoveForward = 0;
     float rdMoveRight = 0;
     float rdMoveUp = 0;

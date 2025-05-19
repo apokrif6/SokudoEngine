@@ -35,7 +35,6 @@ void main() {
 
     gl_Position = projection * view * animPos;
 
-    //gl_Position = projection * view * vec4(aPos, 1.0);
     normal = aNormal;
     textCoord = aUV;
 }
