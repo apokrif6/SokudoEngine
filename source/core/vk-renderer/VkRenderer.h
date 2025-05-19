@@ -12,7 +12,6 @@
 #include "ArrowModel.h"
 #include "core/events/EventDispatcher.h"
 #include "GridModel.h"
-#include "GltfModel.h"
 #include "Primitive.h"
 #include "Mesh.h"
 #include <glm/detail/type_quat.hpp>
@@ -38,7 +37,6 @@ class VkRenderer final : public EventListener
 
   private:
     Core::Renderer::VkRenderData mRenderData{};
-    Core::Renderer::VkGltfRenderData mGltfRenderData{};
     Core::Renderer::VkPrimitiveRenderData mPrimitiveRenderData{};
 
     Core::Renderer::UserInterface mUserInterface{};
@@ -62,7 +60,6 @@ class VkRenderer final : public EventListener
     std::shared_ptr<Core::Renderer::VkMesh> mSkeletonMesh = nullptr;
     unsigned int mSkeletonLineIndexCount = 0;
 
-    std::shared_ptr<Core::Model::GltfModel> mGltfModel = nullptr;
     bool mModelUploadRequired = true;
 
     std::shared_ptr<Core::Renderer::Mesh> mMesh = nullptr;;
@@ -117,8 +114,6 @@ class VkRenderer final : public EventListener
 
     bool createUBO();
 
-    bool createSSBO();
-
     bool createVBO();
 
     bool createRenderPass();
@@ -130,12 +125,6 @@ class VkRenderer final : public EventListener
     bool createLinePipeline();
 
     bool createGridPipeline();
-
-    bool createGltfPipelineLayout();
-
-    bool createGltfSkeletonPipeline();
-
-    bool createGltfGPUPipeline();
 
     bool createFramebuffer();
 
@@ -150,8 +139,6 @@ class VkRenderer final : public EventListener
     bool initVma();
 
     bool initUserInterface();
-
-    bool loadGltfModel();
 
     bool loadMeshWithAssimp();
 

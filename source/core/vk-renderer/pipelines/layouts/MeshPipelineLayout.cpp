@@ -1,6 +1,5 @@
 #include "MeshPipelineLayout.h"
 #include "core/tools/Logger.h"
-#include "core/animations/AnimationsData.h"
 
 bool Core::Renderer::MeshPipelineLayout::init(Core::Renderer::VkRenderData& renderData,
                                               VkPipelineLayout& pipelineLayout)
@@ -83,7 +82,7 @@ bool Core::Renderer::MeshPipelineLayout::init(Core::Renderer::VkRenderData& rend
 
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutInfo.setLayoutCount = ARRAY_SIZE_IN_ELEMENTS(layouts);
+    pipelineLayoutInfo.setLayoutCount = std::size(layouts);
     pipelineLayoutInfo.pSetLayouts = layouts;
 
     if (vkCreatePipelineLayout(renderData.rdVkbDevice.device, &pipelineLayoutInfo, nullptr, &pipelineLayout) !=

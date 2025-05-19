@@ -1,16 +1,16 @@
-#include <stb_image.h>
-
-#include "core/vk-renderer/buffers/CommandBuffer.h"
 #include "Texture.h"
+
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+#include "core/vk-renderer/buffers/CommandBuffer.h"
 #include "core/tools/Logger.h"
 
 std::future<bool> Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderData& renderData,
                                                        VkTextureData& textureData, const std::string& textureFilename)
 {
-    const char* functionName = __FUNCTION__;
     return std::async(
         std::launch::async,
-        [&renderData, &textureData, &textureFilename, &functionName]()
+        [&renderData, &textureData, &textureFilename]()
         {
             int texWidth;
             int texHeight;
@@ -22,8 +22,7 @@ std::future<bool> Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderD
             if (!texData)
             {
                 perror("Error");
-                Logger::log(1, "%s error: could not load file '%s', because of '%s'\n", "TOREMOVE",
-                            textureFilename.c_str(), stbi_failure_reason());
+                Logger::log(1, "Could not load file '%s', because of '%s'\n",textureFilename.c_str(), stbi_failure_reason());
                 stbi_image_free(texData);
                 return false;
             }
@@ -51,7 +50,7 @@ std::future<bool> Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderD
             if (vmaCreateImage(renderData.rdAllocator, &imageInfo, &imageAllocInfo, &textureData.texTextureImage,
                                &textureData.texTextureImageAlloc, nullptr) != VK_SUCCESS)
             {
-                Logger::log(1, "%s error: could not allocate texture image via VMA\n", "TOREMOVE");
+                Logger::log(1, "Could not allocate texture image via VMA\n");
                 return false;
             }
 
@@ -69,7 +68,7 @@ std::future<bool> Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderD
             if (vmaCreateBuffer(renderData.rdAllocator, &stagingBufferInfo, &stagingAllocInfo, &stagingBuffer,
                                 &stagingBufferAlloc, nullptr) != VK_SUCCESS)
             {
-                Logger::log(1, "%s error: could not allocate texture staging buffer via VMA\n", "TOREMOVE");
+                Logger::log(1, "Could not allocate texture staging buffer via VMA\n");
                 return false;
             }
 
@@ -126,13 +125,13 @@ std::future<bool> Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderD
 
             if (!Core::Renderer::CommandBuffer::init(renderData, stagingCommandBuffer))
             {
-                Logger::log(1, "%s error: could not create texture upload command buffers\n", "TOREMOVE");
+                Logger::log(1, "Could not create texture upload command buffers\n");
                 return false;
             }
 
             if (vkResetCommandBuffer(stagingCommandBuffer, 0) != VK_SUCCESS)
             {
-                Logger::log(1, "%s error: failed to reset staging command buffer\n", "TOREMOVE");
+                Logger::log(1, "Failed to reset staging command buffer\n");
                 return false;
             }
 
@@ -142,7 +141,7 @@ std::future<bool> Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderD
 
             if (vkBeginCommandBuffer(stagingCommandBuffer, &cmdBeginInfo) != VK_SUCCESS)
             {
-                Logger::log(1, "%s error: failed to begin staging command buffer\n", "TOREMOVE");
+                Logger::log(1, "%s error: failed to begin staging command buffer\n");
                 return false;
             }
 
@@ -157,7 +156,7 @@ std::future<bool> Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderD
 
             if (vkEndCommandBuffer(stagingCommandBuffer) != VK_SUCCESS)
             {
-                Logger::log(1, "%s error: failed to end staging command buffer\n", "TOREMOVE");
+                Logger::log(1, "Failed to end staging command buffer\n");
                 return false;
             }
 
@@ -179,26 +178,26 @@ std::future<bool> Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderD
 
             if (vkCreateFence(renderData.rdVkbDevice.device, &fenceInfo, nullptr, &stagingBufferFence) != VK_SUCCESS)
             {
-                Logger::log(1, "%s error: failed to create staging buffer fence\n", "TOREMOVE");
+                Logger::log(1, "Failed to create staging buffer fence\n");
                 return false;
             }
 
             if (vkResetFences(renderData.rdVkbDevice.device, 1, &stagingBufferFence) != VK_SUCCESS)
             {
-                Logger::log(1, "%s error: staging buffer fence reset failed\n", "TOREMOVE");
+                Logger::log(1, "Staging buffer fence reset failed\n");
                 return false;
             }
 
             if (vkQueueSubmit(renderData.rdGraphicsQueue, 1, &submitInfo, stagingBufferFence) != VK_SUCCESS)
             {
-                Logger::log(1, "%s error: failed to submit staging buffer copy command buffer\n", "TOREMOVE");
+                Logger::log(1, "Failed to submit staging buffer copy command buffer\n");
                 return false;
             }
 
             if (vkWaitForFences(renderData.rdVkbDevice.device, 1, &stagingBufferFence, VK_TRUE, UINT64_MAX) !=
                 VK_SUCCESS)
             {
-                Logger::log(1, "%s error: waiting for staging buffer copy fence failed\n", "TOREMOVE");
+                Logger::log(1, "Error: waiting for staging buffer copy fence failed\n");
                 return false;
             }
 
@@ -221,7 +220,7 @@ std::future<bool> Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderD
             if (vkCreateImageView(renderData.rdVkbDevice.device, &texViewInfo, nullptr,
                                   &textureData.texTextureImageView) != VK_SUCCESS)
             {
-                Logger::log(1, "%s error: could not create image view for texture\n", "TOREMOVE");
+                Logger::log(1, "Could not create image view for texture\n");
                 return false;
             }
 
@@ -246,7 +245,7 @@ std::future<bool> Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderD
             if (vkCreateSampler(renderData.rdVkbDevice.device, &texSamplerInfo, nullptr,
                                 &textureData.texTextureSampler) != VK_SUCCESS)
             {
-                Logger::log(1, "%s error: could not create sampler for texture\n", "TOREMOVE");
+                Logger::log(1, "Could not create sampler for texture\n");
                 return false;
             }
 
@@ -265,7 +264,7 @@ std::future<bool> Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderD
             if (vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &textureCreateInfo, nullptr,
                                             &textureData.texTextureDescriptorLayout) != VK_SUCCESS)
             {
-                Logger::log(1, "%s error: could not create descriptor set layout\n", "TOREMOVE");
+                Logger::log(1, "Could not create descriptor set layout\n");
                 return false;
             }
 
@@ -282,7 +281,7 @@ std::future<bool> Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderD
             if (vkCreateDescriptorPool(renderData.rdVkbDevice.device, &descriptorPool, nullptr,
                                        &textureData.texTextureDescriptorPool) != VK_SUCCESS)
             {
-                Logger::log(1, "%s error: could not create descriptor pool\n", "TOREMOVE");
+                Logger::log(1, "Could not create descriptor pool\n");
                 return false;
             }
 
@@ -295,7 +294,7 @@ std::future<bool> Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderD
             if (vkAllocateDescriptorSets(renderData.rdVkbDevice.device, &descriptorAllocateInfo,
                                          &textureData.texTextureDescriptorSet) != VK_SUCCESS)
             {
-                Logger::log(1, "%s error: could not allocate descriptor set\n", "TOREMOVE");
+                Logger::log(1, "Could not allocate descriptor set\n");
                 return false;
             }
 
@@ -316,7 +315,7 @@ std::future<bool> Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderD
 
             vkUpdateDescriptorSets(renderData.rdVkbDevice.device, 1, &writeDescriptorSet, 0, nullptr);
 
-            Logger::log(1, "%s: texture '%s' loaded (%dx%d, %d channels)\n", "TOREMOVE", textureFilename.c_str(),
+            Logger::log(1, "Texture '%s' loaded (%dx%d, %d channels)\n", textureFilename.c_str(),
                         texWidth, texHeight, numberOfChannels);
             return true;
         });
