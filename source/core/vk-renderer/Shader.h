@@ -11,7 +11,8 @@ class Shader
   public:
     static VkShaderModule loadShader(VkDevice device, const std::string& shaderFileName);
 
-    static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptionsFromSPV(const std::string& shaderFileName);
+    static std::vector<VkVertexInputAttributeDescription>
+    getAttributeDescriptionsBySpvReflect(const std::string& shaderFileName);
 
   private:
     static std::string loadFileToString(const std::string& fileName);

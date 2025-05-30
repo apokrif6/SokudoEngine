@@ -28,7 +28,7 @@ VkShaderModule Core::Renderer::Shader::loadShader(VkDevice device, const std::st
 }
 
 std::vector<VkVertexInputAttributeDescription>
-Core::Renderer::Shader::getAttributeDescriptionsFromSPV(const std::string& shaderFileName)
+Core::Renderer::Shader::getAttributeDescriptionsBySpvReflect(const std::string& shaderFileName)
 {
     std::vector<char> shaderCode = readBinaryFile(shaderFileName);
 
@@ -40,7 +40,7 @@ Core::Renderer::Shader::getAttributeDescriptionsFromSPV(const std::string& shade
     uint32_t inputVarCount = 0;
     result = spvReflectEnumerateInputVariables(&module, &inputVarCount, nullptr);
     if (result != SPV_REFLECT_RESULT_SUCCESS)
-        throw std::runtime_error("Failed to enumerate input variables");
+        throw std::runtime_error("Failed to enumerate input variables with SPIR-V reflection");
 
     std::vector<SpvReflectInterfaceVariable*> inputVariables(inputVarCount);
     spvReflectEnumerateInputVariables(&module, &inputVarCount, inputVariables.data());
@@ -86,7 +86,7 @@ Core::Renderer::Shader::getAttributeDescriptionsFromSPV(const std::string& shade
             formatSize = 16;
             break;
         default:
-            throw std::runtime_error("Unsupported or unknown format");
+            throw std::runtime_error("Unsupported or unknown inputAttributeDescription format");
         }
 
         attributeDescriptions.push_back(inputAttributeDescription);

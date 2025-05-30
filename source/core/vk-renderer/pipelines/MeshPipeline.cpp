@@ -35,7 +35,7 @@ bool Core::Renderer::MeshPipeline::init(Core::Renderer::VkRenderData& renderData
     VkPipelineShaderStageCreateInfo shaderStagesInfo[] = {vertexStageInfo, fragmentStageInfo};
 
     auto bindingDescription =  NewVertex::getBindingDescription();
-    auto attributeDescriptions = Core::Renderer::Shader::getAttributeDescriptionsFromSPV(vertexShaderFilename);
+    auto attributeDescriptions = Core::Renderer::Shader::getAttributeDescriptionsBySpvReflect(vertexShaderFilename);
 
     VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
