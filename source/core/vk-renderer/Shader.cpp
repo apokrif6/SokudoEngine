@@ -35,12 +35,16 @@ Core::Renderer::Shader::getAttributeDescriptionsBySpvReflect(const std::string& 
     SpvReflectShaderModule module;
     SpvReflectResult result = spvReflectCreateShaderModule(shaderCode.size(), shaderCode.data(), &module);
     if (result != SPV_REFLECT_RESULT_SUCCESS)
+    {
         throw std::runtime_error("SPIR-V reflection failed to create shader module");
+    }
 
     uint32_t inputVarCount = 0;
     result = spvReflectEnumerateInputVariables(&module, &inputVarCount, nullptr);
     if (result != SPV_REFLECT_RESULT_SUCCESS)
+    {
         throw std::runtime_error("Failed to enumerate input variables with SPIR-V reflection");
+    }
 
     std::vector<SpvReflectInterfaceVariable*> inputVariables(inputVarCount);
     spvReflectEnumerateInputVariables(&module, &inputVarCount, inputVariables.data());
@@ -91,8 +95,6 @@ Core::Renderer::Shader::getAttributeDescriptionsBySpvReflect(const std::string& 
 
         attributeDescriptions.push_back(inputAttributeDescription);
         currentOffset += formatSize;
-
-        attributeDescriptions.push_back(inputAttributeDescription);
     }
 
     spvReflectDestroyShaderModule(&module);
