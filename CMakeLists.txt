@@ -7,8 +7,6 @@ project(SokudoEngine)
 file(GLOB_RECURSE SOURCES
         main.cpp
         source/*.cpp
-        external/imgui/*.cpp
-        external/tinygltf/*.cc
 )
 add_executable(SokudoEngine ${SOURCES}
         source/core/window/Window.cpp)
@@ -19,7 +17,10 @@ endif ()
 
 find_package(glfw3 3.3 REQUIRED)
 find_package(Vulkan REQUIRED)
+find_package(vk-bootstrap REQUIRED)
+find_package(VulkanMemoryAllocator REQUIRED)
 find_package(assimp REQUIRED)
+find_package(imgui REQUIRED)
 find_package(unofficial-spirv-reflect REQUIRED)
 
 if (UNIX)
@@ -104,15 +105,15 @@ add_custom_command(TARGET Assets POST_BUILD
 )
 
 # includes
-add_subdirectory(external/vk-bootstrap)
-
-include_directories(${GLFW3_INCLUDE_DIR} source external/vk-memory-allocation external/include source/core/model external/imgui external/tinygltf)
+include_directories(${GLFW3_INCLUDE_DIR} source)
 
 set(DEPENDENCIES
         ${GLFW3_LIBRARY}
         Vulkan::Vulkan
         vk-bootstrap::vk-bootstrap
+        GPUOpen::VulkanMemoryAllocator
         assimp::assimp
+        imgui::imgui
         unofficial::spirv-reflect
 )
 
