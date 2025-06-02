@@ -1,5 +1,6 @@
 #include "Mesh.h"
 #include "core/vk-renderer/buffers/UniformBuffer.h"
+#include "core/animations/AnimatorSingleton.h"
 
 void Core::Renderer::Mesh::addPrimitive(const std::vector<Core::Renderer::NewVertex>& vertexBufferData,
                                         const std::vector<uint32_t>& indexBufferData, const VkTextureData& textureData,
@@ -21,7 +22,7 @@ void Core::Renderer::Mesh::updateData(Core::Renderer::VkRenderData& renderData)
 
 void Core::Renderer::Mesh::draw(Core::Renderer::VkRenderData& renderData)
 {
-    mAnimator->update(renderData, this);
+    Animations::AnimatorSingleton::getInstance().update(renderData, this);
 
     for (auto& primitive : mPrimitives)
     {

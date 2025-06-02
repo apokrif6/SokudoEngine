@@ -4,20 +4,13 @@
 #include <vector>
 #include <memory>
 #include "Primitive.h"
-#include "core/animations/Animator.h"
-
-// read comment in Animator.h
-namespace Core::Animations
-{
-class Animator;
-}
 
 namespace Core::Renderer
 {
 class Mesh
 {
   public:
-    explicit Mesh(std::string name) : mName(std::move(name)) { mAnimator = std::make_unique<Animations::Animator>(); }
+    explicit Mesh(std::string name) : mName(std::move(name)) {}
 
     void addPrimitive(const std::vector<Core::Renderer::NewVertex>& vertexBufferData,
                       const std::vector<uint32_t>& indexBufferData, const VkTextureData& textureData,
@@ -47,7 +40,5 @@ class Mesh
 
     std::string mName;
     std::vector<Core::Renderer::Primitive> mPrimitives;
-
-    std::unique_ptr<Animations::Animator> mAnimator;
 };
 } // namespace Core::Renderer
