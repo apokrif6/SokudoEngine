@@ -118,7 +118,7 @@ set(DEPENDENCIES
 )
 
 if (NOT MSVC)
-    list(APPEND DEPENDENCIES stdc++ m)
+    list(APPEND DEPENDENCIES stdc++)
 endif ()
 
 target_link_libraries(SokudoEngine PRIVATE ${DEPENDENCIES})
