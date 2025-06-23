@@ -12,7 +12,7 @@
 #include "core/vk-renderer/buffers/CommandBuffer.h"
 #include "core/tools/Logger.h"
 
-void Core::Renderer::UserInterface::createFrame(Core::Renderer::VkRenderData& renderData)
+void Core::Renderer::UserInterface::createFrame(VkRenderData& renderData)
 {
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -22,9 +22,7 @@ void Core::Renderer::UserInterface::createFrame(Core::Renderer::VkRenderData& re
     imguiWindowFlags |= ImGuiWindowFlags_NoCollapse;
     imguiWindowFlags |= ImGuiWindowFlags_AlwaysAutoResize;
 
-    ImGui::SetNextWindowBgAlpha(0.3f);
-
-    ImGui::PushStyleColor(ImGuiCol_WindowBg, IM_COL32(207, 159, 255, 1));
+    setupImGuiStyle();
 
     ImGui::Begin("Sokudo Engine", nullptr, imguiWindowFlags);
 
@@ -36,112 +34,119 @@ void Core::Renderer::UserInterface::createFrame(Core::Renderer::VkRenderData& re
 
     mFramesPerSecond = (mAveragingAlpha * mFramesPerSecond) + (1.0f - mAveragingAlpha) * newFps;
 
-    ImGui::Text("Frames per second:");
-    ImGui::SameLine();
-    ImGui::Text("%s", std::to_string(mFramesPerSecond).c_str());
-
-    ImGui::Separator();
-
-    ImGui::Text("Frame Time:");
-    ImGui::SameLine();
-    ImGui::Text("%s", std::to_string(renderData.rdFrameTime).c_str());
-    ImGui::SameLine();
-    ImGui::Text("ms");
-
-    ImGui::Text("Matrix Generation Time:");
-    ImGui::SameLine();
-    ImGui::Text("%s", std::to_string(renderData.rdMatrixGenerateTime).c_str());
-    ImGui::SameLine();
-    ImGui::Text("ms");
-
-    ImGui::Text("Matrix Upload Time:");
-    ImGui::SameLine();
-    ImGui::Text("%s", std::to_string(renderData.rdUploadToUBOTime).c_str());
-    ImGui::SameLine();
-    ImGui::Text("ms");
-
-    ImGui::Text("UI Generation Time:");
-    ImGui::SameLine();
-    ImGui::Text("%s", std::to_string(renderData.rdUIGenerateTime).c_str());
-    ImGui::SameLine();
-    ImGui::Text("ms");
-
-    ImGui::Text("UI Draw Time:");
-    ImGui::SameLine();
-    ImGui::Text("%s", std::to_string(renderData.rdUIDrawTime).c_str());
-    ImGui::SameLine();
-    ImGui::Text("ms");
-
-    ImGui::Separator();
-
-    ImGui::Text("Camera Position:");
-    ImGui::SameLine();
-    ImGui::Text("%s", glm::to_string(renderData.rdCameraWorldPosition).c_str());
-
-    ImGui::Text("View Yaw:");
-    ImGui::SameLine();
-    ImGui::Text("%s", std::to_string(renderData.rdViewYaw).c_str());
-
-    ImGui::Text("View Pitch:");
-    ImGui::SameLine();
-    ImGui::Text("%s", std::to_string(renderData.rdViewPitch).c_str());
-
-    ImGui::Separator();
-
-    std::string windowDims = std::to_string(renderData.rdWidth) + "x" + std::to_string(renderData.rdHeight);
-    ImGui::Text("Window Dimensions:");
-    ImGui::SameLine();
-    ImGui::Text("%s", windowDims.c_str());
-
-    ImGui::Separator();
-
-    ImGui::Text("Field Of View");
-    ImGui::SameLine();
-    ImGui::SliderInt("FOV", &renderData.rdFieldOfView, 40, 150);
-
-    if (ImGui::CollapsingHeader("Angles"))
+    if (ImGui::BeginTabBar("Tabs"))
     {
-        ImGui::Checkbox("Draw World Coordinate Arrows", &renderData.rdDrawWorldCoordinateArrows);
-        ImGui::Checkbox("Draw Model Coordinate Arrows", &renderData.rdDrawModelCoordinateArrows);
-
-        if (ImGui::Button("Reset Rotation"))
+        if (ImGui::BeginTabItem("Profiling"))
         {
-            renderData.rdResetAngles = true;
+            ImGui::Text("Frames per second:");
+            ImGui::SameLine();
+            ImGui::Text("%s", std::to_string(mFramesPerSecond).c_str());
+
+            ImGui::Text("Frame Time:");
+            ImGui::SameLine();
+            ImGui::Text("%s", std::to_string(renderData.rdFrameTime).c_str());
+            ImGui::SameLine();
+            ImGui::Text("ms");
+
+            ImGui::Text("Matrix Generation Time:");
+            ImGui::SameLine();
+            ImGui::Text("%s", std::to_string(renderData.rdMatrixGenerateTime).c_str());
+            ImGui::SameLine();
+            ImGui::Text("ms");
+
+            ImGui::Text("Matrix Upload Time:");
+            ImGui::SameLine();
+            ImGui::Text("%s", std::to_string(renderData.rdUploadToUBOTime).c_str());
+            ImGui::SameLine();
+            ImGui::Text("ms");
+
+            ImGui::Text("UI Generation Time:");
+            ImGui::SameLine();
+            ImGui::Text("%s", std::to_string(renderData.rdUIGenerateTime).c_str());
+            ImGui::SameLine();
+            ImGui::Text("ms");
+
+            ImGui::Text("UI Draw Time:");
+            ImGui::SameLine();
+            ImGui::Text("%s", std::to_string(renderData.rdUIDrawTime).c_str());
+            ImGui::SameLine();
+            ImGui::Text("ms");
+
+            ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("Camera"))
+        {
+            ImGui::Text("Camera Position:");
+            ImGui::SameLine();
+            ImGui::Text("%s", glm::to_string(renderData.rdCameraWorldPosition).c_str());
+
+            ImGui::Text("View Yaw:");
+            ImGui::SameLine();
+            ImGui::Text("%s", std::to_string(renderData.rdViewYaw).c_str());
+
+            ImGui::Text("View Pitch:");
+            ImGui::SameLine();
+            ImGui::Text("%s", std::to_string(renderData.rdViewPitch).c_str());
+
+            std::string windowDims = std::to_string(renderData.rdWidth) + "x" + std::to_string(renderData.rdHeight);
+            ImGui::Text("Window Dimensions:");
+            ImGui::SameLine();
+            ImGui::Text("%s", windowDims.c_str());
+
+            ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("Scene"))
+        {
+            ImGui::Text("Field Of View");
+            ImGui::SameLine();
+            ImGui::SliderInt("FOV", &renderData.rdFieldOfView, 40, 150);
+
+            ImGui::Checkbox("Draw World Coordinate Arrows", &renderData.rdDrawWorldCoordinateArrows);
+            ImGui::Checkbox("Draw Model Coordinate Arrows", &renderData.rdDrawModelCoordinateArrows);
+
+            if (ImGui::Button("Reset Rotation"))
+            {
+                renderData.rdResetAngles = true;
+            }
+
+            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 0, 0, 255));
+            ImGui::Text("X Rotation");
+            ImGui::PopStyleColor();
+            ImGui::SameLine();
+            ImGui::SliderInt("##ROTX", &renderData.rdRotXAngle, 0, 360);
+
+            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 255, 0, 255));
+            ImGui::Text("Y Rotation");
+            ImGui::PopStyleColor();
+            ImGui::SameLine();
+            ImGui::SliderInt("##ROTY", &renderData.rdRotYAngle, 0, 360);
+
+            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 0, 255, 255));
+            ImGui::Text("Z Rotation");
+            ImGui::PopStyleColor();
+            ImGui::SameLine();
+            ImGui::SliderInt("##ROTZ", &renderData.rdRotZAngle, 0, 360);
+
+            ImGui::EndTabItem();
         }
 
-        ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 0, 0, 255));
-        ImGui::Text("X Rotation");
-        ImGui::PopStyleColor();
-        ImGui::SameLine();
-        ImGui::SliderInt("##ROTX", &renderData.rdRotXAngle, 0, 360);
+        if (ImGui::BeginTabItem("Animation"))
+        {
+            // TODO
+            // should be implemented
+            // also animation timeline slider should be implemented
+            bool DebugBones = false;
+            ImGui::Checkbox("Debug Bones", &DebugBones);
 
-        ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 255, 0, 255));
-        ImGui::Text("Y Rotation");
-        ImGui::PopStyleColor();
-        ImGui::SameLine();
-        ImGui::SliderInt("##ROTY", &renderData.rdRotYAngle, 0, 360);
-
-        ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 0, 255, 255));
-        ImGui::Text("Z Rotation");
-        ImGui::PopStyleColor();
-        ImGui::SameLine();
-        ImGui::SliderInt("##ROTZ", &renderData.rdRotZAngle, 0, 360);
+            ImGui::EndTabItem();
+        }
+        ImGui::EndTabBar();
     }
-
-    if (ImGui::CollapsingHeader("Assimp Model"))
-    {
-        // TODO
-        // should be implemented
-        // also animation timeline slider should be implemented
-        bool DebugBones = false;
-        ImGui::Checkbox("Debug Bones", &DebugBones);
-    }
-
-    ImGui::PopStyleColor();
 
     ImGui::End();
 }
-bool Core::Renderer::UserInterface::init(Core::Renderer::VkRenderData& renderData)
+
+bool Core::Renderer::UserInterface::init(VkRenderData& renderData)
 {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -267,16 +272,70 @@ bool Core::Renderer::UserInterface::init(Core::Renderer::VkRenderData& renderDat
     return true;
 }
 
-void Core::Renderer::UserInterface::render(Core::Renderer::VkRenderData& renderData)
+void Core::Renderer::UserInterface::render(VkRenderData& renderData)
 {
     ImGui::Render();
     ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), renderData.rdCommandBuffer);
 }
 
-void Core::Renderer::UserInterface::cleanup(Core::Renderer::VkRenderData& renderData)
+void Core::Renderer::UserInterface::cleanup(VkRenderData& renderData)
 {
     vkDestroyDescriptorPool(renderData.rdVkbDevice.device, renderData.rdImguiDescriptorPool, nullptr);
     ImGui_ImplVulkan_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
+}
+
+void Core::Renderer::UserInterface::setupImGuiStyle() const
+{
+    ImGuiStyle& style = ImGui::GetStyle();
+    style.Alpha = 0.8f;
+
+    style.Colors[ImGuiCol_WindowBg] = ImVec4(0.1f, 0.05f, 0.15f, 1.f);
+    style.Colors[ImGuiCol_ChildBg] = ImVec4(0.08f, 0.04f, 0.12f, 1.f);
+    style.Colors[ImGuiCol_PopupBg] = ImVec4(0.12f, 0.06f, 0.18f, 0.95f);
+
+    style.Colors[ImGuiCol_Border] = ImVec4(0.35f, 0.1f, 0.6f, 0.6f);
+    style.Colors[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+
+    style.Colors[ImGuiCol_Text] = ImVec4(0.9f, 0.85f, 1.f, 1.f);
+    style.Colors[ImGuiCol_TextDisabled] = ImVec4(0.5f, 0.4f, 0.6f, 1.f);
+
+    style.Colors[ImGuiCol_Header] = ImVec4(0.45f, 0.2f, 0.65f, 0.8f);
+    style.Colors[ImGuiCol_HeaderHovered] = ImVec4(0.6f, 0.3f, 0.8f, 0.9f);
+    style.Colors[ImGuiCol_HeaderActive] = ImVec4(0.7f, 0.35f, 0.9f, 1.f);
+
+    style.Colors[ImGuiCol_Button] = ImVec4(0.45f, 0.2f, 0.65f, 0.6f);
+    style.Colors[ImGuiCol_ButtonHovered] = ImVec4(0.6f, 0.3f, 0.8f, 0.85f);
+    style.Colors[ImGuiCol_ButtonActive] = ImVec4(0.7f, 0.35f, 0.9f, 1.f);
+
+    style.Colors[ImGuiCol_FrameBg] = ImVec4(0.2f, 0.1f, 0.3f, 1.f);
+    style.Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.35f, 0.15f, 0.55f, 1.f);
+    style.Colors[ImGuiCol_FrameBgActive] = ImVec4(0.4f, 0.2f, 0.6f, 1.f);
+
+    style.Colors[ImGuiCol_Tab] = ImVec4(0.35f, 0.15f, 0.5f, 0.8f);
+    style.Colors[ImGuiCol_TabHovered] = ImVec4(0.55f, 0.25f, 0.75f, 0.9f);
+    style.Colors[ImGuiCol_TabActive] = ImVec4(0.65f, 0.3f, 0.85f, 1.f);
+    style.Colors[ImGuiCol_TabUnfocused] = ImVec4(0.2f, 0.1f, 0.3f, 0.8f);
+    style.Colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.3f, 0.15f, 0.45f, 0.9f);
+
+    style.Colors[ImGuiCol_TitleBg] = ImVec4(0.25f, 0.1f, 0.4f, 1.f);
+    style.Colors[ImGuiCol_TitleBgActive] = ImVec4(0.4f, 0.2f, 0.6f, 1.f);
+    style.Colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.15f, 0.05f, 0.25f, 0.75f);
+
+    style.Colors[ImGuiCol_ScrollbarBg] = ImVec4(0.08f, 0.04f, 0.12f, 1.f);
+    style.Colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.4f, 0.2f, 0.6f, 0.6f);
+    style.Colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.55f, 0.25f, 0.75f, 0.8f);
+    style.Colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.7f, 0.35f, 0.9f, 1.f);
+
+    style.Colors[ImGuiCol_ResizeGrip] = ImVec4(0.5f, 0.25f, 0.75f, 0.5f);
+    style.Colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.65f, 0.3f, 0.85f, 0.7f);
+    style.Colors[ImGuiCol_ResizeGripActive] = ImVec4(0.75f, 0.35f, 0.95f, 0.9f);
+
+    style.Colors[ImGuiCol_SliderGrab] = ImVec4(0.6f, 0.3f, 0.8f, 0.9f);
+    style.Colors[ImGuiCol_SliderGrabActive] = ImVec4(0.75f, 0.35f, 0.95f, 1.f);
+
+    style.Colors[ImGuiCol_Separator] = ImVec4(0.35f, 0.15f, 0.6f, 0.6f);
+    style.Colors[ImGuiCol_SeparatorHovered] = ImVec4(0.5f, 0.25f, 0.75f, 0.8f);
+    style.Colors[ImGuiCol_SeparatorActive] = ImVec4(0.65f, 0.3f, 0.85f, 1.f);
 }
