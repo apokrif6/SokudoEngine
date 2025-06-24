@@ -16,6 +16,7 @@ if (WIN32)
 endif ()
 
 find_package(glfw3 3.3 REQUIRED)
+find_package(glm CONFIG REQUIRED)
 find_package(Vulkan REQUIRED)
 find_package(vk-bootstrap REQUIRED)
 find_package(VulkanMemoryAllocator REQUIRED)
@@ -109,6 +110,7 @@ include_directories(${GLFW3_INCLUDE_DIR} source)
 
 set(DEPENDENCIES
         ${GLFW3_LIBRARY}
+        glm::glm
         Vulkan::Vulkan
         vk-bootstrap::vk-bootstrap
         GPUOpen::VulkanMemoryAllocator
