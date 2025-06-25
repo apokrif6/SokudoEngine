@@ -2,7 +2,6 @@
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
-#include <glm/gtc/type_ptr.hpp>
 
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
@@ -11,6 +10,7 @@
 #include "UserInterface.h"
 #include "core/vk-renderer/buffers/CommandBuffer.h"
 #include "core/tools/Logger.h"
+#include "core/animations/AnimatorSingleton.h"
 
 void Core::Renderer::UserInterface::createFrame(VkRenderData& renderData)
 {
@@ -133,10 +133,32 @@ void Core::Renderer::UserInterface::createFrame(VkRenderData& renderData)
         if (ImGui::BeginTabItem("Animation"))
         {
             // TODO
-            // should be implemented
-            // also animation timeline slider should be implemented
-            bool DebugBones = false;
-            ImGui::Checkbox("Debug Bones", &DebugBones);
+            // animation timeline slider should be implemented
+
+            ImGui::Checkbox("Should play animation", &renderData.shouldPlayAnimation);
+
+            if (ImGui::BeginListBox("Loaded animations"))
+            {
+                for (int i = 0; i < Core::Animations::AnimatorSingleton::getInstance().loadedAnimations.size(); ++i)
+                {
+                    std::string fullPath = Core::Animations::AnimatorSingleton::getInstance().loadedAnimations[i];
+                    size_t lastSlash = fullPath.find_last_of("/\\");
+                    std::string shortAnimationName = (lastSlash != std::string::npos) ? fullPath.substr(lastSlash + 1) : fullPath;
+
+                    const bool isAnimationToPlaySelected = (renderData.selectedAnimationIndexToPlay == i);
+                    if (ImGui::Selectable(shortAnimationName.c_str(),isAnimationToPlaySelected))
+                    {
+                        renderData.selectedAnimationIndexToPlay = i;
+                    }
+
+                    if (isAnimationToPlaySelected)
+                    {
+                        ImGui::SetItemDefaultFocus();
+                    }
+                }
+
+                ImGui::EndListBox();
+            }
 
             ImGui::EndTabItem();
         }

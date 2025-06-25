@@ -1,6 +1,9 @@
 #pragma once
 
 #include "assimp/matrix4x4.h"
+#include "AnimationsData.h"
+#include "assimp/quaternion.h"
+#include "assimp/scene.h"
 #include <glm/glm.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
@@ -47,5 +50,9 @@ class AnimationsUtils
     {
         return {pOrientation.w, pOrientation.x, pOrientation.y, pOrientation.z};
     }
+
+    static Core::Animations::AnimationClip loadAnimationFromFile(const std::string& filePath);
+
+    static Core::Animations::BoneNode buildBoneHierarchy(const aiNode* node);
 };
 } // namespace Core::Animations

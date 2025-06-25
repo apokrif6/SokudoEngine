@@ -23,8 +23,8 @@ struct PrimitiveData
 struct MeshData
 {
     std::vector<PrimitiveData> primitives;
-
-    std::shared_ptr<Assimp::Importer> importer;
+    Core::Animations::Skeleton skeleton;
+    std::vector<Core::Animations::AnimationClip> animations;
 };
 
 MeshData loadMeshFromFile(const std::string& fileName, Core::Renderer::VkRenderData& renderData);

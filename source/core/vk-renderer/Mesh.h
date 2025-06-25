@@ -10,7 +10,7 @@ namespace Core::Renderer
 class Mesh
 {
   public:
-    explicit Mesh(std::string name) : mName(std::move(name)) {}
+    explicit Mesh(std::string name, const Animations::Skeleton& skeleton) : mName(std::move(name)), mSkeleton(skeleton) {}
 
     void addPrimitive(const std::vector<Core::Renderer::NewVertex>& vertexBufferData,
                       const std::vector<uint32_t>& indexBufferData, const VkTextureData& textureData,
@@ -27,6 +27,17 @@ class Mesh
 
     [[nodiscard]] std::string getMeshName() const { return mName; }
 
+    [[nodiscard]] Animations::Skeleton& getSkeleton() { return mSkeleton; }
+
+    void setupAnimations(const std::vector<Core::Animations::AnimationClip>& animationClips)
+    {
+        mAnimations = animationClips;
+    }
+
+    [[nodiscard]] const std::vector<Core::Animations::AnimationClip>& getAnimations() const { return mAnimations; }
+
+    [[nodiscard]] bool hasAnimations() const { return !mAnimations.empty(); }
+
   private:
     // TODO
     // should this be private?
@@ -40,5 +51,7 @@ class Mesh
 
     std::string mName;
     std::vector<Core::Renderer::Primitive> mPrimitives;
+    Core::Animations::Skeleton mSkeleton;
+    std::vector<Core::Animations::AnimationClip> mAnimations;
 };
 } // namespace Core::Renderer

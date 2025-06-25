@@ -112,15 +112,6 @@ struct VkShaderStorageBufferData
     VkDescriptorSet rdSSBODescriptorSet = VK_NULL_HANDLE;
 };
 
-// TODO
-// should be removed
-struct VkGltfRenderData
-{
-    std::vector<VkVertexBufferData> rdGltfVertexBufferData{};
-    VkIndexBufferData rdGltfIndexBufferData{};
-    VkTextureData rdGltfModelTexture{};
-};
-
 struct VkPrimitiveRenderData
 {
     VkVertexBufferData rdModelVertexBufferData{};
@@ -160,15 +151,14 @@ struct VkRenderData
     int rdRotYAngle = 0;
     int rdRotZAngle = 0;
 
-    bool rdDrawGltfModel = true;
-    bool rdDrawSkeleton = true;
-    bool rdGPUVertexSkinning = true;
-
     float rdMoveForward = 0;
     float rdMoveRight = 0;
     float rdMoveUp = 0;
 
     float rdTickDiff = 0.f;
+
+    bool shouldPlayAnimation = false;
+    int selectedAnimationIndexToPlay = 0;
 
     VmaAllocator rdAllocator;
 

@@ -60,8 +60,6 @@ class VkRenderer final : public EventListener
     std::shared_ptr<Core::Renderer::VkMesh> mSkeletonMesh = nullptr;
     unsigned int mSkeletonLineIndexCount = 0;
 
-    bool mModelUploadRequired = true;
-
     std::shared_ptr<Core::Renderer::Mesh> mMesh = nullptr;;
 
     glm::mat4 mRotYMat = glm::mat4(1.0f);

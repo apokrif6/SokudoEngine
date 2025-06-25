@@ -25,27 +25,26 @@ class AnimatorSingleton
 
     void update(const Renderer::VkRenderData& renderData, Renderer::Mesh* mesh);
 
-    void updateBonesTransform(Renderer::Mesh* mesh);
-
-    void readNodeHierarchy(Renderer::Mesh* mesh, const aiNode* node, const glm::mat4& parentTransform,
-                           const aiAnimation* animation, float animationTime);
-
     // TODO
-    // dude refactor this shit ( ｡ •̀ ᴖ •́ ｡)
-    std::map<std::string, std::shared_ptr<Assimp::Importer>> importers;
+    // should be refactored when Scene system will be written. should be stored per mesh
+    std::vector<std::string> loadedAnimations{};
+
   private:
     AnimatorSingleton() = default;
     ~AnimatorSingleton() = default;
 
-    const aiNodeAnim* findAnimationNode(const aiAnimation* animation, const std::string& nodeName);
+    void updateBonesTransform(Renderer::Mesh* mesh, int animationToPlayIndex);
 
-    glm::vec3 interpolatePosition(const aiNodeAnim* nodeAnim, float animationTime);
+    glm::vec3 interpolatePositionClip(const std::vector<KeyframeVec3>& keyframes, float animationTime);
 
-    glm::quat interpolateRotation(const aiNodeAnim* nodeAnim, float animationTime);
+    glm::quat interpolateRotationClip(const std::vector<KeyframeQuat>& keyframes, float animationTime);
 
-    glm::vec3 interpolateScaling(const aiNodeAnim* nodeAnim, float animationTime);
+    glm::vec3 interpolateScaleClip(const std::vector<KeyframeVec3>& keyframes, float animationTime);
 
-    glm::mat4 mGlobalInverseTransform;
+    // TODO
+    // should be refactored via creating custom structs for nodes to not store aiNode* pointers
+    void readNodeHierarchyClip(const AnimationClip& clip, float animationTime, const BoneNode& node,
+                               const glm::mat4& parentTransform, BonesInfo& bonesInfo, const Skeleton& skeleton);
 
     float mAnimationTime = 0.f;
 };

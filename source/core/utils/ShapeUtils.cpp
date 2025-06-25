@@ -211,11 +211,11 @@ void processNode(Core::Utils::MeshData& meshData, aiNode* node, const aiScene* s
 Core::Utils::MeshData Core::Utils::loadMeshFromFile(const std::string& fileName,
                                                     Core::Renderer::VkRenderData& renderData)
 {
-    std::shared_ptr<Assimp::Importer> importer = std::make_shared<Assimp::Importer>();
-    importer->ReadFile(fileName, aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_JoinIdenticalVertices |
+    Assimp::Importer importer{};
+    importer.ReadFile(fileName, aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_JoinIdenticalVertices |
                                      aiProcess_TransformUVCoords | aiProcess_GlobalScale);
 
-    const aiScene* scene = importer->GetScene();
+    const aiScene* scene = importer.GetScene();
 
     if (!scene || !scene->mRootNode || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE)
     {
@@ -225,7 +225,7 @@ Core::Utils::MeshData Core::Utils::loadMeshFromFile(const std::string& fileName,
 
     Core::Utils::MeshData mesh;
     std::vector<Core::Renderer::VkTextureData> loadedTextures;
-    mesh.importer = importer;
     processNode(mesh, scene->mRootNode, scene, glm::mat4(1.0f), renderData, loadedTextures);
+    mesh.skeleton.rootNode = Core::Animations::AnimationsUtils::buildBoneHierarchy(scene->mRootNode);
     return mesh;
 }

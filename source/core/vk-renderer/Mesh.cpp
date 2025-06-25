@@ -22,7 +22,10 @@ void Core::Renderer::Mesh::updateData(Core::Renderer::VkRenderData& renderData)
 
 void Core::Renderer::Mesh::draw(Core::Renderer::VkRenderData& renderData)
 {
-    Animations::AnimatorSingleton::getInstance().update(renderData, this);
+    if (renderData.shouldPlayAnimation)
+    {
+        Animations::AnimatorSingleton::getInstance().update(renderData, this);
+    }
 
     for (auto& primitive : mPrimitives)
     {

@@ -20,7 +20,7 @@
 #include "core/vk-renderer/pipelines/MeshPipeline.h"
 #include "core/vk-renderer/pipelines/layouts/MeshPipelineLayout.h"
 #include "core/animations/AnimatorSingleton.h"
-
+#include "core/animations/AnimationsUtils.h"
 #include <core/events/input-events/MouseLockEvent.h>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -924,8 +924,15 @@ bool Core::Renderer::VkRenderer::initUserInterface()
 
 bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
 {
-    const std::string modelFileName = "assets/mixamo/FemaleHipHopDancing.fbx";
+    const std::string modelFileName = "assets/mixamo/models/FemaleModel.fbx";
     Core::Utils::MeshData primitiveMeshData = Core::Utils::loadMeshFromFile(modelFileName, mRenderData);
+    primitiveMeshData.animations = {
+        Core::Animations::AnimationsUtils::loadAnimationFromFile("assets/mixamo/animations/StandingIdleAnimation.fbx"),
+        Core::Animations::AnimationsUtils::loadAnimationFromFile("assets/mixamo/animations/AngryAnimation.fbx"),
+        Core::Animations::AnimationsUtils::loadAnimationFromFile("assets/mixamo/animations/BoxingAnimation.fbx"),
+        Core::Animations::AnimationsUtils::loadAnimationFromFile("assets/mixamo/animations/HipHopDancingAnimation.fbx"),
+        Core::Animations::AnimationsUtils::loadAnimationFromFile("assets/mixamo/animations/StandingReactDeathBackwardAnimation.fbx")
+    };
     if (!Core::Renderer::MeshPipelineLayout::init(mRenderData, mRenderData.rdMeshPipelineLayout))
     {
         Logger::log(1, "%s error: could not init mesh pipeline layout\n", __FUNCTION__);
@@ -942,8 +949,8 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
     }
 
     const std::string meshName = "TestMesh";
-    mMesh = std::make_shared<Core::Renderer::Mesh>(meshName);
-    Core::Animations::AnimatorSingleton::getInstance().importers[meshName] = primitiveMeshData.importer;
+    mMesh = std::make_shared<Core::Renderer::Mesh>(meshName, primitiveMeshData.skeleton);
+    mMesh->setupAnimations(primitiveMeshData.animations);
 
     for (auto& primitive : primitiveMeshData.primitives)
     {
