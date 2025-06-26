@@ -29,8 +29,8 @@ void Core::Animations::AnimatorSingleton::updateBonesTransform(Renderer::Mesh* m
 
         const Core::Animations::Skeleton& skeleton = mesh->getSkeleton();
 
-        readNodeHierarchyClip(animation, timeInTicks, skeleton.rootNode, glm::mat4(1.0f),
-                              bonesInfo, skeleton);
+        readNodeHierarchyClip(animation, timeInTicks, skeleton.rootNode,
+                              glm::mat4(1.0f),bonesInfo, skeleton);
 
         for (size_t i = 0; i < bonesInfoSize; ++i)
         {
@@ -110,7 +110,6 @@ void Core::Animations::AnimatorSingleton::readNodeHierarchyClip(const AnimationC
 {
     std::string nodeName = node.name;
     glm::mat4 nodeTransform = node.localTransform;
-    //glm::mat4 nodeTransform = Core::Animations::AnimationsUtils::convertMatrixToGlm(node->mTransformation);
 
     const AnimationChannel* channel = findChannel(clip, nodeName);
     if (channel)

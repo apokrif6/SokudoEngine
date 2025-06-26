@@ -134,19 +134,18 @@ void Core::Renderer::UserInterface::createFrame(VkRenderData& renderData)
         {
             // TODO
             // animation timeline slider should be implemented
-
             ImGui::Checkbox("Should play animation", &renderData.shouldPlayAnimation);
 
-            if (ImGui::BeginListBox("Loaded animations"))
+            std::vector<std::string>& loadedAnimations =
+                Core::Animations::AnimatorSingleton::getInstance().loadedAnimations;
+            if (ImGui::BeginCombo("##Loaded animations",
+                                  loadedAnimations[renderData.selectedAnimationIndexToPlay].c_str(),
+                                  ImGuiComboFlags_WidthFitPreview))
             {
-                for (int i = 0; i < Core::Animations::AnimatorSingleton::getInstance().loadedAnimations.size(); ++i)
+                for (int i = 0; i < loadedAnimations.size(); ++i)
                 {
-                    std::string fullPath = Core::Animations::AnimatorSingleton::getInstance().loadedAnimations[i];
-                    size_t lastSlash = fullPath.find_last_of("/\\");
-                    std::string shortAnimationName = (lastSlash != std::string::npos) ? fullPath.substr(lastSlash + 1) : fullPath;
-
                     const bool isAnimationToPlaySelected = (renderData.selectedAnimationIndexToPlay == i);
-                    if (ImGui::Selectable(shortAnimationName.c_str(),isAnimationToPlaySelected))
+                    if (ImGui::Selectable(loadedAnimations[i].c_str(), isAnimationToPlaySelected))
                     {
                         renderData.selectedAnimationIndexToPlay = i;
                     }
@@ -157,7 +156,7 @@ void Core::Renderer::UserInterface::createFrame(VkRenderData& renderData)
                     }
                 }
 
-                ImGui::EndListBox();
+                ImGui::EndCombo();
             }
 
             ImGui::EndTabItem();
