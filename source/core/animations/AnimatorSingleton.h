@@ -41,8 +41,6 @@ class AnimatorSingleton
 
     glm::vec3 interpolateScaleClip(const std::vector<KeyframeVec3>& keyframes, float animationTime);
 
-    // TODO
-    // should be refactored via creating custom structs for nodes to not store aiNode* pointers
     void readNodeHierarchyClip(const AnimationClip& clip, float animationTime, const BoneNode& node,
                                const glm::mat4& parentTransform, BonesInfo& bonesInfo, const Skeleton& skeleton);
 

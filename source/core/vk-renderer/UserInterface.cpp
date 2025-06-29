@@ -135,6 +135,7 @@ void Core::Renderer::UserInterface::createFrame(VkRenderData& renderData)
             // TODO
             // animation timeline slider should be implemented
             ImGui::Checkbox("Should play animation", &renderData.shouldPlayAnimation);
+            ImGui::Checkbox("Should draw debug skeleton", &renderData.shouldDrawDebugSkeleton);
 
             std::vector<std::string>& loadedAnimations =
                 Core::Animations::AnimatorSingleton::getInstance().loadedAnimations;

@@ -4,13 +4,14 @@
 #include <vector>
 #include <memory>
 #include "Primitive.h"
+#include "core/vk-renderer/debug/Skeleton.h"
 
 namespace Core::Renderer
 {
 class Mesh
 {
   public:
-    explicit Mesh(std::string name, const Animations::Skeleton& skeleton) : mName(std::move(name)), mSkeleton(skeleton) {}
+    explicit Mesh(std::string name, Animations::Skeleton& skeleton) : mName(std::move(name)), mSkeleton(std::move(skeleton)) {}
 
     void addPrimitive(const std::vector<Core::Renderer::NewVertex>& vertexBufferData,
                       const std::vector<uint32_t>& indexBufferData, const VkTextureData& textureData,
@@ -38,17 +39,12 @@ class Mesh
 
     [[nodiscard]] bool hasAnimations() const { return !mAnimations.empty(); }
 
+    void initDebugSkeleton(Core::Renderer::VkRenderData& renderData)
+    {
+        mSkeleton.initDebug(renderData);
+    }
+
   private:
-    // TODO
-    // should this be private?
-    // or there is any optimization to upload only specific buffers instead of all of them in updateData
-    // I don't know (｡•́︿•̀｡)
-    void uploadVertexBuffers(Core::Renderer::VkRenderData& renderData);
-
-    void uploadIndexBuffers(Core::Renderer::VkRenderData& renderData);
-
-    void uploadUniformBuffers(Core::Renderer::VkRenderData& renderData);
-
     std::string mName;
     std::vector<Core::Renderer::Primitive> mPrimitives;
     Core::Animations::Skeleton mSkeleton;

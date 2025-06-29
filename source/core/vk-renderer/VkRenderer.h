@@ -140,6 +140,10 @@ class VkRenderer final : public EventListener
 
     bool loadMeshWithAssimp();
 
+    bool createDebugSkeletonPipelineLayout();
+
+    bool createDebugSkeletonPipeline();
+
 #pragma endregion Renderer
 
 #pragma region HandleGLFWEvents

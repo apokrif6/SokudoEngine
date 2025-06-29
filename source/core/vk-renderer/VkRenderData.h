@@ -2,7 +2,6 @@
 
 #include "vk_mem_alloc.h"
 #include "VkBootstrap.h"
-#include "core/animations/AnimationsData.h"
 #include <glm/glm.hpp>
 #include <GLFW/glfw3.h>
 #include <array>
@@ -158,6 +157,7 @@ struct VkRenderData
     float rdTickDiff = 0.f;
 
     bool shouldPlayAnimation = false;
+    bool shouldDrawDebugSkeleton = false;
     int selectedAnimationIndexToPlay = 0;
 
     VmaAllocator rdAllocator;
@@ -186,15 +186,13 @@ struct VkRenderData
 
     VkRenderPass rdRenderpass = VK_NULL_HANDLE;
     VkPipelineLayout rdPipelineLayout = VK_NULL_HANDLE;
-    VkPipelineLayout rdGltfPipelineLayout = VK_NULL_HANDLE;
     VkPipelineLayout rdMeshPipelineLayout = VK_NULL_HANDLE;
+    VkPipelineLayout rdDebugSkeletonPipelineLayout = VK_NULL_HANDLE;
     VkPipeline rdBasicPipeline = VK_NULL_HANDLE;
     VkPipeline rdLinePipeline = VK_NULL_HANDLE;
     VkPipeline rdGridPipeline = VK_NULL_HANDLE;
-    VkPipeline rdGltfPipeline = VK_NULL_HANDLE;
-    VkPipeline rdGltfGPUPipeline = VK_NULL_HANDLE;
-    VkPipeline rdGltfSkeletonPipeline = VK_NULL_HANDLE;
     VkPipeline rdMeshPipeline = VK_NULL_HANDLE;
+    VkPipeline rdDebugSkeletonPipeline = VK_NULL_HANDLE;
 
     VkCommandPool rdCommandPool = VK_NULL_HANDLE;
     VkCommandBuffer rdCommandBuffer = VK_NULL_HANDLE;

@@ -3,6 +3,7 @@
 #include "core/tools/Logger.h"
 #include "glm/glm.hpp"
 #include "glm/detail/type_quat.hpp"
+#include "core/vk-renderer/debug/Skeleton.h"
 #include <vector>
 #include <map>
 #include <string>
@@ -10,7 +11,6 @@
 #include <unordered_map>
 
 #define MAX_NUM_BONES_PER_VERTEX 4
-#define ARRAY_SIZE_IN_ELEMENTS(a) (sizeof(a) / sizeof(a[0]))
 
 namespace Core::Animations
 {
@@ -20,29 +20,16 @@ struct VertexBoneData
     float weights[MAX_NUM_BONES_PER_VERTEX] = {0.f};
 
     VertexBoneData() = default;
-
-    void AddBoneData(unsigned int boneID, float weight)
-    {
-        for (unsigned int i = 0; i < ARRAY_SIZE_IN_ELEMENTS(boneIDs); i++)
-        {
-            if (weights[i] == 0.f)
-            {
-                boneIDs[i] = boneID;
-                weights[i] = weight;
-                Logger::log(1, "%s: bone %d weight %f index %i\n", __FUNCTION__, boneID, weight, i);
-                return;
-            }
-        }
-    }
 };
 
 struct Bone
 {
     glm::mat4 offset{};
+    glm::mat4 animatedGlobalTransform{};
     glm::mat4 finalTransform{};
 
     Bone() = default;
-    explicit Bone(const glm::mat4& inOffset) : offset(inOffset), finalTransform(glm::mat4(0.0)) {}
+    explicit Bone(const glm::mat4& inOffset) : offset(inOffset), animatedGlobalTransform(glm::mat4(0.0)), finalTransform(glm::mat4(0.0)) {}
 };
 
 struct BonesInfo
@@ -89,8 +76,4 @@ struct BoneNode {
     glm::mat4 localTransform;
     std::vector<BoneNode> children;
 };
-
-struct Skeleton {
-    BoneNode rootNode;
-};
-} // namespace Core::Animations
+}

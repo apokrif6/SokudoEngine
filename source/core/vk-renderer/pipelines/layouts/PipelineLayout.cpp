@@ -21,6 +21,7 @@ bool Core::Renderer::PipelineLayout::init(Core::Renderer::VkRenderData& renderDa
         Logger::log(1, "%s error: could not create pipeline layout\n", __FUNCTION__);
         return false;
     }
+
     return true;
 }
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/vk-renderer/VkRenderData.h"
+#include "core/vk-renderer/debug/DebugRenderer.h"
 
 namespace Core::Renderer
 {
@@ -18,6 +19,10 @@ class VertexBuffer
 
     static bool uploadData(Core::Renderer::VkRenderData& renderData, VkVertexBufferData& vertexBufferData,
                            std::vector<Core::Renderer::NewVertex> vertexData);
+
+    static bool uploadData(Core::Renderer::VkRenderData& renderData,
+                           VkVertexBufferData& vertexBufferData,
+                           const std::vector<Core::Renderer::Debug::LineVertex>& vertexData);
 
     static void cleanup(Core::Renderer::VkRenderData& renderData, VkVertexBufferData& vertexBufferData);
 };

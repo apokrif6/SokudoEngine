@@ -29,7 +29,7 @@ void Core::Animations::AnimatorSingleton::updateBonesTransform(Renderer::Mesh* m
 
         const Core::Animations::Skeleton& skeleton = mesh->getSkeleton();
 
-        readNodeHierarchyClip(animation, timeInTicks, skeleton.rootNode,
+        readNodeHierarchyClip(animation, timeInTicks, skeleton.getRootNode(),
                               glm::mat4(1.0f),bonesInfo, skeleton);
 
         for (size_t i = 0; i < bonesInfoSize; ++i)
@@ -127,7 +127,7 @@ void Core::Animations::AnimatorSingleton::readNodeHierarchyClip(const AnimationC
     }
     else
     {
-       nodeTransform = glm::mat4(1.f);
+        nodeTransform = glm::mat4(1.f);
     }
 
     glm::mat4 globalTransform = parentTransform * nodeTransform;
@@ -135,6 +135,7 @@ void Core::Animations::AnimatorSingleton::readNodeHierarchyClip(const AnimationC
     if (bonesInfo.boneNameToIndexMap.contains(nodeName))
     {
         int boneIndex = bonesInfo.boneNameToIndexMap[nodeName];
+        bonesInfo.bones[boneIndex].animatedGlobalTransform = globalTransform;
         bonesInfo.bones[boneIndex].finalTransform = globalTransform * bonesInfo.bones[boneIndex].offset;
     }
 

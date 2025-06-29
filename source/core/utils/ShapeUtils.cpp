@@ -226,6 +226,6 @@ Core::Utils::MeshData Core::Utils::loadMeshFromFile(const std::string& fileName,
     Core::Utils::MeshData mesh;
     std::vector<Core::Renderer::VkTextureData> loadedTextures;
     processNode(mesh, scene->mRootNode, scene, glm::mat4(1.0f), renderData, loadedTextures);
-    mesh.skeleton.rootNode = Core::Animations::AnimationsUtils::buildBoneHierarchy(scene->mRootNode);
+    mesh.skeleton.setRootNode(Core::Animations::AnimationsUtils::buildBoneHierarchy(scene->mRootNode));
     return mesh;
 }

@@ -23,6 +23,8 @@
 #include "core/animations/AnimationsUtils.h"
 #include <core/events/input-events/MouseLockEvent.h>
 #include <glm/gtc/matrix_transform.hpp>
+#include "core/vk-renderer/pipelines/DebugSkeletonPipeline.h"
+#include "core/vk-renderer/pipelines/layouts/DebugSkeletonPipelineLayout.h"
 
 bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned int height)
 {
@@ -542,11 +544,13 @@ void Core::Renderer::VkRenderer::cleanup()
     Core::Renderer::CommandPool::cleanup(mRenderData);
     Core::Renderer::Framebuffer::cleanup(mRenderData);
     Core::Renderer::MeshPipeline::cleanup(mRenderData, mRenderData.rdMeshPipeline);
+    Core::Renderer::DebugSkeletonPipeline::cleanup(mRenderData, mRenderData.rdDebugSkeletonPipeline);
     Core::Renderer::Pipeline::cleanup(mRenderData, mRenderData.rdGridPipeline);
     Core::Renderer::Pipeline::cleanup(mRenderData, mRenderData.rdLinePipeline);
     Core::Renderer::Pipeline::cleanup(mRenderData, mRenderData.rdBasicPipeline);
     Core::Renderer::PipelineLayout::cleanup(mRenderData, mRenderData.rdPipelineLayout);
     Core::Renderer::MeshPipelineLayout::cleanup(mRenderData, mRenderData.rdMeshPipelineLayout);
+    Core::Renderer::DebugSkeletonPipelineLayout::cleanup(mRenderData, mRenderData.rdDebugSkeletonPipelineLayout);
     Core::Renderer::Renderpass::cleanup(mRenderData);
     Core::Renderer::UniformBuffer::cleanup(mRenderData, mRenderData.rdPerspectiveViewMatrixUBO);
     Core::Renderer::VertexBuffer::cleanup(mRenderData, mRenderData.rdVertexBufferData);
@@ -948,9 +952,13 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
         return false;
     }
 
+    createDebugSkeletonPipelineLayout();
+    createDebugSkeletonPipeline();
+
     const std::string meshName = "TestMesh";
     mMesh = std::make_shared<Core::Renderer::Mesh>(meshName, primitiveMeshData.skeleton);
     mMesh->setupAnimations(primitiveMeshData.animations);
+    mMesh->initDebugSkeleton(mRenderData);
 
     for (auto& primitive : primitiveMeshData.primitives)
     {
@@ -965,6 +973,31 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
         }
         mMesh->addPrimitive(primitive.vertices, primitive.indices, primitiveTexture, mRenderData, primitive.material,
                             primitive.bones);
+    }
+
+    return true;
+}
+
+bool Core::Renderer::VkRenderer::createDebugSkeletonPipelineLayout()
+{
+    if (!Core::Renderer::DebugSkeletonPipelineLayout::init(mRenderData, mRenderData.rdDebugSkeletonPipelineLayout))
+    {
+        Logger::log(1, "%s error: could not init debug skeleton pipeline layout\n", __FUNCTION__);
+        return false;
+    }
+
+    return true;
+}
+
+bool Core::Renderer::VkRenderer::createDebugSkeletonPipeline()
+{
+    const std::string vertexShaderFile = "shaders/debug_line.vert.spv";
+    const std::string fragmentShaderFile = "shaders/debug_line.frag.spv";
+    if (!DebugSkeletonPipeline::init(mRenderData, mRenderData.rdDebugSkeletonPipelineLayout, mRenderData.rdDebugSkeletonPipeline,
+                                     VK_PRIMITIVE_TOPOLOGY_LINE_LIST, vertexShaderFile, fragmentShaderFile))
+    {
+        Logger::log(1, "%s error: could not init debug skeleton shader pipeline\n", __FUNCTION__);
+        return false;
     }
 
     return true;

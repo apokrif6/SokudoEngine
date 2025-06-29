@@ -144,7 +144,54 @@ bool Core::Renderer::VertexBuffer::uploadData(Core::Renderer::VkRenderData& rend
 {
     unsigned int vertexDataSize = vertexData.size() * sizeof(NewVertex);
 
-    // unsigned int vertexDataSize = vertexData.size() * sizeof(glm::vec3);
+    /* buffer too small, resize */
+    if (vertexBufferData.rdVertexBufferSize < vertexDataSize)
+    {
+        cleanup(renderData, vertexBufferData);
+
+        if (!init(renderData, vertexBufferData, vertexDataSize))
+        {
+            Logger::log(1, "%s error: could not create vertex buffer of size %i bytes\n", __FUNCTION__, vertexDataSize);
+            return false;
+        }
+        Logger::log(1, "%s: vertex buffer resize to %i bytes\n", __FUNCTION__, vertexDataSize);
+        vertexBufferData.rdVertexBufferSize = vertexDataSize;
+    }
+
+    /* copy data to staging buffer*/
+    void* data;
+    vmaMapMemory(renderData.rdAllocator, vertexBufferData.rdStagingBufferAlloc, &data);
+    std::memcpy(data, vertexData.data(), vertexDataSize);
+    vmaUnmapMemory(renderData.rdAllocator, vertexBufferData.rdStagingBufferAlloc);
+
+    VkBufferMemoryBarrier vertexBufferBarrier{};
+    vertexBufferBarrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+    vertexBufferBarrier.srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
+    vertexBufferBarrier.dstAccessMask = VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT;
+    vertexBufferBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    vertexBufferBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    vertexBufferBarrier.buffer = vertexBufferData.rdStagingBuffer;
+    vertexBufferBarrier.offset = 0;
+    vertexBufferBarrier.size = vertexBufferData.rdVertexBufferSize;
+
+    VkBufferCopy stagingBufferCopy{};
+    stagingBufferCopy.srcOffset = 0;
+    stagingBufferCopy.dstOffset = 0;
+    stagingBufferCopy.size = vertexDataSize;
+
+    vkCmdCopyBuffer(renderData.rdCommandBuffer, vertexBufferData.rdStagingBuffer, vertexBufferData.rdVertexBuffer, 1,
+                    &stagingBufferCopy);
+    vkCmdPipelineBarrier(renderData.rdCommandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_VERTEX_INPUT_BIT,
+                         0, 0, nullptr, 1, &vertexBufferBarrier, 0, nullptr);
+
+    return true;
+}
+
+bool Core::Renderer::VertexBuffer::uploadData(Core::Renderer::VkRenderData& renderData,
+                                              Core::Renderer::VkVertexBufferData& vertexBufferData,
+                                              const std::vector<Core::Renderer::Debug::LineVertex>& vertexData)
+{
+    unsigned int vertexDataSize = vertexData.size() * sizeof(Core::Renderer::Debug::LineVertex);
 
     /* buffer too small, resize */
     if (vertexBufferData.rdVertexBufferSize < vertexDataSize)

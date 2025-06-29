@@ -8,6 +8,7 @@
 #include "core/animations/AnimationsData.h"
 #include "assimp/Importer.hpp"
 #include "assimp/material.h"
+#include "core/animations/Skeleton.h"
 
 namespace Core::Utils
 {
