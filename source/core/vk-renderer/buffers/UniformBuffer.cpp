@@ -92,6 +92,14 @@ bool Core::Renderer::UniformBuffer::init(Core::Renderer::VkRenderData& renderDat
     return true;
 }
 
+void Core::Renderer::UniformBuffer::uploadData(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData, const glm::mat4& matrix)
+{
+    void* data;
+    vmaMapMemory(renderData.rdAllocator, UBOData.rdUniformBufferAlloc, &data);
+    std::memcpy(data, &matrix, UBOData.rdUniformBufferSize);
+    vmaUnmapMemory(renderData.rdAllocator, UBOData.rdUniformBufferAlloc);
+}
+
 void Core::Renderer::UniformBuffer::uploadData(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData,
                                                std::vector<glm::mat4> matrices)
 {

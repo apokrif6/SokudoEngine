@@ -14,6 +14,7 @@
 #include "core/model/GridModel.h"
 #include "Primitive.h"
 #include "Mesh.h"
+#include "core/scene/Scene.h"
 #include <glm/detail/type_quat.hpp>
 
 namespace Core::Renderer
@@ -60,7 +61,7 @@ class VkRenderer final : public EventListener
     std::shared_ptr<Core::Renderer::VkMesh> mSkeletonMesh = nullptr;
     unsigned int mSkeletonLineIndexCount = 0;
 
-    std::shared_ptr<Core::Renderer::Mesh> mMesh = nullptr;;
+    std::unique_ptr<Core::Scene::Scene> mScene = std::make_unique<Core::Scene::Scene>();
 
     glm::mat4 mRotYMat = glm::mat4(1.0f);
     glm::mat4 mRotZMat = glm::mat4(1.0f);

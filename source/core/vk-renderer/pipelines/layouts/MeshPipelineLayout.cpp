@@ -76,9 +76,29 @@ bool Core::Renderer::MeshPipelineLayout::init(Core::Renderer::VkRenderData& rend
         return false;
     }
 
+    VkDescriptorSetLayoutBinding modelBinding{};
+    modelBinding.binding = 0;
+    modelBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    modelBinding.descriptorCount = 1;
+    modelBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    VkDescriptorSetLayoutCreateInfo modelLayoutInfo{};
+    modelLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    modelLayoutInfo.bindingCount = 1;
+    modelLayoutInfo.pBindings = &modelBinding;
+
+    if (vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &modelLayoutInfo, nullptr,
+                                    &renderData.rdMeshModelDescriptorLayout) != VK_SUCCESS)
+    {
+        Logger::log(1, "%s error: failed to create model descriptor layout\n", __FUNCTION__);
+        return false;
+    }
+
     VkDescriptorSetLayout layouts[] = {
         renderData.rdMeshTextureDescriptorLayout, renderData.rdMeshViewMatrixDescriptorLayout,
-        renderData.rdMeshMaterialDescriptorLayout, renderData.rdMeshBonesTransformDescriptorLayout};
+        renderData.rdMeshMaterialDescriptorLayout, renderData.rdMeshBonesTransformDescriptorLayout,
+        renderData.rdMeshModelDescriptorLayout
+    };
 
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -102,5 +122,6 @@ void Core::Renderer::MeshPipelineLayout::cleanup(Core::Renderer::VkRenderData& r
     vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdMeshViewMatrixDescriptorLayout, nullptr);
     vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdMeshMaterialDescriptorLayout, nullptr);
     vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdMeshBonesTransformDescriptorLayout, nullptr);
+    vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdMeshModelDescriptorLayout, nullptr);
     vkDestroyPipelineLayout(renderData.rdVkbDevice.device, pipelineLayout, nullptr);
 }

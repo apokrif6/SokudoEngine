@@ -12,6 +12,9 @@ class UniformBuffer
     static bool init(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData, size_t bufferSize);
 
     static void uploadData(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData,
+                           const glm::mat4& matrix);
+
+    static void uploadData(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData,
                            std::vector<glm::mat4> matrices);
 
     static void uploadData(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData,

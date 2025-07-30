@@ -18,7 +18,7 @@ class Primitive
 
     void uploadIndexBuffer(Renderer::VkRenderData& renderData);
 
-    void uploadUniformBuffer(Renderer::VkRenderData& renderData);
+    void uploadUniformBuffer(Renderer::VkRenderData& renderData, const glm::mat4& modelMatrix);
 
     void draw(const Renderer::VkRenderData& renderData);
 
@@ -35,6 +35,8 @@ class Primitive
 
     void createBonesTransformBuffer(Renderer::VkRenderData& renderData);
 
+    void createModelMatrixBuffer(Renderer::VkRenderData& renderData);
+
     Renderer::VkPrimitiveRenderData primitiveRenderData;
 
     std::vector<Renderer::NewVertex> mVertexBufferData;
@@ -46,5 +48,7 @@ class Primitive
 
     Renderer::VkUniformBufferData mBonesTransformUBO{};
     Animations::BonesInfo mBonesInfo{};
+
+    Core::Renderer::VkUniformBufferData mModelUBO{};
 };
 } // namespace Core::Renderer

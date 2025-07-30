@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/scene/SceneObject.h"
 #include <utility>
 #include <vector>
 #include <memory>
@@ -8,25 +9,23 @@
 
 namespace Core::Renderer
 {
-class Mesh
+class Mesh : public Core::Scene::SceneObject
 {
   public:
-    explicit Mesh(std::string name, Animations::Skeleton& skeleton) : mName(std::move(name)), mSkeleton(std::move(skeleton)) {}
+    explicit Mesh(std::string name, Animations::Skeleton& skeleton) : Core::Scene::SceneObject(std::move(name)), mSkeleton(std::move(skeleton)) {}
 
     void addPrimitive(const std::vector<Core::Renderer::NewVertex>& vertexBufferData,
                       const std::vector<uint32_t>& indexBufferData, const VkTextureData& textureData,
                       VkRenderData& renderData, const MaterialInfo& materialInfo,
                       const Animations::BonesInfo& bonesInfo);
 
-    void updateData(Core::Renderer::VkRenderData& renderData);
+    void update(Core::Renderer::VkRenderData& renderData) override;
 
-    void draw(Core::Renderer::VkRenderData& renderData);
+    void draw(Core::Renderer::VkRenderData& renderData) override;
 
-    void cleanup(Core::Renderer::VkRenderData& renderData);
+    void cleanup(Core::Renderer::VkRenderData& renderData) override;
 
     [[nodiscard]] std::vector<Core::Renderer::Primitive>& getPrimitives() { return mPrimitives; }
-
-    [[nodiscard]] std::string getMeshName() const { return mName; }
 
     [[nodiscard]] Animations::Skeleton& getSkeleton() { return mSkeleton; }
 
@@ -45,7 +44,6 @@ class Mesh
     }
 
   private:
-    std::string mName;
     std::vector<Core::Renderer::Primitive> mPrimitives;
     Core::Animations::Skeleton mSkeleton;
     std::vector<Core::Animations::AnimationClip> mAnimations;

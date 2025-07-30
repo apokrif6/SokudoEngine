@@ -23,6 +23,10 @@ layout (set = 3, binding = 0) uniform Bones {
     mat4 bones[MAX_BONES];
 };
 
+layout (set = 4, binding = 0) uniform Model {
+    mat4 model;
+};
+
 void main() {
     mat4 boneTransform = mat4(1.0f);
 
@@ -33,7 +37,7 @@ void main() {
 
     vec4 animPos = boneTransform * vec4(aPos, 1.0);
 
-    gl_Position = projection * view * animPos;
+    gl_Position = projection * view * model * animPos;
 
     normal = aNormal;
     textCoord = aUV;

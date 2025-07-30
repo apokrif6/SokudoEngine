@@ -16,6 +16,7 @@ Core::Renderer::Primitive::Primitive(const std::vector<Core::Renderer::NewVertex
     createIndexBuffer(renderData);
     createMaterialBuffer(renderData);
     createBonesTransformBuffer(renderData);
+    createModelMatrixBuffer(renderData);
 }
 
 void Core::Renderer::Primitive::createVertexBuffer(Core::Renderer::VkRenderData& renderData)
@@ -43,6 +44,11 @@ void Core::Renderer::Primitive::createBonesTransformBuffer(Core::Renderer::VkRen
                                         mBonesInfo.finalTransforms.size() * sizeof(glm::mat4));
 }
 
+void Core::Renderer::Primitive::createModelMatrixBuffer(Core::Renderer::VkRenderData& renderData)
+{
+    Core::Renderer::UniformBuffer::init(renderData, mModelUBO, sizeof(glm::mat4));
+}
+
 void Core::Renderer::Primitive::uploadVertexBuffer(Core::Renderer::VkRenderData& renderData)
 {
     Core::Renderer::VertexBuffer::uploadData(renderData, primitiveRenderData.rdModelVertexBufferData,
@@ -54,9 +60,11 @@ void Core::Renderer::Primitive::uploadIndexBuffer(Core::Renderer::VkRenderData& 
     Core::Renderer::IndexBuffer::uploadData(renderData, primitiveRenderData.rdModelIndexBufferData, mIndexBufferData);
 }
 
-void Core::Renderer::Primitive::uploadUniformBuffer(Core::Renderer::VkRenderData& renderData)
+void Core::Renderer::Primitive::uploadUniformBuffer(Core::Renderer::VkRenderData& renderData, const glm::mat4& modelMatrix)
 {
     Core::Renderer::UniformBuffer::uploadData(renderData, mBonesTransformUBO, mBonesInfo.finalTransforms);
+
+    Core::Renderer::UniformBuffer::uploadData(renderData, mModelUBO, modelMatrix);
 }
 
 void Core::Renderer::Primitive::draw(const Core::Renderer::VkRenderData& renderData)
@@ -85,6 +93,9 @@ void Core::Renderer::Primitive::draw(const Core::Renderer::VkRenderData& renderD
     vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                             renderData.rdMeshPipelineLayout, 3, 1, &mBonesTransformUBO.rdUBODescriptorSet, 0, nullptr);
 
+    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                            renderData.rdMeshPipelineLayout, 4, 1, &mModelUBO.rdUBODescriptorSet, 0, nullptr);
+
     VkDeviceSize offsets[1] = {0};
     vkCmdBindVertexBuffers(renderData.rdCommandBuffer, 0, 1,
                            &primitiveRenderData.rdModelVertexBufferData.rdVertexBuffer, offsets);
@@ -105,4 +116,9 @@ void Core::Renderer::Primitive::cleanup(Core::Renderer::VkRenderData& renderData
     Core::Renderer::IndexBuffer::cleanup(renderData, primitiveRenderData.rdModelIndexBufferData);
 
     Core::Renderer::Texture::cleanup(renderData, mTextureData);
+
+    //???
+    //Core::Renderer::UniformBuffer::cleanup(renderData, mModelUBO);
+    //Core::Renderer::UniformBuffer::cleanup(renderData, mBonesTransformUBO);
+    //Core::Renderer::UniformBuffer::cleanup(renderData, mMaterialUBO);
 }

@@ -43,13 +43,13 @@ void Core::Renderer::Mesh::addPrimitive(const std::vector<Core::Renderer::NewVer
     mPrimitives.emplace_back(vertexBufferData, indexBufferData, textureData, materialInfo, bonesInfo, renderData);
 }
 
-void Core::Renderer::Mesh::updateData(Core::Renderer::VkRenderData& renderData)
+void Core::Renderer::Mesh::update(Core::Renderer::VkRenderData& renderData)
 {
     for (auto& primitive : mPrimitives)
     {
         primitive.uploadVertexBuffer(renderData);
         primitive.uploadIndexBuffer(renderData);
-        primitive.uploadUniformBuffer(renderData);
+        primitive.uploadUniformBuffer(renderData, getTransform().getMatrix());
 
         if (renderData.shouldDrawDebugSkeleton)
         {

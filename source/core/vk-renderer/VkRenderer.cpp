@@ -25,6 +25,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "core/vk-renderer/pipelines/DebugSkeletonPipeline.h"
 #include "core/vk-renderer/pipelines/layouts/DebugSkeletonPipelineLayout.h"
+#include "core/scene/Scene.h"
 
 bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned int height)
 {
@@ -419,7 +420,7 @@ bool Core::Renderer::VkRenderer::draw()
 
     Core::Renderer::VertexBuffer::uploadData(mRenderData, mRenderData.rdVertexBufferData, *mAllMeshes);
 
-    mMesh->updateData(mRenderData);
+    mScene->update(mRenderData);
 
     mRenderData.rdUploadToVBOTime = mUploadToVBOTimer.stop();
 
@@ -456,7 +457,7 @@ bool Core::Renderer::VkRenderer::draw()
     // TODO
     // Implement RenderQueue
     // map with objects which should be rendered
-    mMesh->draw(mRenderData);
+    mScene->draw(mRenderData);
 
     mUIGenerateTimer.start();
     mUserInterface.createFrame(mRenderData);
@@ -535,7 +536,7 @@ void Core::Renderer::VkRenderer::cleanup()
 {
     vkDeviceWaitIdle(mRenderData.rdVkbDevice.device);
 
-    mMesh->cleanup(mRenderData);
+    mScene->cleanup(mRenderData);
 
     mUserInterface.cleanup(mRenderData);
 
@@ -955,10 +956,18 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
     createDebugSkeletonPipelineLayout();
     createDebugSkeletonPipeline();
 
-    const std::string meshName = "TestMesh";
-    mMesh = std::make_shared<Core::Renderer::Mesh>(meshName, primitiveMeshData.skeleton);
-    mMesh->setupAnimations(primitiveMeshData.animations);
-    mMesh->initDebugSkeleton(mRenderData);
+    auto testMeshOne = std::make_shared<Mesh>("TestMesh_1", primitiveMeshData.skeleton);
+    testMeshOne->setupAnimations(primitiveMeshData.animations);
+    testMeshOne->initDebugSkeleton(mRenderData);
+    testMeshOne->getTransform().position = {1, 0, 0};
+
+    auto testMeshTwo = std::make_shared<Mesh>("TestMesh_2", primitiveMeshData.skeleton);
+    testMeshTwo->setupAnimations(primitiveMeshData.animations);
+    testMeshTwo->initDebugSkeleton(mRenderData);
+    testMeshTwo->getTransform().position = {-1, 0, 0};
+
+    mScene->addObject(testMeshOne);
+    mScene->addObject(testMeshTwo);
 
     for (auto& primitive : primitiveMeshData.primitives)
     {
@@ -971,8 +980,10 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
         {
             primitiveTexture = foundDiffuseTexture->second;
         }
-        mMesh->addPrimitive(primitive.vertices, primitive.indices, primitiveTexture, mRenderData, primitive.material,
+        testMeshOne->addPrimitive(primitive.vertices, primitive.indices, primitiveTexture, mRenderData, primitive.material,
                             primitive.bones);
+        testMeshTwo->addPrimitive(primitive.vertices, primitive.indices, primitiveTexture, mRenderData, primitive.material,
+                                  primitive.bones);
     }
 
     return true;
