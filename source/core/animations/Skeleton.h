@@ -24,6 +24,6 @@ class Skeleton
   private:
     BoneNode rootNode;
 
-    std::unique_ptr<Core::Renderer::Debug::Skeleton> debugDraw;
+    std::shared_ptr<Core::Renderer::Debug::Skeleton> debugDraw;
 };
 } // namespace Core::Animations
