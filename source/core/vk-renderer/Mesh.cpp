@@ -1,7 +1,7 @@
 #include <functional>
 #include "Mesh.h"
 #include "core/vk-renderer/buffers/UniformBuffer.h"
-#include "core/animations/AnimatorSingleton.h"
+#include "core/engine/Engine.h"
 
 void buildDebugSkeletonLines(const Core::Animations::Skeleton& skeleton,
                              const Core::Animations::BonesInfo& bonesInfo,
@@ -9,7 +9,7 @@ void buildDebugSkeletonLines(const Core::Animations::Skeleton& skeleton,
                              const Core::Animations::BoneNode& node,
                              const glm::mat4& parentTransform)
 {
-    glm::mat4 currentTransform = parentTransform;
+    glm::mat4 currentTransform;
     if (bonesInfo.boneNameToIndexMap.contains(node.name))
     {
         int boneIndex = bonesInfo.boneNameToIndexMap.at(node.name);
@@ -65,7 +65,7 @@ void Core::Renderer::Mesh::draw(Core::Renderer::VkRenderData& renderData)
 {
     if (renderData.shouldPlayAnimation)
     {
-        Animations::AnimatorSingleton::getInstance().update(renderData, this);
+        Core::Engine::getInstance().getSystem<Animations::Animator>()->update(renderData, this);
     }
 
     for (auto& primitive : mPrimitives)

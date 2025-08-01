@@ -32,12 +32,13 @@ class VkRenderer final : public EventListener
 
     void onEvent(const Event& event) override;
 
+    void update(const VkRenderData& renderData, float deltaTime);
+
     bool draw();
 
-    void cleanup();
+    void cleanup(VkRenderData& renderData);
 
   private:
-    Core::Renderer::VkRenderData mRenderData{};
     Core::Renderer::VkPrimitiveRenderData mPrimitiveRenderData{};
 
     Core::Renderer::UserInterface mUserInterface{};
@@ -61,8 +62,6 @@ class VkRenderer final : public EventListener
     std::shared_ptr<Core::Renderer::VkMesh> mSkeletonMesh = nullptr;
     unsigned int mSkeletonLineIndexCount = 0;
 
-    std::unique_ptr<Core::Scene::Scene> mScene = std::make_unique<Core::Scene::Scene>();
-
     glm::mat4 mRotYMat = glm::mat4(1.0f);
     glm::mat4 mRotZMat = glm::mat4(1.0f);
 
@@ -77,7 +76,6 @@ class VkRenderer final : public EventListener
     glm::quat mQuaternionModelOrientation = glm::quat();
     glm::quat mQuaternionModelOrientationConjugate = glm::quat();
 
-    Timer mFrameTimer{};
     Timer mUIGenerateTimer{};
     Timer mUIDrawTimer{};
     Timer mUploadToVBOTimer{};
@@ -94,8 +92,6 @@ class VkRenderer final : public EventListener
 
 #pragma region Camera
     Camera mCamera{};
-
-    double mLastTickTime = 0.0;
 
     void handleCameraMovementKeys();
 #pragma endregion Camera

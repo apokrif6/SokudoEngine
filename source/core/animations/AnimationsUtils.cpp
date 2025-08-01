@@ -3,8 +3,9 @@
 #include "assimp/Importer.hpp"
 #include "assimp/postprocess.h"
 #include "assimp/scene.h"
-#include "AnimatorSingleton.h"
+#include "Animator.h"
 #include "glm/gtc/type_ptr.hpp"
+#include "core/engine/Engine.h"
 
 Core::Animations::AnimationClip Core::Animations::AnimationsUtils::loadAnimationFromFile(const std::string& filePath)
 {
@@ -67,7 +68,7 @@ Core::Animations::AnimationClip Core::Animations::AnimationsUtils::loadAnimation
         clip.channels.push_back(animChannel);
     }
 
-    Animations::AnimatorSingleton::getInstance().loadedAnimations.push_back(filePath);
+    Core::Engine::getInstance().getSystem<Animator>()->loadedAnimations.push_back(filePath);
 
     return clip;
 }

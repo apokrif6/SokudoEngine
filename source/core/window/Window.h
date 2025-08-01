@@ -8,13 +8,17 @@
 #include "core/model/Model.h"
 #include "core/vk-renderer/VkRenderer.h"
 #include "core/tools/InputHandler.h"
+#include "core/engine/Engine.h"
 
 namespace Core::Application
 {
 class Window
 {
   public:
-    bool init(int width, int height, const std::string& title);
+    // TODO
+    // remove this dependency on VkRenderer
+    // init should not return VkRenderer xd
+    std::unique_ptr<Core::Renderer::VkRenderer> init(int width, int height, const std::string& title);
 
     void mainLoop();
 
@@ -22,8 +26,6 @@ class Window
 
   private:
     GLFWwindow* mWindow = nullptr;
-
-    std::unique_ptr<Core::Renderer::VkRenderer> mRenderer;
 
     std::unique_ptr<InputHandler> mInputHandler;
 };

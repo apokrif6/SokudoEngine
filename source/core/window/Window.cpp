@@ -2,19 +2,19 @@
 #include "Window.h"
 #include "core/tools/Logger.h"
 
-bool Core::Application::Window::init(int width, int height, const std::string& title)
+std::unique_ptr<Core::Renderer::VkRenderer> Core::Application::Window::init(int width, int height, const std::string& title)
 {
     if (!glfwInit())
     {
         Logger::log(1, "%s: glfwInit error\n", __FUNCTION__);
-        return false;
+        return nullptr;
     }
 
     if (!glfwVulkanSupported())
     {
         Logger::log(1, "%s: Vulkan is not supported\n", __FUNCTION__);
         glfwTerminate();
-        return false;
+        return nullptr;
     }
 
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
@@ -25,15 +25,15 @@ bool Core::Application::Window::init(int width, int height, const std::string& t
     {
         Logger::log(1, "%s: Could not create window\n", __FUNCTION__);
         glfwTerminate();
-        return false;
+        return nullptr;
     }
 
-    mRenderer = std::make_unique<Core::Renderer::VkRenderer>(mWindow);
-    if (!mRenderer->init(width, height))
+    std::unique_ptr<Core::Renderer::VkRenderer> renderer = std::make_unique<Core::Renderer::VkRenderer>(mWindow);
+    if (!renderer->init(width, height))
     {
         glfwTerminate();
-        Logger::log(1, "%s error: Could not init Vulkan mRenderer\n", __FUNCTION__);
-        return false;
+        Logger::log(1, "%s error: Could not init Vulkan renderer\n", __FUNCTION__);
+        return nullptr;
     }
 
     mInputHandler = std::make_unique<InputHandler>(mWindow);
@@ -41,46 +41,41 @@ bool Core::Application::Window::init(int width, int height, const std::string& t
     {
         glfwTerminate();
         Logger::log(1, "%s error: Could not init Input Handler\n", __FUNCTION__);
-        return false;
+        return nullptr;
     }
 
-    mRenderer->subscribeToInputEvents(mInputHandler->getDispatcher());
+    renderer->subscribeToInputEvents(mInputHandler->getDispatcher());
 
     glfwSetWindowUserPointer(mWindow, this);
 
     glfwSetWindowPosCallback(mWindow,
                              [](GLFWwindow* window, int xPosition, int yPosition)
                              {
-                                 const auto CurrentWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
-                                 CurrentWindow->mRenderer->handleWindowMoveEvents(xPosition, yPosition);
+                                 Core::Engine::getInstance().getSystem<Core::Renderer::VkRenderer>()->handleWindowMoveEvents(xPosition, yPosition);
                              });
 
     glfwSetWindowIconifyCallback(mWindow,
                                  [](GLFWwindow* window, int minimized)
                                  {
-                                     const auto CurrentWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
-                                     CurrentWindow->mRenderer->handleWindowMinimizedEvents(minimized);
+                                     Core::Engine::getInstance().getSystem<Core::Renderer::VkRenderer>()->handleWindowMinimizedEvents(minimized);
                                  });
 
     glfwSetWindowMaximizeCallback(mWindow,
                                   [](GLFWwindow* window, int maximized)
                                   {
-                                      const auto CurrentWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
-                                      CurrentWindow->mRenderer->handleWindowMaximizedEvents(maximized);
+                                      Core::Engine::getInstance().getSystem<Core::Renderer::VkRenderer>()->handleWindowMaximizedEvents(maximized);
                                   });
 
     glfwSetWindowSizeCallback(mWindow,
                               [](GLFWwindow* window, int width, int height)
                               {
-                                  const auto CurrentWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
-                                  CurrentWindow->mRenderer->setSize(width, height);
+                                  Core::Engine::getInstance().getSystem<Core::Renderer::VkRenderer>()->setSize(width, height);
                               });
 
     glfwSetWindowCloseCallback(mWindow,
                                [](GLFWwindow* window)
                                {
-                                   const auto CurrentWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
-                                   CurrentWindow->mRenderer->handleWindowCloseEvents();
+                                   Core::Engine::getInstance().getSystem<Core::Renderer::VkRenderer>()->handleWindowCloseEvents();
                                });
 
     glfwSetKeyCallback(mWindow,
@@ -107,22 +102,19 @@ bool Core::Application::Window::init(int width, int height, const std::string& t
     glfwSetCursorEnterCallback(mWindow,
                                [](GLFWwindow* window, int enter)
                                {
-                                   const auto CurrentWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
-                                   CurrentWindow->mRenderer->handleMouseEnterLeaveEvents(enter);
+                                   Core::Engine::getInstance().getSystem<Core::Renderer::VkRenderer>()->handleMouseEnterLeaveEvents(enter);
                                });
 
     Logger::log(1, "%s: window successfully initialized\n", __FUNCTION__);
-    return true;
+    return renderer;
 }
 
 void Core::Application::Window::mainLoop()
 {
     while (!glfwWindowShouldClose(mWindow))
     {
-        if (!mRenderer->draw())
-        {
-            break;
-        }
+        Core::Engine::getInstance().update();
+        Core::Engine::getInstance().draw();
 
         glfwPollEvents();
     }
@@ -130,7 +122,7 @@ void Core::Application::Window::mainLoop()
 
 void Core::Application::Window::cleanup()
 {
-    mRenderer->cleanup();
+    Core::Engine::getInstance().cleanup();
     glfwDestroyWindow(mWindow);
     glfwTerminate();
     Logger::log(1, "%s: Terminating window\n", __FUNCTION__);

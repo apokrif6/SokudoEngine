@@ -12,7 +12,7 @@ class SceneObject
     explicit SceneObject(std::string name) : mName(std::move(name)) {}
     virtual ~SceneObject() = default;
 
-    virtual void update(Core::Renderer::VkRenderData& renderData) {}
+    virtual void update(Core::Renderer::VkRenderData& renderData) = 0;
     virtual void draw(Core::Renderer::VkRenderData& renderData) = 0;
     virtual void cleanup(Core::Renderer::VkRenderData& renderData) = 0;
 

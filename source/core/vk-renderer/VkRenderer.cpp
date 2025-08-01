@@ -15,23 +15,22 @@
 #include "imgui.h"
 #include "core/vk-renderer/buffers/VertexBuffer.h"
 #include "core/events/input-events/MouseMovementEvent.h"
-#include "core/vk-renderer/buffers/ShaderStorageBuffer.h"
 #include "core/utils/ShapeUtils.h"
 #include "core/vk-renderer/pipelines/MeshPipeline.h"
 #include "core/vk-renderer/pipelines/layouts/MeshPipelineLayout.h"
-#include "core/animations/AnimatorSingleton.h"
+#include "core/animations/Animator.h"
 #include "core/animations/AnimationsUtils.h"
 #include <core/events/input-events/MouseLockEvent.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include "core/vk-renderer/pipelines/DebugSkeletonPipeline.h"
 #include "core/vk-renderer/pipelines/layouts/DebugSkeletonPipelineLayout.h"
-#include "core/scene/Scene.h"
+#include "core/engine/Engine.h"
 
 bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned int height)
 {
-    if (!mRenderData.rdWindow)
+    if (!Core::Engine::getInstance().getRenderData().rdWindow)
     {
-        Logger::log(1, "%s error: Can't init Vulkan mCore::Renderer. mRenderData.rdWindow is invalid\n", __FUNCTION__);
+        Logger::log(1, "%s error: Can't init Vulkan mCore::Renderer. Core::Engine::getInstance().getRenderData().rdWindow is invalid\n", __FUNCTION__);
         return false;
     }
 
@@ -135,8 +134,8 @@ bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned i
         return false;
     }
 
-    mRenderData.rdWidth = static_cast<int>(width);
-    mRenderData.rdHeight = static_cast<int>(height);
+    Core::Engine::getInstance().getRenderData().rdWidth = static_cast<int>(width);
+    Core::Engine::getInstance().getRenderData().rdHeight = static_cast<int>(height);
 
     mModel = std::make_unique<Core::Model::Model>();
 
@@ -150,22 +149,20 @@ bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned i
     mAllMeshes = std::make_unique<Core::Renderer::VkMesh>();
     Logger::log(1, "%s: global mesh storage initialized\n", __FUNCTION__);
 
-    mFrameTimer.start();
-
     Logger::log(1, "%s: Vulkan Core::Renderer initialized to %ix%i\n", __FUNCTION__, width, height);
     return true;
 }
 Core::Renderer::VkRenderer::VkRenderer(GLFWwindow* inWindow)
 {
-    mRenderData.rdWindow = inWindow;
+    Core::Engine::getInstance().getRenderData().rdWindow = inWindow;
     mPerspectiveViewMatrices.emplace_back(1.0f);
     mPerspectiveViewMatrices.emplace_back(1.0f);
 }
 
 void Core::Renderer::VkRenderer::setSize(unsigned int width, unsigned int height)
 {
-    mRenderData.rdWidth = width;
-    mRenderData.rdHeight = height;
+    Core::Engine::getInstance().getRenderData().rdWidth = width;
+    Core::Engine::getInstance().getRenderData().rdHeight = height;
 
     Logger::log(1, "%s: resized window to %ix%i\n", __FUNCTION__, width, height);
 }
@@ -180,71 +177,68 @@ void Core::Renderer::VkRenderer::onEvent(const Event& event)
 {
     if (const auto* mouseMovementEvent = dynamic_cast<const MouseMovementEvent*>(&event))
     {
-        mRenderData.rdViewYaw += static_cast<float>(mouseMovementEvent->deltaX) / 10.f;
-        if (mRenderData.rdViewYaw < 0.f)
+        Core::Engine::getInstance().getRenderData().rdViewYaw += static_cast<float>(mouseMovementEvent->deltaX) / 10.f;
+        if (Core::Engine::getInstance().getRenderData().rdViewYaw < 0.f)
         {
-            mRenderData.rdViewYaw += 360.f;
+            Core::Engine::getInstance().getRenderData().rdViewYaw += 360.f;
         }
-        if (mRenderData.rdViewYaw >= 360.f)
+        if (Core::Engine::getInstance().getRenderData().rdViewYaw >= 360.f)
         {
-            mRenderData.rdViewYaw -= 360.f;
+            Core::Engine::getInstance().getRenderData().rdViewYaw -= 360.f;
         }
 
-        mRenderData.rdViewPitch -= static_cast<float>(mouseMovementEvent->deltaY) / 10.f;
-        if (mRenderData.rdViewPitch > 89.f)
+        Core::Engine::getInstance().getRenderData().rdViewPitch -= static_cast<float>(mouseMovementEvent->deltaY) / 10.f;
+        if (Core::Engine::getInstance().getRenderData().rdViewPitch > 89.f)
         {
-            mRenderData.rdViewPitch = 89.f;
+            Core::Engine::getInstance().getRenderData().rdViewPitch = 89.f;
         }
-        if (mRenderData.rdViewPitch < -89.f)
+        if (Core::Engine::getInstance().getRenderData().rdViewPitch < -89.f)
         {
-            mRenderData.rdViewPitch = -89.f;
+            Core::Engine::getInstance().getRenderData().rdViewPitch = -89.f;
         }
     }
     else if (const auto* mouseLockEvent = dynamic_cast<const MouseLockEvent*>(&event))
     {
         if (mouseLockEvent->isLocked)
         {
-            glfwSetInputMode(mRenderData.rdWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            glfwSetInputMode(Core::Engine::getInstance().getRenderData().rdWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
             if (glfwRawMouseMotionSupported())
             {
-                glfwSetInputMode(mRenderData.rdWindow, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+                glfwSetInputMode(Core::Engine::getInstance().getRenderData().rdWindow, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
             }
         }
         else
         {
-            glfwSetInputMode(mRenderData.rdWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            glfwSetInputMode(Core::Engine::getInstance().getRenderData().rdWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         }
     }
+}
+void Core::Renderer::VkRenderer::update(const VkRenderData& renderData, float deltaTime)
+{
 }
 
 bool Core::Renderer::VkRenderer::draw()
 {
-    double tickTime = glfwGetTime();
-    mRenderData.rdTickDiff = static_cast<float>(tickTime - mLastTickTime);
-
-    mRenderData.rdFrameTime = mFrameTimer.stop();
-    mFrameTimer.start();
-
     handleCameraMovementKeys();
 
     mAllMeshes->vertices.clear();
 
-    if (vkWaitForFences(mRenderData.rdVkbDevice.device, 1, &mRenderData.rdRenderFence, VK_TRUE, UINT64_MAX) !=
+    if (vkWaitForFences(Core::Engine::getInstance().getRenderData().rdVkbDevice.device, 1, &Core::Engine::getInstance().getRenderData().rdRenderFence, VK_TRUE, UINT64_MAX) !=
         VK_SUCCESS)
     {
         Logger::log(1, "%s error: waiting for fence failed\n", __FUNCTION__);
         return false;
     }
 
-    if (vkResetFences(mRenderData.rdVkbDevice.device, 1, &mRenderData.rdRenderFence) != VK_SUCCESS)
+    if (vkResetFences(Core::Engine::getInstance().getRenderData().rdVkbDevice.device, 1, &Core::Engine::getInstance().getRenderData().rdRenderFence) != VK_SUCCESS)
     {
         Logger::log(1, "%s error: fence reset failed\n", __FUNCTION__);
         return false;
     }
 
     uint32_t imageIndex = 0;
-    VkResult result = vkAcquireNextImageKHR(mRenderData.rdVkbDevice.device, mRenderData.rdVkbSwapchain.swapchain,
-                                            UINT64_MAX, mRenderData.rdPresentSemaphore, VK_NULL_HANDLE, &imageIndex);
+    VkResult result = vkAcquireNextImageKHR(Core::Engine::getInstance().getRenderData().rdVkbDevice.device, Core::Engine::getInstance().getRenderData().rdVkbSwapchain.swapchain,
+                                            UINT64_MAX, Core::Engine::getInstance().getRenderData().rdPresentSemaphore, VK_NULL_HANDLE, &imageIndex);
 
     if (result == VK_ERROR_OUT_OF_DATE_KHR)
     {
@@ -269,58 +263,58 @@ bool Core::Renderer::VkRenderer::draw()
 
     VkRenderPassBeginInfo rpInfo{};
     rpInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    rpInfo.renderPass = mRenderData.rdRenderpass;
+    rpInfo.renderPass = Core::Engine::getInstance().getRenderData().rdRenderpass;
 
     rpInfo.renderArea.offset.x = 0;
     rpInfo.renderArea.offset.y = 0;
-    rpInfo.renderArea.extent = mRenderData.rdVkbSwapchain.extent;
-    rpInfo.framebuffer = mRenderData.rdFramebuffers[imageIndex];
+    rpInfo.renderArea.extent = Core::Engine::getInstance().getRenderData().rdVkbSwapchain.extent;
+    rpInfo.framebuffer = Core::Engine::getInstance().getRenderData().rdFramebuffers[imageIndex];
 
     rpInfo.clearValueCount = 2;
     rpInfo.pClearValues = clearValues;
 
     VkViewport viewport{};
     viewport.x = 0.0f;
-    viewport.y = static_cast<float>(mRenderData.rdVkbSwapchain.extent.height);
-    viewport.width = static_cast<float>(mRenderData.rdVkbSwapchain.extent.width);
+    viewport.y = static_cast<float>(Core::Engine::getInstance().getRenderData().rdVkbSwapchain.extent.height);
+    viewport.width = static_cast<float>(Core::Engine::getInstance().getRenderData().rdVkbSwapchain.extent.width);
     /* invert viewport from OpenGL */
-    viewport.height = -static_cast<float>(mRenderData.rdVkbSwapchain.extent.height);
+    viewport.height = -static_cast<float>(Core::Engine::getInstance().getRenderData().rdVkbSwapchain.extent.height);
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
 
     VkRect2D scissor{};
     scissor.offset = {0, 0};
-    scissor.extent = mRenderData.rdVkbSwapchain.extent;
+    scissor.extent = Core::Engine::getInstance().getRenderData().rdVkbSwapchain.extent;
 
     mMatrixGenerateTimer.start();
-    mPerspectiveViewMatrices.at(0) = mCamera.getViewMatrix(mRenderData);
-    mPerspectiveViewMatrices.at(1) = glm::perspective(glm::radians(static_cast<float>(mRenderData.rdFieldOfView)),
-                                                      static_cast<float>(mRenderData.rdVkbSwapchain.extent.width) /
-                                                          static_cast<float>(mRenderData.rdVkbSwapchain.extent.height),
+    mPerspectiveViewMatrices.at(0) = mCamera.getViewMatrix(Core::Engine::getInstance().getRenderData());
+    mPerspectiveViewMatrices.at(1) = glm::perspective(glm::radians(static_cast<float>(Core::Engine::getInstance().getRenderData().rdFieldOfView)),
+                                                      static_cast<float>(Core::Engine::getInstance().getRenderData().rdVkbSwapchain.extent.width) /
+                                                          static_cast<float>(Core::Engine::getInstance().getRenderData().rdVkbSwapchain.extent.height),
                                                       0.01f, 50.0f);
 
-    mRenderData.rdMatrixGenerateTime = mMatrixGenerateTimer.stop();
+    Core::Engine::getInstance().getRenderData().rdMatrixGenerateTime = mMatrixGenerateTimer.stop();
 
-    if (mRenderData.rdResetAngles)
+    if (Core::Engine::getInstance().getRenderData().rdResetAngles)
     {
-        mRenderData.rdResetAngles = false;
+        Core::Engine::getInstance().getRenderData().rdResetAngles = false;
 
-        mRenderData.rdRotXAngle = 0;
-        mRenderData.rdRotYAngle = 0;
-        mRenderData.rdRotZAngle = 0;
+        Core::Engine::getInstance().getRenderData().rdRotXAngle = 0;
+        Core::Engine::getInstance().getRenderData().rdRotYAngle = 0;
+        Core::Engine::getInstance().getRenderData().rdRotZAngle = 0;
 
         mEulerRotMatrix = glm::mat3(1.f);
         mQuaternionModelOrientation = glm::quat();
     }
 
-    mRotYMat = glm::rotate(glm::mat4(1.0f), glm::radians(static_cast<float>(mRenderData.rdRotYAngle)), mRotYAxis);
-    mRotZMat = glm::rotate(mRotYMat, glm::radians(static_cast<float>(mRenderData.rdRotZAngle)), mRotZAxis);
-    mEulerRotMatrix = glm::rotate(mRotZMat, glm::radians(static_cast<float>(mRenderData.rdRotXAngle)), mRotXAxis);
+    mRotYMat = glm::rotate(glm::mat4(1.0f), glm::radians(static_cast<float>(Core::Engine::getInstance().getRenderData().rdRotYAngle)), mRotYAxis);
+    mRotZMat = glm::rotate(mRotYMat, glm::radians(static_cast<float>(Core::Engine::getInstance().getRenderData().rdRotZAngle)), mRotZAxis);
+    mEulerRotMatrix = glm::rotate(mRotZMat, glm::radians(static_cast<float>(Core::Engine::getInstance().getRenderData().rdRotXAngle)), mRotXAxis);
 
     mQuaternionModelOrientation =
-        glm::normalize(glm::quat(glm::vec3(glm::radians(static_cast<float>(mRenderData.rdRotXAngle)),
-                                           glm::radians(static_cast<float>(mRenderData.rdRotYAngle)),
-                                           glm::radians(static_cast<float>(mRenderData.rdRotZAngle)))));
+        glm::normalize(glm::quat(glm::vec3(glm::radians(static_cast<float>(Core::Engine::getInstance().getRenderData().rdRotXAngle)),
+                                           glm::radians(static_cast<float>(Core::Engine::getInstance().getRenderData().rdRotYAngle)),
+                                           glm::radians(static_cast<float>(Core::Engine::getInstance().getRenderData().rdRotZAngle)))));
 
     mQuaternionModelOrientationConjugate = glm::conjugate(mQuaternionModelOrientation);
 
@@ -328,7 +322,7 @@ bool Core::Renderer::VkRenderer::draw()
 
     mCoordinateArrowsMesh.vertices.clear();
 
-    if (mRenderData.rdDrawWorldCoordinateArrows)
+    if (Core::Engine::getInstance().getRenderData().rdDrawWorldCoordinateArrows)
     {
         mCoordinateArrowsMesh = mCoordinateArrowsModel.getVertexData();
         std::for_each(mCoordinateArrowsMesh.vertices.begin(), mCoordinateArrowsMesh.vertices.end(),
@@ -341,7 +335,7 @@ bool Core::Renderer::VkRenderer::draw()
     mEulerCoordinateArrowsMesh.vertices.clear();
     mQuaternionArrowMesh.vertices.clear();
 
-    if (mRenderData.rdDrawModelCoordinateArrows)
+    if (Core::Engine::getInstance().getRenderData().rdDrawModelCoordinateArrows)
     {
         mEulerCoordinateArrowsMesh = mCoordinateArrowsModel.getVertexData();
         std::for_each(mEulerCoordinateArrowsMesh.vertices.begin(), mEulerCoordinateArrowsMesh.vertices.end(),
@@ -371,7 +365,7 @@ bool Core::Renderer::VkRenderer::draw()
     }
 
     *mEulerModelMesh = mModel->getVertexData();
-    mRenderData.rdTriangleCount = mEulerModelMesh->vertices.size() / 3;
+    Core::Engine::getInstance().getRenderData().rdTriangleCount = mEulerModelMesh->vertices.size() / 3;
     std::for_each(mEulerModelMesh->vertices.begin(), mEulerModelMesh->vertices.end(),
                   [this](VkVertex& vertex)
                   {
@@ -382,7 +376,7 @@ bool Core::Renderer::VkRenderer::draw()
                                 mEulerModelMesh->vertices.end());
 
     *mQuaternionModelMesh = mModel->getVertexData();
-    mRenderData.rdTriangleCount += mQuaternionModelMesh->vertices.size() / 3;
+    Core::Engine::getInstance().getRenderData().rdTriangleCount += mQuaternionModelMesh->vertices.size() / 3;
     std::for_each(mQuaternionModelMesh->vertices.begin(), mQuaternionModelMesh->vertices.end(),
                   [this](VkVertex& vertex)
                   {
@@ -400,7 +394,7 @@ bool Core::Renderer::VkRenderer::draw()
     mLineIndexCount = mCoordinateArrowsMesh.vertices.size() + mEulerCoordinateArrowsMesh.vertices.size() +
                       mQuaternionArrowMesh.vertices.size();
 
-    if (vkResetCommandBuffer(mRenderData.rdCommandBuffer, 0) != VK_SUCCESS)
+    if (vkResetCommandBuffer(Core::Engine::getInstance().getRenderData().rdCommandBuffer, 0) != VK_SUCCESS)
     {
         Logger::log(1, "%s error: failed to reset command buffer\n", __FUNCTION__);
         return false;
@@ -410,7 +404,7 @@ bool Core::Renderer::VkRenderer::draw()
     cmdBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     cmdBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-    if (vkBeginCommandBuffer(mRenderData.rdCommandBuffer, &cmdBeginInfo) != VK_SUCCESS)
+    if (vkBeginCommandBuffer(Core::Engine::getInstance().getRenderData().rdCommandBuffer, &cmdBeginInfo) != VK_SUCCESS)
     {
         Logger::log(1, "%s error: failed to begin command buffer\n", __FUNCTION__);
         return false;
@@ -418,58 +412,57 @@ bool Core::Renderer::VkRenderer::draw()
 
     mUploadToVBOTimer.start();
 
-    Core::Renderer::VertexBuffer::uploadData(mRenderData, mRenderData.rdVertexBufferData, *mAllMeshes);
+    Core::Renderer::VertexBuffer::uploadData(Core::Engine::getInstance().getRenderData(), Core::Engine::getInstance().getRenderData().rdVertexBufferData, *mAllMeshes);
 
-    mScene->update(mRenderData);
+    Core::Engine::getInstance().getSystem<Scene::Scene>()->update(Core::Engine::getInstance().getRenderData(), Core::Engine::getInstance().getRenderData().rdTickDiff);
 
-    mRenderData.rdUploadToVBOTime = mUploadToVBOTimer.stop();
+    Core::Engine::getInstance().getRenderData().rdUploadToVBOTime = mUploadToVBOTimer.stop();
 
-    vkCmdBeginRenderPass(mRenderData.rdCommandBuffer, &rpInfo, VK_SUBPASS_CONTENTS_INLINE);
+    vkCmdBeginRenderPass(Core::Engine::getInstance().getRenderData().rdCommandBuffer, &rpInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-    vkCmdSetViewport(mRenderData.rdCommandBuffer, 0, 1, &viewport);
-    vkCmdSetScissor(mRenderData.rdCommandBuffer, 0, 1, &scissor);
+    vkCmdSetViewport(Core::Engine::getInstance().getRenderData().rdCommandBuffer, 0, 1, &viewport);
+    vkCmdSetScissor(Core::Engine::getInstance().getRenderData().rdCommandBuffer, 0, 1, &scissor);
 
-    vkCmdBindDescriptorSets(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdPipelineLayout,
-                            0, 1, &mRenderData.rdModelTexture.texTextureDescriptorSet, 0, nullptr);
+    vkCmdBindDescriptorSets(Core::Engine::getInstance().getRenderData().rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Core::Engine::getInstance().getRenderData().rdPipelineLayout,
+                            0, 1, &Core::Engine::getInstance().getRenderData().rdModelTexture.texTextureDescriptorSet, 0, nullptr);
 
-    vkCmdBindDescriptorSets(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdPipelineLayout,
-                            1, 1, &mRenderData.rdPerspectiveViewMatrixUBO.rdUBODescriptorSet, 0, nullptr);
+    vkCmdBindDescriptorSets(Core::Engine::getInstance().getRenderData().rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Core::Engine::getInstance().getRenderData().rdPipelineLayout,
+                            1, 1, &Core::Engine::getInstance().getRenderData().rdPerspectiveViewMatrixUBO.rdUBODescriptorSet, 0, nullptr);
 
     VkDeviceSize offset = 0;
-    vkCmdBindVertexBuffers(mRenderData.rdCommandBuffer, 0, 1, &mRenderData.rdVertexBufferData.rdVertexBuffer, &offset);
+    vkCmdBindVertexBuffers(Core::Engine::getInstance().getRenderData().rdCommandBuffer, 0, 1, &Core::Engine::getInstance().getRenderData().rdVertexBufferData.rdVertexBuffer, &offset);
 
     if (mLineIndexCount > 0)
     {
-        vkCmdBindPipeline(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdLinePipeline);
-        vkCmdSetLineWidth(mRenderData.rdCommandBuffer, 3.0f);
-        vkCmdDraw(mRenderData.rdCommandBuffer, mLineIndexCount, 1, 0, 0);
+        vkCmdBindPipeline(Core::Engine::getInstance().getRenderData().rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Core::Engine::getInstance().getRenderData().rdLinePipeline);
+        vkCmdSetLineWidth(Core::Engine::getInstance().getRenderData().rdCommandBuffer, 3.0f);
+        vkCmdDraw(Core::Engine::getInstance().getRenderData().rdCommandBuffer, mLineIndexCount, 1, 0, 0);
     }
 
     // draw box
-    vkCmdBindPipeline(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdBasicPipeline);
-    vkCmdDraw(mRenderData.rdCommandBuffer, mRenderData.rdTriangleCount * 3, 1,
+    vkCmdBindPipeline(Core::Engine::getInstance().getRenderData().rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Core::Engine::getInstance().getRenderData().rdBasicPipeline);
+    vkCmdDraw(Core::Engine::getInstance().getRenderData().rdCommandBuffer, Core::Engine::getInstance().getRenderData().rdTriangleCount * 3, 1,
               mLineIndexCount + mSkeletonLineIndexCount, 0);
 
     // draw grid
-    vkCmdBindPipeline(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdGridPipeline);
-    vkCmdDraw(mRenderData.rdCommandBuffer, 6, 1, 0, 0);
+    vkCmdBindPipeline(Core::Engine::getInstance().getRenderData().rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Core::Engine::getInstance().getRenderData().rdGridPipeline);
+    vkCmdDraw(Core::Engine::getInstance().getRenderData().rdCommandBuffer, 6, 1, 0, 0);
 
     // TODO
-    // Implement RenderQueue
-    // map with objects which should be rendered
-    mScene->draw(mRenderData);
+    // should be moved to Engine::Update
+    Core::Engine::getInstance().getSystem<Scene::Scene>()->draw(Core::Engine::getInstance().getRenderData());
 
     mUIGenerateTimer.start();
-    mUserInterface.createFrame(mRenderData);
-    mRenderData.rdUIGenerateTime = mUIGenerateTimer.stop();
+    mUserInterface.createFrame(Core::Engine::getInstance().getRenderData());
+    Core::Engine::getInstance().getRenderData().rdUIGenerateTime = mUIGenerateTimer.stop();
 
     mUIDrawTimer.start();
-    mUserInterface.render(mRenderData);
-    mRenderData.rdUIDrawTime = mUIDrawTimer.stop();
+    mUserInterface.render(Core::Engine::getInstance().getRenderData());
+    Core::Engine::getInstance().getRenderData().rdUIDrawTime = mUIDrawTimer.stop();
 
-    vkCmdEndRenderPass(mRenderData.rdCommandBuffer);
+    vkCmdEndRenderPass(Core::Engine::getInstance().getRenderData().rdCommandBuffer);
 
-    if (vkEndCommandBuffer(mRenderData.rdCommandBuffer) != VK_SUCCESS)
+    if (vkEndCommandBuffer(Core::Engine::getInstance().getRenderData().rdCommandBuffer) != VK_SUCCESS)
     {
         Logger::log(1, "%s error: failed to end command buffer\n", __FUNCTION__);
         return false;
@@ -477,10 +470,10 @@ bool Core::Renderer::VkRenderer::draw()
 
     mUploadToUBOTimer.start();
 
-    Core::Renderer::UniformBuffer::uploadData(mRenderData, mRenderData.rdPerspectiveViewMatrixUBO,
+    Core::Renderer::UniformBuffer::uploadData(Core::Engine::getInstance().getRenderData(), Core::Engine::getInstance().getRenderData().rdPerspectiveViewMatrixUBO,
                                               mPerspectiveViewMatrices);
 
-    mRenderData.rdUploadToUBOTime = mUploadToUBOTimer.stop();
+    Core::Engine::getInstance().getRenderData().rdUploadToUBOTime = mUploadToUBOTimer.stop();
 
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -489,15 +482,15 @@ bool Core::Renderer::VkRenderer::draw()
     submitInfo.pWaitDstStageMask = &waitStage;
 
     submitInfo.waitSemaphoreCount = 1;
-    submitInfo.pWaitSemaphores = &mRenderData.rdPresentSemaphore;
+    submitInfo.pWaitSemaphores = &Core::Engine::getInstance().getRenderData().rdPresentSemaphore;
 
     submitInfo.signalSemaphoreCount = 1;
-    submitInfo.pSignalSemaphores = &mRenderData.rdRenderSemaphore;
+    submitInfo.pSignalSemaphores = &Core::Engine::getInstance().getRenderData().rdRenderSemaphore;
 
     submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &mRenderData.rdCommandBuffer;
+    submitInfo.pCommandBuffers = &Core::Engine::getInstance().getRenderData().rdCommandBuffer;
 
-    if (vkQueueSubmit(mRenderData.rdGraphicsQueue, 1, &submitInfo, mRenderData.rdRenderFence) != VK_SUCCESS)
+    if (vkQueueSubmit(Core::Engine::getInstance().getRenderData().rdGraphicsQueue, 1, &submitInfo, Core::Engine::getInstance().getRenderData().rdRenderFence) != VK_SUCCESS)
     {
         Logger::log(1, "%s error: failed to submit draw command buffer\n", __FUNCTION__);
         return false;
@@ -506,14 +499,14 @@ bool Core::Renderer::VkRenderer::draw()
     VkPresentInfoKHR presentInfo{};
     presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
     presentInfo.waitSemaphoreCount = 1;
-    presentInfo.pWaitSemaphores = &mRenderData.rdRenderSemaphore;
+    presentInfo.pWaitSemaphores = &Core::Engine::getInstance().getRenderData().rdRenderSemaphore;
 
     presentInfo.swapchainCount = 1;
-    presentInfo.pSwapchains = &mRenderData.rdVkbSwapchain.swapchain;
+    presentInfo.pSwapchains = &Core::Engine::getInstance().getRenderData().rdVkbSwapchain.swapchain;
 
     presentInfo.pImageIndices = &imageIndex;
 
-    result = vkQueuePresentKHR(mRenderData.rdPresentQueue, &presentInfo);
+    result = vkQueuePresentKHR(Core::Engine::getInstance().getRenderData().rdPresentQueue, &presentInfo);
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
     {
         return recreateSwapchain();
@@ -527,46 +520,44 @@ bool Core::Renderer::VkRenderer::draw()
         }
     }
 
-    mLastTickTime = tickTime;
-
     return true;
 }
 
-void Core::Renderer::VkRenderer::cleanup()
+void Core::Renderer::VkRenderer::cleanup(VkRenderData& renderData)
 {
-    vkDeviceWaitIdle(mRenderData.rdVkbDevice.device);
+    vkDeviceWaitIdle(Core::Engine::getInstance().getRenderData().rdVkbDevice.device);
 
-    mScene->cleanup(mRenderData);
+    Core::Engine::getInstance().getSystem<Scene::Scene>()->cleanup(renderData);
 
-    mUserInterface.cleanup(mRenderData);
+    mUserInterface.cleanup(renderData);
 
-    Core::Renderer::SyncObjects::cleanup(mRenderData);
-    Core::Renderer::CommandBuffer::cleanup(mRenderData, mRenderData.rdCommandBuffer);
-    Core::Renderer::CommandPool::cleanup(mRenderData);
-    Core::Renderer::Framebuffer::cleanup(mRenderData);
-    Core::Renderer::MeshPipeline::cleanup(mRenderData, mRenderData.rdMeshPipeline);
-    Core::Renderer::DebugSkeletonPipeline::cleanup(mRenderData, mRenderData.rdDebugSkeletonPipeline);
-    Core::Renderer::Pipeline::cleanup(mRenderData, mRenderData.rdGridPipeline);
-    Core::Renderer::Pipeline::cleanup(mRenderData, mRenderData.rdLinePipeline);
-    Core::Renderer::Pipeline::cleanup(mRenderData, mRenderData.rdBasicPipeline);
-    Core::Renderer::PipelineLayout::cleanup(mRenderData, mRenderData.rdPipelineLayout);
-    Core::Renderer::MeshPipelineLayout::cleanup(mRenderData, mRenderData.rdMeshPipelineLayout);
-    Core::Renderer::DebugSkeletonPipelineLayout::cleanup(mRenderData, mRenderData.rdDebugSkeletonPipelineLayout);
-    Core::Renderer::Renderpass::cleanup(mRenderData);
-    Core::Renderer::UniformBuffer::cleanup(mRenderData, mRenderData.rdPerspectiveViewMatrixUBO);
-    Core::Renderer::VertexBuffer::cleanup(mRenderData, mRenderData.rdVertexBufferData);
-    Core::Renderer::Texture::cleanup(mRenderData, mRenderData.rdModelTexture);
+    Core::Renderer::SyncObjects::cleanup(renderData);
+    Core::Renderer::CommandBuffer::cleanup(renderData, Core::Engine::getInstance().getRenderData().rdCommandBuffer);
+    Core::Renderer::CommandPool::cleanup(renderData);
+    Core::Renderer::Framebuffer::cleanup(renderData);
+    Core::Renderer::MeshPipeline::cleanup(renderData, renderData.rdMeshPipeline);
+    Core::Renderer::DebugSkeletonPipeline::cleanup(renderData, Core::Engine::getInstance().getRenderData().rdDebugSkeletonPipeline);
+    Core::Renderer::Pipeline::cleanup(renderData, Core::Engine::getInstance().getRenderData().rdGridPipeline);
+    Core::Renderer::Pipeline::cleanup(renderData, renderData.rdLinePipeline);
+    Core::Renderer::Pipeline::cleanup(renderData, renderData.rdBasicPipeline);
+    Core::Renderer::PipelineLayout::cleanup(renderData, renderData.rdPipelineLayout);
+    Core::Renderer::MeshPipelineLayout::cleanup(renderData, renderData.rdMeshPipelineLayout);
+    Core::Renderer::DebugSkeletonPipelineLayout::cleanup(renderData, renderData.rdDebugSkeletonPipelineLayout);
+    Core::Renderer::Renderpass::cleanup(renderData);
+    Core::Renderer::UniformBuffer::cleanup(renderData, renderData.rdPerspectiveViewMatrixUBO);
+    Core::Renderer::VertexBuffer::cleanup(renderData, renderData.rdVertexBufferData);
+    Core::Renderer::Texture::cleanup(renderData, renderData.rdModelTexture);
 
-    vkDestroyImageView(mRenderData.rdVkbDevice.device, mRenderData.rdDepthImageView, nullptr);
-    vmaDestroyImage(mRenderData.rdAllocator, mRenderData.rdDepthImage, mRenderData.rdDepthImageAlloc);
-    vmaDestroyAllocator(mRenderData.rdAllocator);
+    vkDestroyImageView(renderData.rdVkbDevice.device, renderData.rdDepthImageView, nullptr);
+    vmaDestroyImage(renderData.rdAllocator, renderData.rdDepthImage, Core::Engine::getInstance().getRenderData().rdDepthImageAlloc);
+    vmaDestroyAllocator(renderData.rdAllocator);
 
-    mRenderData.rdVkbSwapchain.destroy_image_views(mRenderData.rdSwapchainImageViews);
-    vkb::destroy_swapchain(mRenderData.rdVkbSwapchain);
+    renderData.rdVkbSwapchain.destroy_image_views(renderData.rdSwapchainImageViews);
+    vkb::destroy_swapchain(renderData.rdVkbSwapchain);
 
-    vkb::destroy_device(mRenderData.rdVkbDevice);
-    vkb::destroy_surface(mRenderData.rdVkbInstance.instance, mSurface);
-    vkb::destroy_instance(mRenderData.rdVkbInstance);
+    vkb::destroy_device(renderData.rdVkbDevice);
+    vkb::destroy_surface(renderData.rdVkbInstance.instance, mSurface);
+    vkb::destroy_instance(renderData.rdVkbInstance);
 
     Logger::log(1, "%s: Vulkan Core::Renderer destroyed\n", __FUNCTION__);
 }
@@ -584,10 +575,10 @@ bool Core::Renderer::VkRenderer::deviceInit()
         Logger::log(1, "%s error: could not build vkb instance\n", __FUNCTION__);
         return false;
     }
-    mRenderData.rdVkbInstance = instRet.value();
+    Core::Engine::getInstance().getRenderData().rdVkbInstance = instRet.value();
 
     VkResult result = VK_ERROR_UNKNOWN;
-    result = glfwCreateWindowSurface(mRenderData.rdVkbInstance, mRenderData.rdWindow, nullptr, &mSurface);
+    result = glfwCreateWindowSurface(Core::Engine::getInstance().getRenderData().rdVkbInstance, Core::Engine::getInstance().getRenderData().rdWindow, nullptr, &mSurface);
     if (result != VK_SUCCESS)
     {
         Logger::log(1, "%s error: Could not create Vulkan surface\n", __FUNCTION__);
@@ -595,7 +586,7 @@ bool Core::Renderer::VkRenderer::deviceInit()
     }
 
     /* just get the first available device */
-    vkb::PhysicalDeviceSelector physicalDevSel{mRenderData.rdVkbInstance};
+    vkb::PhysicalDeviceSelector physicalDevSel{Core::Engine::getInstance().getRenderData().rdVkbInstance};
     auto firstPhysicalDevSelRet = physicalDevSel.set_surface(mSurface).select();
     if (!firstPhysicalDevSelRet)
     {
@@ -614,57 +605,57 @@ bool Core::Renderer::VkRenderer::deviceInit()
         return false;
     }
 
-    mRenderData.rdVkbPhysicalDevice = secondPhysicalDevSelRet.value();
+    Core::Engine::getInstance().getRenderData().rdVkbPhysicalDevice = secondPhysicalDevSelRet.value();
 
-    Logger::log(1, "%s: found physical device '%s'\n", __FUNCTION__, mRenderData.rdVkbPhysicalDevice.name.c_str());
+    Logger::log(1, "%s: found physical device '%s'\n", __FUNCTION__, Core::Engine::getInstance().getRenderData().rdVkbPhysicalDevice.name.c_str());
 
     mMinUniformBufferOffsetAlignment =
-        mRenderData.rdVkbPhysicalDevice.properties.limits.minUniformBufferOffsetAlignment;
+        Core::Engine::getInstance().getRenderData().rdVkbPhysicalDevice.properties.limits.minUniformBufferOffsetAlignment;
     Logger::log(1, "%s: the physical device as a minimal uniform buffer offset of %i bytes\n", __FUNCTION__,
                 mMinUniformBufferOffsetAlignment);
 
-    vkb::DeviceBuilder devBuilder{mRenderData.rdVkbPhysicalDevice};
+    vkb::DeviceBuilder devBuilder{Core::Engine::getInstance().getRenderData().rdVkbPhysicalDevice};
     auto devBuilderRet = devBuilder.build();
     if (!devBuilderRet)
     {
         Logger::log(1, "%s error: could not get devices\n", __FUNCTION__);
         return false;
     }
-    mRenderData.rdVkbDevice = devBuilderRet.value();
+    Core::Engine::getInstance().getRenderData().rdVkbDevice = devBuilderRet.value();
 
     return true;
 }
 
 bool Core::Renderer::VkRenderer::getQueue()
 {
-    auto graphQueueRet = mRenderData.rdVkbDevice.get_queue(vkb::QueueType::graphics);
+    auto graphQueueRet = Core::Engine::getInstance().getRenderData().rdVkbDevice.get_queue(vkb::QueueType::graphics);
     if (!graphQueueRet.has_value())
     {
         Logger::log(1, "%s error: could not get graphics queue\n", __FUNCTION__);
         return false;
     }
-    mRenderData.rdGraphicsQueue = graphQueueRet.value();
+    Core::Engine::getInstance().getRenderData().rdGraphicsQueue = graphQueueRet.value();
 
-    auto presentQueueRet = mRenderData.rdVkbDevice.get_queue(vkb::QueueType::present);
+    auto presentQueueRet = Core::Engine::getInstance().getRenderData().rdVkbDevice.get_queue(vkb::QueueType::present);
     if (!presentQueueRet.has_value())
     {
         Logger::log(1, "%s error: could not get present queue\n", __FUNCTION__);
         return false;
     }
-    mRenderData.rdPresentQueue = presentQueueRet.value();
+    Core::Engine::getInstance().getRenderData().rdPresentQueue = presentQueueRet.value();
 
     return true;
 }
 
 bool Core::Renderer::VkRenderer::createSwapchain()
 {
-    vkb::SwapchainBuilder swapChainBuild{mRenderData.rdVkbDevice};
+    vkb::SwapchainBuilder swapChainBuild{Core::Engine::getInstance().getRenderData().rdVkbDevice};
 
-    glfwGetFramebufferSize(mRenderData.rdWindow, &mRenderData.rdWidth, &mRenderData.rdHeight);
+    glfwGetFramebufferSize(Core::Engine::getInstance().getRenderData().rdWindow, &Core::Engine::getInstance().getRenderData().rdWidth, &Core::Engine::getInstance().getRenderData().rdHeight);
 
-    auto swapChainBuildRet = swapChainBuild.set_old_swapchain(mRenderData.rdVkbSwapchain)
+    auto swapChainBuildRet = swapChainBuild.set_old_swapchain(Core::Engine::getInstance().getRenderData().rdVkbSwapchain)
                                  .set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR)
-                                 .set_desired_extent(mRenderData.rdWidth, mRenderData.rdHeight)
+                                 .set_desired_extent(Core::Engine::getInstance().getRenderData().rdWidth, Core::Engine::getInstance().getRenderData().rdHeight)
                                  .build();
     if (!swapChainBuildRet)
     {
@@ -672,23 +663,23 @@ bool Core::Renderer::VkRenderer::createSwapchain()
         return false;
     }
 
-    vkb::destroy_swapchain(mRenderData.rdVkbSwapchain);
-    mRenderData.rdVkbSwapchain = swapChainBuildRet.value();
+    vkb::destroy_swapchain(Core::Engine::getInstance().getRenderData().rdVkbSwapchain);
+    Core::Engine::getInstance().getRenderData().rdVkbSwapchain = swapChainBuildRet.value();
 
     return true;
 }
 
 bool Core::Renderer::VkRenderer::createDepthBuffer()
 {
-    const VkExtent3D depthImageExtent = {mRenderData.rdVkbSwapchain.extent.width,
-                                         mRenderData.rdVkbSwapchain.extent.height, 1};
+    const VkExtent3D depthImageExtent = {Core::Engine::getInstance().getRenderData().rdVkbSwapchain.extent.width,
+                                         Core::Engine::getInstance().getRenderData().rdVkbSwapchain.extent.height, 1};
 
-    mRenderData.rdDepthFormat = VK_FORMAT_D32_SFLOAT;
+    Core::Engine::getInstance().getRenderData().rdDepthFormat = VK_FORMAT_D32_SFLOAT;
 
     VkImageCreateInfo depthImageInfo{};
     depthImageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     depthImageInfo.imageType = VK_IMAGE_TYPE_2D;
-    depthImageInfo.format = mRenderData.rdDepthFormat;
+    depthImageInfo.format = Core::Engine::getInstance().getRenderData().rdDepthFormat;
     depthImageInfo.extent = depthImageExtent;
     depthImageInfo.mipLevels = 1;
     depthImageInfo.arrayLayers = 1;
@@ -700,8 +691,8 @@ bool Core::Renderer::VkRenderer::createDepthBuffer()
     depthAllocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
     depthAllocInfo.requiredFlags = static_cast<VkMemoryPropertyFlags>(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-    if (vmaCreateImage(mRenderData.rdAllocator, &depthImageInfo, &depthAllocInfo, &mRenderData.rdDepthImage,
-                       &mRenderData.rdDepthImageAlloc, nullptr) != VK_SUCCESS)
+    if (vmaCreateImage(Core::Engine::getInstance().getRenderData().rdAllocator, &depthImageInfo, &depthAllocInfo, &Core::Engine::getInstance().getRenderData().rdDepthImage,
+                       &Core::Engine::getInstance().getRenderData().rdDepthImageAlloc, nullptr) != VK_SUCCESS)
     {
         Logger::log(1, "%s error: could not allocate depth buffer memory\n", __FUNCTION__);
         return false;
@@ -710,16 +701,16 @@ bool Core::Renderer::VkRenderer::createDepthBuffer()
     VkImageViewCreateInfo depthImageViewInfo{};
     depthImageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     depthImageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    depthImageViewInfo.image = mRenderData.rdDepthImage;
-    depthImageViewInfo.format = mRenderData.rdDepthFormat;
+    depthImageViewInfo.image = Core::Engine::getInstance().getRenderData().rdDepthImage;
+    depthImageViewInfo.format = Core::Engine::getInstance().getRenderData().rdDepthFormat;
     depthImageViewInfo.subresourceRange.baseMipLevel = 0;
     depthImageViewInfo.subresourceRange.levelCount = 1;
     depthImageViewInfo.subresourceRange.baseArrayLayer = 0;
     depthImageViewInfo.subresourceRange.layerCount = 1;
     depthImageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
 
-    if (vkCreateImageView(mRenderData.rdVkbDevice.device, &depthImageViewInfo, nullptr,
-                          &mRenderData.rdDepthImageView) != VK_SUCCESS)
+    if (vkCreateImageView(Core::Engine::getInstance().getRenderData().rdVkbDevice.device, &depthImageViewInfo, nullptr,
+                          &Core::Engine::getInstance().getRenderData().rdDepthImageView) != VK_SUCCESS)
     {
         Logger::log(1, "%s error: could not create depth buffer image view\n", __FUNCTION__);
         return false;
@@ -729,20 +720,20 @@ bool Core::Renderer::VkRenderer::createDepthBuffer()
 
 bool Core::Renderer::VkRenderer::recreateSwapchain()
 {
-    while (mRenderData.rdWidth == 0 || mRenderData.rdHeight == 0)
+    while (Core::Engine::getInstance().getRenderData().rdWidth == 0 || Core::Engine::getInstance().getRenderData().rdHeight == 0)
     {
-        glfwGetFramebufferSize(mRenderData.rdWindow, &mRenderData.rdWidth, &mRenderData.rdHeight);
+        glfwGetFramebufferSize(Core::Engine::getInstance().getRenderData().rdWindow, &Core::Engine::getInstance().getRenderData().rdWidth, &Core::Engine::getInstance().getRenderData().rdHeight);
         glfwWaitEvents();
     }
 
-    vkDeviceWaitIdle(mRenderData.rdVkbDevice.device);
+    vkDeviceWaitIdle(Core::Engine::getInstance().getRenderData().rdVkbDevice.device);
 
     /* cleanup */
-    Core::Renderer::Framebuffer::cleanup(mRenderData);
-    vkDestroyImageView(mRenderData.rdVkbDevice.device, mRenderData.rdDepthImageView, nullptr);
-    vmaDestroyImage(mRenderData.rdAllocator, mRenderData.rdDepthImage, mRenderData.rdDepthImageAlloc);
+    Core::Renderer::Framebuffer::cleanup(Core::Engine::getInstance().getRenderData());
+    vkDestroyImageView(Core::Engine::getInstance().getRenderData().rdVkbDevice.device, Core::Engine::getInstance().getRenderData().rdDepthImageView, nullptr);
+    vmaDestroyImage(Core::Engine::getInstance().getRenderData().rdAllocator, Core::Engine::getInstance().getRenderData().rdDepthImage, Core::Engine::getInstance().getRenderData().rdDepthImageAlloc);
 
-    mRenderData.rdVkbSwapchain.destroy_image_views(mRenderData.rdSwapchainImageViews);
+    Core::Engine::getInstance().getRenderData().rdVkbSwapchain.destroy_image_views(Core::Engine::getInstance().getRenderData().rdSwapchainImageViews);
 
     /* and recreate */
     if (!createSwapchain())
@@ -770,7 +761,7 @@ bool Core::Renderer::VkRenderer::createUBO()
 {
     size_t matrixSize = mPerspectiveViewMatrices.size() * sizeof(glm::mat4);
 
-    if (!Core::Renderer::UniformBuffer::init(mRenderData, mRenderData.rdPerspectiveViewMatrixUBO, matrixSize))
+    if (!Core::Renderer::UniformBuffer::init(Core::Engine::getInstance().getRenderData(), Core::Engine::getInstance().getRenderData().rdPerspectiveViewMatrixUBO, matrixSize))
     {
         Logger::log(1, "%s error: could not create uniform buffers\n", __FUNCTION__);
         return false;
@@ -780,7 +771,7 @@ bool Core::Renderer::VkRenderer::createUBO()
 
 bool Core::Renderer::VkRenderer::createVBO()
 {
-    if (!Core::Renderer::VertexBuffer::init(mRenderData, mRenderData.rdVertexBufferData, VertexBufferSize))
+    if (!Core::Renderer::VertexBuffer::init(Core::Engine::getInstance().getRenderData(), Core::Engine::getInstance().getRenderData().rdVertexBufferData, VertexBufferSize))
     {
         Logger::log(1, "%s error: could not create vertex buffer\n", __FUNCTION__);
         return false;
@@ -790,7 +781,7 @@ bool Core::Renderer::VkRenderer::createVBO()
 
 bool Core::Renderer::VkRenderer::createRenderPass()
 {
-    if (!Core::Renderer::Renderpass::init(mRenderData))
+    if (!Core::Renderer::Renderpass::init(Core::Engine::getInstance().getRenderData()))
     {
         Logger::log(1, "%s error: could not init renderpass\n", __FUNCTION__);
         return false;
@@ -800,7 +791,7 @@ bool Core::Renderer::VkRenderer::createRenderPass()
 
 bool Core::Renderer::VkRenderer::createPipelineLayout()
 {
-    if (!Core::Renderer::PipelineLayout::init(mRenderData, mRenderData.rdModelTexture, mRenderData.rdPipelineLayout))
+    if (!Core::Renderer::PipelineLayout::init(Core::Engine::getInstance().getRenderData(), Core::Engine::getInstance().getRenderData().rdModelTexture, Core::Engine::getInstance().getRenderData().rdPipelineLayout))
     {
         Logger::log(1, "%s error: could not init pipeline layout\n", __FUNCTION__);
         return false;
@@ -812,7 +803,7 @@ bool Core::Renderer::VkRenderer::createBasicPipeline()
 {
     const std::string vertexShaderFile = "shaders/basic.vert.spv";
     const std::string fragmentShaderFile = "shaders/basic.frag.spv";
-    if (!Pipeline::init(mRenderData, mRenderData.rdPipelineLayout, mRenderData.rdBasicPipeline,
+    if (!Pipeline::init(Core::Engine::getInstance().getRenderData(), Core::Engine::getInstance().getRenderData().rdPipelineLayout, Core::Engine::getInstance().getRenderData().rdBasicPipeline,
                         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile))
     {
         Logger::log(1, "%s error: could not init pipeline\n", __FUNCTION__);
@@ -825,7 +816,7 @@ bool Core::Renderer::VkRenderer::createLinePipeline()
 {
     const std::string vertexShaderFile = "shaders/line.vert.spv";
     const std::string fragmentShaderFile = "shaders/line.frag.spv";
-    if (!Pipeline::init(mRenderData, mRenderData.rdPipelineLayout, mRenderData.rdLinePipeline,
+    if (!Pipeline::init(Core::Engine::getInstance().getRenderData(), Core::Engine::getInstance().getRenderData().rdPipelineLayout, Core::Engine::getInstance().getRenderData().rdLinePipeline,
                         VK_PRIMITIVE_TOPOLOGY_LINE_LIST, vertexShaderFile, fragmentShaderFile))
     {
         Logger::log(1, "%s error: could not init line shader pipeline\n", __FUNCTION__);
@@ -838,7 +829,7 @@ bool Core::Renderer::VkRenderer::createGridPipeline()
 {
     const std::string vertexShaderFile = "shaders/grid.vert.spv";
     const std::string fragmentShaderFile = "shaders/grid.frag.spv";
-    if (!Pipeline::init(mRenderData, mRenderData.rdPipelineLayout, mRenderData.rdGridPipeline,
+    if (!Pipeline::init(Core::Engine::getInstance().getRenderData(), Core::Engine::getInstance().getRenderData().rdPipelineLayout, Core::Engine::getInstance().getRenderData().rdGridPipeline,
                         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile))
     {
         Logger::log(1, "%s error: could not init grid shader pipeline\n", __FUNCTION__);
@@ -849,7 +840,7 @@ bool Core::Renderer::VkRenderer::createGridPipeline()
 
 bool Core::Renderer::VkRenderer::createFramebuffer()
 {
-    if (!Core::Renderer::Framebuffer::init(mRenderData))
+    if (!Core::Renderer::Framebuffer::init(Core::Engine::getInstance().getRenderData()))
     {
         Logger::log(1, "%s error: could not init framebuffer\n", __FUNCTION__);
         return false;
@@ -859,7 +850,7 @@ bool Core::Renderer::VkRenderer::createFramebuffer()
 
 bool Core::Renderer::VkRenderer::createCommandPool()
 {
-    if (!Core::Renderer::CommandPool::init(mRenderData))
+    if (!Core::Renderer::CommandPool::init(Core::Engine::getInstance().getRenderData()))
     {
         Logger::log(1, "%s error: could not create command pool\n", __FUNCTION__);
         return false;
@@ -869,7 +860,7 @@ bool Core::Renderer::VkRenderer::createCommandPool()
 
 bool Core::Renderer::VkRenderer::createCommandBuffer()
 {
-    if (!Core::Renderer::CommandBuffer::init(mRenderData, mRenderData.rdCommandBuffer))
+    if (!Core::Renderer::CommandBuffer::init(Core::Engine::getInstance().getRenderData(), Core::Engine::getInstance().getRenderData().rdCommandBuffer))
     {
         Logger::log(1, "%s error: could not create command buffers\n", __FUNCTION__);
         return false;
@@ -879,7 +870,7 @@ bool Core::Renderer::VkRenderer::createCommandBuffer()
 
 bool Core::Renderer::VkRenderer::createSyncObjects()
 {
-    if (!Core::Renderer::SyncObjects::init(mRenderData))
+    if (!Core::Renderer::SyncObjects::init(Core::Engine::getInstance().getRenderData()))
     {
         Logger::log(1, "%s error: could not create sync objects\n", __FUNCTION__);
         return false;
@@ -892,7 +883,7 @@ bool Core::Renderer::VkRenderer::loadTexture()
 {
     const std::string textureFileName = "textures/default.png";
     std::future<bool> textureLoadFuture =
-        Core::Renderer::Texture::loadTexture(mRenderData, mRenderData.rdModelTexture, textureFileName);
+        Core::Renderer::Texture::loadTexture(Core::Engine::getInstance().getRenderData(), Core::Engine::getInstance().getRenderData().rdModelTexture, textureFileName);
     if (!textureLoadFuture.get())
     {
         Logger::log(1, "%s error: could not load texture\n", __FUNCTION__);
@@ -905,10 +896,10 @@ bool Core::Renderer::VkRenderer::loadTexture()
 bool Core::Renderer::VkRenderer::initVma()
 {
     VmaAllocatorCreateInfo allocatorInfo{};
-    allocatorInfo.physicalDevice = mRenderData.rdVkbPhysicalDevice.physical_device;
-    allocatorInfo.device = mRenderData.rdVkbDevice.device;
-    allocatorInfo.instance = mRenderData.rdVkbInstance.instance;
-    if (vmaCreateAllocator(&allocatorInfo, &mRenderData.rdAllocator) != VK_SUCCESS)
+    allocatorInfo.physicalDevice = Core::Engine::getInstance().getRenderData().rdVkbPhysicalDevice.physical_device;
+    allocatorInfo.device = Core::Engine::getInstance().getRenderData().rdVkbDevice.device;
+    allocatorInfo.instance = Core::Engine::getInstance().getRenderData().rdVkbInstance.instance;
+    if (vmaCreateAllocator(&allocatorInfo, &Core::Engine::getInstance().getRenderData().rdAllocator) != VK_SUCCESS)
     {
         Logger::log(1, "%s error: could not init VMA\n", __FUNCTION__);
         return false;
@@ -919,7 +910,7 @@ bool Core::Renderer::VkRenderer::initVma()
 
 bool Core::Renderer::VkRenderer::initUserInterface()
 {
-    if (!mUserInterface.init(mRenderData))
+    if (!mUserInterface.init(Core::Engine::getInstance().getRenderData()))
     {
         Logger::log(1, "%s error: could not init ImGui\n", __FUNCTION__);
         return false;
@@ -930,7 +921,7 @@ bool Core::Renderer::VkRenderer::initUserInterface()
 bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
 {
     const std::string modelFileName = "assets/mixamo/models/FemaleModel.fbx";
-    Core::Utils::MeshData primitiveMeshData = Core::Utils::loadMeshFromFile(modelFileName, mRenderData);
+    Core::Utils::MeshData primitiveMeshData = Core::Utils::loadMeshFromFile(modelFileName, Core::Engine::getInstance().getRenderData());
     primitiveMeshData.animations = {
         Core::Animations::AnimationsUtils::loadAnimationFromFile("assets/mixamo/animations/StandingIdleAnimation.fbx"),
         Core::Animations::AnimationsUtils::loadAnimationFromFile("assets/mixamo/animations/AngryAnimation.fbx"),
@@ -938,7 +929,7 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
         Core::Animations::AnimationsUtils::loadAnimationFromFile("assets/mixamo/animations/HipHopDancingAnimation.fbx"),
         Core::Animations::AnimationsUtils::loadAnimationFromFile("assets/mixamo/animations/StandingReactDeathBackwardAnimation.fbx")
     };
-    if (!Core::Renderer::MeshPipelineLayout::init(mRenderData, mRenderData.rdMeshPipelineLayout))
+    if (!Core::Renderer::MeshPipelineLayout::init(Core::Engine::getInstance().getRenderData(), Core::Engine::getInstance().getRenderData().rdMeshPipelineLayout))
     {
         Logger::log(1, "%s error: could not init mesh pipeline layout\n", __FUNCTION__);
         return false;
@@ -946,7 +937,7 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
 
     const std::string vertexShaderFile = "shaders/primitive.vert.spv";
     const std::string fragmentShaderFile = "shaders/primitive.frag.spv";
-    if (!MeshPipeline::init(mRenderData, mRenderData.rdMeshPipelineLayout, mRenderData.rdMeshPipeline,
+    if (!MeshPipeline::init(Core::Engine::getInstance().getRenderData(), Core::Engine::getInstance().getRenderData().rdMeshPipelineLayout, Core::Engine::getInstance().getRenderData().rdMeshPipeline,
                             VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile))
     {
         Logger::log(1, "%s error: could not init mesh pipeline\n", __FUNCTION__);
@@ -958,16 +949,16 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
 
     auto testMeshOne = std::make_shared<Mesh>("TestMesh_1", primitiveMeshData.skeleton);
     testMeshOne->setupAnimations(primitiveMeshData.animations);
-    testMeshOne->initDebugSkeleton(mRenderData);
+    testMeshOne->initDebugSkeleton(Core::Engine::getInstance().getRenderData());
     testMeshOne->getTransform().position = {1, 0, 0};
 
     auto testMeshTwo = std::make_shared<Mesh>("TestMesh_2", primitiveMeshData.skeleton);
     testMeshTwo->setupAnimations(primitiveMeshData.animations);
-    testMeshTwo->initDebugSkeleton(mRenderData);
+    testMeshTwo->initDebugSkeleton(Core::Engine::getInstance().getRenderData());
     testMeshTwo->getTransform().position = {-1, 0, 0};
 
-    mScene->addObject(testMeshOne);
-    mScene->addObject(testMeshTwo);
+    Core::Engine::getInstance().getSystem<Scene::Scene>()->addObject(testMeshOne);
+    Core::Engine::getInstance().getSystem<Scene::Scene>()->addObject(testMeshTwo);
 
     for (auto& primitive : primitiveMeshData.primitives)
     {
@@ -980,9 +971,9 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
         {
             primitiveTexture = foundDiffuseTexture->second;
         }
-        testMeshOne->addPrimitive(primitive.vertices, primitive.indices, primitiveTexture, mRenderData, primitive.material,
+        testMeshOne->addPrimitive(primitive.vertices, primitive.indices, primitiveTexture, Core::Engine::getInstance().getRenderData(), primitive.material,
                             primitive.bones);
-        testMeshTwo->addPrimitive(primitive.vertices, primitive.indices, primitiveTexture, mRenderData, primitive.material,
+        testMeshTwo->addPrimitive(primitive.vertices, primitive.indices, primitiveTexture, Core::Engine::getInstance().getRenderData(), primitive.material,
                                   primitive.bones);
     }
 
@@ -991,7 +982,7 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
 
 bool Core::Renderer::VkRenderer::createDebugSkeletonPipelineLayout()
 {
-    if (!Core::Renderer::DebugSkeletonPipelineLayout::init(mRenderData, mRenderData.rdDebugSkeletonPipelineLayout))
+    if (!Core::Renderer::DebugSkeletonPipelineLayout::init(Core::Engine::getInstance().getRenderData(), Core::Engine::getInstance().getRenderData().rdDebugSkeletonPipelineLayout))
     {
         Logger::log(1, "%s error: could not init debug skeleton pipeline layout\n", __FUNCTION__);
         return false;
@@ -1004,7 +995,7 @@ bool Core::Renderer::VkRenderer::createDebugSkeletonPipeline()
 {
     const std::string vertexShaderFile = "shaders/debug_line.vert.spv";
     const std::string fragmentShaderFile = "shaders/debug_line.frag.spv";
-    if (!DebugSkeletonPipeline::init(mRenderData, mRenderData.rdDebugSkeletonPipelineLayout, mRenderData.rdDebugSkeletonPipeline,
+    if (!DebugSkeletonPipeline::init(Core::Engine::getInstance().getRenderData(), Core::Engine::getInstance().getRenderData().rdDebugSkeletonPipelineLayout, Core::Engine::getInstance().getRenderData().rdDebugSkeletonPipeline,
                                      VK_PRIMITIVE_TOPOLOGY_LINE_LIST, vertexShaderFile, fragmentShaderFile))
     {
         Logger::log(1, "%s error: could not init debug skeleton shader pipeline\n", __FUNCTION__);
@@ -1016,18 +1007,18 @@ bool Core::Renderer::VkRenderer::createDebugSkeletonPipeline()
 
 void Core::Renderer::VkRenderer::handleWindowMoveEvents(int xPosition, int yPosition)
 {
-    Logger::log(1, "%s: mRenderData.rdWindow has been moved to %i/%i\n", __FUNCTION__, xPosition, yPosition);
+    Logger::log(1, "%s: Core::Engine::getInstance().getRenderData().rdWindow has been moved to %i/%i\n", __FUNCTION__, xPosition, yPosition);
 }
 
 void Core::Renderer::VkRenderer::handleWindowMinimizedEvents(int minimized)
 {
     if (minimized)
     {
-        Logger::log(1, "%s: mRenderData.rdWindow has been minimized\n", __FUNCTION__);
+        Logger::log(1, "%s: Core::Engine::getInstance().getRenderData().rdWindow has been minimized\n", __FUNCTION__);
     }
     else
     {
-        Logger::log(1, "%s: mRenderData.rdWindow has been restored\n", __FUNCTION__);
+        Logger::log(1, "%s: Core::Engine::getInstance().getRenderData().rdWindow has been restored\n", __FUNCTION__);
     }
 }
 
@@ -1035,17 +1026,17 @@ void Core::Renderer::VkRenderer::handleWindowMaximizedEvents(int maximized)
 {
     if (maximized)
     {
-        Logger::log(1, "%s: mRenderData.rdWindow has been maximized\n", __FUNCTION__);
+        Logger::log(1, "%s: Core::Engine::getInstance().getRenderData().rdWindow has been maximized\n", __FUNCTION__);
     }
     else
     {
-        Logger::log(1, "%s: mRenderData.rdWindow has been restored\n", __FUNCTION__);
+        Logger::log(1, "%s: Core::Engine::getInstance().getRenderData().rdWindow has been restored\n", __FUNCTION__);
     }
 }
 
 void Core::Renderer::VkRenderer::handleWindowCloseEvents()
 {
-    Logger::log(1, "%s: mRenderData.rdWindow has been closed\n", __FUNCTION__);
+    Logger::log(1, "%s: Core::Engine::getInstance().getRenderData().rdWindow has been closed\n", __FUNCTION__);
 }
 
 void Core::Renderer::VkRenderer::handleMouseEnterLeaveEvents(int enter)
@@ -1068,33 +1059,33 @@ void Core::Renderer::VkRenderer::handleCameraMovementKeys()
         return;
     }
 
-    mRenderData.rdMoveForward = 0.f;
-    if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_W) == GLFW_PRESS)
+    Core::Engine::getInstance().getRenderData().rdMoveForward = 0.f;
+    if (glfwGetKey(Core::Engine::getInstance().getRenderData().rdWindow, GLFW_KEY_W) == GLFW_PRESS)
     {
-        mRenderData.rdMoveForward += 1.f;
+        Core::Engine::getInstance().getRenderData().rdMoveForward += 1.f;
     }
-    if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_S) == GLFW_PRESS)
+    if (glfwGetKey(Core::Engine::getInstance().getRenderData().rdWindow, GLFW_KEY_S) == GLFW_PRESS)
     {
-        mRenderData.rdMoveForward -= 1.f;
-    }
-
-    mRenderData.rdMoveRight = 0.f;
-    if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_D) == GLFW_PRESS)
-    {
-        mRenderData.rdMoveRight += 1;
-    }
-    if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_A) == GLFW_PRESS)
-    {
-        mRenderData.rdMoveRight -= 1.f;
+        Core::Engine::getInstance().getRenderData().rdMoveForward -= 1.f;
     }
 
-    mRenderData.rdMoveUp = 0.f;
-    if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_E) == GLFW_PRESS)
+    Core::Engine::getInstance().getRenderData().rdMoveRight = 0.f;
+    if (glfwGetKey(Core::Engine::getInstance().getRenderData().rdWindow, GLFW_KEY_D) == GLFW_PRESS)
     {
-        mRenderData.rdMoveUp += 1.f;
+        Core::Engine::getInstance().getRenderData().rdMoveRight += 1;
     }
-    if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_Q) == GLFW_PRESS)
+    if (glfwGetKey(Core::Engine::getInstance().getRenderData().rdWindow, GLFW_KEY_A) == GLFW_PRESS)
     {
-        mRenderData.rdMoveUp -= 1.f;
+        Core::Engine::getInstance().getRenderData().rdMoveRight -= 1.f;
+    }
+
+    Core::Engine::getInstance().getRenderData().rdMoveUp = 0.f;
+    if (glfwGetKey(Core::Engine::getInstance().getRenderData().rdWindow, GLFW_KEY_E) == GLFW_PRESS)
+    {
+        Core::Engine::getInstance().getRenderData().rdMoveUp += 1.f;
+    }
+    if (glfwGetKey(Core::Engine::getInstance().getRenderData().rdWindow, GLFW_KEY_Q) == GLFW_PRESS)
+    {
+        Core::Engine::getInstance().getRenderData().rdMoveUp -= 1.f;
     }
 }

@@ -1,13 +1,13 @@
-#include "AnimatorSingleton.h"
+#include "Animator.h"
 #include "AnimationsUtils.h"
 
-void Core::Animations::AnimatorSingleton::update(const Renderer::VkRenderData& renderData, Renderer::Mesh* mesh)
+void Core::Animations::Animator::update(const Renderer::VkRenderData& renderData, Renderer::Mesh* mesh)
 {
     updateBonesTransform(mesh, renderData.selectedAnimationIndexToPlay);
     mAnimationTime += renderData.rdTickDiff;
 }
 
-void Core::Animations::AnimatorSingleton::updateBonesTransform(Renderer::Mesh* mesh, int animationToPlayIndex)
+void Core::Animations::Animator::updateBonesTransform(Renderer::Mesh* mesh, int animationToPlayIndex)
 {
     for (Renderer::Primitive& primitive : mesh->getPrimitives())
     {
@@ -52,7 +52,7 @@ const Core::Animations::AnimationChannel* findChannel(const Core::Animations::An
     return nullptr;
 }
 
-glm::vec3 Core::Animations::AnimatorSingleton::interpolatePositionClip(const std::vector<KeyframeVec3>& keyframes,
+glm::vec3 Core::Animations::Animator::interpolatePositionClip(const std::vector<KeyframeVec3>& keyframes,
                                                                        float animationTime)
 {
     if (keyframes.size() == 1)
@@ -75,7 +75,7 @@ glm::vec3 Core::Animations::AnimatorSingleton::interpolatePositionClip(const std
     return keyframes.back().value;
 }
 
-glm::quat Core::Animations::AnimatorSingleton::interpolateRotationClip(const std::vector<KeyframeQuat>& keyframes,
+glm::quat Core::Animations::Animator::interpolateRotationClip(const std::vector<KeyframeQuat>& keyframes,
                                                                        float animationTime)
 {
     if (keyframes.size() == 1)
@@ -98,13 +98,13 @@ glm::quat Core::Animations::AnimatorSingleton::interpolateRotationClip(const std
     return keyframes.back().value;
 }
 
-glm::vec3 Core::Animations::AnimatorSingleton::interpolateScaleClip(const std::vector<KeyframeVec3>& keyframes,
+glm::vec3 Core::Animations::Animator::interpolateScaleClip(const std::vector<KeyframeVec3>& keyframes,
                                                                     float animationTime)
 {
     return interpolatePositionClip(keyframes, animationTime);
 }
 
-void Core::Animations::AnimatorSingleton::readNodeHierarchyClip(const AnimationClip& clip, float animationTime,
+void Core::Animations::Animator::readNodeHierarchyClip(const AnimationClip& clip, float animationTime,
                                                                 const BoneNode& node, const glm::mat4& parentTransform,
                                                                 BonesInfo& bonesInfo, const Skeleton& skeleton)
 {

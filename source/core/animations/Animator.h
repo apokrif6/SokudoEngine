@@ -7,22 +7,11 @@
 #include <map>
 #include <memory>
 
-// TODO
-// create templated class for all singletons
 namespace Core::Animations
 {
-class AnimatorSingleton
+class Animator
 {
   public:
-    static AnimatorSingleton& getInstance()
-    {
-        static AnimatorSingleton instance;
-        return instance;
-    }
-
-    AnimatorSingleton(const AnimatorSingleton&) = delete;
-    AnimatorSingleton& operator=(const AnimatorSingleton&) = delete;
-
     void update(const Renderer::VkRenderData& renderData, Renderer::Mesh* mesh);
 
     // TODO
@@ -30,9 +19,6 @@ class AnimatorSingleton
     std::vector<std::string> loadedAnimations{};
 
   private:
-    AnimatorSingleton() = default;
-    ~AnimatorSingleton() = default;
-
     void updateBonesTransform(Renderer::Mesh* mesh, int animationToPlayIndex);
 
     glm::vec3 interpolatePositionClip(const std::vector<KeyframeVec3>& keyframes, float animationTime);

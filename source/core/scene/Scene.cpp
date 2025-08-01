@@ -5,7 +5,7 @@ void Core::Scene::Scene::addObject(std::shared_ptr<SceneObject> object)
     mObjects.emplace_back(std::move(object));
 }
 
-void Core::Scene::Scene::update(Core::Renderer::VkRenderData& renderData)
+void Core::Scene::Scene::update(Core::Renderer::VkRenderData& renderData, float deltaTime)
 {
     for (auto& object : mObjects)
     {

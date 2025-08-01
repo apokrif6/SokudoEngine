@@ -10,7 +10,8 @@
 #include "UserInterface.h"
 #include "core/vk-renderer/buffers/CommandBuffer.h"
 #include "core/tools/Logger.h"
-#include "core/animations/AnimatorSingleton.h"
+#include "core/animations/Animator.h"
+#include "core/engine/Engine.h"
 
 void Core::Renderer::UserInterface::createFrame(VkRenderData& renderData)
 {
@@ -132,13 +133,11 @@ void Core::Renderer::UserInterface::createFrame(VkRenderData& renderData)
 
         if (ImGui::BeginTabItem("Animation"))
         {
-            // TODO
-            // animation timeline slider should be implemented
             ImGui::Checkbox("Should play animation", &renderData.shouldPlayAnimation);
             ImGui::Checkbox("Should draw debug skeleton", &renderData.shouldDrawDebugSkeleton);
 
             std::vector<std::string>& loadedAnimations =
-                Core::Animations::AnimatorSingleton::getInstance().loadedAnimations;
+                Core::Engine::getInstance().getSystem<Animations::Animator>()->loadedAnimations;
             if (ImGui::BeginCombo("##Loaded animations",
                                   loadedAnimations[renderData.selectedAnimationIndexToPlay].c_str(),
                                   ImGuiComboFlags_WidthFitPreview))
