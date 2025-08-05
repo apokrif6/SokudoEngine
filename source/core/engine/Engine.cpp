@@ -19,7 +19,7 @@ void Core::Engine::init()
 
 void Core::Engine::update()
 {
-    float tickTime = static_cast<float>(glfwGetTime());
+    auto tickTime = static_cast<float>(glfwGetTime());
     mRenderData.rdTickDiff = tickTime - mLastTickTime;
 
     mRenderData.rdFrameTime = mFrameTimer.stop();
@@ -29,9 +29,10 @@ void Core::Engine::update()
 
     mLastTickTime = tickTime;
 }
+
 void Core::Engine::draw()
 {
-    mRenderer->draw();
+    mRenderer->draw(mRenderData);
 }
 
 void Core::Engine::cleanup()

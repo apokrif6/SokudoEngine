@@ -67,6 +67,33 @@ bool Core::Renderer::VertexBuffer::uploadData(Core::Renderer::VkRenderData& rend
     std::memcpy(data, vertexData.vertices.data(), vertexDataSize);
     vmaUnmapMemory(renderData.rdAllocator, vertexBufferData.rdStagingBufferAlloc);
 
+    VkCommandBufferAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.commandPool = renderData.rdCommandPool;
+    allocInfo.commandBufferCount = 1;
+
+    VkCommandBuffer tempCmdBuffer;
+    vkAllocateCommandBuffers(renderData.rdVkbDevice, &allocInfo, &tempCmdBuffer);
+
+    VkCommandBufferBeginInfo cmdBeginInfo{};
+    cmdBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    cmdBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+    if (vkBeginCommandBuffer(tempCmdBuffer, &cmdBeginInfo) != VK_SUCCESS)
+    {
+        Logger::log(1, "%s error: failed to begin command buffer\n", __FUNCTION__);
+        return false;
+    }
+
+    VkBufferCopy stagingBufferCopy{};
+    stagingBufferCopy.srcOffset = 0;
+    stagingBufferCopy.dstOffset = 0;
+    stagingBufferCopy.size = vertexDataSize;
+
+    vkCmdCopyBuffer(tempCmdBuffer, vertexBufferData.rdStagingBuffer, vertexBufferData.rdVertexBuffer, 1,
+                    &stagingBufferCopy);
+
     VkBufferMemoryBarrier vertexBufferBarrier{};
     vertexBufferBarrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
     vertexBufferBarrier.srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
@@ -77,15 +104,30 @@ bool Core::Renderer::VertexBuffer::uploadData(Core::Renderer::VkRenderData& rend
     vertexBufferBarrier.offset = 0;
     vertexBufferBarrier.size = vertexDataSize;
 
-    VkBufferCopy stagingBufferCopy{};
-    stagingBufferCopy.srcOffset = 0;
-    stagingBufferCopy.dstOffset = 0;
-    stagingBufferCopy.size = vertexDataSize;
-
-    vkCmdCopyBuffer(renderData.rdCommandBuffer, vertexBufferData.rdStagingBuffer, vertexBufferData.rdVertexBuffer, 1,
-                    &stagingBufferCopy);
-    vkCmdPipelineBarrier(renderData.rdCommandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_VERTEX_INPUT_BIT,
+    vkCmdPipelineBarrier(tempCmdBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_VERTEX_INPUT_BIT,
                          0, 0, nullptr, 1, &vertexBufferBarrier, 0, nullptr);
+
+    if (vkEndCommandBuffer(tempCmdBuffer) != VK_SUCCESS)
+    {
+        Logger::log(1, "%s error: failed to end command buffer\n", __FUNCTION__);
+        return false;
+    }
+
+    VkSubmitInfo submitInfo{};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &tempCmdBuffer;
+
+    VkFence fence;
+    VkFenceCreateInfo fenceInfo{};
+    fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    vkCreateFence(renderData.rdVkbDevice, &fenceInfo, nullptr, &fence);
+
+    vkQueueSubmit(renderData.rdGraphicsQueue, 1, &submitInfo, fence);
+    vkWaitForFences(renderData.rdVkbDevice, 1, &fence, VK_TRUE, UINT64_MAX);
+
+    vkDestroyFence(renderData.rdVkbDevice, fence, nullptr);
+    vkFreeCommandBuffers(renderData.rdVkbDevice, renderData.rdCommandPool, 1, &tempCmdBuffer);
 
     return true;
 }
