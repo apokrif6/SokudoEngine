@@ -126,7 +126,6 @@ struct VkRenderData
     int rdHeight = 0;
 
     unsigned int rdTriangleCount = 0;
-    unsigned int rdGltfTriangleCount = 0;
 
     int rdFieldOfView = 90;
 
@@ -161,6 +160,8 @@ struct VkRenderData
     int selectedAnimationIndexToPlay = 0;
 
     VmaAllocator rdAllocator;
+
+    uint32_t rdCurrentImageIndex = 0;
 
     vkb::Instance rdVkbInstance{};
     vkb::PhysicalDevice rdVkbPhysicalDevice{};
@@ -207,7 +208,6 @@ struct VkRenderData
     VkVertexBufferData rdVertexBufferData{};
 
     VkUniformBufferData rdPerspectiveViewMatrixUBO{};
-    VkShaderStorageBufferData rdJointMatrixSSBO{};
 
     VkDescriptorPool rdImguiDescriptorPool = VK_NULL_HANDLE;
 };

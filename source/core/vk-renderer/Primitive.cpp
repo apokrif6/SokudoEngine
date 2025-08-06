@@ -69,6 +69,8 @@ void Core::Renderer::Primitive::uploadUniformBuffer(Core::Renderer::VkRenderData
 
 void Core::Renderer::Primitive::draw(const Core::Renderer::VkRenderData& renderData)
 {
+    vkCmdBindPipeline(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdMeshPipeline);
+
     if (mMaterialInfo.useTexture)
     {
         vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -96,14 +98,12 @@ void Core::Renderer::Primitive::draw(const Core::Renderer::VkRenderData& renderD
     vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                             renderData.rdMeshPipelineLayout, 4, 1, &mModelUBO.rdUBODescriptorSet, 0, nullptr);
 
-    VkDeviceSize offsets[1] = {0};
+    VkDeviceSize offset = 0;
     vkCmdBindVertexBuffers(renderData.rdCommandBuffer, 0, 1,
-                           &primitiveRenderData.rdModelVertexBufferData.rdVertexBuffer, offsets);
+                           &primitiveRenderData.rdModelVertexBufferData.rdVertexBuffer, &offset);
 
     vkCmdBindIndexBuffer(renderData.rdCommandBuffer, primitiveRenderData.rdModelIndexBufferData.rdIndexBuffer, 0,
                          VK_INDEX_TYPE_UINT32);
-
-    vkCmdBindPipeline(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdMeshPipeline);
 
     vkCmdDrawIndexed(renderData.rdCommandBuffer, static_cast<int64_t>(mIndexBufferData.size()), 1, 0, 0, 0);
 }

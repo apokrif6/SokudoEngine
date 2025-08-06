@@ -155,6 +155,7 @@ bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned i
     Logger::log(1, "%s: Vulkan Core::Renderer initialized to %ix%i\n", __FUNCTION__, width, height);
     return true;
 }
+
 Core::Renderer::VkRenderer::VkRenderer(GLFWwindow* inWindow)
 {
     Core::Engine::getInstance().getRenderData().rdWindow = inWindow;
@@ -217,6 +218,20 @@ void Core::Renderer::VkRenderer::onEvent(const Event& event)
             glfwSetInputMode(Core::Engine::getInstance().getRenderData().rdWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         }
     }
+}
+
+void Core::Renderer::VkRenderer::beginUploadFrame(Core::Renderer::VkRenderData& renderData)
+{
+    vkWaitForFences(renderData.rdVkbDevice.device, 1, &renderData.rdRenderFence, VK_TRUE, UINT64_MAX);
+
+    vkResetFences(renderData.rdVkbDevice.device, 1, &renderData.rdRenderFence);
+    vkResetCommandBuffer(renderData.rdCommandBuffer, 0);
+
+    VkCommandBufferBeginInfo beginInfo{};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+    vkBeginCommandBuffer(renderData.rdCommandBuffer, &beginInfo);
 }
 
 void Core::Renderer::VkRenderer::update(VkRenderData& renderData, float deltaTime)
@@ -321,51 +336,49 @@ void Core::Renderer::VkRenderer::update(VkRenderData& renderData, float deltaTim
     renderData.rdUIGenerateTime = mUIGenerateTimer.stop();
 }
 
-bool Core::Renderer::VkRenderer::draw(VkRenderData& renderData)
+void Core::Renderer::VkRenderer::endUploadFrame(Core::Renderer::VkRenderData& renderData)
 {
-    if (vkWaitForFences(renderData.rdVkbDevice.device, 1, &renderData.rdRenderFence, VK_TRUE, UINT64_MAX) != VK_SUCCESS)
-    {
-        Logger::log(1, "Renderer::draw - vkWaitForFences failed");
-        return false;
-    }
+    vkEndCommandBuffer(renderData.rdCommandBuffer);
 
-    if (vkResetFences(renderData.rdVkbDevice.device, 1, &renderData.rdRenderFence) != VK_SUCCESS)
-    {
-        Logger::log(1, "Renderer::draw - vkResetFences failed");
-        return false;
-    }
+    VkSubmitInfo submitInfo{};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &renderData.rdCommandBuffer;
 
+    if (vkQueueSubmit(renderData.rdGraphicsQueue, 1, &submitInfo, renderData.rdRenderFence) != VK_SUCCESS)
+    {
+        Logger::log(1, "VkRenderer::endUploadFrame error: failed to submit command buffer\n");
+        return;
+    }
+}
+
+void Core::Renderer::VkRenderer::beginRenderFrame(Core::Renderer::VkRenderData& renderData)
+{
     uint32_t imageIndex = 0;
     VkResult result = vkAcquireNextImageKHR(renderData.rdVkbDevice.device, renderData.rdVkbSwapchain.swapchain,
                                             UINT64_MAX, renderData.rdPresentSemaphore, VK_NULL_HANDLE, &imageIndex);
-
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
     {
-        return recreateSwapchain();
-    }
-    else if (result != VK_SUCCESS)
-    {
-        Logger::log(1, "Renderer::draw - vkAcquireNextImageKHR failed: %i", result);
-        return false;
+        recreateSwapchain();
+        return;
     }
 
-    if (vkResetCommandBuffer(renderData.rdCommandBuffer, 0) != VK_SUCCESS)
-    {
-        Logger::log(1, "Renderer::draw - vkResetCommandBuffer failed");
-        return false;
-    }
+    vkWaitForFences(renderData.rdVkbDevice.device, 1, &renderData.rdRenderFence, VK_TRUE, UINT64_MAX);
+
+    vkResetFences(renderData.rdVkbDevice.device, 1, &renderData.rdRenderFence);
+
+    renderData.rdCurrentImageIndex = imageIndex;
 
     VkCommandBufferBeginInfo beginInfo{VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
     if (vkBeginCommandBuffer(renderData.rdCommandBuffer, &beginInfo) != VK_SUCCESS)
     {
-        Logger::log(1, "Renderer::draw - vkBeginCommandBuffer failed");
-        return false;
+        Logger::log(1, "VkRenderer::beginRenderFrame - vkBeginCommandBuffer failed");
+        return;
     }
 
     VkClearValue clearValues[2] = {{{{0.f, 0.f, 0.f, 1.0f}}}, {1.0f, 0}};
-
     VkRenderPassBeginInfo renderPassInfo{VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
     renderPassInfo.renderPass = renderData.rdRenderpass;
     renderPassInfo.framebuffer = renderData.rdFramebuffers[imageIndex];
@@ -373,17 +386,25 @@ bool Core::Renderer::VkRenderer::draw(VkRenderData& renderData)
     renderPassInfo.clearValueCount = 2;
     renderPassInfo.pClearValues = clearValues;
 
-    VkViewport viewport{0,
-                        static_cast<float>(renderData.rdVkbSwapchain.extent.height),
-                        static_cast<float>(renderData.rdVkbSwapchain.extent.width),
-                        -static_cast<float>(renderData.rdVkbSwapchain.extent.height),
-                        0.0f,
-                        1.0f};
+    VkViewport viewport{
+        0,
+        static_cast<float>(renderData.rdVkbSwapchain.extent.height),
+        static_cast<float>(renderData.rdVkbSwapchain.extent.width),
+        -static_cast<float>(renderData.rdVkbSwapchain.extent.height),
+        0.0f,
+        1.0f
+    };
+
     VkRect2D scissor{{0, 0}, renderData.rdVkbSwapchain.extent};
 
     vkCmdBeginRenderPass(renderData.rdCommandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
     vkCmdSetViewport(renderData.rdCommandBuffer, 0, 1, &viewport);
     vkCmdSetScissor(renderData.rdCommandBuffer, 0, 1, &scissor);
+}
+
+bool Core::Renderer::VkRenderer::draw(VkRenderData& renderData)
+{
+    vkCmdBindPipeline(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdLinePipeline);
 
     vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdPipelineLayout, 0,
                             1, &renderData.rdModelTexture.texTextureDescriptorSet, 0, nullptr);
@@ -395,7 +416,6 @@ bool Core::Renderer::VkRenderer::draw(VkRenderData& renderData)
 
     if (mLineIndexCount > 0)
     {
-        vkCmdBindPipeline(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdLinePipeline);
         vkCmdSetLineWidth(renderData.rdCommandBuffer, 3.0f);
         vkCmdDraw(renderData.rdCommandBuffer, mLineIndexCount, 1, 0, 0);
     }
@@ -411,12 +431,17 @@ bool Core::Renderer::VkRenderer::draw(VkRenderData& renderData)
     mUserInterface.render(renderData);
     renderData.rdUIDrawTime = mUIDrawTimer.stop();
 
+    return true;
+}
+
+void Core::Renderer::VkRenderer::endRenderFrame(Core::Renderer::VkRenderData& renderData)
+{
     vkCmdEndRenderPass(renderData.rdCommandBuffer);
 
     if (vkEndCommandBuffer(renderData.rdCommandBuffer) != VK_SUCCESS)
     {
-        Logger::log(1, "Renderer::draw - vkEndCommandBuffer failed");
-        return false;
+        Logger::log(1, "VkRenderer::endRenderFrame - vkEndCommandBuffer failed");
+        return;
     }
 
     VkSubmitInfo submitInfo{VK_STRUCTURE_TYPE_SUBMIT_INFO};
@@ -431,8 +456,8 @@ bool Core::Renderer::VkRenderer::draw(VkRenderData& renderData)
 
     if (vkQueueSubmit(renderData.rdGraphicsQueue, 1, &submitInfo, renderData.rdRenderFence) != VK_SUCCESS)
     {
-        Logger::log(1, "Renderer::draw - vkQueueSubmit failed");
-        return false;
+        Logger::log(1, "VkRenderer::endRenderFrame - vkQueueSubmit failed");
+        return;
     }
 
     VkPresentInfoKHR presentInfo{VK_STRUCTURE_TYPE_PRESENT_INFO_KHR};
@@ -440,10 +465,9 @@ bool Core::Renderer::VkRenderer::draw(VkRenderData& renderData)
     presentInfo.pWaitSemaphores = &renderData.rdRenderSemaphore;
     presentInfo.swapchainCount = 1;
     presentInfo.pSwapchains = &renderData.rdVkbSwapchain.swapchain;
-    presentInfo.pImageIndices = &imageIndex;
+    presentInfo.pImageIndices = &renderData.rdCurrentImageIndex;
 
-    result = vkQueuePresentKHR(renderData.rdPresentQueue, &presentInfo);
-    return result == VK_SUCCESS || result == VK_SUBOPTIMAL_KHR;
+    vkQueuePresentKHR(renderData.rdPresentQueue, &presentInfo);
 }
 
 void Core::Renderer::VkRenderer::cleanup(VkRenderData& renderData)

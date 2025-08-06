@@ -32,9 +32,17 @@ class VkRenderer final : public EventListener
 
     void onEvent(const Event& event) override;
 
+    void beginUploadFrame(VkRenderData& renderData);
+
     void update(VkRenderData& renderData, float deltaTime);
 
+    void endUploadFrame(VkRenderData& renderData);
+
+    void beginRenderFrame(VkRenderData& renderData);
+
     bool draw(VkRenderData& renderData);
+
+    void endRenderFrame(VkRenderData& renderData);
 
     void cleanup(VkRenderData& renderData);
 

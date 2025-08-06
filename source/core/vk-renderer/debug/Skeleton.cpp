@@ -30,8 +30,8 @@ void Core::Renderer::Debug::Skeleton::draw(Core::Renderer::VkRenderData& renderD
                             renderData.rdDebugSkeletonPipelineLayout, 0, 1,
                             &renderData.rdPerspectiveViewMatrixUBO.rdUBODescriptorSet, 0, nullptr);
 
-    VkDeviceSize offsets[] = {0};
-    vkCmdBindVertexBuffers(renderData.rdCommandBuffer, 0, 1, &mDebugLinesBuffer.rdVertexBuffer, offsets);
+    VkDeviceSize offset = 0;
+    vkCmdBindVertexBuffers(renderData.rdCommandBuffer, 0, 1, &mDebugLinesBuffer.rdVertexBuffer, &offset);
 
     vkCmdBindPipeline(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdDebugSkeletonPipeline);
     vkCmdSetLineWidth(renderData.rdCommandBuffer, 3.0f);

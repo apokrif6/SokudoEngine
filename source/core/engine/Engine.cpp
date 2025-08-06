@@ -25,14 +25,24 @@ void Core::Engine::update()
     mRenderData.rdFrameTime = mFrameTimer.stop();
     mFrameTimer.start();
 
+    mRenderer->beginUploadFrame(mRenderData);
+
     mRenderer->update(mRenderData, mRenderData.rdTickDiff);
+    mScene->update(mRenderData, mRenderData.rdTickDiff);
+
+    mRenderer->endUploadFrame(mRenderData);
 
     mLastTickTime = tickTime;
 }
 
 void Core::Engine::draw()
 {
+    mRenderer->beginRenderFrame(mRenderData);
+
+    mScene->draw(mRenderData);
     mRenderer->draw(mRenderData);
+
+    mRenderer->endRenderFrame(mRenderData);
 }
 
 void Core::Engine::cleanup()
