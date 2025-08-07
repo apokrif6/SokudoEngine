@@ -9,9 +9,9 @@ class UserInterface
   public:
     bool init(VkRenderData& renderData);
 
-    void createFrame(VkRenderData& renderData);
+    void update(VkRenderData& renderData);
 
-    void render(VkRenderData& renderData);
+    void draw(VkRenderData& renderData);
 
     void cleanup(VkRenderData& renderData);
 

@@ -5,13 +5,17 @@ void Core::Engine::init()
 {
     std::unique_ptr<Core::Application::Window> ApplicationWindow = std::make_unique<Core::Application::Window>();
 
-    mRenderer = ApplicationWindow->init(1280, 900, "Sokudo Engine");
-
-    if (!mRenderer)
+    if (mRenderer = ApplicationWindow->init(1280, 900, "Sokudo Engine"); !mRenderer)
     {
         Logger::log(1, "%s error: window init error\n", __FUNCTION__);
+        return;
     }
 
+    if (!mUserInterface->init(mRenderData))
+    {
+        Logger::log(1, "%s error: could not init ImGui\n", __FUNCTION__);
+        return;
+    }
 
     ApplicationWindow->mainLoop();
     ApplicationWindow->cleanup();
@@ -29,6 +33,7 @@ void Core::Engine::update()
 
     mRenderer->update(mRenderData, mRenderData.rdTickDiff);
     mScene->update(mRenderData, mRenderData.rdTickDiff);
+    mUserInterface->update(mRenderData);
 
     mRenderer->endUploadFrame(mRenderData);
 
@@ -39,13 +44,16 @@ void Core::Engine::draw()
 {
     mRenderer->beginRenderFrame(mRenderData);
 
-    mScene->draw(mRenderData);
     mRenderer->draw(mRenderData);
+    mScene->draw(mRenderData);
+    mUserInterface->draw(mRenderData);
 
     mRenderer->endRenderFrame(mRenderData);
 }
 
 void Core::Engine::cleanup()
 {
+    mScene->cleanup(mRenderData);
     mRenderer->cleanup(mRenderData);
+    mUserInterface->cleanup(mRenderData);
 }

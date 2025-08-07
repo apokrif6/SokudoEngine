@@ -49,8 +49,6 @@ class VkRenderer final : public EventListener
   private:
     Core::Renderer::VkPrimitiveRenderData mPrimitiveRenderData{};
 
-    Core::Renderer::UserInterface mUserInterface{};
-
     Core::Model::GridModel mGridModel{};
     Core::Renderer::VkMesh mGridMesh{};
 
@@ -84,8 +82,6 @@ class VkRenderer final : public EventListener
     glm::quat mQuaternionModelOrientation = glm::quat();
     glm::quat mQuaternionModelOrientationConjugate = glm::quat();
 
-    Timer mUIGenerateTimer{};
-    Timer mUIDrawTimer{};
     Timer mUploadToVBOTimer{};
     Timer mUploadToUBOTimer{};
     Timer mMatrixGenerateTimer{};
@@ -140,8 +136,6 @@ class VkRenderer final : public EventListener
     bool loadTexture();
 
     bool initVma();
-
-    bool initUserInterface();
 
     bool loadMeshWithAssimp();
 

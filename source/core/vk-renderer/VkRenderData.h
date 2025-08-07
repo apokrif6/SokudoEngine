@@ -133,8 +133,6 @@ struct VkRenderData
     float rdMatrixGenerateTime = 0.0f;
     float rdUploadToVBOTime = 0.0f;
     float rdUploadToUBOTime = 0.0f;
-    float rdUIGenerateTime = 0.0f;
-    float rdUIDrawTime = 0.0f;
 
     float rdViewYaw = 0.f;
     float rdViewPitch = 0.f;

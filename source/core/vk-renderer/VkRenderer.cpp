@@ -132,11 +132,6 @@ bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned i
         return false;
     }
 
-    if (!initUserInterface())
-    {
-        return false;
-    }
-
     Core::Engine::getInstance().getRenderData().rdWidth = static_cast<int>(width);
     Core::Engine::getInstance().getRenderData().rdHeight = static_cast<int>(height);
 
@@ -330,10 +325,6 @@ void Core::Renderer::VkRenderer::update(VkRenderData& renderData, float deltaTim
     mUploadToUBOTimer.start();
     UniformBuffer::uploadData(renderData, renderData.rdPerspectiveViewMatrixUBO, mPerspectiveViewMatrices);
     renderData.rdUploadToUBOTime = mUploadToUBOTimer.stop();
-
-    mUIGenerateTimer.start();
-    mUserInterface.createFrame(renderData);
-    renderData.rdUIGenerateTime = mUIGenerateTimer.stop();
 }
 
 void Core::Renderer::VkRenderer::endUploadFrame(Core::Renderer::VkRenderData& renderData)
@@ -427,10 +418,6 @@ bool Core::Renderer::VkRenderer::draw(VkRenderData& renderData)
     vkCmdBindPipeline(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdGridPipeline);
     vkCmdDraw(renderData.rdCommandBuffer, 6, 1, 0, 0);
 
-    mUIDrawTimer.start();
-    mUserInterface.render(renderData);
-    renderData.rdUIDrawTime = mUIDrawTimer.stop();
-
     return true;
 }
 
@@ -475,8 +462,6 @@ void Core::Renderer::VkRenderer::cleanup(VkRenderData& renderData)
     vkDeviceWaitIdle(Core::Engine::getInstance().getRenderData().rdVkbDevice.device);
 
     Core::Engine::getInstance().getSystem<Scene::Scene>()->cleanup(renderData);
-
-    mUserInterface.cleanup(renderData);
 
     Core::Renderer::SyncObjects::cleanup(renderData);
     Core::Renderer::CommandBuffer::cleanup(renderData, Core::Engine::getInstance().getRenderData().rdCommandBuffer);
@@ -883,16 +868,6 @@ bool Core::Renderer::VkRenderer::initVma()
         return false;
     }
 
-    return true;
-}
-
-bool Core::Renderer::VkRenderer::initUserInterface()
-{
-    if (!mUserInterface.init(Core::Engine::getInstance().getRenderData()))
-    {
-        Logger::log(1, "%s error: could not init ImGui\n", __FUNCTION__);
-        return false;
-    }
     return true;
 }
 
