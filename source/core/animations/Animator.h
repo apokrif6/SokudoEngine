@@ -12,13 +12,20 @@ namespace Core::Animations
 class Animator
 {
   public:
-    void update(const Renderer::VkRenderData& renderData, Renderer::Mesh* mesh);
+    void update(const Renderer::VkRenderData& renderData);
+
+    void addMesh(Renderer::Mesh* mesh)
+    {
+        mMeshes.push_back(mesh);
+    }
 
     // TODO
     // should be refactored when Scene system will be written. should be stored per mesh
     std::vector<std::string> loadedAnimations{};
 
   private:
+    std::vector<Renderer::Mesh*> mMeshes;
+
     void updateBonesTransform(Renderer::Mesh* mesh, int animationToPlayIndex);
 
     glm::vec3 interpolatePositionClip(const std::vector<KeyframeVec3>& keyframes, float animationTime);

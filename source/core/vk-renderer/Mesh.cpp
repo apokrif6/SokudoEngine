@@ -3,11 +3,9 @@
 #include "core/vk-renderer/buffers/UniformBuffer.h"
 #include "core/engine/Engine.h"
 
-void buildDebugSkeletonLines(const Core::Animations::Skeleton& skeleton,
-                             const Core::Animations::BonesInfo& bonesInfo,
+void buildDebugSkeletonLines(const Core::Animations::Skeleton& skeleton, const Core::Animations::BonesInfo& bonesInfo,
                              std::vector<Core::Renderer::Debug::DebugBone>& debugBones,
-                             const Core::Animations::BoneNode& node,
-                             const glm::mat4& parentTransform)
+                             const Core::Animations::BoneNode& node, const glm::mat4& parentTransform)
 {
     glm::mat4 currentTransform;
     if (bonesInfo.boneNameToIndexMap.contains(node.name))
@@ -34,6 +32,11 @@ void buildDebugSkeletonLines(const Core::Animations::Skeleton& skeleton,
     }
 }
 
+Core::Renderer::Mesh::Mesh(std::string name, Core::Animations::Skeleton skeleton)
+    : Core::Scene::SceneObject(std::move(name)), mSkeleton(std::move(skeleton))
+{
+    Core::Engine::getInstance().getSystem<Animations::Animator>()->addMesh(this);
+}
 
 void Core::Renderer::Mesh::addPrimitive(const std::vector<Core::Renderer::NewVertex>& vertexBufferData,
                                         const std::vector<uint32_t>& indexBufferData, const VkTextureData& textureData,
@@ -54,8 +57,8 @@ void Core::Renderer::Mesh::update(Core::Renderer::VkRenderData& renderData)
         if (renderData.shouldDrawDebugSkeleton)
         {
             std::vector<Debug::DebugBone> debugBones;
-            buildDebugSkeletonLines(mSkeleton, primitive.getBonesInfo(), debugBones,
-                                    mSkeleton.getRootNode(), glm::mat4(1.0f));
+            buildDebugSkeletonLines(mSkeleton, primitive.getBonesInfo(), debugBones, mSkeleton.getRootNode(),
+                                    glm::mat4(1.0f));
             mSkeleton.updateDebug(renderData, debugBones);
         }
     }
@@ -63,11 +66,6 @@ void Core::Renderer::Mesh::update(Core::Renderer::VkRenderData& renderData)
 
 void Core::Renderer::Mesh::draw(Core::Renderer::VkRenderData& renderData)
 {
-    if (renderData.shouldPlayAnimation)
-    {
-        Core::Engine::getInstance().getSystem<Animations::Animator>()->update(renderData, this);
-    }
-
     for (auto& primitive : mPrimitives)
     {
         primitive.draw(renderData);

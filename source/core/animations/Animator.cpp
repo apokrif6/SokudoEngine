@@ -1,9 +1,17 @@
 #include "Animator.h"
 #include "AnimationsUtils.h"
 
-void Core::Animations::Animator::update(const Renderer::VkRenderData& renderData, Renderer::Mesh* mesh)
+void Core::Animations::Animator::update(const Renderer::VkRenderData& renderData)
 {
-    updateBonesTransform(mesh, renderData.selectedAnimationIndexToPlay);
+    if (!renderData.shouldPlayAnimation)
+    {
+        return;
+    }
+
+    for (Renderer::Mesh* mesh : mMeshes)
+    {
+        updateBonesTransform(mesh, renderData.selectedAnimationIndexToPlay);
+    }
     mAnimationTime += renderData.rdTickDiff;
 }
 

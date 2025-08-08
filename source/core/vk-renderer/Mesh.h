@@ -12,7 +12,7 @@ namespace Core::Renderer
 class Mesh : public Core::Scene::SceneObject
 {
   public:
-    explicit Mesh(std::string name, Animations::Skeleton skeleton) : Core::Scene::SceneObject(std::move(name)), mSkeleton(std::move(skeleton)) {}
+    explicit Mesh(std::string name, Animations::Skeleton skeleton);
 
     void addPrimitive(const std::vector<Core::Renderer::NewVertex>& vertexBufferData,
                       const std::vector<uint32_t>& indexBufferData, const VkTextureData& textureData,

@@ -32,6 +32,7 @@ void Core::Engine::update()
     mRenderer->beginUploadFrame(mRenderData);
 
     mRenderer->update(mRenderData, mRenderData.rdTickDiff);
+    mAnimator->update(mRenderData);
     mScene->update(mRenderData, mRenderData.rdTickDiff);
     mUserInterface->update(mRenderData);
 
