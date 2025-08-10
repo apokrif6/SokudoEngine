@@ -5,13 +5,14 @@
 
 void buildDebugSkeletonLines(const Core::Animations::Skeleton& skeleton, const Core::Animations::BonesInfo& bonesInfo,
                              std::vector<Core::Renderer::Debug::DebugBone>& debugBones,
-                             const Core::Animations::BoneNode& node, const glm::mat4& parentTransform)
+                             const Core::Animations::BoneNode& node, const glm::mat4& parentTransform,
+                             const glm::mat4& meshTransform = glm::mat4(1.f))
 {
     glm::mat4 currentTransform;
     if (bonesInfo.boneNameToIndexMap.contains(node.name))
     {
         int boneIndex = bonesInfo.boneNameToIndexMap.at(node.name);
-        currentTransform = bonesInfo.bones[boneIndex].animatedGlobalTransform;
+        currentTransform = meshTransform * bonesInfo.bones[boneIndex].animatedGlobalTransform;
     }
     else
     {
@@ -28,7 +29,7 @@ void buildDebugSkeletonLines(const Core::Animations::Skeleton& skeleton, const C
 
     for (const auto& child : node.children)
     {
-        buildDebugSkeletonLines(skeleton, bonesInfo, debugBones, child, currentTransform);
+        buildDebugSkeletonLines(skeleton, bonesInfo, debugBones, child, currentTransform, meshTransform);
     }
 }
 
@@ -58,7 +59,7 @@ void Core::Renderer::Mesh::update(Core::Renderer::VkRenderData& renderData)
         {
             std::vector<Debug::DebugBone> debugBones;
             buildDebugSkeletonLines(mSkeleton, primitive.getBonesInfo(), debugBones, mSkeleton.getRootNode(),
-                                    glm::mat4(1.0f));
+                                    mTransform.getMatrix(), mTransform.getMatrix());
             mSkeleton.updateDebug(renderData, debugBones);
         }
     }

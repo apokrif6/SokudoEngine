@@ -907,15 +907,29 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
     auto testMeshOne = std::make_shared<Mesh>("TestMesh_1", primitiveMeshData.skeleton);
     testMeshOne->setupAnimations(primitiveMeshData.animations);
     testMeshOne->initDebugSkeleton(Core::Engine::getInstance().getRenderData());
-    testMeshOne->getTransform().position = {1, 0, 0};
+    testMeshOne->getTransform().position = {1, 0, 1};
 
     auto testMeshTwo = std::make_shared<Mesh>("TestMesh_2", primitiveMeshData.skeleton);
     testMeshTwo->setupAnimations(primitiveMeshData.animations);
     testMeshTwo->initDebugSkeleton(Core::Engine::getInstance().getRenderData());
-    testMeshTwo->getTransform().position = {-1, 0, 0};
+    testMeshTwo->getTransform().position = {-1, 0, 1};
+
+    auto testMeshThree = std::make_shared<Mesh>("TestMesh_3", primitiveMeshData.skeleton);
+    testMeshThree->setupAnimations(primitiveMeshData.animations);
+    testMeshThree->initDebugSkeleton(Core::Engine::getInstance().getRenderData());
+    testMeshThree->getTransform().position = {1, 0, -1};
+
+
+    auto testMeshFour = std::make_shared<Mesh>("TestMesh_4", primitiveMeshData.skeleton);
+    testMeshFour->setupAnimations(primitiveMeshData.animations);
+    testMeshFour->initDebugSkeleton(Core::Engine::getInstance().getRenderData());
+    testMeshFour->getTransform().position = {-1, 0, -1};
+
 
     Core::Engine::getInstance().getSystem<Scene::Scene>()->addObject(testMeshOne);
     Core::Engine::getInstance().getSystem<Scene::Scene>()->addObject(testMeshTwo);
+    Core::Engine::getInstance().getSystem<Scene::Scene>()->addObject(testMeshThree);
+    Core::Engine::getInstance().getSystem<Scene::Scene>()->addObject(testMeshFour);
 
     for (auto& primitive : primitiveMeshData.primitives)
     {
@@ -931,6 +945,10 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
         testMeshOne->addPrimitive(primitive.vertices, primitive.indices, primitiveTexture,
                                   Core::Engine::getInstance().getRenderData(), primitive.material, primitive.bones);
         testMeshTwo->addPrimitive(primitive.vertices, primitive.indices, primitiveTexture,
+                                  Core::Engine::getInstance().getRenderData(), primitive.material, primitive.bones);
+        testMeshThree->addPrimitive(primitive.vertices, primitive.indices, primitiveTexture,
+                                  Core::Engine::getInstance().getRenderData(), primitive.material, primitive.bones);
+        testMeshFour->addPrimitive(primitive.vertices, primitive.indices, primitiveTexture,
                                   Core::Engine::getInstance().getRenderData(), primitive.material, primitive.bones);
     }
 
