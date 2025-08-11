@@ -1,18 +1,16 @@
 #include <string>
 
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/string_cast.hpp>
-
-#include <imgui.h>
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_vulkan.h>
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_vulkan.h"
 
 #include "UserInterface.h"
 #include "core/vk-renderer/buffers/CommandBuffer.h"
 #include "core/tools/Logger.h"
-#include "core/animations/Animator.h"
-#include "core/engine/Engine.h"
-
+#include "core/ui/ProfilingUIWindow.h"
+#include "core/ui/CameraUIWindow.h"
+#include "core/ui/SceneUIWindow.h"
+#include "core/ui/AnimationUIWindow.h"
 
 bool Core::Renderer::UserInterface::init(VkRenderData& renderData)
 {
@@ -154,128 +152,13 @@ void Core::Renderer::UserInterface::update(VkRenderData& renderData)
 
     ImGui::Begin("Sokudo Engine", nullptr, imguiWindowFlags);
 
-    static float newFps = 0.0f;
-    if (renderData.rdFrameTime > 0.0)
-    {
-        newFps = 1.0f / renderData.rdFrameTime * 1000.f;
-    }
-
-    mFramesPerSecond = (mAveragingAlpha * mFramesPerSecond) + (1.0f - mAveragingAlpha) * newFps;
-
     if (ImGui::BeginTabBar("Tabs"))
     {
-        if (ImGui::BeginTabItem("Profiling"))
-        {
-            ImGui::Text("Frames per second:");
-            ImGui::SameLine();
-            ImGui::Text("%s", std::to_string(mFramesPerSecond).c_str());
+        Core::UI::ProfilingUIWindow::getBody();
+        Core::UI::CameraUIWindow::getBody();
+        Core::UI::SceneUIWindow::getBody();
+        Core::UI::AnimationUIWindow::getBody();
 
-            ImGui::Text("Frame Time:");
-            ImGui::SameLine();
-            ImGui::Text("%s", std::to_string(renderData.rdFrameTime).c_str());
-            ImGui::SameLine();
-            ImGui::Text("ms");
-
-            ImGui::Text("Matrix Generation Time:");
-            ImGui::SameLine();
-            ImGui::Text("%s", std::to_string(renderData.rdMatrixGenerateTime).c_str());
-            ImGui::SameLine();
-            ImGui::Text("ms");
-
-            ImGui::Text("Matrix Upload Time:");
-            ImGui::SameLine();
-            ImGui::Text("%s", std::to_string(renderData.rdUploadToUBOTime).c_str());
-            ImGui::SameLine();
-            ImGui::Text("ms");
-
-            ImGui::EndTabItem();
-        }
-        if (ImGui::BeginTabItem("Camera"))
-        {
-            ImGui::Text("Camera Position:");
-            ImGui::SameLine();
-            ImGui::Text("%s", glm::to_string(renderData.rdCameraWorldPosition).c_str());
-
-            ImGui::Text("View Yaw:");
-            ImGui::SameLine();
-            ImGui::Text("%s", std::to_string(renderData.rdViewYaw).c_str());
-
-            ImGui::Text("View Pitch:");
-            ImGui::SameLine();
-            ImGui::Text("%s", std::to_string(renderData.rdViewPitch).c_str());
-
-            std::string windowDims = std::to_string(renderData.rdWidth) + "x" + std::to_string(renderData.rdHeight);
-            ImGui::Text("Window Dimensions:");
-            ImGui::SameLine();
-            ImGui::Text("%s", windowDims.c_str());
-
-            ImGui::EndTabItem();
-        }
-        if (ImGui::BeginTabItem("Scene"))
-        {
-            ImGui::Text("Field Of View");
-            ImGui::SameLine();
-            ImGui::SliderInt("FOV", &renderData.rdFieldOfView, 40, 150);
-
-            ImGui::Checkbox("Draw World Coordinate Arrows", &renderData.rdDrawWorldCoordinateArrows);
-            ImGui::Checkbox("Draw Model Coordinate Arrows", &renderData.rdDrawModelCoordinateArrows);
-
-            if (ImGui::Button("Reset Rotation"))
-            {
-                renderData.rdResetAngles = true;
-            }
-
-            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 0, 0, 255));
-            ImGui::Text("X Rotation");
-            ImGui::PopStyleColor();
-            ImGui::SameLine();
-            ImGui::SliderInt("##ROTX", &renderData.rdRotXAngle, 0, 360);
-
-            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 255, 0, 255));
-            ImGui::Text("Y Rotation");
-            ImGui::PopStyleColor();
-            ImGui::SameLine();
-            ImGui::SliderInt("##ROTY", &renderData.rdRotYAngle, 0, 360);
-
-            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 0, 255, 255));
-            ImGui::Text("Z Rotation");
-            ImGui::PopStyleColor();
-            ImGui::SameLine();
-            ImGui::SliderInt("##ROTZ", &renderData.rdRotZAngle, 0, 360);
-
-            ImGui::EndTabItem();
-        }
-
-        if (ImGui::BeginTabItem("Animation"))
-        {
-            ImGui::Checkbox("Should play animation", &renderData.shouldPlayAnimation);
-            ImGui::Checkbox("Should draw debug skeleton", &renderData.shouldDrawDebugSkeleton);
-
-            std::vector<std::string>& loadedAnimations =
-                Core::Engine::getInstance().getSystem<Animations::Animator>()->loadedAnimations;
-            if (ImGui::BeginCombo("##Loaded animations",
-                                  loadedAnimations[renderData.selectedAnimationIndexToPlay].c_str(),
-                                  ImGuiComboFlags_WidthFitPreview))
-            {
-                for (int i = 0; i < loadedAnimations.size(); ++i)
-                {
-                    const bool isAnimationToPlaySelected = (renderData.selectedAnimationIndexToPlay == i);
-                    if (ImGui::Selectable(loadedAnimations[i].c_str(), isAnimationToPlaySelected))
-                    {
-                        renderData.selectedAnimationIndexToPlay = i;
-                    }
-
-                    if (isAnimationToPlaySelected)
-                    {
-                        ImGui::SetItemDefaultFocus();
-                    }
-                }
-
-                ImGui::EndCombo();
-            }
-
-            ImGui::EndTabItem();
-        }
         ImGui::EndTabBar();
     }
 

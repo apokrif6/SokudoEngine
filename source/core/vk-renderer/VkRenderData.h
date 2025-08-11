@@ -139,8 +139,6 @@ struct VkRenderData
 
     glm::vec3 rdCameraWorldPosition = glm::vec3(0.f, 3.f, 4.5f);
 
-    bool rdDrawWorldCoordinateArrows = true;
-    bool rdDrawModelCoordinateArrows = true;
     bool rdResetAngles = false;
 
     int rdRotXAngle = 0;

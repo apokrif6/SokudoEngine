@@ -1,0 +1,61 @@
+#pragma once
+
+#include "UIWindow.h"
+#include "imgui.h"
+#include "string"
+#include "core/engine/Engine.h"
+
+namespace Core::UI
+{
+class ProfilingUIWindow : public UIWindow<ProfilingUIWindow>
+{
+  public:
+    static bool getBody()
+    {
+        if (!ImGui::BeginTabItem("Profiling"))
+        {
+            return false;
+        }
+
+        Renderer::VkRenderData renderData = Core::Engine::getInstance().getRenderData();
+        static float newFps = 0.0f;
+        if (renderData.rdFrameTime > 0.0)
+        {
+            newFps = 1.0f / renderData.rdFrameTime * 1000.f;
+        }
+
+        mFramesPerSecond = (mAveragingAlpha * mFramesPerSecond) + (1.0f - mAveragingAlpha) * newFps;
+
+        ImGui::Text("Frames per second:");
+        ImGui::SameLine();
+        ImGui::Text("%s", std::to_string(mFramesPerSecond).c_str());
+
+        ImGui::Text("Frame Time:");
+        ImGui::SameLine();
+        ImGui::Text("%s", std::to_string(renderData.rdFrameTime).c_str());
+        ImGui::SameLine();
+        ImGui::Text("ms");
+
+        ImGui::Text("Matrix Generation Time:");
+        ImGui::SameLine();
+        ImGui::Text("%s", std::to_string(renderData.rdMatrixGenerateTime).c_str());
+        ImGui::SameLine();
+        ImGui::Text("ms");
+
+        ImGui::Text("Matrix Upload Time:");
+        ImGui::SameLine();
+        ImGui::Text("%s", std::to_string(renderData.rdUploadToUBOTime).c_str());
+        ImGui::SameLine();
+        ImGui::Text("ms");
+
+        ImGui::EndTabItem();
+
+        return true;
+    }
+
+  private:
+    inline static float mFramesPerSecond = 0.0f;
+    inline static float mAveragingAlpha = 0.95f;
+};
+}
+

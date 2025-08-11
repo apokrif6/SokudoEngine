@@ -263,37 +263,6 @@ void Core::Renderer::VkRenderer::update(VkRenderData& renderData, float deltaTim
                                            glm::radians(static_cast<float>(renderData.rdRotZAngle)))));
     mQuaternionModelOrientationConjugate = glm::conjugate(mQuaternionModelOrientation);
 
-    if (renderData.rdDrawWorldCoordinateArrows)
-    {
-        mCoordinateArrowsMesh = mCoordinateArrowsModel.getVertexData();
-        for (auto& vertex : mCoordinateArrowsMesh.vertices)
-            vertex.color /= 2.f;
-        mAllMeshes->vertices.insert(mAllMeshes->vertices.end(), mCoordinateArrowsMesh.vertices.begin(),
-                                    mCoordinateArrowsMesh.vertices.end());
-    }
-
-    if (renderData.rdDrawModelCoordinateArrows)
-    {
-        mEulerCoordinateArrowsMesh = mCoordinateArrowsModel.getVertexData();
-        for (auto& vertex : mEulerCoordinateArrowsMesh.vertices)
-        {
-            vertex.position = mEulerRotMatrix * vertex.position;
-            vertex.position += mEulerModelDist;
-        }
-        mAllMeshes->vertices.insert(mAllMeshes->vertices.end(), mEulerCoordinateArrowsMesh.vertices.begin(),
-                                    mEulerCoordinateArrowsMesh.vertices.end());
-
-        mQuaternionArrowMesh = mArrowModel.getVertexData();
-        for (auto& vertex : mQuaternionArrowMesh.vertices)
-        {
-            glm::quat position = glm::quat(0.f, vertex.position.x, vertex.position.y, vertex.position.z);
-            glm::quat rotated = mQuaternionModelOrientation * position * mQuaternionModelOrientationConjugate;
-            vertex.position = glm::vec3(rotated.x, rotated.y, rotated.z) + mQuaternionModelDist;
-        }
-        mAllMeshes->vertices.insert(mAllMeshes->vertices.end(), mQuaternionArrowMesh.vertices.begin(),
-                                    mQuaternionArrowMesh.vertices.end());
-    }
-
     *mEulerModelMesh = mModel->getVertexData();
     renderData.rdTriangleCount = mEulerModelMesh->vertices.size() / 3;
     for (auto& vertex : mEulerModelMesh->vertices)
