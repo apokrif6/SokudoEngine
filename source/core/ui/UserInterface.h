@@ -17,7 +17,5 @@ class UserInterface
 
   private:
     void setupImGuiStyle() const;
-
-
 };
 } // namespace Core::Renderer

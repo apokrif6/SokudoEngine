@@ -19,7 +19,7 @@ class CameraUIWindow : public UIWindow<CameraUIWindow>
             return false;
         }
 
-        Renderer::VkRenderData renderData = Core::Engine::getInstance().getRenderData();
+        Renderer::VkRenderData& renderData = Core::Engine::getInstance().getRenderData();
 
         ImGui::Text("Camera Position:");
         ImGui::SameLine();

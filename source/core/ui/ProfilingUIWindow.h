@@ -17,7 +17,7 @@ class ProfilingUIWindow : public UIWindow<ProfilingUIWindow>
             return false;
         }
 
-        Renderer::VkRenderData renderData = Core::Engine::getInstance().getRenderData();
+        Renderer::VkRenderData& renderData = Core::Engine::getInstance().getRenderData();
         static float newFps = 0.0f;
         if (renderData.rdFrameTime > 0.0)
         {

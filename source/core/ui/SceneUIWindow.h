@@ -17,7 +17,7 @@ class SceneUIWindow : public UIWindow<SceneUIWindow>
             return false;
         }
 
-        Renderer::VkRenderData renderData = Core::Engine::getInstance().getRenderData();
+        Renderer::VkRenderData& renderData = Core::Engine::getInstance().getRenderData();
 
         ImGui::Text("Field Of View");
         ImGui::SameLine();

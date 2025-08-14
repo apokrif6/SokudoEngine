@@ -17,7 +17,7 @@ class AnimationUIWindow : public UIWindow<AnimationUIWindow>
             return true;
         }
 
-        Renderer::VkRenderData renderData = Core::Engine::getInstance().getRenderData();
+        Renderer::VkRenderData& renderData = Core::Engine::getInstance().getRenderData();
 
         ImGui::Checkbox("Should play animation", &renderData.shouldPlayAnimation);
         ImGui::Checkbox("Should draw debug skeleton", &renderData.shouldDrawDebugSkeleton);
@@ -45,6 +45,8 @@ class AnimationUIWindow : public UIWindow<AnimationUIWindow>
         }
 
         ImGui::EndTabItem();
+
+        return true;
     }
 };
 } // namespace Core::UI
