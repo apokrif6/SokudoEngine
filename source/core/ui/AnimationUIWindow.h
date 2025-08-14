@@ -14,7 +14,7 @@ class AnimationUIWindow : public UIWindow<AnimationUIWindow>
     {
         if (!ImGui::BeginTabItem("Animation"))
         {
-            return true;
+            return false;
         }
 
         Renderer::VkRenderData& renderData = Core::Engine::getInstance().getRenderData();

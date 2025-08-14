@@ -21,6 +21,10 @@ class CameraUIWindow : public UIWindow<CameraUIWindow>
 
         Renderer::VkRenderData& renderData = Core::Engine::getInstance().getRenderData();
 
+        ImGui::Text("Field Of View");
+        ImGui::SameLine();
+        ImGui::SliderInt("FOV", &renderData.rdFieldOfView, 40, 150);
+
         ImGui::Text("Camera Position:");
         ImGui::SameLine();
         ImGui::Text("%s", glm::to_string(renderData.rdCameraWorldPosition).c_str());

@@ -139,12 +139,6 @@ struct VkRenderData
 
     glm::vec3 rdCameraWorldPosition = glm::vec3(0.f, 3.f, 4.5f);
 
-    bool rdResetAngles = false;
-
-    int rdRotXAngle = 0;
-    int rdRotYAngle = 0;
-    int rdRotZAngle = 0;
-
     float rdMoveForward = 0;
     float rdMoveRight = 0;
     float rdMoveUp = 0;

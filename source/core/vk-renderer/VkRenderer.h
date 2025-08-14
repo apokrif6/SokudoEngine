@@ -68,9 +68,6 @@ class VkRenderer final : public EventListener
     std::shared_ptr<Core::Renderer::VkMesh> mSkeletonMesh = nullptr;
     unsigned int mSkeletonLineIndexCount = 0;
 
-    glm::mat4 mRotYMat = glm::mat4(1.0f);
-    glm::mat4 mRotZMat = glm::mat4(1.0f);
-
     glm::vec3 mEulerModelDist = glm::vec3(-2.5f, 0.f, 0.f);
     glm::vec3 mQuaternionModelDist = glm::vec3(2.5f, 0.f, 0.f);
 

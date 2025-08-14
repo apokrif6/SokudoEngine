@@ -244,23 +244,6 @@ void Core::Renderer::VkRenderer::update(VkRenderData& renderData, float deltaTim
                                                       0.01f, 50.0f);
 
     renderData.rdMatrixGenerateTime = mMatrixGenerateTimer.stop();
-
-    if (renderData.rdResetAngles)
-    {
-        renderData.rdResetAngles = false;
-        renderData.rdRotXAngle = renderData.rdRotYAngle = renderData.rdRotZAngle = 0;
-        mEulerRotMatrix = glm::mat3(1.f);
-        mQuaternionModelOrientation = glm::quat();
-    }
-
-    mRotYMat = glm::rotate(glm::mat4(1.0f), glm::radians(static_cast<float>(renderData.rdRotYAngle)), mRotYAxis);
-    mRotZMat = glm::rotate(mRotYMat, glm::radians(static_cast<float>(renderData.rdRotZAngle)), mRotZAxis);
-    mEulerRotMatrix = glm::rotate(mRotZMat, glm::radians(static_cast<float>(renderData.rdRotXAngle)), mRotXAxis);
-
-    mQuaternionModelOrientation =
-        glm::normalize(glm::quat(glm::vec3(glm::radians(static_cast<float>(renderData.rdRotXAngle)),
-                                           glm::radians(static_cast<float>(renderData.rdRotYAngle)),
-                                           glm::radians(static_cast<float>(renderData.rdRotZAngle)))));
     mQuaternionModelOrientationConjugate = glm::conjugate(mQuaternionModelOrientation);
 
     *mEulerModelMesh = mModel->getVertexData();

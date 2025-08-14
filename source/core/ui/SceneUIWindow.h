@@ -19,37 +19,49 @@ class SceneUIWindow : public UIWindow<SceneUIWindow>
 
         Renderer::VkRenderData& renderData = Core::Engine::getInstance().getRenderData();
 
-        ImGui::Text("Field Of View");
-        ImGui::SameLine();
-        ImGui::SliderInt("FOV", &renderData.rdFieldOfView, 40, 150);
-
-        if (ImGui::Button("Reset Rotation"))
+        std::vector<std::string> loadedSceneObjectsNames;
+        for (const auto& object : Core::Engine::getInstance().getSystem<Scene::Scene>()->getObjects())
         {
-            renderData.rdResetAngles = true;
+            loadedSceneObjectsNames.push_back(object->getName());
         }
 
-        ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 0, 0, 255));
-        ImGui::Text("X Rotation");
-        ImGui::PopStyleColor();
-        ImGui::SameLine();
-        ImGui::SliderInt("##ROTX", &renderData.rdRotXAngle, 0, 360);
+        if (loadedSceneObjectsNames.empty())
+        {
+            ImGui::Text("No objects loaded");
+            ImGui::EndTabItem();
+            return true;
+        }
 
-        ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 255, 0, 255));
-        ImGui::Text("Y Rotation");
-        ImGui::PopStyleColor();
+        ImGui::Separator();
+        ImGui::Text("Selected Scene Object:");
         ImGui::SameLine();
-        ImGui::SliderInt("##ROTY", &renderData.rdRotYAngle, 0, 360);
+        if (ImGui::BeginCombo("##Loaded objects", loadedSceneObjectsNames[selectedSceneObjectIndex].c_str(),
+                              ImGuiComboFlags_WidthFitPreview))
+        {
+            for (int i = 0; i < loadedSceneObjectsNames.size(); ++i)
+            {
+                const bool isSceneObjectSelected = (selectedSceneObjectIndex == i);
+                if (ImGui::Selectable(loadedSceneObjectsNames[i].c_str(), isSceneObjectSelected))
+                {
+                    selectedSceneObjectIndex = i;
+                }
 
-        ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 0, 255, 255));
-        ImGui::Text("Z Rotation");
-        ImGui::PopStyleColor();
-        ImGui::SameLine();
-        ImGui::SliderInt("##ROTZ", &renderData.rdRotZAngle, 0, 360);
+                if (isSceneObjectSelected)
+                {
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+
+            ImGui::EndCombo();
+        }
 
         ImGui::EndTabItem();
 
         return true;
     }
+
+private:
+    static inline int selectedSceneObjectIndex = 0;
 };
 }
 

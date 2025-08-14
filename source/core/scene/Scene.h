@@ -16,6 +16,8 @@ class Scene
 
     void cleanup(Core::Renderer::VkRenderData& renderData);
 
+    [[nodiscard]] std::vector<std::shared_ptr<SceneObject>> getObjects() const { return mObjects; }
+
   private:
     std::vector<std::shared_ptr<SceneObject>> mObjects;
 };
