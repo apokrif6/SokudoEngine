@@ -26,7 +26,7 @@ Core::Animations::AnimationClip Core::Animations::AnimationsUtils::loadAnimation
     }
 
     Core::Animations::AnimationClip clip;
-    clip.name = aiAnim->mName.C_Str();
+    clip.name = filePath;
     clip.duration = static_cast<float>(aiAnim->mDuration);
     clip.ticksPerSecond = aiAnim->mTicksPerSecond != 0.0 ? static_cast<float>(aiAnim->mTicksPerSecond) : 25.0f;
 

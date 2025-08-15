@@ -6,7 +6,6 @@
 #include "core/ui/UserInterface.h"
 #include "core/tools/Timer.h"
 #include "core/tools/Camera.h"
-#include "core/model/Model.h"
 #include "core/model/CoordinateArrowModel.h"
 #include "core/events/EventListener.h"
 #include "core/model/ArrowModel.h"
@@ -59,25 +58,12 @@ class VkRenderer final : public EventListener
     Core::Model::ArrowModel mArrowModel{};
     Core::Renderer::VkMesh mQuaternionArrowMesh{};
 
-    std::unique_ptr<Core::Model::Model> mModel = nullptr;
-    std::unique_ptr<Core::Renderer::VkMesh> mEulerModelMesh = nullptr;
-    std::unique_ptr<Core::Renderer::VkMesh> mQuaternionModelMesh = nullptr;
-    std::unique_ptr<Core::Renderer::VkMesh> mAllMeshes = nullptr;
-    unsigned int mLineIndexCount = 0;
-
-    std::shared_ptr<Core::Renderer::VkMesh> mSkeletonMesh = nullptr;
-    unsigned int mSkeletonLineIndexCount = 0;
-
     glm::vec3 mEulerModelDist = glm::vec3(-2.5f, 0.f, 0.f);
     glm::vec3 mQuaternionModelDist = glm::vec3(2.5f, 0.f, 0.f);
 
     glm::vec3 mRotXAxis = glm::vec3(1.0f, 0.0f, 0.0f);
     glm::vec3 mRotYAxis = glm::vec3(0.0f, 1.0f, 0.0f);
     glm::vec3 mRotZAxis = glm::vec3(0.0f, 0.0f, 1.0f);
-
-    glm::mat3 mEulerRotMatrix = glm::mat3(1.0f);
-    glm::quat mQuaternionModelOrientation = glm::quat();
-    glm::quat mQuaternionModelOrientationConjugate = glm::quat();
 
     Timer mUploadToVBOTimer{};
     Timer mUploadToUBOTimer{};

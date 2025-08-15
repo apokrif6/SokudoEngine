@@ -157,7 +157,6 @@ void Core::Renderer::UserInterface::update(VkRenderData& renderData)
         Core::UI::ProfilingUIWindow::getBody();
         Core::UI::CameraUIWindow::getBody();
         Core::UI::SceneUIWindow::getBody();
-        Core::UI::AnimationUIWindow::getBody();
 
         ImGui::EndTabBar();
     }

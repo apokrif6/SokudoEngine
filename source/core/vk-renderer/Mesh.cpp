@@ -55,7 +55,7 @@ void Core::Renderer::Mesh::update(Core::Renderer::VkRenderData& renderData)
         primitive.uploadIndexBuffer(renderData);
         primitive.uploadUniformBuffer(renderData, getTransform().getMatrix());
 
-        if (renderData.shouldDrawDebugSkeleton)
+        if (shouldDrawDebugSkeleton())
         {
             std::vector<Debug::DebugBone> debugBones;
             buildDebugSkeletonLines(mSkeleton, primitive.getBonesInfo(), debugBones, mSkeleton.getRootNode(),
@@ -71,7 +71,7 @@ void Core::Renderer::Mesh::draw(Core::Renderer::VkRenderData& renderData)
     {
         primitive.draw(renderData);
 
-        if (renderData.shouldDrawDebugSkeleton)
+        if (shouldDrawDebugSkeleton())
         {
             mSkeleton.drawDebug(renderData);
         }

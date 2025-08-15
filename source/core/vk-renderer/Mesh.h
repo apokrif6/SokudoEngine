@@ -9,6 +9,8 @@
 
 namespace Core::Renderer
 {
+// right now every mesh is a skeletal mesh
+// in future animation-related code should be moved to a separate SkeletalMesh class
 class Mesh : public Core::Scene::SceneObject
 {
   public:
@@ -38,6 +40,35 @@ class Mesh : public Core::Scene::SceneObject
 
     [[nodiscard]] bool hasAnimations() const { return !mAnimations.empty(); }
 
+    [[nodiscard]] bool shouldPlayAnimation() const { return mShouldPlayAnimation; }
+
+    void setShouldPlayAnimation(bool shouldPlay)
+    {
+        mShouldPlayAnimation = shouldPlay;
+    }
+
+    [[nodiscard]] bool shouldDrawDebugSkeleton() const { return mShouldDrawDebugSkeleton; }
+
+    void setShouldDrawDebugSkeleton(bool shouldDraw)
+    {
+        mShouldDrawDebugSkeleton = shouldDraw;
+    }
+
+    void setCurrentAnimationIndex(uint32_t index)
+    {
+        if (index < mAnimations.size())
+        {
+            mCurrentAnimationIndex = index;
+        }
+    }
+
+    [[nodiscard]] uint16_t getCurrentAnimationIndex() const { return mCurrentAnimationIndex; }
+
+    [[nodiscard]] Core::Animations::AnimationClip& getCurrentAnimation()
+    {
+        return mAnimations[mCurrentAnimationIndex];
+    }
+
     void initDebugSkeleton(Core::Renderer::VkRenderData& renderData)
     {
         mSkeleton.initDebug(renderData);
@@ -47,5 +78,8 @@ class Mesh : public Core::Scene::SceneObject
     std::vector<Core::Renderer::Primitive> mPrimitives;
     Core::Animations::Skeleton mSkeleton;
     std::vector<Core::Animations::AnimationClip> mAnimations;
+    bool mShouldPlayAnimation = false;
+    bool mShouldDrawDebugSkeleton = false;
+    uint16_t mCurrentAnimationIndex = 0;
 };
 } // namespace Core::Renderer

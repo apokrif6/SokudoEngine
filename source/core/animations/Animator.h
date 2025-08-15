@@ -26,7 +26,7 @@ class Animator
   private:
     std::vector<Renderer::Mesh*> mMeshes;
 
-    void updateBonesTransform(Renderer::Mesh* mesh, int animationToPlayIndex);
+    void updateBonesTransform(Renderer::Mesh* mesh, uint16_t animationToPlayIndex);
 
     glm::vec3 interpolatePositionClip(const std::vector<KeyframeVec3>& keyframes, float animationTime);
 

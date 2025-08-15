@@ -135,18 +135,6 @@ bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned i
     Core::Engine::getInstance().getRenderData().rdWidth = static_cast<int>(width);
     Core::Engine::getInstance().getRenderData().rdHeight = static_cast<int>(height);
 
-    mModel = std::make_unique<Core::Model::Model>();
-
-    mEulerModelMesh = std::make_unique<Core::Renderer::VkMesh>();
-    mQuaternionModelMesh = std::make_unique<Core::Renderer::VkMesh>();
-    Logger::log(1, "%s: model mesh storage initialized\n", __FUNCTION__);
-
-    mSkeletonMesh = std::make_shared<Core::Renderer::VkMesh>();
-    Logger::log(1, "%s: skeleton mesh storage initialized\n", __FUNCTION__);
-
-    mAllMeshes = std::make_unique<Core::Renderer::VkMesh>();
-    Logger::log(1, "%s: global mesh storage initialized\n", __FUNCTION__);
-
     Logger::log(1, "%s: Vulkan Core::Renderer initialized to %ix%i\n", __FUNCTION__, width, height);
     return true;
 }
@@ -233,8 +221,6 @@ void Core::Renderer::VkRenderer::update(VkRenderData& renderData, float deltaTim
 {
     handleCameraMovementKeys();
 
-    mAllMeshes->vertices.clear();
-
     mMatrixGenerateTimer.start();
 
     mPerspectiveViewMatrices.at(0) = mCamera.getViewMatrix(renderData);
@@ -244,34 +230,8 @@ void Core::Renderer::VkRenderer::update(VkRenderData& renderData, float deltaTim
                                                       0.01f, 50.0f);
 
     renderData.rdMatrixGenerateTime = mMatrixGenerateTimer.stop();
-    mQuaternionModelOrientationConjugate = glm::conjugate(mQuaternionModelOrientation);
-
-    *mEulerModelMesh = mModel->getVertexData();
-    renderData.rdTriangleCount = mEulerModelMesh->vertices.size() / 3;
-    for (auto& vertex : mEulerModelMesh->vertices)
-    {
-        vertex.position = mEulerRotMatrix * vertex.position;
-        vertex.position += mEulerModelDist;
-    }
-    mAllMeshes->vertices.insert(mAllMeshes->vertices.end(), mEulerModelMesh->vertices.begin(),
-                                mEulerModelMesh->vertices.end());
-
-    *mQuaternionModelMesh = mModel->getVertexData();
-    renderData.rdTriangleCount += mQuaternionModelMesh->vertices.size() / 3;
-    for (auto& vertex : mQuaternionModelMesh->vertices)
-    {
-        glm::quat position = glm::quat(0.f, vertex.position.x, vertex.position.y, vertex.position.z);
-        glm::quat rotated = mQuaternionModelOrientation * position * mQuaternionModelOrientationConjugate;
-        vertex.position = glm::vec3(rotated.x, rotated.y, rotated.z) + mQuaternionModelDist;
-    }
-    mAllMeshes->vertices.insert(mAllMeshes->vertices.end(), mQuaternionModelMesh->vertices.begin(),
-                                mQuaternionModelMesh->vertices.end());
-
-    mLineIndexCount = mCoordinateArrowsMesh.vertices.size() + mEulerCoordinateArrowsMesh.vertices.size() +
-                      mQuaternionArrowMesh.vertices.size();
 
     mUploadToVBOTimer.start();
-    VertexBuffer::uploadData(renderData, renderData.rdVertexBufferData, *mAllMeshes);
     renderData.rdUploadToVBOTime = mUploadToVBOTimer.stop();
 
     mUploadToUBOTimer.start();
@@ -356,16 +316,6 @@ bool Core::Renderer::VkRenderer::draw(VkRenderData& renderData)
 
     VkDeviceSize offset = 0;
     vkCmdBindVertexBuffers(renderData.rdCommandBuffer, 0, 1, &renderData.rdVertexBufferData.rdVertexBuffer, &offset);
-
-    if (mLineIndexCount > 0)
-    {
-        vkCmdSetLineWidth(renderData.rdCommandBuffer, 3.0f);
-        vkCmdDraw(renderData.rdCommandBuffer, mLineIndexCount, 1, 0, 0);
-    }
-
-    vkCmdBindPipeline(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdBasicPipeline);
-    vkCmdDraw(renderData.rdCommandBuffer, renderData.rdTriangleCount * 3, 1, mLineIndexCount + mSkeletonLineIndexCount,
-              0);
 
     vkCmdBindPipeline(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdGridPipeline);
     vkCmdDraw(renderData.rdCommandBuffer, 6, 1, 0, 0);

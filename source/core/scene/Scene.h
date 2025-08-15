@@ -2,6 +2,7 @@
 
 #include <memory>
 #include "SceneObject.h"
+#include "SceneEditor.h"
 
 namespace Core::Scene
 {
@@ -18,7 +19,11 @@ class Scene
 
     [[nodiscard]] std::vector<std::shared_ptr<SceneObject>> getObjects() const { return mObjects; }
 
+    [[nodiscard]] SceneObjectSelection& getSceneObjectSelection() { return sceneObjectSelection; }
+
   private:
     std::vector<std::shared_ptr<SceneObject>> mObjects;
+
+    Core::Scene::SceneObjectSelection sceneObjectSelection;
 };
 }

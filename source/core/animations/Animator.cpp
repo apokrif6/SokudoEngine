@@ -3,19 +3,18 @@
 
 void Core::Animations::Animator::update(const Renderer::VkRenderData& renderData)
 {
-    if (!renderData.shouldPlayAnimation)
-    {
-        return;
-    }
-
     for (Renderer::Mesh* mesh : mMeshes)
     {
-        updateBonesTransform(mesh, renderData.selectedAnimationIndexToPlay);
+        if (!mesh->shouldPlayAnimation())
+        {
+            continue;
+        }
+        updateBonesTransform(mesh, mesh->getCurrentAnimationIndex());
     }
     mAnimationTime += renderData.rdTickDiff;
 }
 
-void Core::Animations::Animator::updateBonesTransform(Renderer::Mesh* mesh, int animationToPlayIndex)
+void Core::Animations::Animator::updateBonesTransform(Renderer::Mesh* mesh, uint16_t animationToPlayIndex)
 {
     for (Renderer::Primitive& primitive : mesh->getPrimitives())
     {

@@ -117,8 +117,7 @@ void Core::Renderer::Primitive::cleanup(Core::Renderer::VkRenderData& renderData
 
     Core::Renderer::Texture::cleanup(renderData, mTextureData);
 
-    //???
-    //Core::Renderer::UniformBuffer::cleanup(renderData, mModelUBO);
-    //Core::Renderer::UniformBuffer::cleanup(renderData, mBonesTransformUBO);
-    //Core::Renderer::UniformBuffer::cleanup(renderData, mMaterialUBO);
+    Core::Renderer::UniformBuffer::cleanup(renderData, mModelUBO);
+    Core::Renderer::UniformBuffer::cleanup(renderData, mBonesTransformUBO);
+    Core::Renderer::UniformBuffer::cleanup(renderData, mMaterialUBO);
 }

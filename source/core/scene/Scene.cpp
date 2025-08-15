@@ -3,6 +3,10 @@
 void Core::Scene::Scene::addObject(std::shared_ptr<SceneObject> object)
 {
     mObjects.emplace_back(std::move(object));
+    if (sceneObjectSelection.selectedObject == nullptr)
+    {
+        sceneObjectSelection.selectedObject = mObjects[0];
+    }
 }
 
 void Core::Scene::Scene::update(Core::Renderer::VkRenderData& renderData, float deltaTime)

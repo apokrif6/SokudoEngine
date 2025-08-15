@@ -145,10 +145,6 @@ struct VkRenderData
 
     float rdTickDiff = 0.f;
 
-    bool shouldPlayAnimation = false;
-    bool shouldDrawDebugSkeleton = false;
-    int selectedAnimationIndexToPlay = 0;
-
     VmaAllocator rdAllocator;
 
     uint32_t rdCurrentImageIndex = 0;
