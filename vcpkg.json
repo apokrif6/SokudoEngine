@@ -24,5 +24,8 @@
   }, {
     "name" : "glm",
     "version>=" : "1.0.1#3"
+  }, {
+    "name" : "glfw3",
+    "version>=" : "3.4#1"
   } ]
 }
