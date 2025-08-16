@@ -11,11 +11,7 @@ file(GLOB_RECURSE SOURCES
 add_executable(SokudoEngine ${SOURCES}
         source/core/window/Window.cpp)
 
-if (WIN32)
-    list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
-endif ()
-
-find_package(glfw3 3.3 REQUIRED)
+find_package(glfw3 CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(Vulkan REQUIRED)
 find_package(vk-bootstrap REQUIRED)
@@ -23,10 +19,6 @@ find_package(VulkanMemoryAllocator REQUIRED)
 find_package(assimp REQUIRED)
 find_package(imgui REQUIRED)
 find_package(unofficial-spirv-reflect REQUIRED)
-
-if (UNIX)
-    set(GLFW3_LIBRARY glfw)
-endif ()
 
 file(GLOB GLSL_SOURCE_FILES
         shaders/*.frag
@@ -105,11 +97,10 @@ add_custom_command(TARGET Assets POST_BUILD
         "$<TARGET_PROPERTY:SokudoEngine,BINARY_DIR>/assets"
 )
 
-# includes
-include_directories(${GLFW3_INCLUDE_DIR} source)
+include_directories(source)
 
 set(DEPENDENCIES
-        ${GLFW3_LIBRARY}
+        glfw
         glm::glm
         Vulkan::Vulkan
         vk-bootstrap::vk-bootstrap
