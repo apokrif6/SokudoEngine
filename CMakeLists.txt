@@ -5,7 +5,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 project(SokudoEngine)
 file(GLOB_RECURSE SOURCES
-        main.cpp
         source/*.cpp
 )
 add_executable(SokudoEngine ${SOURCES}
