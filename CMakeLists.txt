@@ -48,54 +48,6 @@ elseif (Vulkan_GLSLANG_VALIDATOR_EXECUTABLE)
     endforeach (GLSL)
 endif ()
 
-# copy shaders
-add_custom_target(
-        Shaders
-        DEPENDS ${SPIRV_BINARY_FILES}
-)
-add_dependencies(SokudoEngine Shaders)
-
-add_custom_command(TARGET Shaders POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "$<TARGET_PROPERTY:SokudoEngine,SOURCE_DIR>/shaders"
-        "$<TARGET_PROPERTY:SokudoEngine,BINARY_DIR>/shaders"
-)
-
-# copy textures
-file(GLOB TEX_SOURCE_FILES
-        textures/*
-)
-
-add_custom_target(
-        Textures
-        DEPENDS ${TEX_SOURCE_FILES}
-)
-add_dependencies(SokudoEngine Textures)
-
-add_custom_command(TARGET Textures POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "$<TARGET_PROPERTY:SokudoEngine,SOURCE_DIR>/textures"
-        "$<TARGET_PROPERTY:SokudoEngine,BINARY_DIR>/textures"
-)
-
-# copy assets
-file(GLOB ASSET_SOURCE_FILES
-        assets/*
-)
-
-add_custom_target(
-        Assets
-        DEPENDS ${ASSET_SOURCE_FILES}
-)
-
-add_dependencies(SokudoEngine Assets)
-
-add_custom_command(TARGET Assets POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "$<TARGET_PROPERTY:SokudoEngine,SOURCE_DIR>/assets"
-        "$<TARGET_PROPERTY:SokudoEngine,BINARY_DIR>/assets"
-)
-
 include_directories(source)
 
 set(DEPENDENCIES
