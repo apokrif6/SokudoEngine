@@ -116,7 +116,7 @@ class VkRenderer final : public EventListener
 
     bool createSyncObjects();
 
-    bool loadTexture();
+    bool loadPlaceholderTexture();
 
     bool initVma();
 

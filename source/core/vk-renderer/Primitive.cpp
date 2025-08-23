@@ -82,7 +82,7 @@ void Core::Renderer::Primitive::draw(const Core::Renderer::VkRenderData& renderD
         // if material don't use texture, create dummy descriptor set with default texture
         vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                                 renderData.rdMeshPipelineLayout, 0, 1,
-                                &renderData.rdModelTexture.texTextureDescriptorSet, 0, nullptr);
+                                &renderData.rdPlaceholderTexture.texTextureDescriptorSet, 0, nullptr);
     }
 
     vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,

@@ -72,7 +72,7 @@ bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned i
         return false;
     }
 
-    if (!loadTexture())
+    if (!loadPlaceholderTexture())
     {
         return false;
     }
@@ -310,7 +310,7 @@ bool Core::Renderer::VkRenderer::draw(VkRenderData& renderData)
     vkCmdBindPipeline(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdLinePipeline);
 
     vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdPipelineLayout, 0,
-                            1, &renderData.rdModelTexture.texTextureDescriptorSet, 0, nullptr);
+                            1, &renderData.rdPlaceholderTexture.texTextureDescriptorSet, 0, nullptr);
     vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdPipelineLayout, 1,
                             1, &renderData.rdPerspectiveViewMatrixUBO.rdUBODescriptorSet, 0, nullptr);
 
@@ -381,7 +381,7 @@ void Core::Renderer::VkRenderer::cleanup(VkRenderData& renderData)
     Core::Renderer::Renderpass::cleanup(renderData);
     Core::Renderer::UniformBuffer::cleanup(renderData, renderData.rdPerspectiveViewMatrixUBO);
     Core::Renderer::VertexBuffer::cleanup(renderData, renderData.rdVertexBufferData);
-    Core::Renderer::Texture::cleanup(renderData, renderData.rdModelTexture);
+    Core::Renderer::Texture::cleanup(renderData, renderData.rdPlaceholderTexture);
 
     vkDestroyImageView(renderData.rdVkbDevice.device, renderData.rdDepthImageView, nullptr);
     vmaDestroyImage(renderData.rdAllocator, renderData.rdDepthImage,
@@ -647,7 +647,7 @@ bool Core::Renderer::VkRenderer::createRenderPass()
 bool Core::Renderer::VkRenderer::createPipelineLayout()
 {
     if (!Core::Renderer::PipelineLayout::init(Core::Engine::getInstance().getRenderData(),
-                                              Core::Engine::getInstance().getRenderData().rdModelTexture,
+                                              Core::Engine::getInstance().getRenderData().rdPlaceholderTexture,
                                               Core::Engine::getInstance().getRenderData().rdPipelineLayout))
     {
         Logger::log(1, "%s error: could not init pipeline layout\n", __FUNCTION__);
@@ -743,11 +743,11 @@ bool Core::Renderer::VkRenderer::createSyncObjects()
     return true;
 }
 
-bool Core::Renderer::VkRenderer::loadTexture()
+bool Core::Renderer::VkRenderer::loadPlaceholderTexture()
 {
-    const std::string textureFileName = "textures/default.png";
+    const std::string textureFileName = "assets/textures/placeholder_sampler.png";
     std::future<bool> textureLoadFuture = Core::Renderer::Texture::loadTexture(
-        Core::Engine::getInstance().getRenderData(), Core::Engine::getInstance().getRenderData().rdModelTexture,
+        Core::Engine::getInstance().getRenderData(), Core::Engine::getInstance().getRenderData().rdPlaceholderTexture,
         textureFileName);
     if (!textureLoadFuture.get())
     {

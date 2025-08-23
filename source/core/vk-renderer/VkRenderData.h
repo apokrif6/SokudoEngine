@@ -189,7 +189,7 @@ struct VkRenderData
     VkSemaphore rdRenderSemaphore = VK_NULL_HANDLE;
     VkFence rdRenderFence = VK_NULL_HANDLE;
 
-    VkTextureData rdModelTexture{};
+    VkTextureData rdPlaceholderTexture{};
 
     VkVertexBufferData rdVertexBufferData{};
 
