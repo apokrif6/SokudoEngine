@@ -66,10 +66,10 @@ std::unique_ptr<Core::Renderer::VkRenderer> Core::Application::Window::init(int 
                                       Core::Engine::getInstance().getSystem<Core::Renderer::VkRenderer>()->handleWindowMaximizedEvents(maximized);
                                   });
 
-    glfwSetWindowSizeCallback(mWindow,
+    glfwSetFramebufferSizeCallback(mWindow,
                               [](GLFWwindow* window, int width, int height)
                               {
-                                  Core::Engine::getInstance().getSystem<Core::Renderer::VkRenderer>()->setSize(width, height);
+                                  Core::Engine::getInstance().getSystem<Core::Renderer::VkRenderer>()->handleWindowResizeEvents(width, height);
                               });
 
     glfwSetWindowCloseCallback(mWindow,

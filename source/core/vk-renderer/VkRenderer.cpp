@@ -146,18 +146,26 @@ Core::Renderer::VkRenderer::VkRenderer(GLFWwindow* inWindow)
     mPerspectiveViewMatrices.emplace_back(1.0f);
 }
 
-void Core::Renderer::VkRenderer::setSize(unsigned int width, unsigned int height)
-{
-    Core::Engine::getInstance().getRenderData().rdWidth = width;
-    Core::Engine::getInstance().getRenderData().rdHeight = height;
-
-    Logger::log(1, "%s: resized window to %ix%i\n", __FUNCTION__, width, height);
-}
-
 // maybe move to some global functions?
 void Core::Renderer::VkRenderer::subscribeToInputEvents(EventDispatcher& eventDispatcher)
 {
     eventDispatcher.subscribe(this);
+}
+
+void Core::Renderer::VkRenderer::handleWindowResizeEvents(int width, int height)
+{
+    Core::Renderer::VkRenderData& renderData = Core::Engine::getInstance().getRenderData();
+
+    vkDeviceWaitIdle(renderData.rdVkbDevice.device);
+
+    renderData.rdWidth = width;
+    renderData.rdHeight = height;
+
+    recreateSwapchain();
+
+    vkResetCommandBuffer(renderData.rdCommandBuffer, 0);
+
+    Logger::log(1, "%s: resized window to %ix%i\n", __FUNCTION__, width, height);
 }
 
 void Core::Renderer::VkRenderer::onEvent(const Event& event)

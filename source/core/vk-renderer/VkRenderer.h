@@ -25,9 +25,9 @@ class VkRenderer final : public EventListener
 
     bool init(unsigned int width, unsigned int height);
 
-    void setSize(unsigned int width, unsigned int height);
-
     void subscribeToInputEvents(EventDispatcher& eventDispatcher);
+
+    void handleWindowResizeEvents(int width, int height);
 
     void onEvent(const Event& event) override;
 
