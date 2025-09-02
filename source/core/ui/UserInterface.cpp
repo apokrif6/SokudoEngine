@@ -10,7 +10,6 @@
 #include "core/ui/ProfilingUIWindow.h"
 #include "core/ui/CameraUIWindow.h"
 #include "core/ui/SceneUIWindow.h"
-#include "core/ui/AnimationUIWindow.h"
 
 bool Core::Renderer::UserInterface::init(VkRenderData& renderData)
 {
