@@ -7,8 +7,7 @@ project(SokudoEngine)
 file(GLOB_RECURSE SOURCES
         source/*.cpp
 )
-add_executable(SokudoEngine ${SOURCES}
-        source/core/window/Window.cpp)
+add_executable(SokudoEngine ${SOURCES})
 
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
