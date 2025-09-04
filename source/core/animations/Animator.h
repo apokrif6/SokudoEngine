@@ -1,18 +1,16 @@
 #pragma once
 
 #include "assimp/scene.h"
-#include "assimp/Importer.hpp"
 #include "core/vk-renderer/VkRenderData.h"
 #include "core/vk-renderer/Mesh.h"
-#include <map>
-#include <memory>
+#include <core/tools/Timer.h>
 
 namespace Core::Animations
 {
 class Animator
 {
   public:
-    void update(const Renderer::VkRenderData& renderData);
+    void update(Renderer::VkRenderData& renderData);
 
     void addMesh(Renderer::Mesh* mesh)
     {
@@ -38,5 +36,7 @@ class Animator
                                const glm::mat4& parentTransform, BonesInfo& bonesInfo, const Skeleton& skeleton);
 
     float mAnimationTime = 0.f;
+
+    Timer mAnimationBonesTransformCalculationTimer;
 };
 } // namespace Core::Animations

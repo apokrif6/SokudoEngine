@@ -129,10 +129,13 @@ struct VkRenderData
 
     int rdFieldOfView = 90;
 
+#pragma region Profiling
     float rdFrameTime = 0.0f;
     float rdMatrixGenerateTime = 0.0f;
     float rdUploadToVBOTime = 0.0f;
     float rdUploadToUBOTime = 0.0f;
+    float rdAnimationBonesTransformCalculationTime = 0.0f;
+#pragma endregion
 
     float rdViewYaw = 0.f;
     float rdViewPitch = 0.f;
