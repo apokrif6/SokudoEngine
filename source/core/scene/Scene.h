@@ -3,6 +3,7 @@
 #include <memory>
 #include "SceneObject.h"
 #include "SceneEditor.h"
+#include "core/tools/Timer.h"
 
 namespace Core::Scene
 {
@@ -24,6 +25,8 @@ class Scene
   private:
     std::vector<std::shared_ptr<SceneObject>> mObjects;
 
-    Core::Scene::SceneObjectSelection sceneObjectSelection;
+    SceneObjectSelection sceneObjectSelection;
+
+    Timer mUpdateSceneProfilingTimer;
 };
-}
+} // namespace Core::Scene

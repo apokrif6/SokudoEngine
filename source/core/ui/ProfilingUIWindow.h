@@ -2,76 +2,12 @@
 
 #include "UIWindow.h"
 #include "imgui.h"
-#include "imgui_internal.h"
 #include "string"
-#include "deque"
-#include "algorithm"
 #include "core/engine/Engine.h"
-
-#include <numeric>
+#include "core/profiling/PlotBuffer.h"
 
 namespace Core::UI
 {
-struct PlotBuffer
-{
-    std::deque<float> values;
-    size_t maxSize;
-
-    explicit PlotBuffer(const size_t inMaxSize = 60) : maxSize(inMaxSize) {}
-
-    void push(const float value)
-    {
-        if (values.size() >= maxSize)
-        {
-            values.pop_front();
-        }
-        values.push_back(value);
-    }
-
-    void draw(const char* label)
-    {
-        if (values.empty())
-        {
-            return;
-        }
-
-        float minVal = *std::ranges::min_element(values);
-        float maxVal = *std::ranges::max_element(values);
-        float avgVal = std::accumulate(values.begin(), values.end(), 0.f) / static_cast<float>(values.size());
-        float lastVal = values.back();
-
-        ImGui::Text("%s", label);
-
-        ImGui::PlotLines(
-            "##AnimationUpdatePlot",
-            [](void* data, int idx)
-            {
-                const auto* value = static_cast<std::deque<float>*>(data);
-                return (*value)[idx];
-            },
-            &values, static_cast<int>(values.size()), 0, nullptr, 0.0f, maxVal, ImVec2(0, 80));
-
-        const ImRect infoRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
-        ImDrawList* drawList = ImGui::GetWindowDrawList();
-
-        for (float value = 0.f; value <= maxVal; value += 1.f)
-        {
-            float py = ImLerp(infoRect.Max.y, infoRect.Min.y, value / maxVal);
-            drawList->AddLine(ImVec2(infoRect.Min.x, py), ImVec2(infoRect.Max.x, py), IM_COL32(255, 255, 0, 100));
-            drawList->AddText(ImVec2(infoRect.Min.x, py - 6), IM_COL32(255, 255, 255, 200),
-                              (std::to_string(static_cast<int>(value)) + " ms").c_str());
-        }
-
-        ImGui::SetCursorScreenPos(ImVec2(infoRect.Max.x + 10, infoRect.Min.y));
-        ImGui::BeginGroup();
-        ImGui::Text("Min:  %.2f ms", minVal);
-        ImGui::Text("Max:  %.2f ms", maxVal);
-        ImGui::Text("Avg:  %.2f ms", avgVal);
-        ImGui::Text("Last: %.2f ms", lastVal);
-        ImGui::EndGroup();
-    }
-};
-
 class ProfilingUIWindow : public UIWindow<ProfilingUIWindow>
 {
   public:
@@ -113,8 +49,11 @@ class ProfilingUIWindow : public UIWindow<ProfilingUIWindow>
         ImGui::SameLine();
         ImGui::Text("ms");
 
+        mScenePlot.push(renderData.rdUpdateSceneProfilingTime);
+        mScenePlot.draw("Scene Update Time");
+
         mAnimationPlot.push(renderData.rdAnimationBonesTransformCalculationTime);
-        mAnimationPlot.draw("Animation  Update Time");
+        mAnimationPlot.draw("Animation Update Time");
 
         ImGui::EndTabItem();
 
@@ -125,6 +64,7 @@ class ProfilingUIWindow : public UIWindow<ProfilingUIWindow>
     inline static float mFramesPerSecond = 0.0f;
     inline static float mAveragingAlpha = 0.95f;
 
-    inline static PlotBuffer mAnimationPlot{200};
+    inline static Profiling::PlotBuffer mScenePlot{200};
+    inline static Profiling::PlotBuffer mAnimationPlot{200};
 };
 } // namespace Core::UI

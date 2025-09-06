@@ -11,10 +11,12 @@ void Core::Scene::Scene::addObject(std::shared_ptr<SceneObject> object)
 
 void Core::Scene::Scene::update(Core::Renderer::VkRenderData& renderData, float deltaTime)
 {
+    mUpdateSceneProfilingTimer.start();
     for (auto& object : mObjects)
     {
         object->update(renderData);
     }
+    renderData.rdUpdateSceneProfilingTime = mUpdateSceneProfilingTimer.stop();
 }
 
 void Core::Scene::Scene::draw(Core::Renderer::VkRenderData& renderData)
