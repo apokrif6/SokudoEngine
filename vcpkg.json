@@ -27,5 +27,8 @@
   }, {
     "name" : "glfw3",
     "version>=" : "3.4#1"
+  }, {
+    "name" : "imguizmo",
+    "version>=" : "2024-05-29#1"
   } ]
 }

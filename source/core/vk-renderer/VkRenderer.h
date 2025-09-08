@@ -45,6 +45,11 @@ class VkRenderer final : public EventListener
 
     void cleanup(VkRenderData& renderData);
 
+    const std::vector<glm::mat4>& getPerspectiveViewMatrices()
+    {
+        return mPerspectiveViewMatrices;
+    }
+
   private:
     Core::Renderer::VkPrimitiveRenderData mPrimitiveRenderData{};
 

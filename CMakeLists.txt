@@ -16,6 +16,7 @@ find_package(vk-bootstrap REQUIRED)
 find_package(VulkanMemoryAllocator REQUIRED)
 find_package(assimp REQUIRED)
 find_package(imgui REQUIRED)
+find_package(imguizmo CONFIG REQUIRED)
 find_package(unofficial-spirv-reflect REQUIRED)
 
 file(GLOB GLSL_SOURCE_FILES
@@ -57,6 +58,7 @@ set(DEPENDENCIES
         GPUOpen::VulkanMemoryAllocator
         assimp::assimp
         imgui::imgui
+        imguizmo::imguizmo
         unofficial::spirv-reflect
 )
 

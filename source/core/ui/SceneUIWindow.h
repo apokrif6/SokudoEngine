@@ -6,6 +6,9 @@
 #include "core/engine/Engine.h"
 #include "core/scene/SceneEditor.h"
 #include "AnimationUIWindow.h"
+#include "ImGuizmo.h"
+#include "glm/gtc/type_ptr.hpp"
+#include "glm/gtx/matrix_decompose.hpp"
 
 namespace Core::UI
 {
@@ -33,7 +36,8 @@ class SceneUIWindow : public UIWindow<SceneUIWindow>
             return true;
         }
 
-        Core::Scene::SceneObjectSelection& sceneObjectSelection = Core::Engine::getInstance().getSystem<Scene::Scene>()->getSceneObjectSelection();
+        Core::Scene::SceneObjectSelection& sceneObjectSelection =
+            Core::Engine::getInstance().getSystem<Scene::Scene>()->getSceneObjectSelection();
 
         ImGui::Separator();
         ImGui::Text("Selected Scene Object:");
@@ -58,9 +62,11 @@ class SceneUIWindow : public UIWindow<SceneUIWindow>
 
             ImGui::EndCombo();
         }
-        ImGui::Text("Position: %s", glm::to_string(sceneObjectSelection.selectedObject->getTransform().position).c_str());
-        ImGui::Text("Rotation: %s", glm::to_string(sceneObjectSelection.selectedObject->getTransform().rotation).c_str());
-        ImGui::Text("Scale: %s", glm::to_string(sceneObjectSelection.selectedObject->getTransform().scale).c_str());
+        Scene::Transform& sceneObjectTransform = sceneObjectSelection.selectedObject->getTransform();
+
+        ImGui::Text("Position: %s", glm::to_string(sceneObjectTransform.position).c_str());
+        ImGui::Text("Rotation: %s", glm::to_string(sceneObjectTransform.rotation).c_str());
+        ImGui::Text("Scale: %s", glm::to_string(sceneObjectTransform.scale).c_str());
 
         if (auto meshObject = std::static_pointer_cast<Core::Renderer::Mesh>(sceneObjectSelection.selectedObject))
         {
@@ -74,11 +80,42 @@ class SceneUIWindow : public UIWindow<SceneUIWindow>
 
         ImGui::EndTabItem();
 
+        if (sceneObjectSelection.selectedObject)
+        {
+            auto perspectiveViewMatrices =
+                Core::Engine::getInstance().getSystem<Renderer::VkRenderer>()->getPerspectiveViewMatrices();
+            glm::mat4 view = perspectiveViewMatrices[0];
+            glm::mat4 projection = perspectiveViewMatrices[1];
+
+            ImGuizmo::BeginFrame();
+            ImGuizmo::SetDrawlist(ImGui::GetBackgroundDrawList());
+
+            ImGuiIO& io = ImGui::GetIO();
+            ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
+
+            glm::mat4 objectMatrix = sceneObjectTransform.getMatrix();
+
+            ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(projection), ImGuizmo::TRANSLATE, ImGuizmo::LOCAL,
+                                 glm::value_ptr(objectMatrix));
+
+            if (ImGuizmo::IsUsing())
+            {
+                glm::vec3 translation, scale, skew;
+                glm::vec4 perspective;
+                glm::quat rotation;
+
+                glm::decompose(objectMatrix, scale, rotation, translation, skew, perspective);
+
+                sceneObjectTransform.position = translation;
+                sceneObjectTransform.rotation = rotation;
+                sceneObjectTransform.scale = scale;
+            }
+        }
+
         return true;
     }
 
-private:
+  private:
     static inline int selectedSceneObjectIndex = 0;
 };
-}
-
+} // namespace Core::UI
