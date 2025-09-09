@@ -7,6 +7,9 @@
 
 namespace Core
 {
+template<class>
+inline constexpr bool always_false_v = false;
+
 class Engine
 {
   public:
@@ -38,9 +41,13 @@ class Engine
         {
             return mAnimator.get();
         }
+        else if constexpr (std::is_same_v<T, Renderer::UserInterface>)
+        {
+            return mUserInterface.get();
+        }
         else
         {
-            static_assert(false, "Unsupported system type");
+            static_assert(always_false_v<T>, "Unsupported system type");
         }
     }
 

@@ -146,12 +146,6 @@ Core::Renderer::VkRenderer::VkRenderer(GLFWwindow* inWindow)
     mPerspectiveViewMatrices.emplace_back(1.0f);
 }
 
-// maybe move to some global functions?
-void Core::Renderer::VkRenderer::subscribeToInputEvents(EventDispatcher& eventDispatcher)
-{
-    eventDispatcher.subscribe(this);
-}
-
 void Core::Renderer::VkRenderer::handleWindowResizeEvents(int width, int height)
 {
     Core::Renderer::VkRenderData& renderData = Core::Engine::getInstance().getRenderData();

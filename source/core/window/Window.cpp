@@ -44,7 +44,8 @@ std::unique_ptr<Core::Renderer::VkRenderer> Core::Application::Window::init(int 
         return nullptr;
     }
 
-    renderer->subscribeToInputEvents(mInputHandler->getDispatcher());
+    renderer->subscribeToEventDispatcher(mInputHandler->getDispatcher());
+    Engine::getInstance().getSystem<Renderer::UserInterface>()->subscribeToEventDispatcher(mInputHandler->getDispatcher());
 
     glfwSetWindowUserPointer(mWindow, this);
 

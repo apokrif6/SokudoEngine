@@ -2,9 +2,9 @@
 
 #include "core/events/Event.h"
 
-struct MouseLockEvent final : public Event
+struct MouseLockEvent final : Event
 {
-    MouseLockEvent(const bool inIsLocked) : isLocked(inIsLocked) {}
+    explicit MouseLockEvent(const bool inIsLocked) : isLocked(inIsLocked) {}
 
     bool isLocked;
 };

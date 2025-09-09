@@ -1,10 +1,9 @@
 #include <string>
-
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_vulkan.h"
-
 #include "UserInterface.h"
+#include "core/events/input-events/KeyEvent.h"
 #include "core/vk-renderer/buffers/CommandBuffer.h"
 #include "core/tools/Logger.h"
 #include "core/ui/ProfilingUIWindow.h"
@@ -175,6 +174,30 @@ void Core::Renderer::UserInterface::cleanup(VkRenderData& renderData)
     ImGui_ImplVulkan_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
+}
+
+void Core::Renderer::UserInterface::onEvent(const Event& event)
+{
+    if (const auto* keyEvent = dynamic_cast<const KeyEvent*>(&event))
+    {
+        if (keyEvent->action == GLFW_PRESS)
+        {
+            switch (keyEvent->key)
+            {
+            case GLFW_KEY_W:
+                UI::SceneUIWindow::setOperation(ImGuizmo::TRANSLATE);
+                break;
+            case GLFW_KEY_E:
+                UI::SceneUIWindow::setOperation(ImGuizmo::SCALE);
+                break;
+            case GLFW_KEY_R:
+                UI::SceneUIWindow::setOperation(ImGuizmo::ROTATE);
+                break;
+            default:
+                break;
+            }
+        }
+    }
 }
 
 void Core::Renderer::UserInterface::setupImGuiStyle() const

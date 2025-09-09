@@ -95,7 +95,7 @@ class SceneUIWindow : public UIWindow<SceneUIWindow>
 
             glm::mat4 objectMatrix = sceneObjectTransform.getMatrix();
 
-            ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(projection), ImGuizmo::TRANSLATE, ImGuizmo::LOCAL,
+            ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(projection), currentManipulateOperation, ImGuizmo::LOCAL,
                                  glm::value_ptr(objectMatrix));
 
             if (ImGuizmo::IsUsing())
@@ -115,7 +115,10 @@ class SceneUIWindow : public UIWindow<SceneUIWindow>
         return true;
     }
 
+    static void setOperation(ImGuizmo::OPERATION manipulateOperation) { currentManipulateOperation = manipulateOperation; }
+
   private:
     static inline int selectedSceneObjectIndex = 0;
+    static inline ImGuizmo::OPERATION currentManipulateOperation = ImGuizmo::TRANSLATE;
 };
 } // namespace Core::UI

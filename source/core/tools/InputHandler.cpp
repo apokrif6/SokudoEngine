@@ -1,4 +1,6 @@
 #include "InputHandler.h"
+
+#include "core/events/input-events/KeyEvent.h"
 #include "core/tools/Logger.h"
 #include "core/events/input-events/MouseMovementEvent.h"
 #include "core/events/input-events/MouseLockEvent.h"
@@ -28,6 +30,8 @@ void InputHandler::handleKeyEvents(int key, int scancode, int action, int mods)
         actionName = "invalid";
         break;
     }
+
+    mEventDispatcher.dispatch(KeyEvent(key, scancode, action, mods));
 
     const char* keyName = glfwGetKeyName(key, 0);
     Logger::log(1, "%s: key %s (key %i, scancode %i) %s\n", __FUNCTION__, keyName, key, scancode, actionName.c_str());
