@@ -8,8 +8,6 @@
 #include <string>
 #include <GLFW/glfw3.h>
 
-InputHandler::InputHandler(GLFWwindow* inWindow) { mWindow = inWindow; }
-
 void InputHandler::subscribeToEvents(EventListener* listener) { mEventDispatcher.subscribe(listener); }
 
 void InputHandler::handleKeyEvents(int key, int scancode, int action, int mods)
@@ -45,9 +43,16 @@ void InputHandler::handleMouseButtonEvents(int button, int action, int mods)
         io.AddMouseButtonEvent(button, action == GLFW_PRESS);
     }
 
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
+    if (button == GLFW_MOUSE_BUTTON_RIGHT)
     {
-        mMouseLock = !mMouseLock;
+        if (action == GLFW_PRESS)
+        {
+            mMouseLock = true;
+        }
+        else if (action == GLFW_RELEASE)
+        {
+            mMouseLock = false;
+        }
 
         mEventDispatcher.dispatch(MouseLockEvent(mMouseLock));
     }

@@ -36,7 +36,7 @@ std::unique_ptr<Core::Renderer::VkRenderer> Core::Application::Window::init(int 
         return nullptr;
     }
 
-    mInputHandler = std::make_unique<InputHandler>(mWindow);
+    mInputHandler = std::make_unique<InputHandler>();
     if (!mInputHandler)
     {
         glfwTerminate();

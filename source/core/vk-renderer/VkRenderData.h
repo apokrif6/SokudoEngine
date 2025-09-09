@@ -147,6 +147,8 @@ struct VkRenderData
     float rdMoveRight = 0;
     float rdMoveUp = 0;
 
+    bool freeCameraMovement = false;
+
     float rdTickDiff = 0.f;
 
     VmaAllocator rdAllocator;

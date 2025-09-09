@@ -6,8 +6,6 @@
 class InputHandler
 {
   public:
-    explicit InputHandler(GLFWwindow* inWindow);
-
     void subscribeToEvents(EventListener* listener);
 
     EventDispatcher& getDispatcher() { return mEventDispatcher; }
@@ -19,8 +17,6 @@ class InputHandler
     void handleMousePositionEvents(double xPosition, double yPosition);
 
   private:
-    GLFWwindow* mWindow;
-
     EventDispatcher mEventDispatcher;
 
     bool mMouseLock = false;

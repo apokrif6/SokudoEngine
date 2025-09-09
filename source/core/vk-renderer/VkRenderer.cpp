@@ -187,6 +187,7 @@ void Core::Renderer::VkRenderer::onEvent(const Event& event)
     {
         if (mouseLockEvent->isLocked)
         {
+            renderData.freeCameraMovement = true;
             glfwSetInputMode(renderData.rdWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
             if (glfwRawMouseMotionSupported())
             {
@@ -196,6 +197,8 @@ void Core::Renderer::VkRenderer::onEvent(const Event& event)
         }
         else
         {
+            renderData.freeCameraMovement = false;
+
             glfwSetInputMode(renderData.rdWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         }
     }
@@ -939,33 +942,43 @@ void Core::Renderer::VkRenderer::handleCameraMovementKeys()
         return;
     }
 
-    Core::Engine::getInstance().getRenderData().rdMoveForward = 0.f;
-    if (glfwGetKey(Core::Engine::getInstance().getRenderData().rdWindow, GLFW_KEY_W) == GLFW_PRESS)
+    VkRenderData& renderData = Core::Engine::getInstance().getRenderData();
+    if (!renderData.freeCameraMovement)
     {
-        Core::Engine::getInstance().getRenderData().rdMoveForward += 1.f;
-    }
-    if (glfwGetKey(Core::Engine::getInstance().getRenderData().rdWindow, GLFW_KEY_S) == GLFW_PRESS)
-    {
-        Core::Engine::getInstance().getRenderData().rdMoveForward -= 1.f;
+        renderData.rdMoveForward = 0.f;
+        renderData.rdMoveRight = 0.f;
+        renderData.rdMoveUp = 0.f;
+
+        return;
     }
 
-    Core::Engine::getInstance().getRenderData().rdMoveRight = 0.f;
-    if (glfwGetKey(Core::Engine::getInstance().getRenderData().rdWindow, GLFW_KEY_D) == GLFW_PRESS)
+    renderData.rdMoveForward = 0.f;
+    if (glfwGetKey(renderData.rdWindow, GLFW_KEY_W) == GLFW_PRESS)
     {
-        Core::Engine::getInstance().getRenderData().rdMoveRight += 1;
+        renderData.rdMoveForward += 1.f;
     }
-    if (glfwGetKey(Core::Engine::getInstance().getRenderData().rdWindow, GLFW_KEY_A) == GLFW_PRESS)
+    if (glfwGetKey(renderData.rdWindow, GLFW_KEY_S) == GLFW_PRESS)
     {
-        Core::Engine::getInstance().getRenderData().rdMoveRight -= 1.f;
+        renderData.rdMoveForward -= 1.f;
     }
 
-    Core::Engine::getInstance().getRenderData().rdMoveUp = 0.f;
-    if (glfwGetKey(Core::Engine::getInstance().getRenderData().rdWindow, GLFW_KEY_E) == GLFW_PRESS)
+    renderData.rdMoveRight = 0.f;
+    if (glfwGetKey(renderData.rdWindow, GLFW_KEY_D) == GLFW_PRESS)
     {
-        Core::Engine::getInstance().getRenderData().rdMoveUp += 1.f;
+        renderData.rdMoveRight += 1;
     }
-    if (glfwGetKey(Core::Engine::getInstance().getRenderData().rdWindow, GLFW_KEY_Q) == GLFW_PRESS)
+    if (glfwGetKey(renderData.rdWindow, GLFW_KEY_A) == GLFW_PRESS)
     {
-        Core::Engine::getInstance().getRenderData().rdMoveUp -= 1.f;
+        renderData.rdMoveRight -= 1.f;
+    }
+
+    renderData.rdMoveUp = 0.f;
+    if (glfwGetKey(renderData.rdWindow, GLFW_KEY_E) == GLFW_PRESS)
+    {
+        renderData.rdMoveUp += 1.f;
+    }
+    if (glfwGetKey(renderData.rdWindow, GLFW_KEY_Q) == GLFW_PRESS)
+    {
+        renderData.rdMoveUp -= 1.f;
     }
 }
