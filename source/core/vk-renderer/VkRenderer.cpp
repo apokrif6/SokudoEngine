@@ -21,6 +21,7 @@
 #include "core/animations/Animator.h"
 #include "core/animations/AnimationsUtils.h"
 #include <core/events/input-events/MouseLockEvent.h>
+#include <algorithm>
 #include <glm/gtc/matrix_transform.hpp>
 #include "core/vk-renderer/pipelines/DebugSkeletonPipeline.h"
 #include "core/vk-renderer/pipelines/layouts/DebugSkeletonPipelineLayout.h"
@@ -164,43 +165,38 @@ void Core::Renderer::VkRenderer::handleWindowResizeEvents(int width, int height)
 
 void Core::Renderer::VkRenderer::onEvent(const Event& event)
 {
+    VkRenderData& renderData = Core::Engine::getInstance().getRenderData();
+    
     if (const auto* mouseMovementEvent = dynamic_cast<const MouseMovementEvent*>(&event))
     {
-        Core::Engine::getInstance().getRenderData().rdViewYaw += static_cast<float>(mouseMovementEvent->deltaX) / 10.f;
-        if (Core::Engine::getInstance().getRenderData().rdViewYaw < 0.f)
+        renderData.rdViewYaw += static_cast<float>(mouseMovementEvent->deltaX) / 10.f;
+        if (renderData.rdViewYaw < 0.f)
         {
-            Core::Engine::getInstance().getRenderData().rdViewYaw += 360.f;
+            renderData.rdViewYaw += 360.f;
         }
-        if (Core::Engine::getInstance().getRenderData().rdViewYaw >= 360.f)
+        if (renderData.rdViewYaw >= 360.f)
         {
-            Core::Engine::getInstance().getRenderData().rdViewYaw -= 360.f;
+            renderData.rdViewYaw -= 360.f;
         }
 
-        Core::Engine::getInstance().getRenderData().rdViewPitch -=
-            static_cast<float>(mouseMovementEvent->deltaY) / 10.f;
-        if (Core::Engine::getInstance().getRenderData().rdViewPitch > 89.f)
-        {
-            Core::Engine::getInstance().getRenderData().rdViewPitch = 89.f;
-        }
-        if (Core::Engine::getInstance().getRenderData().rdViewPitch < -89.f)
-        {
-            Core::Engine::getInstance().getRenderData().rdViewPitch = -89.f;
-        }
+        renderData.rdViewPitch -= static_cast<float>(mouseMovementEvent->deltaY) / 10.f;
+        renderData.rdViewPitch = std::min(renderData.rdViewPitch, 89.f);
+        renderData.rdViewPitch = std::max(renderData.rdViewPitch, -89.f);
     }
     else if (const auto* mouseLockEvent = dynamic_cast<const MouseLockEvent*>(&event))
     {
         if (mouseLockEvent->isLocked)
         {
-            glfwSetInputMode(Core::Engine::getInstance().getRenderData().rdWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            glfwSetInputMode(renderData.rdWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
             if (glfwRawMouseMotionSupported())
             {
-                glfwSetInputMode(Core::Engine::getInstance().getRenderData().rdWindow, GLFW_RAW_MOUSE_MOTION,
+                glfwSetInputMode(renderData.rdWindow, GLFW_RAW_MOUSE_MOTION,
                                  GLFW_TRUE);
             }
         }
         else
         {
-            glfwSetInputMode(Core::Engine::getInstance().getRenderData().rdWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            glfwSetInputMode(renderData.rdWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         }
     }
 }
