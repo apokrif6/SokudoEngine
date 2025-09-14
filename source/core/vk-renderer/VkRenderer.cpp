@@ -1,8 +1,15 @@
+#include "core/tools/Logger.h"
 #define VMA_IMPLEMENTATION
 #define GLM_ENABLE_EXPERIMENTAL
+#if defined(_DEBUG) || !defined(NDEBUG)
+#define VMA_DEBUG_DETECT_LEAKS 1
+#define VMA_DEBUG_INITIALIZE_ALLOCATIONS 1
+#define VMA_DEBUG_DETECT_CORRUPTION 1
+#define VMA_DEBUG_LOG_FORMAT(fmt, ...) Logger::log(1, fmt, __VA_ARGS__)
+#define VMA_DEBUG_LOG(...) Logger::log(1, __VA_ARGS__)
+#endif
 #include "vk_mem_alloc.h"
 #include "VkRenderer.h"
-#include "core/tools/Logger.h"
 #include "Framebuffer.h"
 #include "Renderpass.h"
 #include "core/vk-renderer/pipelines/layouts/PipelineLayout.h"
