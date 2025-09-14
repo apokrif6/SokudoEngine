@@ -362,10 +362,6 @@ void Core::Renderer::VkRenderer::endRenderFrame(Core::Renderer::VkRenderData& re
 
 void Core::Renderer::VkRenderer::cleanup(VkRenderData& renderData)
 {
-    vkDeviceWaitIdle(Core::Engine::getInstance().getRenderData().rdVkbDevice.device);
-
-    Core::Engine::getInstance().getSystem<Scene::Scene>()->cleanup(renderData);
-
     Core::Renderer::SyncObjects::cleanup(renderData);
     Core::Renderer::CommandBuffer::cleanup(renderData, Core::Engine::getInstance().getRenderData().rdCommandBuffer);
     Core::Renderer::CommandPool::cleanup(renderData);
