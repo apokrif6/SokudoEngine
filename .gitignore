@@ -47,3 +47,6 @@ vcpkg_installed/
 
 # Build
 build/
+
+# ImGui
+imgui.ini
