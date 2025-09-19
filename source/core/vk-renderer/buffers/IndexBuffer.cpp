@@ -13,11 +13,14 @@ bool Core::Renderer::IndexBuffer::init(Core::Renderer::VkRenderData& renderData,
     bufferInfo.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
     bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-    VmaAllocationCreateInfo bufferAllocInfo{};
-    bufferAllocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+    VmaAllocationCreateInfo bufferAllocCreateInfo{};
+    bufferAllocCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
-    if (vmaCreateBuffer(renderData.rdAllocator, &bufferInfo, &bufferAllocInfo, &indexBufferData.rdIndexBuffer,
-                        &indexBufferData.rdIndexBufferAlloc, nullptr) != VK_SUCCESS)
+    VmaAllocationInfo bufferAllocInfo{};
+    bufferAllocInfo.pName = "Index Buffer";
+    
+    if (vmaCreateBuffer(renderData.rdAllocator, &bufferInfo, &bufferAllocCreateInfo, &indexBufferData.rdIndexBuffer,
+                        &indexBufferData.rdIndexBufferAlloc, &bufferAllocInfo) != VK_SUCCESS)
     {
         Logger::log(1, "%s error: could not allocate index buffer via VMA\n", __FUNCTION__);
         return false;
@@ -28,11 +31,14 @@ bool Core::Renderer::IndexBuffer::init(Core::Renderer::VkRenderData& renderData,
     stagingBufferInfo.size = bufferSize;
     stagingBufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 
-    VmaAllocationCreateInfo stagingAllocInfo{};
-    stagingAllocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
+    VmaAllocationCreateInfo stagingAllocCreateInfo{};
+    stagingAllocCreateInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
 
-    if (vmaCreateBuffer(renderData.rdAllocator, &stagingBufferInfo, &stagingAllocInfo, &indexBufferData.rdStagingBuffer,
-                        &indexBufferData.rdStagingBufferAlloc, nullptr) != VK_SUCCESS)
+    VmaAllocationInfo stagingAllocInfo{};
+    stagingAllocInfo.pName = "Index Staging Buffer";
+
+    if (vmaCreateBuffer(renderData.rdAllocator, &stagingBufferInfo, &stagingAllocCreateInfo, &indexBufferData.rdStagingBuffer,
+                        &indexBufferData.rdStagingBufferAlloc, &stagingAllocInfo) != VK_SUCCESS)
     {
         Logger::log(1, "%s error: could not allocate index staging buffer via VMA\n", __FUNCTION__);
         return false;

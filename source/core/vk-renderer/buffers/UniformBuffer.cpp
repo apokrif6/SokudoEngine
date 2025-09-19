@@ -11,11 +11,14 @@ bool Core::Renderer::UniformBuffer::init(Core::Renderer::VkRenderData& renderDat
     bufferInfo.size = bufferSize;
     bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 
-    VmaAllocationCreateInfo vmaAllocInfo{};
-    vmaAllocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+    VmaAllocationCreateInfo vmaAllocCreateInfo{};
+    vmaAllocCreateInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
 
-    if (vmaCreateBuffer(renderData.rdAllocator, &bufferInfo, &vmaAllocInfo, &UBOData.rdUniformBuffer,
-                        &UBOData.rdUniformBufferAlloc, nullptr) != VK_SUCCESS)
+    VmaAllocationInfo vmaAllocInfo{};
+    vmaAllocInfo.pName = "Uniform Buffer";
+    
+    if (vmaCreateBuffer(renderData.rdAllocator, &bufferInfo, &vmaAllocCreateInfo, &UBOData.rdUniformBuffer,
+                        &UBOData.rdUniformBufferAlloc, &vmaAllocInfo) != VK_SUCCESS)
     {
         Logger::log(1, "%s error: could not allocate uniform buffer via VMA\n", __FUNCTION__);
         return false;

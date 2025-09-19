@@ -10,11 +10,14 @@ bool Core::Renderer::VertexBuffer::init(Core::Renderer::VkRenderData& renderData
     bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
     bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-    VmaAllocationCreateInfo bufferAllocInfo{};
-    bufferAllocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+    VmaAllocationCreateInfo bufferAllocCreateInfo{};
+    bufferAllocCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
-    if (vmaCreateBuffer(renderData.rdAllocator, &bufferInfo, &bufferAllocInfo, &vertexBufferData.rdVertexBuffer,
-                        &vertexBufferData.rdVertexBufferAlloc, nullptr) != VK_SUCCESS)
+    VmaAllocationInfo bufferAllocInfo{};
+    bufferAllocInfo.pName = "Vertex Buffer";
+
+    if (vmaCreateBuffer(renderData.rdAllocator, &bufferInfo, &bufferAllocCreateInfo, &vertexBufferData.rdVertexBuffer,
+                        &vertexBufferData.rdVertexBufferAlloc, &bufferAllocInfo) != VK_SUCCESS)
     {
         Logger::log(1, "%s error: could not allocate vertex buffer via VMA\n", __FUNCTION__);
         return false;
@@ -25,12 +28,15 @@ bool Core::Renderer::VertexBuffer::init(Core::Renderer::VkRenderData& renderData
     stagingBufferInfo.size = bufferSize;
     stagingBufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 
-    VmaAllocationCreateInfo stagingAllocInfo{};
-    stagingAllocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
+    VmaAllocationCreateInfo stagingAllocCreateInfo{};
+    stagingAllocCreateInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
 
-    if (vmaCreateBuffer(renderData.rdAllocator, &stagingBufferInfo, &stagingAllocInfo,
+    VmaAllocationInfo stagingAllocInfo{};
+    stagingAllocInfo.pName = "Vertex Staging Buffer";
+    
+    if (vmaCreateBuffer(renderData.rdAllocator, &stagingBufferInfo, &stagingAllocCreateInfo,
                         &vertexBufferData.rdStagingBuffer, &vertexBufferData.rdStagingBufferAlloc,
-                        nullptr) != VK_SUCCESS)
+                        &stagingAllocInfo) != VK_SUCCESS)
     {
         Logger::log(1, "%s error: could not allocate vertex staging buffer via VMA\n", __FUNCTION__);
         return false;

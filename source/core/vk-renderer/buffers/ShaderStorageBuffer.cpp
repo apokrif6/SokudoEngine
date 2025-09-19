@@ -11,11 +11,14 @@ bool Core::Renderer::ShaderStorageBuffer::init(Core::Renderer::VkRenderData& ren
     bufferInfo.size = bufferSize;
     bufferInfo.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
 
-    VmaAllocationCreateInfo vmaAllocInfo{};
-    vmaAllocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+    VmaAllocationCreateInfo vmaAllocCreateInfo{};
+    vmaAllocCreateInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
 
-    if (vmaCreateBuffer(renderData.rdAllocator, &bufferInfo, &vmaAllocInfo, 
-                        &SSBOData.rdShaderStorageBuffer,&SSBOData.rdShaderStorageBufferAlloc, nullptr) != VK_SUCCESS)
+    VmaAllocationInfo vmaAllocInfo{};
+    vmaAllocInfo.pName = "Shader Storage Buffer";
+
+    if (vmaCreateBuffer(renderData.rdAllocator, &bufferInfo, &vmaAllocCreateInfo, 
+                        &SSBOData.rdShaderStorageBuffer,&SSBOData.rdShaderStorageBufferAlloc, &vmaAllocInfo) != VK_SUCCESS)
     {
         Logger::log(1, "%s error: could not allocate shader storage buffer via VMA\n", __FUNCTION__);
         return false;
