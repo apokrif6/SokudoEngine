@@ -10,7 +10,7 @@ class VertexBuffer
 {
   public:
     static bool init(Core::Renderer::VkRenderData& renderData, VkVertexBufferData& VkVertexBufferData,
-                     unsigned int bufferSize);
+                     unsigned int bufferSize, const std::string& name);
 
     // TODO
     // to remove!
@@ -29,7 +29,7 @@ class VertexBuffer
         {
             cleanup(renderData, vertexBufferData);
 
-            if (!init(renderData, vertexBufferData, vertexDataSize))
+            if (!init(renderData, vertexBufferData, vertexDataSize, vertexBufferData.rdName))
             {
                 Logger::log(1, "%s error: could not create vertex buffer of size %i bytes\n", __FUNCTION__, vertexDataSize);
                 return false;

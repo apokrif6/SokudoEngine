@@ -4,7 +4,7 @@
 #include "VkBootstrap.h"
 
 bool Core::Renderer::UniformBuffer::init(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData,
-                                         size_t bufferSize)
+                                         size_t bufferSize, const std::string& name)
 {
     VkBufferCreateInfo bufferInfo{};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -23,9 +23,11 @@ bool Core::Renderer::UniformBuffer::init(Core::Renderer::VkRenderData& renderDat
         return false;
     }
 
+
+    UBOData.rdName = "Uniform Buffer " + name;
     vmaSetAllocationName(renderData.rdAllocator,
                          UBOData.rdUniformBufferAlloc,
-                         "Uniform Buffer");
+                         UBOData.rdName.c_str());
 
     VkDescriptorSetLayoutBinding uboBind{};
     uboBind.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;

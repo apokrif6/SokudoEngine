@@ -4,7 +4,7 @@
 #include "VkBootstrap.h"
 
 bool Core::Renderer::ShaderStorageBuffer::init(Core::Renderer::VkRenderData& renderData, VkShaderStorageBufferData &SSBOData,
-                                               size_t bufferSize)
+                                               size_t bufferSize, const std::string& name)
 {
     VkBufferCreateInfo bufferInfo{};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -23,9 +23,10 @@ bool Core::Renderer::ShaderStorageBuffer::init(Core::Renderer::VkRenderData& ren
         return false;
     }
 
+    SSBOData.rdName = "Shader Storage Buffer " + name;
     vmaSetAllocationName(renderData.rdAllocator,
                          SSBOData.rdShaderStorageBufferAlloc,
-                         "Shader Storage Buffer");
+                         SSBOData.rdName.c_str());
 
     VkDescriptorSetLayoutBinding ssboBind{};
     ssboBind.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;

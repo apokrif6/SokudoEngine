@@ -8,7 +8,7 @@ void Core::Renderer::Debug::Skeleton::init(Core::Renderer::VkRenderData& renderD
 
 void Core::Renderer::Debug::Skeleton::createVertexBuffer(Core::Renderer::VkRenderData& renderData)
 {
-    Core::Renderer::VertexBuffer::init(renderData, mDebugLinesBuffer, sizeof(LineVertex) * MAX_DEBUG_BONES_LINES);
+    Core::Renderer::VertexBuffer::init(renderData, mDebugLinesBuffer, sizeof(LineVertex) * MAX_DEBUG_BONES_LINES, "DebugSkeleton");
 }
 
 void Core::Renderer::Debug::Skeleton::update(Core::Renderer::VkRenderData& renderData,

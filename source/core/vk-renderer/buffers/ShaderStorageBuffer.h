@@ -10,7 +10,7 @@ class ShaderStorageBuffer
 {
   public:
     static bool init(Core::Renderer::VkRenderData& renderData, VkShaderStorageBufferData &SSBOData,
-                     size_t bufferSize);
+                     size_t bufferSize, const std::string& name);
 
     static void uploadData(Core::Renderer::VkRenderData& renderData, VkShaderStorageBufferData &SSBOData,
                            std::vector<glm::mat4> matrices);

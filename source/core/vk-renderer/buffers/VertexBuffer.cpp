@@ -2,7 +2,8 @@
 #include "VertexBuffer.h"
 
 bool Core::Renderer::VertexBuffer::init(Core::Renderer::VkRenderData &renderData, VkVertexBufferData &vertexBufferData,
-                                        unsigned int bufferSize) {
+                                        unsigned int bufferSize, const std::string& name)
+{
     VkBufferCreateInfo bufferInfo{};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     bufferInfo.size = bufferSize;
@@ -20,9 +21,10 @@ bool Core::Renderer::VertexBuffer::init(Core::Renderer::VkRenderData &renderData
         return false;
     }
 
+    vertexBufferData.rdName = "Vertex Buffer " + name;
     vmaSetAllocationName(renderData.rdAllocator,
                          vertexBufferData.rdVertexBufferAlloc,
-                         "Vertex Buffer");
+                         vertexBufferData.rdName.c_str());
 
     VkBufferCreateInfo stagingBufferInfo{};
     stagingBufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -33,7 +35,6 @@ bool Core::Renderer::VertexBuffer::init(Core::Renderer::VkRenderData &renderData
     stagingAllocCreateInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
 
     VmaAllocationInfo stagingAllocInfo{};
-    stagingAllocInfo.pName = "Vertex Staging Buffer";
 
     if (vmaCreateBuffer(renderData.rdAllocator, &stagingBufferInfo, &stagingAllocCreateInfo,
                         &vertexBufferData.rdStagingBuffer, &vertexBufferData.rdStagingBufferAlloc,
@@ -42,20 +43,26 @@ bool Core::Renderer::VertexBuffer::init(Core::Renderer::VkRenderData &renderData
         return false;
     }
 
+    vertexBufferData.rdName = "Vertex Staging Buffer " + name;
+    vmaSetAllocationName(renderData.rdAllocator,
+                         vertexBufferData.rdStagingBufferAlloc,
+                         vertexBufferData.rdName.c_str());
+
     vertexBufferData.rdVertexBufferSize = bufferSize;
 
     return true;
 }
 
 bool Core::Renderer::VertexBuffer::uploadData(Core::Renderer::VkRenderData &renderData,
-                                              VkVertexBufferData &vertexBufferData, Core::Renderer::VkMesh vertexData) {
+                                              VkVertexBufferData &vertexBufferData, Core::Renderer::VkMesh vertexData)
+{
     unsigned int vertexDataSize = vertexData.vertices.size() * sizeof(VkVertex);
 
     // buffer too small, should resize
     if (vertexBufferData.rdVertexBufferSize < vertexDataSize) {
         cleanup(renderData, vertexBufferData);
 
-        if (!init(renderData, vertexBufferData, vertexDataSize)) {
+        if (!init(renderData, vertexBufferData, vertexDataSize, vertexBufferData.rdName)) {
             Logger::log(1, "%s error: could not create vertex buffer of size %i bytes\n", __FUNCTION__, vertexDataSize);
             return false;
         }
@@ -94,7 +101,8 @@ bool Core::Renderer::VertexBuffer::uploadData(Core::Renderer::VkRenderData &rend
 }
 
 void Core::Renderer::VertexBuffer::cleanup(Core::Renderer::VkRenderData &renderData,
-                                           VkVertexBufferData &vertexBufferData) {
+                                           VkVertexBufferData &vertexBufferData)
+{
     vmaDestroyBuffer(renderData.rdAllocator, vertexBufferData.rdStagingBuffer, vertexBufferData.rdStagingBufferAlloc);
     vmaDestroyBuffer(renderData.rdAllocator, vertexBufferData.rdVertexBuffer, vertexBufferData.rdVertexBufferAlloc);
 }

@@ -78,6 +78,7 @@ struct VkVertexBufferData
     VmaAllocation rdVertexBufferAlloc = nullptr;
     VkBuffer rdStagingBuffer = VK_NULL_HANDLE;
     VmaAllocation rdStagingBufferAlloc = nullptr;
+    std::string rdName;
 };
 
 struct VkIndexBufferData
@@ -87,6 +88,7 @@ struct VkIndexBufferData
     VmaAllocation rdIndexBufferAlloc = nullptr;
     VkBuffer rdStagingBuffer = VK_NULL_HANDLE;
     VmaAllocation rdStagingBufferAlloc = nullptr;
+    std::string rdName;
 };
 
 struct VkUniformBufferData
@@ -94,10 +96,10 @@ struct VkUniformBufferData
     size_t rdUniformBufferSize = 0;
     VkBuffer rdUniformBuffer = VK_NULL_HANDLE;
     VmaAllocation rdUniformBufferAlloc = nullptr;
-
     VkDescriptorPool rdUBODescriptorPool = VK_NULL_HANDLE;
     VkDescriptorSetLayout rdUBODescriptorLayout = VK_NULL_HANDLE;
     VkDescriptorSet rdUBODescriptorSet = VK_NULL_HANDLE;
+    std::string rdName;
 };
 
 struct VkShaderStorageBufferData
@@ -105,10 +107,10 @@ struct VkShaderStorageBufferData
     size_t rdShaderStorageBufferSize = 0;
     VkBuffer rdShaderStorageBuffer = VK_NULL_HANDLE;
     VmaAllocation rdShaderStorageBufferAlloc = nullptr;
-
     VkDescriptorPool rdSSBODescriptorPool = VK_NULL_HANDLE;
     VkDescriptorSetLayout rdSSBODescriptorLayout = VK_NULL_HANDLE;
     VkDescriptorSet rdSSBODescriptorSet = VK_NULL_HANDLE;
+    std::string rdName;
 };
 
 struct VkPrimitiveRenderData

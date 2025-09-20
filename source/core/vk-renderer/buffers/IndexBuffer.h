@@ -9,7 +9,7 @@ class IndexBuffer
 {
   public:
     static bool init(Core::Renderer::VkRenderData& renderData, VkIndexBufferData& indexBufferData,
-                     unsigned int bufferSize);
+                     unsigned int bufferSize, const std::string& name);
 
     static bool uploadData(Core::Renderer::VkRenderData& renderData, VkIndexBufferData& indexBufferData,
                            const std::vector<uint32_t>& indexData);

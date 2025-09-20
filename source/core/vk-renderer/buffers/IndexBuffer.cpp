@@ -5,7 +5,7 @@
 #include "core/tools/Logger.h"
 
 bool Core::Renderer::IndexBuffer::init(Core::Renderer::VkRenderData& renderData, VkIndexBufferData& indexBufferData,
-                                       unsigned int bufferSize)
+                                       unsigned int bufferSize, const std::string& name)
 {
     VkBufferCreateInfo bufferInfo{};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -25,9 +25,10 @@ bool Core::Renderer::IndexBuffer::init(Core::Renderer::VkRenderData& renderData,
         return false;
     }
 
+    indexBufferData.rdName = "Index Buffer " + name;
     vmaSetAllocationName(renderData.rdAllocator,
                          indexBufferData.rdIndexBufferAlloc,
-                         "Index Buffer");
+                         indexBufferData.rdName.c_str());
 
     VkBufferCreateInfo stagingBufferInfo{};
     stagingBufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -46,9 +47,10 @@ bool Core::Renderer::IndexBuffer::init(Core::Renderer::VkRenderData& renderData,
         return false;
     }
 
+    indexBufferData.rdName = "Index Staging Buffer " + name;
     vmaSetAllocationName(renderData.rdAllocator,
                          indexBufferData.rdStagingBufferAlloc,
-                         "Index Staging Buffer");
+                         indexBufferData.rdName.c_str());
 
     indexBufferData.rdIndexBufferSize = bufferSize;
     return true;
@@ -64,7 +66,7 @@ bool Core::Renderer::IndexBuffer::uploadData(Core::Renderer::VkRenderData& rende
     {
         cleanup(renderData, indexBufferData);
 
-        if (!init(renderData, indexBufferData, bufferSize))
+        if (!init(renderData, indexBufferData, bufferSize, indexBufferData.rdName))
         {
             return false;
         }

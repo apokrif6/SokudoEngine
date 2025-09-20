@@ -22,18 +22,18 @@ Core::Renderer::Primitive::Primitive(const std::vector<Core::Renderer::NewVertex
 void Core::Renderer::Primitive::createVertexBuffer(Core::Renderer::VkRenderData& renderData)
 {
     Core::Renderer::VertexBuffer::init(renderData, primitiveRenderData.rdModelVertexBufferData,
-                                       mVertexBufferData.size() * sizeof(Core::Renderer::NewVertex));
+                                       mVertexBufferData.size() * sizeof(Core::Renderer::NewVertex), "Primitive");
 }
 
 void Core::Renderer::Primitive::createIndexBuffer(Core::Renderer::VkRenderData& renderData)
 {
     Core::Renderer::IndexBuffer::init(renderData, primitiveRenderData.rdModelIndexBufferData,
-                                      static_cast<int64_t>(mIndexBufferData.size()));
+                                      static_cast<int64_t>(mIndexBufferData.size()), "Primitive");
 }
 
 void Core::Renderer::Primitive::createMaterialBuffer(Core::Renderer::VkRenderData& renderData)
 {
-    Core::Renderer::UniformBuffer::init(renderData, mMaterialUBO, sizeof(Core::Renderer::MaterialInfo));
+    Core::Renderer::UniformBuffer::init(renderData, mMaterialUBO, sizeof(Core::Renderer::MaterialInfo), "Material");
 
     Core::Renderer::UniformBuffer::uploadData(renderData, mMaterialUBO, mMaterialInfo);
 }
@@ -41,12 +41,12 @@ void Core::Renderer::Primitive::createMaterialBuffer(Core::Renderer::VkRenderDat
 void Core::Renderer::Primitive::createBonesTransformBuffer(Core::Renderer::VkRenderData& renderData)
 {
     Core::Renderer::UniformBuffer::init(renderData, mBonesTransformUBO,
-                                        mBonesInfo.finalTransforms.size() * sizeof(glm::mat4));
+                                        mBonesInfo.finalTransforms.size() * sizeof(glm::mat4), "BonesTransform");
 }
 
 void Core::Renderer::Primitive::createModelMatrixBuffer(Core::Renderer::VkRenderData& renderData)
 {
-    Core::Renderer::UniformBuffer::init(renderData, mModelUBO, sizeof(glm::mat4));
+    Core::Renderer::UniformBuffer::init(renderData, mModelUBO, sizeof(glm::mat4), "ModelMatrix");
 }
 
 void Core::Renderer::Primitive::uploadVertexBuffer(Core::Renderer::VkRenderData& renderData)

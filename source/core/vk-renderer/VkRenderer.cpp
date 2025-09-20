@@ -618,7 +618,7 @@ bool Core::Renderer::VkRenderer::createUBO()
 
     if (!Core::Renderer::UniformBuffer::init(Core::Engine::getInstance().getRenderData(),
                                              Core::Engine::getInstance().getRenderData().rdPerspectiveViewMatrixUBO,
-                                             matrixSize))
+                                             matrixSize, "PerspectiveViewMatrixUBO"))
     {
         Logger::log(1, "%s error: could not create uniform buffers\n", __FUNCTION__);
         return false;
@@ -630,9 +630,9 @@ bool Core::Renderer::VkRenderer::createVBO()
 {
     if (!Core::Renderer::VertexBuffer::init(Core::Engine::getInstance().getRenderData(),
                                             Core::Engine::getInstance().getRenderData().rdVertexBufferData,
-                                            VertexBufferSize))
+                                            VertexBufferSize, "MainVBO"))
     {
-        Logger::log(1, "%s error: could not create vertex buffer\n", __FUNCTION__);
+        Logger::log(1, "%s error: could not create VBO\n", __FUNCTION__);
         return false;
     }
     return true;
