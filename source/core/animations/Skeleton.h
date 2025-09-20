@@ -21,6 +21,8 @@ class Skeleton
 
     void drawDebug(Core::Renderer::VkRenderData& renderData) const;
 
+    void cleanup(Core::Renderer::VkRenderData& renderData);
+
   private:
     BoneNode rootNode;
 

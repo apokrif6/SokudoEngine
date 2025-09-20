@@ -84,4 +84,6 @@ void Core::Renderer::Mesh::cleanup(Core::Renderer::VkRenderData& renderData)
     {
         primitive.cleanup(renderData);
     }
+
+    mSkeleton.cleanup(renderData);
 }

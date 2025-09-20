@@ -110,7 +110,6 @@ void Core::Renderer::Primitive::draw(const Core::Renderer::VkRenderData& renderD
 
 void Core::Renderer::Primitive::cleanup(Core::Renderer::VkRenderData& renderData)
 {
-
     Core::Renderer::VertexBuffer::cleanup(renderData, primitiveRenderData.rdModelVertexBufferData);
 
     Core::Renderer::IndexBuffer::cleanup(renderData, primitiveRenderData.rdModelIndexBufferData);

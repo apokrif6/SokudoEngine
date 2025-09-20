@@ -90,11 +90,6 @@ bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned i
         return false;
     }
 
-    if (!createUBO())
-    {
-        return false;
-    }
-
     if (!createVBO())
     {
         return false;

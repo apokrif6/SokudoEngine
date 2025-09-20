@@ -26,3 +26,12 @@ void Core::Animations::Skeleton::drawDebug(Core::Renderer::VkRenderData& renderD
         debugDraw->draw(renderData);
     }
 }
+
+void Core::Animations::Skeleton::cleanup(Core::Renderer::VkRenderData &renderData)
+{
+    if (debugDraw)
+    {
+        debugDraw->cleanup(renderData);
+        debugDraw.reset();
+    }
+}
