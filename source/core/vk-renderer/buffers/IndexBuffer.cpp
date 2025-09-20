@@ -17,14 +17,17 @@ bool Core::Renderer::IndexBuffer::init(Core::Renderer::VkRenderData& renderData,
     bufferAllocCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
     VmaAllocationInfo bufferAllocInfo{};
-    bufferAllocInfo.pName = "Index Buffer";
-    
+
     if (vmaCreateBuffer(renderData.rdAllocator, &bufferInfo, &bufferAllocCreateInfo, &indexBufferData.rdIndexBuffer,
                         &indexBufferData.rdIndexBufferAlloc, &bufferAllocInfo) != VK_SUCCESS)
     {
         Logger::log(1, "%s error: could not allocate index buffer via VMA\n", __FUNCTION__);
         return false;
     }
+
+    vmaSetAllocationName(renderData.rdAllocator,
+                         indexBufferData.rdIndexBufferAlloc,
+                         "Index Buffer");
 
     VkBufferCreateInfo stagingBufferInfo{};
     stagingBufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -35,7 +38,6 @@ bool Core::Renderer::IndexBuffer::init(Core::Renderer::VkRenderData& renderData,
     stagingAllocCreateInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
 
     VmaAllocationInfo stagingAllocInfo{};
-    stagingAllocInfo.pName = "Index Staging Buffer";
 
     if (vmaCreateBuffer(renderData.rdAllocator, &stagingBufferInfo, &stagingAllocCreateInfo, &indexBufferData.rdStagingBuffer,
                         &indexBufferData.rdStagingBufferAlloc, &stagingAllocInfo) != VK_SUCCESS)
@@ -43,6 +45,10 @@ bool Core::Renderer::IndexBuffer::init(Core::Renderer::VkRenderData& renderData,
         Logger::log(1, "%s error: could not allocate index staging buffer via VMA\n", __FUNCTION__);
         return false;
     }
+
+    vmaSetAllocationName(renderData.rdAllocator,
+                         indexBufferData.rdStagingBufferAlloc,
+                         "Index Staging Buffer");
 
     indexBufferData.rdIndexBufferSize = bufferSize;
     return true;

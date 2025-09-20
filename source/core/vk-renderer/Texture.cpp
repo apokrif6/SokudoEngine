@@ -66,7 +66,6 @@ std::future<bool> Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderD
             stagingAllocCreteInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
 
             VmaAllocationInfo stagingAllocInfo{};
-            stagingAllocInfo.pName = "Texture Staging Buffer";
 
             if (vmaCreateBuffer(renderData.rdAllocator, &stagingBufferInfo, &stagingAllocCreteInfo, &stagingBuffer,
                                 &stagingBufferAlloc, &stagingAllocInfo) != VK_SUCCESS)
@@ -74,6 +73,10 @@ std::future<bool> Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderD
                 Logger::log(1, "Could not allocate texture staging buffer via VMA\n");
                 return false;
             }
+
+            vmaSetAllocationName(renderData.rdAllocator,
+                                 stagingBufferAlloc,
+                                 "Texture Staging Buffer");
 
             void* data;
             vmaMapMemory(renderData.rdAllocator, stagingBufferAlloc, &data);
