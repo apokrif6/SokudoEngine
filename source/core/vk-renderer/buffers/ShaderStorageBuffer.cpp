@@ -2,6 +2,7 @@
 #include "core/tools/Logger.h"
 
 #include "VkBootstrap.h"
+#include "core/vk-renderer/debug/DebugUtils.h"
 
 bool Core::Renderer::ShaderStorageBuffer::init(Core::Renderer::VkRenderData& renderData, VkShaderStorageBufferData &SSBOData,
                                                size_t bufferSize, const std::string& name)
@@ -27,6 +28,11 @@ bool Core::Renderer::ShaderStorageBuffer::init(Core::Renderer::VkRenderData& ren
     vmaSetAllocationName(renderData.rdAllocator,
                          SSBOData.rdShaderStorageBufferAlloc,
                          SSBOData.rdName.c_str());
+
+    Core::Renderer::Debug::setObjectName(renderData.rdVkbDevice.device,
+                                         (uint64_t)SSBOData.rdShaderStorageBuffer,
+                                         VK_OBJECT_TYPE_BUFFER,
+                                         SSBOData.rdName);
 
     VkDescriptorSetLayoutBinding ssboBind{};
     ssboBind.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;

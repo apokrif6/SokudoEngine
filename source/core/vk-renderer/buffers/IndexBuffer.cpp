@@ -3,6 +3,7 @@
 #include "IndexBuffer.h"
 #include "core/vk-renderer/buffers/CommandBuffer.h"
 #include "core/tools/Logger.h"
+#include "core/vk-renderer/debug/DebugUtils.h"
 
 bool Core::Renderer::IndexBuffer::init(Core::Renderer::VkRenderData& renderData, VkIndexBufferData& indexBufferData,
                                        unsigned int bufferSize, const std::string& name)
@@ -30,6 +31,11 @@ bool Core::Renderer::IndexBuffer::init(Core::Renderer::VkRenderData& renderData,
                          indexBufferData.rdIndexBufferAlloc,
                          indexBufferData.rdName.c_str());
 
+    Core::Renderer::Debug::setObjectName(renderData.rdVkbDevice.device,
+                                         (uint64_t)indexBufferData.rdIndexBuffer,
+                                         VK_OBJECT_TYPE_BUFFER,
+                                         indexBufferData.rdName);
+
     VkBufferCreateInfo stagingBufferInfo{};
     stagingBufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     stagingBufferInfo.size = bufferSize;
@@ -51,6 +57,7 @@ bool Core::Renderer::IndexBuffer::init(Core::Renderer::VkRenderData& renderData,
     vmaSetAllocationName(renderData.rdAllocator,
                          indexBufferData.rdStagingBufferAlloc,
                          indexBufferData.rdName.c_str());
+
 
     indexBufferData.rdIndexBufferSize = bufferSize;
     return true;

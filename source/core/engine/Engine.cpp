@@ -57,6 +57,6 @@ void Core::Engine::cleanup()
     vkDeviceWaitIdle(mRenderData.rdVkbDevice);
 
     mScene->cleanup(mRenderData);
-    mRenderer->cleanup(mRenderData);
     mUserInterface->cleanup(mRenderData);
+    mRenderer->cleanup(mRenderData);
 }

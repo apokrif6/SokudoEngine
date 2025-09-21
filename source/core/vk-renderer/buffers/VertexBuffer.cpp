@@ -1,5 +1,6 @@
 #include <cstring>
 #include "VertexBuffer.h"
+#include "core/vk-renderer/debug/DebugUtils.h"
 
 bool Core::Renderer::VertexBuffer::init(Core::Renderer::VkRenderData &renderData, VkVertexBufferData &vertexBufferData,
                                         unsigned int bufferSize, const std::string& name)
@@ -25,6 +26,11 @@ bool Core::Renderer::VertexBuffer::init(Core::Renderer::VkRenderData &renderData
     vmaSetAllocationName(renderData.rdAllocator,
                          vertexBufferData.rdVertexBufferAlloc,
                          vertexBufferData.rdName.c_str());
+
+    Core::Renderer::Debug::setObjectName(renderData.rdVkbDevice.device,
+                  (uint64_t)vertexBufferData.rdVertexBuffer,
+                  VK_OBJECT_TYPE_BUFFER,
+                  vertexBufferData.rdName);
 
     VkBufferCreateInfo stagingBufferInfo{};
     stagingBufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;

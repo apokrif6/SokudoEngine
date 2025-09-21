@@ -365,26 +365,34 @@ void Core::Renderer::VkRenderer::endRenderFrame(Core::Renderer::VkRenderData& re
 void Core::Renderer::VkRenderer::cleanup(VkRenderData& renderData)
 {
     Core::Renderer::SyncObjects::cleanup(renderData);
+
     Core::Renderer::CommandBuffer::cleanup(renderData, Core::Engine::getInstance().getRenderData().rdCommandBuffer);
     Core::Renderer::CommandPool::cleanup(renderData);
+
     Core::Renderer::Framebuffer::cleanup(renderData);
+
     Core::Renderer::MeshPipeline::cleanup(renderData, renderData.rdMeshPipeline);
     Core::Renderer::DebugSkeletonPipeline::cleanup(renderData,
                                                    Core::Engine::getInstance().getRenderData().rdDebugSkeletonPipeline);
     Core::Renderer::Pipeline::cleanup(renderData, Core::Engine::getInstance().getRenderData().rdGridPipeline);
     Core::Renderer::Pipeline::cleanup(renderData, renderData.rdLinePipeline);
     Core::Renderer::Pipeline::cleanup(renderData, renderData.rdBasicPipeline);
+
     Core::Renderer::PipelineLayout::cleanup(renderData, renderData.rdPipelineLayout);
     Core::Renderer::MeshPipelineLayout::cleanup(renderData, renderData.rdMeshPipelineLayout);
     Core::Renderer::DebugSkeletonPipelineLayout::cleanup(renderData, renderData.rdDebugSkeletonPipelineLayout);
+
     Core::Renderer::Renderpass::cleanup(renderData);
+
     Core::Renderer::UniformBuffer::cleanup(renderData, renderData.rdPerspectiveViewMatrixUBO);
     Core::Renderer::VertexBuffer::cleanup(renderData, renderData.rdVertexBufferData);
+
     Core::Renderer::Texture::cleanup(renderData, renderData.rdPlaceholderTexture);
 
     vkDestroyImageView(renderData.rdVkbDevice.device, renderData.rdDepthImageView, nullptr);
     vmaDestroyImage(renderData.rdAllocator, renderData.rdDepthImage,
                     Core::Engine::getInstance().getRenderData().rdDepthImageAlloc);
+
     vmaDestroyAllocator(renderData.rdAllocator);
 
     renderData.rdVkbSwapchain.destroy_image_views(renderData.rdSwapchainImageViews);

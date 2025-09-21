@@ -2,6 +2,7 @@
 #include "core/tools/Logger.h"
 
 #include "VkBootstrap.h"
+#include "core/vk-renderer/debug/DebugUtils.h"
 
 bool Core::Renderer::UniformBuffer::init(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData,
                                          size_t bufferSize, const std::string& name)
@@ -28,6 +29,11 @@ bool Core::Renderer::UniformBuffer::init(Core::Renderer::VkRenderData& renderDat
     vmaSetAllocationName(renderData.rdAllocator,
                          UBOData.rdUniformBufferAlloc,
                          UBOData.rdName.c_str());
+
+    Core::Renderer::Debug::setObjectName(renderData.rdVkbDevice.device,
+                                         (uint64_t)UBOData.rdUniformBuffer,
+                                         VK_OBJECT_TYPE_BUFFER,
+                                         UBOData.rdName);
 
     VkDescriptorSetLayoutBinding uboBind{};
     uboBind.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
