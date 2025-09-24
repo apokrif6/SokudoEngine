@@ -783,15 +783,25 @@ bool Core::Renderer::VkRenderer::initVma()
 bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
 {
     const std::string modelFileName = "assets/mixamo/models/FemaleModel.fbx";
+    const std::vector<std::string> animationsFileNames = {
+         "assets/mixamo/animations/StandingIdleAnimation.fbx",
+         "assets/mixamo/animations/AngryAnimation.fbx",
+         "assets/mixamo/animations/BoxingAnimation.fbx",
+         "assets/mixamo/animations/HipHopDancingAnimation.fbx",
+         "assets/mixamo/animations/StandingReactDeathBackwardAnimation.fbx"
+    };
     Core::Utils::MeshData primitiveMeshData =
         Core::Utils::loadMeshFromFile(modelFileName, Core::Engine::getInstance().getRenderData());
-    primitiveMeshData.animations = {
-        Core::Animations::AnimationsUtils::loadAnimationFromFile("assets/mixamo/animations/StandingIdleAnimation.fbx"),
-        Core::Animations::AnimationsUtils::loadAnimationFromFile("assets/mixamo/animations/AngryAnimation.fbx"),
-        Core::Animations::AnimationsUtils::loadAnimationFromFile("assets/mixamo/animations/BoxingAnimation.fbx"),
-        Core::Animations::AnimationsUtils::loadAnimationFromFile("assets/mixamo/animations/HipHopDancingAnimation.fbx"),
-        Core::Animations::AnimationsUtils::loadAnimationFromFile(
-            "assets/mixamo/animations/StandingReactDeathBackwardAnimation.fbx")};
+    for (const auto& animationFileName : animationsFileNames)
+    {
+        auto animation = Core::Animations::AnimationsUtils::loadAnimationFromFile(animationFileName);
+        if (animation.name.empty())
+        {
+            Logger::log(1, "%s error: could not load animation from file %s", __FUNCTION__, animationFileName.c_str());
+            return false;
+        }
+        primitiveMeshData.animations.push_back(animation);
+    }
     if (!Core::Renderer::MeshPipelineLayout::init(Core::Engine::getInstance().getRenderData(),
                                                   Core::Engine::getInstance().getRenderData().rdMeshPipelineLayout))
     {
@@ -817,23 +827,29 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
     testMeshOne->setupAnimations(primitiveMeshData.animations);
     testMeshOne->initDebugSkeleton(Core::Engine::getInstance().getRenderData());
     testMeshOne->getTransform().position = {1, 0, 1};
+    testMeshOne->setMeshFilePath(modelFileName);
+    testMeshOne->setAnimationFiles(animationsFileNames);
 
     auto testMeshTwo = std::make_shared<Mesh>("TestMesh_2", primitiveMeshData.skeleton);
     testMeshTwo->setupAnimations(primitiveMeshData.animations);
     testMeshTwo->initDebugSkeleton(Core::Engine::getInstance().getRenderData());
     testMeshTwo->getTransform().position = {-1, 0, 1};
+    testMeshTwo->setMeshFilePath(modelFileName);
+    testMeshTwo->setAnimationFiles(animationsFileNames);
 
     auto testMeshThree = std::make_shared<Mesh>("TestMesh_3", primitiveMeshData.skeleton);
     testMeshThree->setupAnimations(primitiveMeshData.animations);
     testMeshThree->initDebugSkeleton(Core::Engine::getInstance().getRenderData());
     testMeshThree->getTransform().position = {1, 0, -1};
-
+    testMeshThree->setMeshFilePath(modelFileName);
+    testMeshThree->setAnimationFiles(animationsFileNames);
 
     auto testMeshFour = std::make_shared<Mesh>("TestMesh_4", primitiveMeshData.skeleton);
     testMeshFour->setupAnimations(primitiveMeshData.animations);
     testMeshFour->initDebugSkeleton(Core::Engine::getInstance().getRenderData());
     testMeshFour->getTransform().position = {-1, 0, -1};
-
+    testMeshFour->setMeshFilePath(modelFileName);
+    testMeshFour->setAnimationFiles(animationsFileNames);
 
     Core::Engine::getInstance().getSystem<Scene::Scene>()->addObject(testMeshOne);
     Core::Engine::getInstance().getSystem<Scene::Scene>()->addObject(testMeshTwo);

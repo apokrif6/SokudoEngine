@@ -9,6 +9,7 @@
 #include "ImGuizmo.h"
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtx/matrix_decompose.hpp"
+#include "core/scene/Serialization.h"
 
 namespace Core::UI
 {
@@ -20,6 +21,19 @@ class SceneUIWindow : public UIWindow<SceneUIWindow>
         if (!ImGui::BeginTabItem("Scene"))
         {
             return false;
+        }
+
+        if (ImGui::Button("Save Scene"))
+        {
+            Core::Scene::Serialization::saveSceneToFile(*Core::Engine::getInstance().getSystem<Scene::Scene>(),
+                                                        "assets/scenes/test.yaml");
+        }
+
+        ImGui::SameLine();
+        if (ImGui::Button("Load Scene"))
+        {
+            Scene::Scene loadedScene = Core::Scene::Serialization::loadSceneFromFile("assets/scenes/test.yaml");
+            *Core::Engine::getInstance().getSystem<Scene::Scene>() = loadedScene;
         }
 
         auto loadedObjects = Core::Engine::getInstance().getSystem<Scene::Scene>()->getObjects();

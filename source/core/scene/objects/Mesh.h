@@ -1,10 +1,10 @@
 #pragma once
 
-#include "core/scene/SceneObject.h"
+#include "core/scene/objects/SceneObject.h"
 #include <utility>
 #include <vector>
 #include <memory>
-#include "Primitive.h"
+#include "core/vk-renderer/Primitive.h"
 #include "core/vk-renderer/debug/Skeleton.h"
 
 namespace Core::Renderer
@@ -20,6 +20,8 @@ class Mesh : public Core::Scene::SceneObject
                       const std::vector<uint32_t>& indexBufferData, const VkTextureData& textureData,
                       VkRenderData& renderData, const MaterialInfo& materialInfo,
                       const Animations::BonesInfo& bonesInfo);
+
+    [[nodiscard]] Scene::ObjectType getType() const override { return Scene::ObjectType::Mesh; }
 
     void update(Core::Renderer::VkRenderData& renderData) override;
 
@@ -74,6 +76,14 @@ class Mesh : public Core::Scene::SceneObject
         mSkeleton.initDebug(renderData);
     }
 
+    void setMeshFilePath(std::string path) { mMeshFilePath = std::move(path); }
+
+    void setAnimationFiles(std::vector<std::string> files) { mAnimationFiles = std::move(files); }
+
+    YAML::Node serialize() const override;
+
+    void deserialize(const YAML::Node& node) override;
+
   private:
     std::vector<Core::Renderer::Primitive> mPrimitives;
     Core::Animations::Skeleton mSkeleton;
@@ -81,5 +91,10 @@ class Mesh : public Core::Scene::SceneObject
     bool mShouldPlayAnimation = false;
     bool mShouldDrawDebugSkeleton = false;
     uint16_t mCurrentAnimationIndex = 0;
+
+    // metadata for serialization
+    // probably should be moved to other place (I don't know where exactly)
+    std::string mMeshFilePath;
+    std::vector<std::string> mAnimationFiles;
 };
 } // namespace Core::Renderer

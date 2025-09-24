@@ -1,10 +1,11 @@
 #pragma once
 
 #include "AnimationsData.h"
+#include "core/serialization/Serializable.h"
 
 namespace Core::Animations
 {
-class Skeleton
+class Skeleton : public Serialization::ISerializable
 {
   public:
     void setRootNode(const BoneNode& node)
@@ -22,6 +23,10 @@ class Skeleton
     void drawDebug(Core::Renderer::VkRenderData& renderData) const;
 
     void cleanup(Core::Renderer::VkRenderData& renderData);
+
+    YAML::Node serialize() const override;
+
+    void deserialize(const YAML::Node& node) override;
 
   private:
     BoneNode rootNode;

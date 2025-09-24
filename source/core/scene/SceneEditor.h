@@ -1,7 +1,7 @@
 #pragma once
 
 #include <memory>
-#include "SceneObject.h"
+#include "core/scene/objects/SceneObject.h"
 
 namespace Core::Scene
 {

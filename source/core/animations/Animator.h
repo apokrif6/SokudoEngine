@@ -2,7 +2,7 @@
 
 #include "assimp/scene.h"
 #include "core/vk-renderer/VkRenderData.h"
-#include "core/vk-renderer/Mesh.h"
+#include "core/scene/objects/Mesh.h"
 #include <core/tools/Timer.h>
 
 namespace Core::Animations

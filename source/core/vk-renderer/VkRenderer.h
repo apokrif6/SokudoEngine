@@ -12,7 +12,7 @@
 #include "core/events/EventDispatcher.h"
 #include "core/model/GridModel.h"
 #include "Primitive.h"
-#include "Mesh.h"
+#include "core/scene/objects/Mesh.h"
 #include "core/scene/Scene.h"
 #include <glm/detail/type_quat.hpp>
 

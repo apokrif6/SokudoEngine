@@ -23,6 +23,11 @@ void Core::Engine::init()
 
 void Core::Engine::update()
 {
+    if (mPaused)
+    {
+        return;
+    }
+
     auto tickTime = static_cast<float>(glfwGetTime());
     mRenderData.rdTickDiff = tickTime - mLastTickTime;
 

@@ -56,6 +56,8 @@ class Engine
         return mRenderData;
     }
 
+    void setPaused(bool paused) { mPaused = paused; }
+
   private:
     Engine() = default;
     ~Engine() = default;
@@ -69,5 +71,9 @@ class Engine
     std::unique_ptr<Scene::Scene> mScene = std::make_unique<Scene::Scene>();
     std::unique_ptr<Animations::Animator> mAnimator = std::make_unique<Animations::Animator>();
     std::unique_ptr<Renderer::UserInterface> mUserInterface = std::make_unique<Renderer::UserInterface>();
+
+    // TODO
+    // replace it with EngineState enum
+    bool mPaused = false;
 };
 }

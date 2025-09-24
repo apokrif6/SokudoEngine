@@ -2,6 +2,7 @@
 #include "Mesh.h"
 #include "core/vk-renderer/buffers/UniformBuffer.h"
 #include "core/engine/Engine.h"
+#include "core/animations/AnimationsUtils.h"
 
 void buildDebugSkeletonLines(const Core::Animations::Skeleton& skeleton, const Core::Animations::BonesInfo& bonesInfo,
                              std::vector<Core::Renderer::Debug::DebugBone>& debugBones,
@@ -86,4 +87,59 @@ void Core::Renderer::Mesh::cleanup(Core::Renderer::VkRenderData& renderData)
     }
 
     mSkeleton.cleanup(renderData);
+}
+
+YAML::Node Core::Renderer::Mesh::serialize() const
+{
+    YAML::Node node = SceneObject::serialize();
+    node["meshFile"] = mMeshFilePath;
+    for (auto& animPath : mAnimationFiles)
+    {
+        node["animations"].push_back(animPath);
+    }
+    node["shouldPlayAnimation"] = mShouldPlayAnimation;
+    node["currentAnimationIndex"] = mCurrentAnimationIndex;
+    return node;
+}
+
+void Core::Renderer::Mesh::deserialize(const YAML::Node& node)
+{
+    SceneObject::deserialize(node);
+    mMeshFilePath = node["meshFile"].as<std::string>();
+    mAnimationFiles.clear();
+    if (node["animations"])
+    {
+        for (auto& animNode : node["animations"])
+        {
+            mAnimationFiles.push_back(animNode.as<std::string>());
+        }
+    }
+    mShouldPlayAnimation = node["shouldPlayAnimation"].as<bool>();
+    mCurrentAnimationIndex = node["currentAnimationIndex"].as<uint16_t>();
+
+    // I don't like this here, it should be done somewhere else (maybe time for a resource manager hehe?)
+    auto& renderData = Core::Engine::getInstance().getRenderData();
+    Core::Utils::MeshData meshData = Core::Utils::loadMeshFromFile(mMeshFilePath, renderData);
+
+    std::vector<Core::Animations::AnimationClip> animations;
+    for (auto& animPath : mAnimationFiles)
+    {
+        animations.push_back(Core::Animations::AnimationsUtils::loadAnimationFromFile(animPath));
+    }
+    meshData.animations = animations;
+    mSkeleton = meshData.skeleton;
+    setupAnimations(meshData.animations);
+    initDebugSkeleton(renderData);
+
+    for (auto& primitive : meshData.primitives)
+    {
+        Core::Renderer::VkTextureData texture;
+        auto found = primitive.textures.find(aiTextureType_DIFFUSE);
+        if (found != primitive.textures.end())
+        {
+            texture = found->second;
+        }
+        addPrimitive(primitive.vertices, primitive.indices, texture,
+                     renderData, primitive.material, primitive.bones);
+    }
 }
