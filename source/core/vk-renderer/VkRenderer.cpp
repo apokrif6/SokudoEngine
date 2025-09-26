@@ -32,6 +32,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "core/vk-renderer/pipelines/DebugSkeletonPipeline.h"
 #include "core/vk-renderer/pipelines/layouts/DebugSkeletonPipelineLayout.h"
+#include "core/vk-renderer/Cubemap.h"
 #include "core/engine/Engine.h"
 
 bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned int height)
@@ -121,6 +122,11 @@ bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned i
     }
 
     if (!loadMeshWithAssimp())
+    {
+        return false;
+    }
+
+    if (!loadSkybox())
     {
         return false;
     }
@@ -323,6 +329,8 @@ bool Core::Renderer::VkRenderer::draw(VkRenderData& renderData)
     vkCmdBindPipeline(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdGridPipeline);
     vkCmdDraw(renderData.rdCommandBuffer, 6, 1, 0, 0);
 
+    drawSkybox();
+
     return true;
 }
 
@@ -372,15 +380,16 @@ void Core::Renderer::VkRenderer::cleanup(VkRenderData& renderData)
     Core::Renderer::Framebuffer::cleanup(renderData);
 
     Core::Renderer::MeshPipeline::cleanup(renderData, renderData.rdMeshPipeline);
-    Core::Renderer::DebugSkeletonPipeline::cleanup(renderData,
-                                                   Core::Engine::getInstance().getRenderData().rdDebugSkeletonPipeline);
-    Core::Renderer::Pipeline::cleanup(renderData, Core::Engine::getInstance().getRenderData().rdGridPipeline);
+    Core::Renderer::DebugSkeletonPipeline::cleanup(renderData, renderData.rdDebugSkeletonPipeline);
+    Core::Renderer::Pipeline::cleanup(renderData, renderData.rdGridPipeline);
     Core::Renderer::Pipeline::cleanup(renderData, renderData.rdLinePipeline);
     Core::Renderer::Pipeline::cleanup(renderData, renderData.rdBasicPipeline);
+    Core::Renderer::Pipeline::cleanup(renderData, renderData.rdSkyboxPipeline);
 
     Core::Renderer::PipelineLayout::cleanup(renderData, renderData.rdPipelineLayout);
     Core::Renderer::MeshPipelineLayout::cleanup(renderData, renderData.rdMeshPipelineLayout);
     Core::Renderer::DebugSkeletonPipelineLayout::cleanup(renderData, renderData.rdDebugSkeletonPipelineLayout);
+    Core::Renderer::PipelineLayout::cleanup(renderData, renderData.rdSkyboxPipelineLayout);
 
     Core::Renderer::Renderpass::cleanup(renderData);
 
@@ -388,6 +397,8 @@ void Core::Renderer::VkRenderer::cleanup(VkRenderData& renderData)
     Core::Renderer::VertexBuffer::cleanup(renderData, renderData.rdVertexBufferData);
 
     Core::Renderer::Texture::cleanup(renderData, renderData.rdPlaceholderTexture);
+
+    Core::Renderer::Cubemap::cleanup(renderData, renderData.rdSkyboxData);
 
     vkDestroyImageView(renderData.rdVkbDevice.device, renderData.rdDepthImageView, nullptr);
     vmaDestroyImage(renderData.rdAllocator, renderData.rdDepthImage,
@@ -909,6 +920,110 @@ bool Core::Renderer::VkRenderer::createDebugSkeletonPipeline()
     return true;
 }
 
+
+bool Core::Renderer::VkRenderer::createSkyboxPipelineLayout()
+{
+    auto& renderData = Core::Engine::getInstance().getRenderData();
+
+    std::vector<VkDescriptorSetLayout> layouts = {renderData.rdPerspectiveViewMatrixUBO.rdUBODescriptorLayout};
+
+    if (renderData.rdSkyboxData.descriptorSetLayout != VK_NULL_HANDLE)
+    {
+        layouts.push_back(renderData.rdSkyboxData.descriptorSetLayout);
+    }
+
+    VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(layouts.size());
+    pipelineLayoutInfo.pSetLayouts = layouts.data();
+
+    if (vkCreatePipelineLayout(renderData.rdVkbDevice.device, &pipelineLayoutInfo, nullptr,
+                               &renderData.rdSkyboxPipelineLayout) != VK_SUCCESS)
+    {
+        Logger::log(1, "%s error: could not create cubemap pipeline layout", __FUNCTION__);
+        return false;
+    }
+
+    return true;
+}
+
+bool Core::Renderer::VkRenderer::createSkyboxPipeline()
+{
+    const std::string vertexShaderFile = "shaders/skybox.vert.spv";
+    const std::string fragmentShaderFile = "shaders/skybox.frag.spv";
+    auto& renderData = Core::Engine::getInstance().getRenderData();
+    if (!Pipeline::init(renderData, renderData.rdSkyboxPipelineLayout,
+                        renderData.rdSkyboxPipeline, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile,
+                        fragmentShaderFile))
+    {
+        Logger::log(1, "%s error: could not init cubemap pipeline\n", __FUNCTION__);
+        return false;
+    }
+
+    return true;
+}
+
+bool Core::Renderer::VkRenderer::loadSkybox()
+{
+    std::vector<std::string> faces = {
+            "assets/textures/cubemaps/Yokohama2/posx.jpg",
+            "assets/textures/cubemaps/Yokohama2/negx.jpg",
+            "assets/textures/cubemaps/Yokohama2/posy.jpg",
+            "assets/textures/cubemaps/Yokohama2/negy.jpg",
+            "assets/textures/cubemaps/Yokohama2/posz.jpg",
+            "assets/textures/cubemaps/Yokohama2/negz.jpg"
+    };
+
+    auto& renderData = Core::Engine::getInstance().getRenderData();
+
+    std::future<bool> loadSkyboxFuture = Cubemap::loadCubemap(renderData, renderData.rdSkyboxData, faces);
+    if (!loadSkyboxFuture.get())
+    {
+        Logger::log(1, "%s error: could not load skybox textures\n", __FUNCTION__);
+        return false;
+    }
+
+    if (!createSkyboxPipelineLayout())
+    {
+        Logger::log(1, "%s error: could not create skybox pipeline layout\n", __FUNCTION__);
+        return false;
+    }
+
+    if (!createSkyboxPipeline())
+    {
+        Logger::log(1, "%s error: could not create skybox pipeline\n", __FUNCTION__);
+        return false;
+    }
+
+    Logger::log(1, "%s: cubemap loaded successfully\n", __FUNCTION__);
+    return true;
+}
+
+void Core::Renderer::VkRenderer::drawSkybox() const
+{
+    auto& renderData = Core::Engine::getInstance().getRenderData();
+
+    if (renderData.rdSkyboxPipeline == VK_NULL_HANDLE ||
+        renderData.rdSkyboxData.descriptorSet == VK_NULL_HANDLE)
+    {
+        return;
+    }
+
+    vkCmdBindPipeline(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdSkyboxPipeline);
+
+    std::vector<VkDescriptorSet> descriptorSets = {
+            renderData.rdPerspectiveViewMatrixUBO.rdUBODescriptorSet,
+            renderData.rdSkyboxData.descriptorSet
+    };
+
+    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                            renderData.rdSkyboxPipelineLayout, 0,
+                            static_cast<uint32_t>(descriptorSets.size()),
+                            descriptorSets.data(), 0, nullptr);
+
+    vkCmdDraw(renderData.rdCommandBuffer, 36, 1, 0, 0);
+}
+
 void Core::Renderer::VkRenderer::handleWindowMoveEvents(int xPosition, int yPosition)
 {
     Logger::log(1, "%s: Core::Engine::getInstance().getRenderData().rdWindow has been moved to %i/%i\n", __FUNCTION__,
@@ -1004,3 +1119,4 @@ void Core::Renderer::VkRenderer::handleCameraMovementKeys()
         renderData.rdMoveUp -= 1.f;
     }
 }
+

@@ -49,25 +49,6 @@ class VkRenderer final : public EventListener
     }
 
   private:
-    Core::Renderer::VkPrimitiveRenderData mPrimitiveRenderData{};
-
-    Core::Model::GridModel mGridModel{};
-    Core::Renderer::VkMesh mGridMesh{};
-
-    Core::Model::CoordinateArrowModel mCoordinateArrowsModel{};
-    Core::Renderer::VkMesh mCoordinateArrowsMesh{};
-    Core::Renderer::VkMesh mEulerCoordinateArrowsMesh{};
-
-    Core::Model::ArrowModel mArrowModel{};
-    Core::Renderer::VkMesh mQuaternionArrowMesh{};
-
-    glm::vec3 mEulerModelDist = glm::vec3(-2.5f, 0.f, 0.f);
-    glm::vec3 mQuaternionModelDist = glm::vec3(2.5f, 0.f, 0.f);
-
-    glm::vec3 mRotXAxis = glm::vec3(1.0f, 0.0f, 0.0f);
-    glm::vec3 mRotYAxis = glm::vec3(0.0f, 1.0f, 0.0f);
-    glm::vec3 mRotZAxis = glm::vec3(0.0f, 0.0f, 1.0f);
-
     Timer mUploadToVBOTimer{};
     Timer mUploadToUBOTimer{};
     Timer mMatrixGenerateTimer{};
@@ -109,8 +90,6 @@ class VkRenderer final : public EventListener
 
     bool createLinePipeline();
 
-    bool createGridPipeline();
-
     bool createFramebuffer();
 
     bool createCommandPool();
@@ -128,8 +107,21 @@ class VkRenderer final : public EventListener
     bool createDebugSkeletonPipelineLayout();
 
     bool createDebugSkeletonPipeline();
-
 #pragma endregion Renderer
+
+#pragma region Skybox
+    bool createSkyboxPipelineLayout();
+
+    bool createSkyboxPipeline();
+
+    bool loadSkybox();
+
+    void drawSkybox() const;
+#pragma endregion Skybox
+
+#pragma region Grid
+    bool createGridPipeline();
+#pragma endregion Grid
 
 #pragma region HandleGLFWEvents
   public:
@@ -143,5 +135,5 @@ class VkRenderer final : public EventListener
 
     void handleMouseEnterLeaveEvents(int enter);
 #pragma endregion HandleGLFWEvents
-};
+ };
 }
