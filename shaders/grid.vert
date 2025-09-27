@@ -1,16 +1,16 @@
 #version 460 core
 
-layout(set = 1, binding = 0) uniform Matrices  {
-    mat4 view;
-    mat4 projection;
-};
-
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 aColor;
 layout (location = 2) in vec2 aTexCoord;
 
-layout(location = 0) out vec3 nearPoint;
-layout(location = 1) out vec3 farPoint;
+layout (location = 0) out vec3 nearPoint;
+layout (location = 1) out vec3 farPoint;
+
+layout (set = 1, binding = 0) uniform Matrices  {
+    mat4 view;
+    mat4 projection;
+};
 
 vec3 gridPlane[6] = vec3[](
 vec3(1, 1, 0), vec3(-1, 1, 0), vec3(-1, -1, 0),

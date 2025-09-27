@@ -1,14 +1,14 @@
 #version 460 core
 
-layout(set = 1, binding = 0) uniform Matrices {
+layout (location = 0) in vec3 nearPoint;
+layout (location = 1) in vec3 farPoint;
+
+layout (location = 0) out vec4 outColor;
+
+layout (set = 1, binding = 0) uniform Matrices {
     mat4 view;
     mat4 projection;
 };
-
-layout(location = 0) in vec3 nearPoint;
-layout(location = 1) in vec3 farPoint;
-
-layout(location = 0) out vec4 outColor;
 
 float near = 0.1;
 float far  = 100.0;

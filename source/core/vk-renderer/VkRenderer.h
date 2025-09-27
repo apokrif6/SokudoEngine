@@ -121,6 +121,8 @@ class VkRenderer final : public EventListener
 
 #pragma region Grid
     bool createGridPipeline();
+
+    void drawGrid() const;
 #pragma endregion Grid
 
 #pragma region HandleGLFWEvents

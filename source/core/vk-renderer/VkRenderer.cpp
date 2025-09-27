@@ -316,20 +316,9 @@ void Core::Renderer::VkRenderer::beginRenderFrame(Core::Renderer::VkRenderData& 
 
 bool Core::Renderer::VkRenderer::draw(VkRenderData& renderData)
 {
-    vkCmdBindPipeline(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdLinePipeline);
-
-    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdPipelineLayout, 0,
-                            1, &renderData.rdPlaceholderTexture.texTextureDescriptorSet, 0, nullptr);
-    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdPipelineLayout, 1,
-                            1, &renderData.rdPerspectiveViewMatrixUBO.rdUBODescriptorSet, 0, nullptr);
-
-    VkDeviceSize offset = 0;
-    vkCmdBindVertexBuffers(renderData.rdCommandBuffer, 0, 1, &renderData.rdVertexBufferData.rdVertexBuffer, &offset);
-
-    vkCmdBindPipeline(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdGridPipeline);
-    vkCmdDraw(renderData.rdCommandBuffer, 6, 1, 0, 0);
-
     drawSkybox();
+
+    drawGrid();
 
     return true;
 }
@@ -719,6 +708,24 @@ bool Core::Renderer::VkRenderer::createGridPipeline()
     return true;
 }
 
+void Core::Renderer::VkRenderer::drawGrid() const
+{
+    auto& renderData = Core::Engine::getInstance().getRenderData();
+
+    vkCmdBindPipeline(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdLinePipeline);
+
+    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdPipelineLayout, 0,
+                            1, &renderData.rdPlaceholderTexture.texTextureDescriptorSet, 0, nullptr);
+    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdPipelineLayout, 1,
+                            1, &renderData.rdPerspectiveViewMatrixUBO.rdUBODescriptorSet, 0, nullptr);
+
+    VkDeviceSize offset = 0;
+    vkCmdBindVertexBuffers(renderData.rdCommandBuffer, 0, 1, &renderData.rdVertexBufferData.rdVertexBuffer, &offset);
+
+    vkCmdBindPipeline(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdGridPipeline);
+    vkCmdDraw(renderData.rdCommandBuffer, 6, 1, 0, 0);
+}
+
 bool Core::Renderer::VkRenderer::createFramebuffer()
 {
     if (!Core::Renderer::Framebuffer::init(Core::Engine::getInstance().getRenderData()))
@@ -1020,6 +1027,9 @@ void Core::Renderer::VkRenderer::drawSkybox() const
                             renderData.rdSkyboxPipelineLayout, 0,
                             static_cast<uint32_t>(descriptorSets.size()),
                             descriptorSets.data(), 0, nullptr);
+
+    VkDeviceSize offset = 0;
+    vkCmdBindVertexBuffers(renderData.rdCommandBuffer, 0, 1, &renderData.rdVertexBufferData.rdVertexBuffer, &offset);
 
     vkCmdDraw(renderData.rdCommandBuffer, 36, 1, 0, 0);
 }
