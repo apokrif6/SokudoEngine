@@ -61,7 +61,7 @@ set(DEPENDENCIES
         imgui::imgui
         imguizmo::imguizmo
         unofficial::spirv-reflect
-        yaml-cpp::yaml-cpp
+        yaml-cpp
 )
 
 if (NOT MSVC)
