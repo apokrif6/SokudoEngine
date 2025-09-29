@@ -1,0 +1,101 @@
+objects:
+  - type: 1
+    name: TestMesh_1
+    transform:
+      position:
+        - 5.57943535
+        - 0
+        - 1
+      rotation:
+        - 0.848206162
+        - 0
+        - -0.529666245
+        - 0
+      scale:
+        - 1
+        - 1
+        - 1
+    meshFile: assets/mixamo/models/FemaleModel.fbx
+    animations:
+      - assets/mixamo/animations/StandingIdleAnimation.fbx
+      - assets/mixamo/animations/AngryAnimation.fbx
+      - assets/mixamo/animations/BoxingAnimation.fbx
+      - assets/mixamo/animations/HipHopDancingAnimation.fbx
+      - assets/mixamo/animations/StandingReactDeathBackwardAnimation.fbx
+    shouldPlayAnimation: false
+    currentAnimationIndex: 0
+  - type: 1
+    name: TestMesh_2
+    transform:
+      position:
+        - -2.80884576
+        - -0.0502997637
+        - 1
+      rotation:
+        - 0.898189664
+        - 0.0196353178
+        - 0.438281983
+        - -0.0279049762
+      scale:
+        - 2.29999995
+        - 2.29999971
+        - 1.82471263
+    meshFile: assets/mixamo/models/FemaleModel.fbx
+    animations:
+      - assets/mixamo/animations/StandingIdleAnimation.fbx
+      - assets/mixamo/animations/AngryAnimation.fbx
+      - assets/mixamo/animations/BoxingAnimation.fbx
+      - assets/mixamo/animations/HipHopDancingAnimation.fbx
+      - assets/mixamo/animations/StandingReactDeathBackwardAnimation.fbx
+    shouldPlayAnimation: false
+    currentAnimationIndex: 0
+  - type: 1
+    name: TestMesh_3
+    transform:
+      position:
+        - 1.9293046
+        - 0
+        - -3.36442065
+      rotation:
+        - 0.13447994
+        - 0
+        - 0.990916312
+        - 0
+      scale:
+        - 0.999999046
+        - 1
+        - 0.741868138
+    meshFile: assets/mixamo/models/FemaleModel.fbx
+    animations:
+      - assets/mixamo/animations/StandingIdleAnimation.fbx
+      - assets/mixamo/animations/AngryAnimation.fbx
+      - assets/mixamo/animations/BoxingAnimation.fbx
+      - assets/mixamo/animations/HipHopDancingAnimation.fbx
+      - assets/mixamo/animations/StandingReactDeathBackwardAnimation.fbx
+    shouldPlayAnimation: false
+    currentAnimationIndex: 0
+  - type: 1
+    name: TestMesh_4
+    transform:
+      position:
+        - -0.98724705
+        - 2.7048769
+        - -0.976140678
+      rotation:
+        - 0.00182757422
+        - 0.116478004
+        - -0.00465479773
+        - 0.993180692
+      scale:
+        - 1.00000334
+        - 1.00001156
+        - 1
+    meshFile: assets/mixamo/models/FemaleModel.fbx
+    animations:
+      - assets/mixamo/animations/StandingIdleAnimation.fbx
+      - assets/mixamo/animations/AngryAnimation.fbx
+      - assets/mixamo/animations/BoxingAnimation.fbx
+      - assets/mixamo/animations/HipHopDancingAnimation.fbx
+      - assets/mixamo/animations/StandingReactDeathBackwardAnimation.fbx
+    shouldPlayAnimation: false
+    currentAnimationIndex: 0

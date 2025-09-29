@@ -185,13 +185,13 @@ void Core::Renderer::UserInterface::onEvent(const Event& event)
             switch (keyEvent->key)
             {
             case GLFW_KEY_W:
-                UI::SceneUIWindow::setOperation(ImGuizmo::TRANSLATE);
+                UI::SceneUIWindow::setSceneObjectManipulationOperation(ImGuizmo::TRANSLATE);
                 break;
             case GLFW_KEY_E:
-                UI::SceneUIWindow::setOperation(ImGuizmo::SCALE);
+                UI::SceneUIWindow::setSceneObjectManipulationOperation(ImGuizmo::SCALE);
                 break;
             case GLFW_KEY_R:
-                UI::SceneUIWindow::setOperation(ImGuizmo::ROTATE);
+                UI::SceneUIWindow::setSceneObjectManipulationOperation(ImGuizmo::ROTATE);
                 break;
             default:
                 break;
