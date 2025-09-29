@@ -20,6 +20,7 @@ private:
 
     static inline bool showSaveDialog = false;
     static inline bool showLoadDialog = false;
+    static inline std::string saveFilename;
     static inline std::vector<std::string> sceneFileList;
     static inline std::string selectedSceneFile;
 

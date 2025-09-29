@@ -39,8 +39,7 @@ bool Core::UI::SceneUIWindow::getBody()
         ImGui::OpenPopup("Save Scene File");
         if (ImGui::BeginPopupModal("Save Scene File", &showSaveDialog, ImGuiWindowFlags_AlwaysAutoResize))
         {
-            std::string filename;
-            ImGui::InputText("Filename", &filename);
+            ImGui::InputText("Filename", &saveFilename);
 
             if (ImGui::BeginListBox("Existing scenes"))
             {
@@ -48,7 +47,7 @@ bool Core::UI::SceneUIWindow::getBody()
                 {
                     if (ImGui::Selectable(file.c_str()))
                     {
-                        filename = file;
+                        saveFilename = file;
                     }
                 }
                 ImGui::EndListBox();
@@ -56,16 +55,15 @@ bool Core::UI::SceneUIWindow::getBody()
 
             if (ImGui::Button("Save", ImVec2(120, 0)))
             {
-                std::string filenameStr = filename;
-                if (!filenameStr.empty())
+                if (!saveFilename.empty())
                 {
-                    if (filenameStr.find(".yaml") == std::string::npos)
+                    if (saveFilename.find(".yaml") == std::string::npos)
                     {
-                        filenameStr += ".yaml";
+                        saveFilename += ".yaml";
                     }
                     Core::Scene::Serialization::saveSceneToFile(
                             *Core::Engine::getInstance().getSystem<Scene::Scene>(),
-                            "assets/scenes/" + filenameStr);
+                            "assets/scenes/" + saveFilename);
                     showSaveDialog = false;
                 }
             }
