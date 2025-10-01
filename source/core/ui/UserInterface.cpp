@@ -9,6 +9,7 @@
 #include "core/ui/ProfilingUIWindow.h"
 #include "core/ui/CameraUIWindow.h"
 #include "core/ui/SceneUIWindow.h"
+#include "core/ui/RenderingUIWindow.h"
 
 bool Core::Renderer::UserInterface::init(VkRenderData& renderData)
 {
@@ -154,6 +155,7 @@ void Core::Renderer::UserInterface::update(VkRenderData& renderData)
     {
         Core::UI::ProfilingUIWindow::getBody();
         Core::UI::CameraUIWindow::getBody();
+        Core::UI::RenderingUIWindow::getBody();
         Core::UI::SceneUIWindow::getBody();
 
         ImGui::EndTabBar();

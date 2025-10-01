@@ -314,7 +314,7 @@ std::future<bool> Core::Renderer::Cubemap::loadCubemap(Core::Renderer::VkRenderD
 
                 vkUpdateDescriptorSets(renderData.rdVkbDevice.device, 1, &descriptorWrite, 0, nullptr);
 
-                cubemapData.widt = widths[0];
+                cubemapData.width = widths[0];
                 cubemapData.height = heights[0];
 
                 Logger::log(1, "%s: created cubemap", __FUNCTION__);

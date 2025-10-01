@@ -131,7 +131,7 @@ struct VkCubemapData
     VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
     VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
 
-    int widt = 0;
+    int width = 0;
     int height = 0;
 };
 
@@ -141,8 +141,6 @@ struct VkRenderData
 
     int rdWidth = 0;
     int rdHeight = 0;
-
-    unsigned int rdTriangleCount = 0;
 
     int rdFieldOfView = 90;
 
@@ -165,6 +163,13 @@ struct VkRenderData
     float rdMoveUp = 0;
 
     bool freeCameraMovement = false;
+
+    // TODO
+    // where to move this?
+#pragma region RenderingFeatures
+    bool shouldDrawSkybox = true;
+    bool shouldDrawGrid = true;
+#pragma endregion
 
     float rdTickDiff = 0.f;
 

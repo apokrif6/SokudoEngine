@@ -316,9 +316,15 @@ void Core::Renderer::VkRenderer::beginRenderFrame(Core::Renderer::VkRenderData& 
 
 bool Core::Renderer::VkRenderer::draw(VkRenderData& renderData)
 {
-    drawSkybox();
+    if (renderData.shouldDrawSkybox)
+    {
+        drawSkybox();
+    }
 
-    drawGrid();
+    if (renderData.shouldDrawGrid)
+    {
+        drawGrid();
+    }
 
     return true;
 }
