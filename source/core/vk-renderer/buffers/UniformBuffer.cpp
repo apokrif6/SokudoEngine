@@ -144,3 +144,4 @@ void Core::Renderer::UniformBuffer::cleanup(Core::Renderer::VkRenderData& render
     vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, UBOData.rdUBODescriptorLayout, nullptr);
     vmaDestroyBuffer(renderData.rdAllocator, UBOData.rdUniformBuffer, UBOData.rdUniformBufferAlloc);
 }
+

@@ -17,6 +17,8 @@ Core::Renderer::Primitive::Primitive(const std::vector<Core::Renderer::NewVertex
     createMaterialBuffer(renderData);
     createBonesTransformBuffer(renderData);
     createModelMatrixBuffer(renderData);
+
+    primitiveFlagsPushConstants.hasSkinning = mBonesInfo.bones.empty() ? 0 : 1;
 }
 
 void Core::Renderer::Primitive::createVertexBuffer(Core::Renderer::VkRenderData& renderData)
@@ -33,7 +35,7 @@ void Core::Renderer::Primitive::createIndexBuffer(Core::Renderer::VkRenderData& 
 
 void Core::Renderer::Primitive::createMaterialBuffer(Core::Renderer::VkRenderData& renderData)
 {
-    Core::Renderer::UniformBuffer::init(renderData, mMaterialUBO, sizeof(Core::Renderer::MaterialInfo), "Material");
+    Core::Renderer::UniformBuffer::init(renderData, mMaterialUBO, sizeof(Renderer::MaterialInfo), "Material");
 
     Core::Renderer::UniformBuffer::uploadData(renderData, mMaterialUBO, mMaterialInfo);
 }
@@ -92,11 +94,18 @@ void Core::Renderer::Primitive::draw(const Core::Renderer::VkRenderData& renderD
     vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                             renderData.rdMeshPipelineLayout, 2, 1, &mMaterialUBO.rdUBODescriptorSet, 0, nullptr);
 
+    const VkDescriptorSet& bonesDescriptorSet = mBonesInfo.bones.empty()
+            ? renderData.rdDummyBonesUBO.rdUBODescriptorSet
+            : mBonesTransformUBO.rdUBODescriptorSet;
+
     vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            renderData.rdMeshPipelineLayout, 3, 1, &mBonesTransformUBO.rdUBODescriptorSet, 0, nullptr);
+                            renderData.rdMeshPipelineLayout, 3, 1, &bonesDescriptorSet, 0, nullptr);
 
     vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                             renderData.rdMeshPipelineLayout, 4, 1, &mModelUBO.rdUBODescriptorSet, 0, nullptr);
+
+    vkCmdPushConstants(renderData.rdCommandBuffer, renderData.rdMeshPipelineLayout,
+                       VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PrimitiveFlagsPushConstants), &primitiveFlagsPushConstants);
 
     VkDeviceSize offset = 0;
     vkCmdBindVertexBuffers(renderData.rdCommandBuffer, 0, 1,

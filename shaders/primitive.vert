@@ -27,13 +27,20 @@ layout (set = 4, binding = 0) uniform Model {
     mat4 model;
 };
 
+layout (push_constant) uniform PrimitiveFlagsPushConstants {
+    int useSkinning;
+} pushConstants;
+
 void main() {
     mat4 boneTransform = mat4(1.0f);
 
-    boneTransform  = bones[aBoneIDs[0]] * aWeights[0];
-    boneTransform += bones[aBoneIDs[1]] * aWeights[1];
-    boneTransform += bones[aBoneIDs[2]] * aWeights[2];
-    boneTransform += bones[aBoneIDs[3]] * aWeights[3];
+    if (pushConstants.useSkinning == 1)
+    {
+        boneTransform  = bones[aBoneIDs[0]] * aWeights[0];
+        boneTransform += bones[aBoneIDs[1]] * aWeights[1];
+        boneTransform += bones[aBoneIDs[2]] * aWeights[2];
+        boneTransform += bones[aBoneIDs[3]] * aWeights[3];
+    }
 
     vec4 animPos = boneTransform * vec4(aPos, 1.0);
 

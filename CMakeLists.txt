@@ -49,6 +49,9 @@ elseif (Vulkan_GLSLANG_VALIDATOR_EXECUTABLE)
     endforeach (GLSL)
 endif ()
 
+add_custom_target(Shaders ALL DEPENDS ${SPIRV_BINARY_FILES})
+add_dependencies(SokudoEngine Shaders)
+
 include_directories(source)
 
 set(DEPENDENCIES

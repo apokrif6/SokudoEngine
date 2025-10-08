@@ -5,6 +5,8 @@
 #include "core/vk-renderer/buffers/CommandBuffer.h"
 #include "core/tools/Logger.h"
 
+#define TEXTURE_FOLDER_PATH "assets/textures/"
+
 std::future<bool> Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderData& renderData,
                                                        VkTextureData& textureData, const std::string& textureFilename)
 {
@@ -12,17 +14,19 @@ std::future<bool> Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderD
         std::launch::async,
         [&renderData, &textureData, &textureFilename]()
         {
+            const std::string texturePath = TEXTURE_FOLDER_PATH + textureFilename;;
+
             int texWidth;
             int texHeight;
             int numberOfChannels;
 
             unsigned char* texData =
-                stbi_load(textureFilename.c_str(), &texWidth, &texHeight, &numberOfChannels, STBI_rgb_alpha);
+                stbi_load(texturePath.c_str(), &texWidth, &texHeight, &numberOfChannels, STBI_rgb_alpha);
 
             if (!texData)
             {
                 perror("Error");
-                Logger::log(1, "Could not load file '%s', because of '%s'\n",textureFilename.c_str(), stbi_failure_reason());
+                Logger::log(1, "Could not load file '%s', because of '%s'\n",texturePath.c_str(), stbi_failure_reason());
                 stbi_image_free(texData);
                 return false;
             }
@@ -317,11 +321,11 @@ std::future<bool> Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderD
             writeDescriptorSet.descriptorCount = 1;
             writeDescriptorSet.pImageInfo = &descriptorImageInfo;
 
-            textureData.texName = textureFilename;
+            textureData.texName = texturePath;
 
             vkUpdateDescriptorSets(renderData.rdVkbDevice.device, 1, &writeDescriptorSet, 0, nullptr);
 
-            Logger::log(1, "Texture '%s' loaded (%dx%d, %d channels)\n", textureFilename.c_str(),
+            Logger::log(1, "Texture '%s' loaded (%dx%d, %d channels)\n", texturePath.c_str(),
                         texWidth, texHeight, numberOfChannels);
             return true;
         });

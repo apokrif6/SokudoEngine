@@ -86,8 +86,6 @@ class VkRenderer final : public EventListener
 
     bool createPipelineLayout();
 
-    bool createBasicPipeline();
-
     bool createLinePipeline();
 
     bool createFramebuffer();
@@ -99,6 +97,8 @@ class VkRenderer final : public EventListener
     bool createSyncObjects();
 
     bool loadPlaceholderTexture();
+
+    bool createDummyBonesTransformUBO();
 
     bool initVma();
 

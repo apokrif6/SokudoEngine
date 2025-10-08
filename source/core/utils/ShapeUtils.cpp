@@ -80,55 +80,139 @@ void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiSc
     Core::Utils::PrimitiveData primitiveData;
     Core::Renderer::MaterialInfo materialInfo = {};
 
-    if (scene->HasMaterials())
+    aiColor4D baseColor(1.f, 1.f, 1.f, 1.f);
+    if (AI_SUCCESS == material->Get(AI_MATKEY_BASE_COLOR, baseColor))
     {
-        size_t textureCount = material->GetTextureCount(aiTextureType_DIFFUSE);
-        if (textureCount > 0)
+        materialInfo.baseColorFactor = glm::vec4(baseColor.r, baseColor.g, baseColor.b, baseColor.a);
+    }
+    else if (AI_SUCCESS == material->Get(AI_MATKEY_COLOR_DIFFUSE, baseColor))
+    {
+        materialInfo.baseColorFactor = glm::vec4(baseColor.r, baseColor.g, baseColor.b, baseColor.a);
+    }
+
+    material->Get(AI_MATKEY_METALLIC_FACTOR, materialInfo.metallic);
+    material->Get(AI_MATKEY_ROUGHNESS_FACTOR, materialInfo.roughness);
+
+    if (material->GetTextureCount(aiTextureType_BASE_COLOR) > 0 ||
+        material->GetTextureCount(aiTextureType_DIFFUSE) > 0)
+    {
+        aiTextureType textureType = material->GetTextureCount(aiTextureType_BASE_COLOR) > 0 ?
+                                    aiTextureType_BASE_COLOR : aiTextureType_DIFFUSE;
+
+        aiString path;
+        if (material->GetTexture(textureType, 0, &path) == AI_SUCCESS)
         {
-            materialInfo.useTexture = 1;
+            std::string textureFileName = path.C_Str();
+            Core::Renderer::VkTextureData textureData;
+            std::future<bool> textureLoadFuture = Core::Renderer::Texture::loadTexture(
+                    renderData, textureData, textureFileName);
 
-            aiString path;
-            if (material->GetTexture(aiTextureType_DIFFUSE, 0, &path) == AI_SUCCESS)
+            if (textureLoadFuture.get())
             {
-                bool foundTexture = false;
-                for (auto& loadedTexture : loadedTextures)
-                {
-                    if (loadedTexture.texName == path.C_Str())
-                    {
-                        primitiveData.textures[aiTextureType_DIFFUSE] = loadedTexture;
-                        foundTexture = true;
-                        break;
-                    }
-                }
-
-                if (!foundTexture)
-                {
-                    std::string texturePath = path.C_Str();
-                    Core::Renderer::VkTextureData textureData;
-                    std::future<bool> textureLoadFuture =
-                        Core::Renderer::Texture::loadTexture(renderData, textureData, texturePath);
-
-                    if (textureLoadFuture.get())
-                    {
-                        primitiveData.textures.emplace(aiTextureType_DIFFUSE, textureData);
-                        loadedTextures.emplace_back(textureData);
-                    }
-                    else
-                    {
-                        Logger::log(1, "Failed to load texture: %s\n", texturePath.c_str());
-                    }
-                }
+                primitiveData.textures[aiTextureType_DIFFUSE] = textureData;
+                materialInfo.useTexture = 1;
             }
         }
-        else
+    }
+
+    if (material->GetTextureCount(aiTextureType_NORMALS) > 0)
+    {
+        aiString path;
+        if (material->GetTexture(aiTextureType_NORMALS, 0, &path) == AI_SUCCESS)
         {
-            aiColor4D diffuseColor;
-            if (AI_SUCCESS == material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuseColor))
+            std::string textureFileName = path.C_Str();
+            Core::Renderer::VkTextureData textureData;
+            std::future<bool> textureLoadFuture = Core::Renderer::Texture::loadTexture(
+                    renderData, textureData, textureFileName);
+
+            if (textureLoadFuture.get())
             {
-                materialInfo.baseColorFactor =
-                    glm::vec4(diffuseColor.r, diffuseColor.g, diffuseColor.b, diffuseColor.a);
+                primitiveData.textures[aiTextureType_NORMALS] = textureData;
+                materialInfo.hasNormalMap = 1;
             }
         }
+    }
+
+    if (material->GetTextureCount(aiTextureType_METALNESS) > 0)
+    {
+        aiString path;
+        if (material->GetTexture(aiTextureType_METALNESS, 0, &path) == AI_SUCCESS)
+        {
+            std::string textureFileName = path.C_Str();
+            Core::Renderer::VkTextureData textureData;
+            std::future<bool> textureLoadFuture = Core::Renderer::Texture::loadTexture(
+                    renderData, textureData, textureFileName);
+
+            if (textureLoadFuture.get())
+            {
+                primitiveData.textures[aiTextureType_METALNESS] = textureData;
+                materialInfo.hasMetallicMap = 1;
+            }
+        }
+    }
+
+    if (material->GetTextureCount(aiTextureType_DIFFUSE_ROUGHNESS) > 0)
+    {
+        aiString path;
+        if (material->GetTexture(aiTextureType_DIFFUSE_ROUGHNESS, 0, &path) == AI_SUCCESS)
+        {
+            std::string textureFileName = path.C_Str();
+            Core::Renderer::VkTextureData textureData;
+            std::future<bool> textureLoadFuture = Core::Renderer::Texture::loadTexture(
+                    renderData, textureData, textureFileName);
+
+            if (textureLoadFuture.get())
+            {
+                primitiveData.textures[aiTextureType_DIFFUSE_ROUGHNESS] = textureData;
+                materialInfo.hasRoughnessMap = 1;
+            }
+        }
+    }
+
+    if (material->GetTextureCount(aiTextureType_AMBIENT_OCCLUSION) > 0 ||
+        material->GetTextureCount(aiTextureType_LIGHTMAP) > 0)
+    {
+        aiTextureType textureType = material->GetTextureCount(aiTextureType_AMBIENT_OCCLUSION) > 0 ?
+                                    aiTextureType_AMBIENT_OCCLUSION : aiTextureType_LIGHTMAP;
+
+        aiString path;
+        if (material->GetTexture(textureType, 0, &path) == AI_SUCCESS)
+        {
+            std::string textureFileName = path.C_Str();
+            Core::Renderer::VkTextureData textureData;
+            std::future<bool> textureLoadFuture = Core::Renderer::Texture::loadTexture(
+                    renderData, textureData, textureFileName);
+
+            if (textureLoadFuture.get())
+            {
+                primitiveData.textures[aiTextureType_AMBIENT_OCCLUSION] = textureData;
+                materialInfo.hasAOMap = 1;
+            }
+        }
+    }
+
+    if (material->GetTextureCount(aiTextureType_EMISSIVE) > 0)
+    {
+        aiString path;
+        if (material->GetTexture(aiTextureType_EMISSIVE, 0, &path) == AI_SUCCESS)
+        {
+            std::string textureFileName = path.C_Str();
+            Core::Renderer::VkTextureData textureData;
+            std::future<bool> textureLoadFuture = Core::Renderer::Texture::loadTexture(
+                    renderData, textureData, textureFileName);
+
+            if (textureLoadFuture.get())
+            {
+                primitiveData.textures[aiTextureType_EMISSIVE] = textureData;
+                materialInfo.hasEmissiveMap = 1;
+            }
+        }
+    }
+
+    aiColor3D emissiveColor(0.0f, 0.0f, 0.0f);
+    if (AI_SUCCESS == material->Get(AI_MATKEY_COLOR_EMISSIVE, emissiveColor))
+    {
+        materialInfo.emissive = glm::vec3(emissiveColor.r, emissiveColor.g, emissiveColor.b);
     }
 
     primitiveData.material = materialInfo;

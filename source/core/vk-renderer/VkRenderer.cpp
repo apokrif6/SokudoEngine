@@ -86,6 +86,11 @@ bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned i
         return false;
     }
 
+    if (!createDummyBonesTransformUBO())
+    {
+        return false;
+    }
+
     if (!createUBO())
     {
         return false;
@@ -102,11 +107,6 @@ bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned i
     }
 
     if (!createPipelineLayout())
-    {
-        return false;
-    }
-
-    if (!createBasicPipeline())
     {
         return false;
     }
@@ -378,7 +378,6 @@ void Core::Renderer::VkRenderer::cleanup(VkRenderData& renderData)
     Core::Renderer::DebugSkeletonPipeline::cleanup(renderData, renderData.rdDebugSkeletonPipeline);
     Core::Renderer::Pipeline::cleanup(renderData, renderData.rdGridPipeline);
     Core::Renderer::Pipeline::cleanup(renderData, renderData.rdLinePipeline);
-    Core::Renderer::Pipeline::cleanup(renderData, renderData.rdBasicPipeline);
     Core::Renderer::Pipeline::cleanup(renderData, renderData.rdSkyboxPipeline);
 
     Core::Renderer::PipelineLayout::cleanup(renderData, renderData.rdPipelineLayout);
@@ -392,6 +391,8 @@ void Core::Renderer::VkRenderer::cleanup(VkRenderData& renderData)
     Core::Renderer::VertexBuffer::cleanup(renderData, renderData.rdVertexBufferData);
 
     Core::Renderer::Texture::cleanup(renderData, renderData.rdPlaceholderTexture);
+
+    Core::Renderer::UniformBuffer::cleanup(renderData, renderData.rdDummyBonesUBO);
 
     Core::Renderer::Cubemap::cleanup(renderData, renderData.rdSkyboxData);
 
@@ -669,21 +670,6 @@ bool Core::Renderer::VkRenderer::createPipelineLayout()
     return true;
 }
 
-bool Core::Renderer::VkRenderer::createBasicPipeline()
-{
-    const std::string vertexShaderFile = "shaders/basic.vert.spv";
-    const std::string fragmentShaderFile = "shaders/basic.frag.spv";
-    if (!Pipeline::init(Core::Engine::getInstance().getRenderData(),
-                        Core::Engine::getInstance().getRenderData().rdPipelineLayout,
-                        Core::Engine::getInstance().getRenderData().rdBasicPipeline,
-                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile))
-    {
-        Logger::log(1, "%s error: could not init pipeline\n", __FUNCTION__);
-        return false;
-    }
-    return true;
-}
-
 bool Core::Renderer::VkRenderer::createLinePipeline()
 {
     const std::string vertexShaderFile = "shaders/line.vert.spv";
@@ -776,7 +762,7 @@ bool Core::Renderer::VkRenderer::createSyncObjects()
 
 bool Core::Renderer::VkRenderer::loadPlaceholderTexture()
 {
-    const std::string textureFileName = "assets/textures/placeholder_sampler.png";
+    const std::string textureFileName = "placeholder_sampler.png";
     std::future<bool> textureLoadFuture = Core::Renderer::Texture::loadTexture(
         Core::Engine::getInstance().getRenderData(), Core::Engine::getInstance().getRenderData().rdPlaceholderTexture,
         textureFileName);
@@ -785,6 +771,24 @@ bool Core::Renderer::VkRenderer::loadPlaceholderTexture()
         Logger::log(1, "%s error: could not load texture\n", __FUNCTION__);
         return false;
     }
+
+    return true;
+}
+
+
+bool Core::Renderer::VkRenderer::createDummyBonesTransformUBO()
+{
+    auto& renderData = Core::Engine::getInstance().getRenderData();
+
+    std::vector<glm::mat4> identityMatrix = {glm::mat4(1.0f)};
+
+    if (!UniformBuffer::init(renderData, renderData.rdDummyBonesUBO, sizeof(glm::mat4), "DummyBonesUBO"))
+    {
+        Logger::log(1, "%s error: could not create dummy bones UBO\n", __FUNCTION__);
+        return false;
+    }
+
+    UniformBuffer::uploadData(renderData, renderData.rdDummyBonesUBO, identityMatrix);
 
     return true;
 }
@@ -806,26 +810,13 @@ bool Core::Renderer::VkRenderer::initVma()
 
 bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
 {
-    const std::string modelFileName = "assets/mixamo/models/FemaleModel.fbx";
-    const std::vector<std::string> animationsFileNames = {
-         "assets/mixamo/animations/StandingIdleAnimation.fbx",
-         "assets/mixamo/animations/AngryAnimation.fbx",
-         "assets/mixamo/animations/BoxingAnimation.fbx",
-         "assets/mixamo/animations/HipHopDancingAnimation.fbx",
-         "assets/mixamo/animations/StandingReactDeathBackwardAnimation.fbx"
-    };
+    const std::string modelFileName = "assets/damaged_helmet/DamagedHelmet.gltf";
+
     Core::Utils::MeshData primitiveMeshData =
         Core::Utils::loadMeshFromFile(modelFileName, Core::Engine::getInstance().getRenderData());
-    for (const auto& animationFileName : animationsFileNames)
-    {
-        auto animation = Core::Animations::AnimationsUtils::loadAnimationFromFile(animationFileName);
-        if (animation.name.empty())
-        {
-            Logger::log(1, "%s error: could not load animation from file %s", __FUNCTION__, animationFileName.c_str());
-            return false;
-        }
-        primitiveMeshData.animations.push_back(animation);
-    }
+
+    std::string vertexShaderFile = "shaders/primitive.vert.spv";
+    std::string fragmentShaderFile = "shaders/primitive.frag.spv";
     if (!Core::Renderer::MeshPipelineLayout::init(Core::Engine::getInstance().getRenderData(),
                                                   Core::Engine::getInstance().getRenderData().rdMeshPipelineLayout))
     {
@@ -833,8 +824,6 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
         return false;
     }
 
-    const std::string vertexShaderFile = "shaders/primitive.vert.spv";
-    const std::string fragmentShaderFile = "shaders/primitive.frag.spv";
     if (!MeshPipeline::init(Core::Engine::getInstance().getRenderData(),
                             Core::Engine::getInstance().getRenderData().rdMeshPipelineLayout,
                             Core::Engine::getInstance().getRenderData().rdMeshPipeline,
@@ -847,38 +836,13 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
     createDebugSkeletonPipelineLayout();
     createDebugSkeletonPipeline();
 
-    auto testMeshOne = std::make_shared<Mesh>("TestMesh_1", primitiveMeshData.skeleton);
-    testMeshOne->setupAnimations(primitiveMeshData.animations);
-    testMeshOne->initDebugSkeleton(Core::Engine::getInstance().getRenderData());
-    testMeshOne->getTransform().position = {1, 0, 1};
-    testMeshOne->setMeshFilePath(modelFileName);
-    testMeshOne->setAnimationFiles(animationsFileNames);
+    auto testMesh = std::make_shared<Mesh>("TestMesh", primitiveMeshData.skeleton);
+    testMesh->setupAnimations(primitiveMeshData.animations);
+    testMesh->initDebugSkeleton(Core::Engine::getInstance().getRenderData());
+    testMesh->getTransform().position = {1, 0, 1};
+    testMesh->setMeshFilePath(modelFileName);
 
-    auto testMeshTwo = std::make_shared<Mesh>("TestMesh_2", primitiveMeshData.skeleton);
-    testMeshTwo->setupAnimations(primitiveMeshData.animations);
-    testMeshTwo->initDebugSkeleton(Core::Engine::getInstance().getRenderData());
-    testMeshTwo->getTransform().position = {-1, 0, 1};
-    testMeshTwo->setMeshFilePath(modelFileName);
-    testMeshTwo->setAnimationFiles(animationsFileNames);
-
-    auto testMeshThree = std::make_shared<Mesh>("TestMesh_3", primitiveMeshData.skeleton);
-    testMeshThree->setupAnimations(primitiveMeshData.animations);
-    testMeshThree->initDebugSkeleton(Core::Engine::getInstance().getRenderData());
-    testMeshThree->getTransform().position = {1, 0, -1};
-    testMeshThree->setMeshFilePath(modelFileName);
-    testMeshThree->setAnimationFiles(animationsFileNames);
-
-    auto testMeshFour = std::make_shared<Mesh>("TestMesh_4", primitiveMeshData.skeleton);
-    testMeshFour->setupAnimations(primitiveMeshData.animations);
-    testMeshFour->initDebugSkeleton(Core::Engine::getInstance().getRenderData());
-    testMeshFour->getTransform().position = {-1, 0, -1};
-    testMeshFour->setMeshFilePath(modelFileName);
-    testMeshFour->setAnimationFiles(animationsFileNames);
-
-    Core::Engine::getInstance().getSystem<Scene::Scene>()->addObject(testMeshOne);
-    Core::Engine::getInstance().getSystem<Scene::Scene>()->addObject(testMeshTwo);
-    Core::Engine::getInstance().getSystem<Scene::Scene>()->addObject(testMeshThree);
-    Core::Engine::getInstance().getSystem<Scene::Scene>()->addObject(testMeshFour);
+    Core::Engine::getInstance().getSystem<Scene::Scene>()->addObject(testMesh);
 
     for (auto& primitive : primitiveMeshData.primitives)
     {
@@ -891,13 +855,7 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
         {
             primitiveTexture = foundDiffuseTexture->second;
         }
-        testMeshOne->addPrimitive(primitive.vertices, primitive.indices, primitiveTexture,
-                                  Core::Engine::getInstance().getRenderData(), primitive.material, primitive.bones);
-        testMeshTwo->addPrimitive(primitive.vertices, primitive.indices, primitiveTexture,
-                                  Core::Engine::getInstance().getRenderData(), primitive.material, primitive.bones);
-        testMeshThree->addPrimitive(primitive.vertices, primitive.indices, primitiveTexture,
-                                  Core::Engine::getInstance().getRenderData(), primitive.material, primitive.bones);
-        testMeshFour->addPrimitive(primitive.vertices, primitive.indices, primitiveTexture,
+        testMesh->addPrimitive(primitive.vertices, primitive.indices, primitiveTexture,
                                   Core::Engine::getInstance().getRenderData(), primitive.material, primitive.bones);
     }
 
@@ -1135,4 +1093,3 @@ void Core::Renderer::VkRenderer::handleCameraMovementKeys()
         renderData.rdMoveUp -= 1.f;
     }
 }
-

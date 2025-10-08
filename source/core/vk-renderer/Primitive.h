@@ -49,6 +49,8 @@ class Primitive
     Renderer::VkUniformBufferData mBonesTransformUBO{};
     Animations::BonesInfo mBonesInfo{};
 
-    Core::Renderer::VkUniformBufferData mModelUBO{};
+    Renderer::VkUniformBufferData mModelUBO{};
+
+    Renderer::PrimitiveFlagsPushConstants primitiveFlagsPushConstants;
 };
 } // namespace Core::Renderer

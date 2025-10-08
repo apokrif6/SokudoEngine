@@ -32,7 +32,23 @@ struct NewVertex
 struct MaterialInfo
 {
     glm::vec4 baseColorFactor = glm::vec4(1.0f);
-    alignas(16) int useTexture = 0;
+    float metallic = 0.f;
+    float roughness = 1.f;
+    int useTexture = 0;
+
+    // PBR
+    int hasNormalMap = 0;
+    int hasMetallicMap = 0;
+    int hasRoughnessMap = 0;
+    int hasAOMap = 0;
+    int hasEmissiveMap = 0;
+    float ao = 1.0f;
+    glm::vec3 emissive = {0.f, 0.f, 0.f};
+};
+
+struct alignas(16) PrimitiveFlagsPushConstants
+{
+    int hasSkinning = 0;
 };
 
 struct VkVertex
@@ -118,6 +134,24 @@ struct VkPrimitiveRenderData
     VkVertexBufferData rdModelVertexBufferData{};
     VkIndexBufferData rdModelIndexBufferData{};
     VkTextureData rdModelTexture{};
+};
+
+struct VkPBRMaterialData
+{
+    VkTextureData albedoTexture{};
+    VkTextureData metallicRoughnessTexture{};
+    VkTextureData normalTexture{};
+    VkTextureData aoTexture{};
+    VkTextureData emissiveTexture{};
+
+    int hasAlbedoMap = 0;
+    int hasNormalMap = 0;
+    int hasMetallicMap = 0;
+    int hasRoughnessMap = 0;
+    int hasAOMap = 0;
+    int hasEmissiveMap = 0;
+
+    MaterialInfo materialInfo;
 };
 
 struct VkCubemapData
@@ -228,5 +262,9 @@ struct VkRenderData
     VkCubemapData rdSkyboxData{};
 
     VkDescriptorPool rdImguiDescriptorPool = VK_NULL_HANDLE;
+
+#pragma region DummyDescriptors
+        VkUniformBufferData rdDummyBonesUBO{};
+#pragma endregion
 };
 } // namespace Core::Renderer
