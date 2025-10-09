@@ -11,7 +11,8 @@ class Primitive
 {
   public:
     Primitive(const std::vector<Renderer::NewVertex>& vertexBufferData, const std::vector<uint32_t>& indexBufferData,
-              const Renderer::VkTextureData& textureData, const Renderer::MaterialInfo& materialInfo,
+              const std::unordered_map<aiTextureType, Renderer::VkTextureData>& textures,
+              const Renderer::MaterialInfo& materialInfo,
               const Animations::BonesInfo& bonesInfo, Core::Renderer::VkRenderData& renderData);
 
     void uploadVertexBuffer(Renderer::VkRenderData& renderData);
@@ -41,7 +42,9 @@ class Primitive
 
     std::vector<Renderer::NewVertex> mVertexBufferData;
     std::vector<uint32_t> mIndexBufferData;
-    Renderer::VkTextureData mTextureData;
+
+    const std::unordered_map<aiTextureType, Renderer::VkTextureData> mTextures;
+    Renderer::VkTextureData mAlbedoTexture{};
 
     Renderer::VkUniformBufferData mMaterialUBO{};
     Renderer::MaterialInfo mMaterialInfo{};

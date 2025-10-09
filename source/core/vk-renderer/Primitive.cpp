@@ -5,13 +5,26 @@
 
 Core::Renderer::Primitive::Primitive(const std::vector<Core::Renderer::NewVertex>& vertexBufferData,
                                      const std::vector<uint32_t>& indexBufferData,
-                                     const Core::Renderer::VkTextureData& textureData,
+                                     const std::unordered_map<aiTextureType, Renderer::VkTextureData>& textures,
                                      const Core::Renderer::MaterialInfo& materialInfo,
                                      const Core::Animations::BonesInfo& bonesInfo,
                                      Core::Renderer::VkRenderData& renderData)
-    : mVertexBufferData(vertexBufferData), mIndexBufferData(indexBufferData), mTextureData(textureData),
+    : mVertexBufferData(vertexBufferData), mIndexBufferData(indexBufferData), mTextures(textures),
       mMaterialInfo(materialInfo), mBonesInfo(bonesInfo)
 {
+    auto foundAlbedoTexture = mTextures.find(aiTextureType_DIFFUSE);
+    if (foundAlbedoTexture != mTextures.end())
+    {
+        mAlbedoTexture = foundAlbedoTexture->second;
+    }
+    else
+    {
+        auto foundBaseColorTexture = mTextures.find(aiTextureType_BASE_COLOR);
+        if (foundBaseColorTexture != mTextures.end()) {
+            mAlbedoTexture = foundBaseColorTexture->second;
+        }
+    }
+
     createVertexBuffer(renderData);
     createIndexBuffer(renderData);
     createMaterialBuffer(renderData);
@@ -76,7 +89,7 @@ void Core::Renderer::Primitive::draw(const Core::Renderer::VkRenderData& renderD
     if (mMaterialInfo.useTexture)
     {
         vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                renderData.rdMeshPipelineLayout, 0, 1, &mTextureData.texTextureDescriptorSet, 0,
+                                renderData.rdMeshPipelineLayout, 0, 1, &mAlbedoTexture.texTextureDescriptorSet, 0,
                                 nullptr);
     }
     else
@@ -123,7 +136,10 @@ void Core::Renderer::Primitive::cleanup(Core::Renderer::VkRenderData& renderData
 
     Core::Renderer::IndexBuffer::cleanup(renderData, primitiveRenderData.rdModelIndexBufferData);
 
-    Core::Renderer::Texture::cleanup(renderData, mTextureData);
+    for (auto texture : mTextures)
+    {
+        Core::Renderer::Texture::cleanup(renderData, texture.second);
+    }
 
     Core::Renderer::UniformBuffer::cleanup(renderData, mModelUBO);
     Core::Renderer::UniformBuffer::cleanup(renderData, mBonesTransformUBO);

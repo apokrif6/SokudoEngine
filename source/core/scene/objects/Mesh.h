@@ -17,7 +17,8 @@ class Mesh : public Core::Scene::SceneObject
     explicit Mesh(std::string name, Animations::Skeleton skeleton);
 
     void addPrimitive(const std::vector<Core::Renderer::NewVertex>& vertexBufferData,
-                      const std::vector<uint32_t>& indexBufferData, const VkTextureData& textureData,
+                      const std::vector<uint32_t>& indexBufferData,
+                      const std::unordered_map<aiTextureType, Renderer::VkTextureData>& textures,
                       VkRenderData& renderData, const MaterialInfo& materialInfo,
                       const Animations::BonesInfo& bonesInfo);
 

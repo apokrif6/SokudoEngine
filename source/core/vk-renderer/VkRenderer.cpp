@@ -846,16 +846,7 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
 
     for (auto& primitive : primitiveMeshData.primitives)
     {
-        // TODO
-        // should be refactored when multiple texture types will be supported
-        // textures should be passed as param, so there will be parameter with whole map or nullptr
-        Core::Renderer::VkTextureData primitiveTexture;
-        auto foundDiffuseTexture = primitive.textures.find(aiTextureType_DIFFUSE);
-        if (foundDiffuseTexture != primitive.textures.end())
-        {
-            primitiveTexture = foundDiffuseTexture->second;
-        }
-        testMesh->addPrimitive(primitive.vertices, primitive.indices, primitiveTexture,
+        testMesh->addPrimitive(primitive.vertices, primitive.indices, primitive.textures,
                                   Core::Engine::getInstance().getRenderData(), primitive.material, primitive.bones);
     }
 

@@ -41,11 +41,12 @@ Core::Renderer::Mesh::Mesh(std::string name, Core::Animations::Skeleton skeleton
 }
 
 void Core::Renderer::Mesh::addPrimitive(const std::vector<Core::Renderer::NewVertex>& vertexBufferData,
-                                        const std::vector<uint32_t>& indexBufferData, const VkTextureData& textureData,
+                                        const std::vector<uint32_t>& indexBufferData,
+                                        const std::unordered_map<aiTextureType, Renderer::VkTextureData>& textures,
                                         VkRenderData& renderData, const MaterialInfo& materialInfo,
                                         const Animations::BonesInfo& bonesInfo)
 {
-    mPrimitives.emplace_back(vertexBufferData, indexBufferData, textureData, materialInfo, bonesInfo, renderData);
+    mPrimitives.emplace_back(vertexBufferData, indexBufferData, textures, materialInfo, bonesInfo, renderData);
 }
 
 void Core::Renderer::Mesh::update(Core::Renderer::VkRenderData& renderData)
@@ -133,13 +134,7 @@ void Core::Renderer::Mesh::deserialize(const YAML::Node& node)
 
     for (auto& primitive : meshData.primitives)
     {
-        Core::Renderer::VkTextureData texture;
-        auto found = primitive.textures.find(aiTextureType_DIFFUSE);
-        if (found != primitive.textures.end())
-        {
-            texture = found->second;
-        }
-        addPrimitive(primitive.vertices, primitive.indices, texture,
+        addPrimitive(primitive.vertices, primitive.indices, primitive.textures,
                      renderData, primitive.material, primitive.bones);
     }
 }
