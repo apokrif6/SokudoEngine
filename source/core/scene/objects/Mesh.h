@@ -20,7 +20,8 @@ class Mesh : public Core::Scene::SceneObject
                       const std::vector<uint32_t>& indexBufferData,
                       const std::unordered_map<aiTextureType, Renderer::VkTextureData>& textures,
                       VkRenderData& renderData, const MaterialInfo& materialInfo,
-                      const Animations::BonesInfo& bonesInfo);
+                      const Animations::BonesInfo& bonesInfo,
+                      VkDescriptorSet materialDescriptorSet);
 
     [[nodiscard]] Scene::ObjectType getType() const override { return Scene::ObjectType::Mesh; }
 

@@ -706,8 +706,6 @@ void Core::Renderer::VkRenderer::drawGrid() const
 
     vkCmdBindPipeline(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdLinePipeline);
 
-    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdPipelineLayout, 0,
-                            1, &renderData.rdPlaceholderTexture.texTextureDescriptorSet, 0, nullptr);
     vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdPipelineLayout, 1,
                             1, &renderData.rdPerspectiveViewMatrixUBO.rdUBODescriptorSet, 0, nullptr);
 
@@ -810,35 +808,50 @@ bool Core::Renderer::VkRenderer::initVma()
 
 bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
 {
-    const std::string modelFileName = "assets/damaged_helmet/DamagedHelmet.gltf";
-
-    Core::Utils::MeshData primitiveMeshData =
-        Core::Utils::loadMeshFromFile(modelFileName, Core::Engine::getInstance().getRenderData());
+    auto& renderData = Core::Engine::getInstance().getRenderData();
 
     std::string vertexShaderFile = "shaders/primitive.vert.spv";
     std::string fragmentShaderFile = "shaders/primitive.frag.spv";
-    if (!Core::Renderer::MeshPipelineLayout::init(Core::Engine::getInstance().getRenderData(),
-                                                  Core::Engine::getInstance().getRenderData().rdMeshPipelineLayout))
+    if (!Core::Renderer::MeshPipelineLayout::init(renderData,renderData.rdMeshPipelineLayout))
     {
         Logger::log(1, "%s error: could not init mesh pipeline layout\n", __FUNCTION__);
         return false;
     }
 
-    if (!MeshPipeline::init(Core::Engine::getInstance().getRenderData(),
-                            Core::Engine::getInstance().getRenderData().rdMeshPipelineLayout,
-                            Core::Engine::getInstance().getRenderData().rdMeshPipeline,
+    VkDescriptorPoolSize poolSize{};
+    poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    poolSize.descriptorCount = MAX_MATERIALS * 5;
+
+    VkDescriptorPoolCreateInfo poolInfo{};
+    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    poolInfo.poolSizeCount = 1;
+    poolInfo.pPoolSizes = &poolSize;
+    poolInfo.maxSets = MAX_MATERIALS;
+
+    if (vkCreateDescriptorPool(renderData.rdVkbDevice.device, &poolInfo, nullptr,
+                               &renderData.rdMaterialDescriptorPool) != VK_SUCCESS) {
+        Logger::log(1, "failed to create material descriptor pool!\n");
+        return false;
+    }
+
+    if (!MeshPipeline::init(renderData,renderData.rdMeshPipelineLayout,renderData.rdMeshPipeline,
                             VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile))
     {
         Logger::log(1, "%s error: could not init mesh pipeline\n", __FUNCTION__);
         return false;
     }
 
+    const std::string modelFileName = "assets/damaged_helmet/DamagedHelmet.gltf";
+
+    Core::Utils::MeshData primitiveMeshData =
+            Core::Utils::loadMeshFromFile(modelFileName, renderData);
+
     createDebugSkeletonPipelineLayout();
     createDebugSkeletonPipeline();
 
     auto testMesh = std::make_shared<Mesh>("TestMesh", primitiveMeshData.skeleton);
     testMesh->setupAnimations(primitiveMeshData.animations);
-    testMesh->initDebugSkeleton(Core::Engine::getInstance().getRenderData());
+    testMesh->initDebugSkeleton(renderData);
     testMesh->getTransform().position = {1, 0, 1};
     testMesh->setMeshFilePath(modelFileName);
 
@@ -847,7 +860,7 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
     for (auto& primitive : primitiveMeshData.primitives)
     {
         testMesh->addPrimitive(primitive.vertices, primitive.indices, primitive.textures,
-                                  Core::Engine::getInstance().getRenderData(), primitive.material, primitive.bones);
+                               renderData, primitive.material, primitive.bones, primitive.materialDescriptorSet);
     }
 
     return true;

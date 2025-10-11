@@ -8,9 +8,11 @@ layout (location = 4) in vec2 aUV;
 layout (location = 5) in vec4 aWeights;
 layout (location = 6) in ivec4 aBoneIDs;
 
-layout (location = 0) out vec3 normal;
-layout (location = 1) out vec2 textCoord;
-layout (location = 2) out vec4 vertColor;
+layout (location = 0) out vec3 worldPos;
+layout (location = 1) out vec3 normal;
+layout (location = 2) out vec2 textCoord;
+layout (location = 3) out vec3 tangent;
+layout (location = 4) out vec4 vertColor;
 
 const int MAX_BONES = 200;
 
@@ -44,8 +46,15 @@ void main() {
 
     vec4 animPos = boneTransform * vec4(aPos, 1.0);
 
-    gl_Position = projection * view * model * animPos;
+    vec4 worldPosition = model * animPos;
+    worldPos = worldPosition.xyz;
 
-    normal = aNormal;
+    normal = normalize(mat3(model) * mat3(boneTransform) * aNormal);
+
+    tangent = normalize(mat3(model) * mat3(boneTransform) * aTangent);
+
+    gl_Position = projection * view * worldPosition;
+
     textCoord = aUV;
+    vertColor = aColor;
 }

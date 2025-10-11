@@ -18,6 +18,9 @@ struct PrimitiveData
     std::vector<uint32_t> indices;
     std::unordered_map<aiTextureType, Core::Renderer::VkTextureData> textures;
     Core::Renderer::MaterialInfo material;
+    // TODO
+    // should it be part of MaterialInfo?
+    VkDescriptorSet materialDescriptorSet{};
     Core::Animations::BonesInfo bones;
 };
 

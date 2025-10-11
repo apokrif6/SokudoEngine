@@ -12,6 +12,9 @@ class UniformBuffer
     static bool init(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData, size_t bufferSize, const std::string& name);
 
     static void uploadData(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData,
+                           const glm::vec3& vector);
+
+    static void uploadData(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData,
                            const glm::mat4& matrix);
 
     static void uploadData(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData,
@@ -19,6 +22,12 @@ class UniformBuffer
 
     static void uploadData(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData,
                            const Core::Renderer::MaterialInfo& materialInfo);
+
+    static void uploadData(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData,
+                           const Core::Renderer::CameraInfo& cameraInfo);
+
+    static void uploadData(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData,
+                           const Core::Renderer::LightsInfo& lightsInfo);
 
     static void cleanup(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData);
 };

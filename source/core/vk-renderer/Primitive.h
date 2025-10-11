@@ -12,8 +12,8 @@ class Primitive
   public:
     Primitive(const std::vector<Renderer::NewVertex>& vertexBufferData, const std::vector<uint32_t>& indexBufferData,
               const std::unordered_map<aiTextureType, Renderer::VkTextureData>& textures,
-              const Renderer::MaterialInfo& materialInfo,
-              const Animations::BonesInfo& bonesInfo, Core::Renderer::VkRenderData& renderData);
+              const Renderer::MaterialInfo& materialInfo, const Animations::BonesInfo& bonesInfo,
+              Core::Renderer::VkRenderData& renderData, VkDescriptorSet materialDescriptorSet);
 
     void uploadVertexBuffer(Renderer::VkRenderData& renderData);
 
@@ -38,6 +38,10 @@ class Primitive
 
     void createModelMatrixBuffer(Renderer::VkRenderData& renderData);
 
+    void createCameraBuffer(Renderer::VkRenderData& renderData);
+
+    void createLightsBuffer(Renderer::VkRenderData& renderData);
+
     Renderer::VkPrimitiveRenderData primitiveRenderData;
 
     std::vector<Renderer::NewVertex> mVertexBufferData;
@@ -48,11 +52,17 @@ class Primitive
 
     Renderer::VkUniformBufferData mMaterialUBO{};
     Renderer::MaterialInfo mMaterialInfo{};
+    VkDescriptorSet mMaterialDescriptorSet{};
 
     Renderer::VkUniformBufferData mBonesTransformUBO{};
     Animations::BonesInfo mBonesInfo{};
 
     Renderer::VkUniformBufferData mModelUBO{};
+
+    Renderer::VkUniformBufferData mCameraUBO{};
+
+    Renderer::VkUniformBufferData mLightsUBO{};
+    Renderer::LightsInfo lightsData{};
 
     Renderer::PrimitiveFlagsPushConstants primitiveFlagsPushConstants;
 };

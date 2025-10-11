@@ -106,6 +106,15 @@ bool Core::Renderer::UniformBuffer::init(Core::Renderer::VkRenderData& renderDat
     return true;
 }
 
+void Core::Renderer::UniformBuffer::uploadData(Core::Renderer::VkRenderData &renderData,
+                                               Core::Renderer::VkUniformBufferData &UBOData, const glm::vec3 &vector)
+{
+    void* data;
+    vmaMapMemory(renderData.rdAllocator, UBOData.rdUniformBufferAlloc, &data);
+    std::memcpy(data, &vector, UBOData.rdUniformBufferSize);
+    vmaUnmapMemory(renderData.rdAllocator, UBOData.rdUniformBufferAlloc);
+}
+
 void Core::Renderer::UniformBuffer::uploadData(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData, const glm::mat4& matrix)
 {
     void* data;
@@ -138,10 +147,31 @@ void Core::Renderer::UniformBuffer::uploadData(Core::Renderer::VkRenderData& ren
     vmaUnmapMemory(renderData.rdAllocator, UBOData.rdUniformBufferAlloc);
 }
 
+void Core::Renderer::UniformBuffer::uploadData(Core::Renderer::VkRenderData &renderData,
+                                               Core::Renderer::VkUniformBufferData &UBOData,
+                                               const Core::Renderer::CameraInfo &cameraInfo)
+{
+    void* data;
+    vmaMapMemory(renderData.rdAllocator, UBOData.rdUniformBufferAlloc, &data);
+    std::memcpy(data, &cameraInfo, sizeof(Core::Renderer::CameraInfo));
+    vmaUnmapMemory(renderData.rdAllocator, UBOData.rdUniformBufferAlloc);
+}
+
+void Core::Renderer::UniformBuffer::uploadData(Core::Renderer::VkRenderData &renderData,
+                                               Core::Renderer::VkUniformBufferData &UBOData,
+                                               const Core::Renderer::LightsInfo &lightsInfo)
+{
+    void* data;
+    vmaMapMemory(renderData.rdAllocator, UBOData.rdUniformBufferAlloc, &data);
+    std::memcpy(data, &lightsInfo, sizeof(Core::Renderer::LightsInfo));
+    vmaUnmapMemory(renderData.rdAllocator, UBOData.rdUniformBufferAlloc);
+}
+
 void Core::Renderer::UniformBuffer::cleanup(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData)
 {
     vkDestroyDescriptorPool(renderData.rdVkbDevice.device, UBOData.rdUBODescriptorPool, nullptr);
     vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, UBOData.rdUBODescriptorLayout, nullptr);
     vmaDestroyBuffer(renderData.rdAllocator, UBOData.rdUniformBuffer, UBOData.rdUniformBufferAlloc);
 }
+
 

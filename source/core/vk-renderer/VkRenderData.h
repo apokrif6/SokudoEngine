@@ -29,21 +29,34 @@ struct NewVertex
     }
 };
 
-struct MaterialInfo
+constexpr int MAX_MATERIALS = 128;
+struct alignas(16) MaterialInfo
 {
     glm::vec4 baseColorFactor = glm::vec4(1.0f);
-    float metallic = 0.f;
-    float roughness = 1.f;
-    int useTexture = 0;
+    float metallicFactor  = 0.f;
+    float roughnessFactor  = 1.f;
 
-    // PBR
-    int hasNormalMap = 0;
-    int hasMetallicMap = 0;
-    int hasRoughnessMap = 0;
-    int hasAOMap = 0;
-    int hasEmissiveMap = 0;
-    float ao = 1.0f;
-    glm::vec3 emissive = {0.f, 0.f, 0.f};
+    alignas(16) glm::vec3 emissiveFactor = {0.f, 0.f, 0.f};
+
+    int useAlbedoMap = 0;
+    int useNormalMap = 0;
+    int useMetallicRoughnessMap = 0;
+    int useAOMap = 0;
+    int useEmissiveMap = 0;
+};
+
+// dude move this somewhere else
+struct alignas(16) CameraInfo
+{
+    glm::vec3 position;
+};
+
+constexpr int MAX_LIGHTS = 4;
+struct alignas(16) LightsInfo
+{
+    glm::vec3 positions[MAX_LIGHTS];
+    glm::vec3 colors[MAX_LIGHTS];
+    int count;
 };
 
 struct alignas(16) PrimitiveFlagsPushConstants
@@ -81,10 +94,6 @@ struct VkTextureData
     VkImageView texTextureImageView = VK_NULL_HANDLE;
     VkSampler texTextureSampler = VK_NULL_HANDLE;
     VmaAllocation texTextureImageAlloc = nullptr;
-
-    VkDescriptorPool texTextureDescriptorPool = VK_NULL_HANDLE;
-    VkDescriptorSetLayout texTextureDescriptorLayout = VK_NULL_HANDLE;
-    VkDescriptorSet texTextureDescriptorSet = VK_NULL_HANDLE;
 };
 
 struct VkVertexBufferData
@@ -233,13 +242,14 @@ struct VkRenderData
     VkDescriptorSetLayout rdMeshMaterialDescriptorLayout = VK_NULL_HANDLE;
     VkDescriptorSetLayout rdMeshBonesTransformDescriptorLayout = VK_NULL_HANDLE;
     VkDescriptorSetLayout rdMeshModelDescriptorLayout = VK_NULL_HANDLE;
+    VkDescriptorSetLayout rdMeshCameraDescriptorLayout = VK_NULL_HANDLE;
+    VkDescriptorSetLayout rdMeshLightsDescriptorLayout = VK_NULL_HANDLE;
 
     VkRenderPass rdRenderpass = VK_NULL_HANDLE;
     VkPipelineLayout rdPipelineLayout = VK_NULL_HANDLE;
     VkPipelineLayout rdMeshPipelineLayout = VK_NULL_HANDLE;
     VkPipelineLayout rdDebugSkeletonPipelineLayout = VK_NULL_HANDLE;
     VkPipelineLayout rdSkyboxPipelineLayout = VK_NULL_HANDLE;
-    VkPipeline rdBasicPipeline = VK_NULL_HANDLE;
     VkPipeline rdLinePipeline = VK_NULL_HANDLE;
     VkPipeline rdGridPipeline = VK_NULL_HANDLE;
     VkPipeline rdMeshPipeline = VK_NULL_HANDLE;
@@ -262,6 +272,8 @@ struct VkRenderData
     VkCubemapData rdSkyboxData{};
 
     VkDescriptorPool rdImguiDescriptorPool = VK_NULL_HANDLE;
+
+    VkDescriptorPool rdMaterialDescriptorPool;
 
 #pragma region DummyDescriptors
         VkUniformBufferData rdDummyBonesUBO{};

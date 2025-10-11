@@ -44,9 +44,10 @@ void Core::Renderer::Mesh::addPrimitive(const std::vector<Core::Renderer::NewVer
                                         const std::vector<uint32_t>& indexBufferData,
                                         const std::unordered_map<aiTextureType, Renderer::VkTextureData>& textures,
                                         VkRenderData& renderData, const MaterialInfo& materialInfo,
-                                        const Animations::BonesInfo& bonesInfo)
+                                        const Animations::BonesInfo& bonesInfo,
+                                        VkDescriptorSet materialDescriptorSet)
 {
-    mPrimitives.emplace_back(vertexBufferData, indexBufferData, textures, materialInfo, bonesInfo, renderData);
+    mPrimitives.emplace_back(vertexBufferData, indexBufferData, textures, materialInfo, bonesInfo, renderData, materialDescriptorSet);
 }
 
 void Core::Renderer::Mesh::update(Core::Renderer::VkRenderData& renderData)
@@ -135,6 +136,6 @@ void Core::Renderer::Mesh::deserialize(const YAML::Node& node)
     for (auto& primitive : meshData.primitives)
     {
         addPrimitive(primitive.vertices, primitive.indices, primitive.textures,
-                     renderData, primitive.material, primitive.bones);
+                     renderData, primitive.material, primitive.bones, primitive.materialDescriptorSet);
     }
 }

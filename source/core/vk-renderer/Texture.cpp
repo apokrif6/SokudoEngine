@@ -259,71 +259,7 @@ std::future<bool> Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderD
                 return false;
             }
 
-            VkDescriptorSetLayoutBinding textureBind{};
-            textureBind.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            textureBind.binding = 0;
-            textureBind.descriptorCount = 1;
-            textureBind.pImmutableSamplers = nullptr;
-            textureBind.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-            VkDescriptorSetLayoutCreateInfo textureCreateInfo{};
-            textureCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-            textureCreateInfo.bindingCount = 1;
-            textureCreateInfo.pBindings = &textureBind;
-
-            if (vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &textureCreateInfo, nullptr,
-                                            &textureData.texTextureDescriptorLayout) != VK_SUCCESS)
-            {
-                Logger::log(1, "Could not create descriptor set layout\n");
-                return false;
-            }
-
-            VkDescriptorPoolSize poolSize{};
-            poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            poolSize.descriptorCount = 1;
-
-            VkDescriptorPoolCreateInfo descriptorPool{};
-            descriptorPool.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-            descriptorPool.poolSizeCount = 1;
-            descriptorPool.pPoolSizes = &poolSize;
-            descriptorPool.maxSets = 16;
-
-            if (vkCreateDescriptorPool(renderData.rdVkbDevice.device, &descriptorPool, nullptr,
-                                       &textureData.texTextureDescriptorPool) != VK_SUCCESS)
-            {
-                Logger::log(1, "Could not create descriptor pool\n");
-                return false;
-            }
-
-            VkDescriptorSetAllocateInfo descriptorAllocateInfo{};
-            descriptorAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-            descriptorAllocateInfo.descriptorPool = textureData.texTextureDescriptorPool;
-            descriptorAllocateInfo.descriptorSetCount = 1;
-            descriptorAllocateInfo.pSetLayouts = &textureData.texTextureDescriptorLayout;
-
-            if (vkAllocateDescriptorSets(renderData.rdVkbDevice.device, &descriptorAllocateInfo,
-                                         &textureData.texTextureDescriptorSet) != VK_SUCCESS)
-            {
-                Logger::log(1, "Could not allocate descriptor set\n");
-                return false;
-            }
-
-            VkDescriptorImageInfo descriptorImageInfo{};
-            descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            descriptorImageInfo.imageView = textureData.texTextureImageView;
-            descriptorImageInfo.sampler = textureData.texTextureSampler;
-
-            VkWriteDescriptorSet writeDescriptorSet{};
-            writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            writeDescriptorSet.dstSet = textureData.texTextureDescriptorSet;
-            writeDescriptorSet.dstBinding = 0;
-            writeDescriptorSet.descriptorCount = 1;
-            writeDescriptorSet.pImageInfo = &descriptorImageInfo;
-
             textureData.texName = texturePath;
-
-            vkUpdateDescriptorSets(renderData.rdVkbDevice.device, 1, &writeDescriptorSet, 0, nullptr);
 
             Logger::log(1, "Texture '%s' loaded (%dx%d, %d channels)\n", texturePath.c_str(),
                         texWidth, texHeight, numberOfChannels);
@@ -333,8 +269,6 @@ std::future<bool> Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderD
 
 void Core::Renderer::Texture::cleanup(Core::Renderer::VkRenderData& renderData, VkTextureData& textureData)
 {
-    vkDestroyDescriptorPool(renderData.rdVkbDevice.device, textureData.texTextureDescriptorPool, nullptr);
-    vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, textureData.texTextureDescriptorLayout, nullptr);
     vkDestroySampler(renderData.rdVkbDevice.device, textureData.texTextureSampler, nullptr);
     vkDestroyImageView(renderData.rdVkbDevice.device, textureData.texTextureImageView, nullptr);
     vmaDestroyImage(renderData.rdAllocator, textureData.texTextureImage, textureData.texTextureImageAlloc);

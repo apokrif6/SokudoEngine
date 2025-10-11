@@ -90,8 +90,8 @@ void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiSc
         materialInfo.baseColorFactor = glm::vec4(baseColor.r, baseColor.g, baseColor.b, baseColor.a);
     }
 
-    material->Get(AI_MATKEY_METALLIC_FACTOR, materialInfo.metallic);
-    material->Get(AI_MATKEY_ROUGHNESS_FACTOR, materialInfo.roughness);
+    material->Get(AI_MATKEY_METALLIC_FACTOR, materialInfo.metallicFactor);
+    material->Get(AI_MATKEY_ROUGHNESS_FACTOR, materialInfo.roughnessFactor);
 
     if (material->GetTextureCount(aiTextureType_BASE_COLOR) > 0 ||
         material->GetTextureCount(aiTextureType_DIFFUSE) > 0)
@@ -110,7 +110,7 @@ void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiSc
             if (textureLoadFuture.get())
             {
                 primitiveData.textures[aiTextureType_DIFFUSE] = textureData;
-                materialInfo.useTexture = 1;
+                materialInfo.useAlbedoMap = 1;
             }
         }
     }
@@ -128,43 +128,30 @@ void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiSc
             if (textureLoadFuture.get())
             {
                 primitiveData.textures[aiTextureType_NORMALS] = textureData;
-                materialInfo.hasNormalMap = 1;
+                materialInfo.useNormalMap = 1;
             }
         }
     }
 
-    if (material->GetTextureCount(aiTextureType_METALNESS) > 0)
+    if (material->GetTextureCount(aiTextureType_METALNESS) > 0 ||
+        material->GetTextureCount(aiTextureType_DIFFUSE_ROUGHNESS) > 0)
     {
+        aiTextureType textureType = material->GetTextureCount(aiTextureType_METALNESS) > 0
+                                    ? aiTextureType_METALNESS
+                                    : aiTextureType_DIFFUSE_ROUGHNESS;
+
         aiString path;
-        if (material->GetTexture(aiTextureType_METALNESS, 0, &path) == AI_SUCCESS)
+        if (material->GetTexture(textureType, 0, &path) == AI_SUCCESS)
         {
             std::string textureFileName = path.C_Str();
             Core::Renderer::VkTextureData textureData;
-            std::future<bool> textureLoadFuture = Core::Renderer::Texture::loadTexture(
-                    renderData, textureData, textureFileName);
+            std::future<bool> textureLoadFuture =
+                    Core::Renderer::Texture::loadTexture(renderData, textureData, textureFileName);
 
             if (textureLoadFuture.get())
             {
                 primitiveData.textures[aiTextureType_METALNESS] = textureData;
-                materialInfo.hasMetallicMap = 1;
-            }
-        }
-    }
-
-    if (material->GetTextureCount(aiTextureType_DIFFUSE_ROUGHNESS) > 0)
-    {
-        aiString path;
-        if (material->GetTexture(aiTextureType_DIFFUSE_ROUGHNESS, 0, &path) == AI_SUCCESS)
-        {
-            std::string textureFileName = path.C_Str();
-            Core::Renderer::VkTextureData textureData;
-            std::future<bool> textureLoadFuture = Core::Renderer::Texture::loadTexture(
-                    renderData, textureData, textureFileName);
-
-            if (textureLoadFuture.get())
-            {
-                primitiveData.textures[aiTextureType_DIFFUSE_ROUGHNESS] = textureData;
-                materialInfo.hasRoughnessMap = 1;
+                materialInfo.useMetallicRoughnessMap = 1;
             }
         }
     }
@@ -186,7 +173,7 @@ void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiSc
             if (textureLoadFuture.get())
             {
                 primitiveData.textures[aiTextureType_AMBIENT_OCCLUSION] = textureData;
-                materialInfo.hasAOMap = 1;
+                materialInfo.useAOMap = 1;
             }
         }
     }
@@ -204,7 +191,7 @@ void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiSc
             if (textureLoadFuture.get())
             {
                 primitiveData.textures[aiTextureType_EMISSIVE] = textureData;
-                materialInfo.hasEmissiveMap = 1;
+                materialInfo.useEmissiveMap = 1;
             }
         }
     }
@@ -212,10 +199,65 @@ void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiSc
     aiColor3D emissiveColor(0.0f, 0.0f, 0.0f);
     if (AI_SUCCESS == material->Get(AI_MATKEY_COLOR_EMISSIVE, emissiveColor))
     {
-        materialInfo.emissive = glm::vec3(emissiveColor.r, emissiveColor.g, emissiveColor.b);
+        materialInfo.emissiveFactor = glm::vec3(emissiveColor.r, emissiveColor.g, emissiveColor.b);
     }
 
     primitiveData.material = materialInfo;
+
+    VkDescriptorSetAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    allocInfo.descriptorPool = renderData.rdMaterialDescriptorPool;
+    allocInfo.descriptorSetCount = 1;
+    allocInfo.pSetLayouts = &renderData.rdMeshTextureDescriptorLayout;
+
+    if (vkAllocateDescriptorSets(renderData.rdVkbDevice.device, &allocInfo,
+                                 &primitiveData.materialDescriptorSet) != VK_SUCCESS)
+    {
+        Logger::log(1, "Failed to allocate material descriptor set!\n");
+    }
+    else
+    {
+        auto makeInfo = [](const Core::Renderer::VkTextureData& tex) {
+            VkDescriptorImageInfo info{};
+            info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            info.imageView = tex.texTextureImageView;
+            info.sampler = tex.texTextureSampler;
+            return info;
+        };
+
+        VkDescriptorImageInfo imageInfos[5]{};
+
+        imageInfos[0] = primitiveData.textures.count(aiTextureType_DIFFUSE)
+                        ? makeInfo(primitiveData.textures[aiTextureType_DIFFUSE])
+                        : makeInfo(renderData.rdPlaceholderTexture);
+        imageInfos[1] = primitiveData.textures.count(aiTextureType_NORMALS)
+                        ? makeInfo(primitiveData.textures[aiTextureType_NORMALS])
+                        : makeInfo(renderData.rdPlaceholderTexture);
+        imageInfos[2] = primitiveData.textures.count(aiTextureType_METALNESS)
+                        ? makeInfo(primitiveData.textures[aiTextureType_METALNESS])
+                        : makeInfo(renderData.rdPlaceholderTexture);
+        imageInfos[3] = primitiveData.textures.count(aiTextureType_AMBIENT_OCCLUSION)
+                        ? makeInfo(primitiveData.textures[aiTextureType_AMBIENT_OCCLUSION])
+                        : makeInfo(renderData.rdPlaceholderTexture);
+        imageInfos[4] = primitiveData.textures.count(aiTextureType_EMISSIVE)
+                        ? makeInfo(primitiveData.textures[aiTextureType_EMISSIVE])
+                        : makeInfo(renderData.rdPlaceholderTexture);
+
+        std::array<VkWriteDescriptorSet, 5> writes{};
+        for (uint32_t i = 0; i < 5; ++i)
+        {
+            writes[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            writes[i].dstSet = primitiveData.materialDescriptorSet;
+            writes[i].dstBinding = i;
+            writes[i].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            writes[i].descriptorCount = 1;
+            writes[i].pImageInfo = &imageInfos[i];
+        }
+
+        vkUpdateDescriptorSets(renderData.rdVkbDevice.device,
+                               static_cast<uint32_t>(writes.size()), writes.data(),
+                               0, nullptr);
+    }
 
     for (size_t i = 0; i < mesh->mNumVertices; ++i)
     {
@@ -237,7 +279,7 @@ void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiSc
         if (mesh->HasTangentsAndBitangents())
         {
             aiVector3D& tangent = mesh->mTangents[i];
-            vertex.tangent = {tangent.x, tangent.y, tangent.z};
+            vertex.tangent = glm::vec4(tangent.x, tangent.y, tangent.z, mesh->mBitangents ? 1.0f : -1.0f);
         }
 
         if (mesh->HasVertexColors(0))
@@ -297,7 +339,7 @@ Core::Utils::MeshData Core::Utils::loadMeshFromFile(const std::string& fileName,
 {
     Assimp::Importer importer{};
     importer.ReadFile(fileName, aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_JoinIdenticalVertices |
-                                     aiProcess_TransformUVCoords | aiProcess_GlobalScale);
+                                     aiProcess_TransformUVCoords | aiProcess_GlobalScale | aiProcess_CalcTangentSpace);
 
     const aiScene* scene = importer.GetScene();
 

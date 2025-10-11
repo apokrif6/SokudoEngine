@@ -6,7 +6,7 @@
 bool Core::Renderer::PipelineLayout::init(Core::Renderer::VkRenderData& renderData, VkTextureData& textureData,
                                           VkPipelineLayout& pipelineLayout)
 {
-    VkDescriptorSetLayout layouts[] = {textureData.texTextureDescriptorLayout,
+    VkDescriptorSetLayout layouts[] = {VK_NULL_HANDLE,
                                        renderData.rdPerspectiveViewMatrixUBO.rdUBODescriptorLayout};
 
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
