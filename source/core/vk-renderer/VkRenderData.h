@@ -54,9 +54,9 @@ struct alignas(16) CameraInfo
 constexpr int MAX_LIGHTS = 4;
 struct alignas(16) LightsInfo
 {
-    glm::vec3 positions[MAX_LIGHTS];
-    glm::vec3 colors[MAX_LIGHTS];
-    int count;
+    glm::vec4 positions[MAX_LIGHTS];
+    glm::vec4 colors[MAX_LIGHTS];
+    glm::ivec4 count;
 };
 
 struct alignas(16) PrimitiveFlagsPushConstants

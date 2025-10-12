@@ -76,14 +76,14 @@ void Core::Renderer::Primitive::createLightsBuffer(Core::Renderer::VkRenderData 
     UniformBuffer::init(renderData, mLightsUBO, sizeof(LightsInfo), "Lights");
 
     // dummy lights
-    lightsData.positions[0] = glm::vec3(0.0f, 10.0f, 10.0f);
-    lightsData.colors[0]  = glm::vec3(1.0f);
-    lightsData.count = 1;
+    lightsData.positions[0] = glm::vec4(0.f, 10.f, 10.f, 1.f);
+    lightsData.colors[0] = glm::vec4(1.f, 1.f, 1.f, 1.f);
+    lightsData.count = glm::ivec4(1, 0, 0, 0);
 
     for (int i = 1; i < MAX_LIGHTS; ++i)
     {
-        lightsData.positions[i] = glm::vec3(0.0f);
-        lightsData.colors[i] = glm::vec3(0.0f);
+        lightsData.positions[i] = glm::vec4(0.f);
+        lightsData.colors[i] = glm::vec4(0.f);
     }
 
     Core::Renderer::UniformBuffer::uploadData(renderData, mLightsUBO, lightsData);
