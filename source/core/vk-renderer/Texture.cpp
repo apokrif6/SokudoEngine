@@ -239,7 +239,7 @@ std::future<bool> Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderD
             texSamplerInfo.magFilter = VK_FILTER_LINEAR;
             texSamplerInfo.minFilter = VK_FILTER_LINEAR;
             texSamplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-            texSamplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+            texSamplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
             texSamplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
             texSamplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
             texSamplerInfo.unnormalizedCoordinates = VK_FALSE;
