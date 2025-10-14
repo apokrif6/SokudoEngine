@@ -169,4 +169,6 @@ void Core::Renderer::Primitive::cleanup(Core::Renderer::VkRenderData& renderData
     Core::Renderer::UniformBuffer::cleanup(renderData, mModelUBO);
     Core::Renderer::UniformBuffer::cleanup(renderData, mBonesTransformUBO);
     Core::Renderer::UniformBuffer::cleanup(renderData, mMaterialUBO);
+    Core::Renderer::UniformBuffer::cleanup(renderData, mCameraUBO);
+    Core::Renderer::UniformBuffer::cleanup(renderData, mLightsUBO);
 }
