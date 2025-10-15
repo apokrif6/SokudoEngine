@@ -8,11 +8,12 @@
 #define TEXTURE_FOLDER_PATH "assets/textures/"
 
 std::future<bool> Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderData& renderData,
-                                                       VkTextureData& textureData, const std::string& textureFilename)
+                                                       VkTextureData& textureData, const std::string& textureFilename,
+                                                       VkFormat format)
 {
     return std::async(
         std::launch::async,
-        [&renderData, &textureData, &textureFilename]()
+        [&renderData, &textureData, &textureFilename, &format]()
         {
             const std::string texturePath = TEXTURE_FOLDER_PATH + textureFilename;;
 
@@ -41,7 +42,7 @@ std::future<bool> Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderD
             imageInfo.extent.depth = 1;
             imageInfo.mipLevels = 1;
             imageInfo.arrayLayers = 1;
-            imageInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
+            imageInfo.format = format;
             imageInfo.tiling = VK_IMAGE_TILING_LINEAR;
             imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
             imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
@@ -220,7 +221,7 @@ std::future<bool> Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderD
             texViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
             texViewInfo.image = textureData.texTextureImage;
             texViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-            texViewInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
+            texViewInfo.format = format;
             texViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             texViewInfo.subresourceRange.baseMipLevel = 0;
             texViewInfo.subresourceRange.levelCount = 1;
