@@ -250,7 +250,6 @@ struct VkRenderData
     VkPipelineLayout rdMeshPipelineLayout = VK_NULL_HANDLE;
     VkPipelineLayout rdDebugSkeletonPipelineLayout = VK_NULL_HANDLE;
     VkPipelineLayout rdSkyboxPipelineLayout = VK_NULL_HANDLE;
-    VkPipeline rdLinePipeline = VK_NULL_HANDLE;
     VkPipeline rdGridPipeline = VK_NULL_HANDLE;
     VkPipeline rdMeshPipeline = VK_NULL_HANDLE;
     VkPipeline rdDebugSkeletonPipeline = VK_NULL_HANDLE;

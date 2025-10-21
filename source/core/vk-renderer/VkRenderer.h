@@ -86,8 +86,6 @@ class VkRenderer final : public EventListener
 
     bool createPipelineLayout();
 
-    bool createLinePipeline();
-
     bool createFramebuffer();
 
     bool createCommandPool();

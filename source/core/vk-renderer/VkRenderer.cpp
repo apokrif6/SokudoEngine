@@ -111,11 +111,6 @@ bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned i
         return false;
     }
 
-    if (!createLinePipeline())
-    {
-        return false;
-    }
-
     if (!createGridPipeline())
     {
         return false;
@@ -377,7 +372,6 @@ void Core::Renderer::VkRenderer::cleanup(VkRenderData& renderData)
     Core::Renderer::MeshPipeline::cleanup(renderData, renderData.rdMeshPipeline);
     Core::Renderer::DebugSkeletonPipeline::cleanup(renderData, renderData.rdDebugSkeletonPipeline);
     Core::Renderer::Pipeline::cleanup(renderData, renderData.rdGridPipeline);
-    Core::Renderer::Pipeline::cleanup(renderData, renderData.rdLinePipeline);
     Core::Renderer::Pipeline::cleanup(renderData, renderData.rdSkyboxPipeline);
 
     Core::Renderer::PipelineLayout::cleanup(renderData, renderData.rdPipelineLayout);
@@ -670,21 +664,6 @@ bool Core::Renderer::VkRenderer::createPipelineLayout()
     return true;
 }
 
-bool Core::Renderer::VkRenderer::createLinePipeline()
-{
-    const std::string vertexShaderFile = "shaders/line.vert.spv";
-    const std::string fragmentShaderFile = "shaders/line.frag.spv";
-    if (!Pipeline::init(Core::Engine::getInstance().getRenderData(),
-                        Core::Engine::getInstance().getRenderData().rdPipelineLayout,
-                        Core::Engine::getInstance().getRenderData().rdLinePipeline, VK_PRIMITIVE_TOPOLOGY_LINE_LIST,
-                        vertexShaderFile, fragmentShaderFile))
-    {
-        Logger::log(1, "%s error: could not init line shader pipeline\n", __FUNCTION__);
-        return false;
-    }
-    return true;
-}
-
 bool Core::Renderer::VkRenderer::createGridPipeline()
 {
     const std::string vertexShaderFile = "shaders/grid.vert.spv";
@@ -704,7 +683,7 @@ void Core::Renderer::VkRenderer::drawGrid() const
 {
     auto& renderData = Core::Engine::getInstance().getRenderData();
 
-    vkCmdBindPipeline(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdLinePipeline);
+    vkCmdBindPipeline(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdGridPipeline);
 
     vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdPipelineLayout, 1,
                             1, &renderData.rdPerspectiveViewMatrixUBO.rdUBODescriptorSet, 0, nullptr);
