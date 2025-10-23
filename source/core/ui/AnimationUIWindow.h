@@ -12,8 +12,6 @@ class AnimationUIWindow : public UIWindow<AnimationUIWindow>
   public:
     static bool getBody()
     {
-        // TODO
-        // make this part of the SceneUIWindow
         if (!ImGui::BeginTabItem("Animation"))
         {
             return false;
@@ -27,7 +25,6 @@ class AnimationUIWindow : public UIWindow<AnimationUIWindow>
             ImGui::EndTabItem();
             return true;
         }
-        Renderer::VkRenderData& renderData = Core::Engine::getInstance().getRenderData();
 
         bool shouldPlayAnimation = meshObject->shouldPlayAnimation();
         if (ImGui::Checkbox("Should play animation", &shouldPlayAnimation))

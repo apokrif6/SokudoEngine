@@ -163,7 +163,10 @@ bool Core::UI::SceneUIWindow::getBody()
     {
         if (ImGui::BeginTabBar("SceneSubTabs"))
         {
-            AnimationUIWindow::getBody();
+            if (meshObject->hasAnimations())
+            {
+                AnimationUIWindow::getBody();
+            }
 
             ImGui::EndTabBar();
         }
