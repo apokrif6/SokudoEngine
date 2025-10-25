@@ -2,24 +2,26 @@
 
 #include "UIWindow.h"
 #include "imgui.h"
-#include <string>
-#define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/string_cast.hpp"
-#include "core/engine/Engine.h"
 
 namespace Core::UI
 {
-class CameraUIWindow : public UIWindow<CameraUIWindow>
+class MiscUIWindow : public UIWindow<MiscUIWindow>
 {
-  public:
+public:
     static bool getBody()
     {
-        if (!ImGui::BeginTabItem("Camera"))
+        if (!ImGui::Begin("Misc"))
         {
             return false;
         }
 
         Renderer::VkRenderData& renderData = Core::Engine::getInstance().getRenderData();
+
+        ImGui::Checkbox("Should draw skybox", &renderData.shouldDrawSkybox);
+        ImGui::Checkbox("Should draw grid", &renderData.shouldDrawGrid);
+
+        ImGui::Separator();
 
         ImGui::Text("Field Of View");
         ImGui::SameLine();
@@ -42,9 +44,9 @@ class CameraUIWindow : public UIWindow<CameraUIWindow>
         ImGui::SameLine();
         ImGui::Text("%s", windowDims.c_str());
 
-        ImGui::EndTabItem();
+        ImGui::End();
 
         return true;
     }
 };
-}
+} // namespace Core::UI

@@ -15,7 +15,7 @@
 
 bool Core::UI::SceneUIWindow::getBody()
 {
-    if (!ImGui::BeginTabItem("Scene"))
+    if (!ImGui::Begin("Scene"))
     {
         return false;
     }
@@ -123,7 +123,7 @@ bool Core::UI::SceneUIWindow::getBody()
     if (loadedSceneObjectsNames.empty())
     {
         ImGui::Text("No objects loaded");
-        ImGui::EndTabItem();
+        ImGui::End();
         return true;
     }
 
@@ -172,7 +172,7 @@ bool Core::UI::SceneUIWindow::getBody()
         }
     }
 
-    ImGui::EndTabItem();
+    ImGui::End();
 
     if (sceneObjectSelection.selectedObject)
     {
@@ -182,7 +182,7 @@ bool Core::UI::SceneUIWindow::getBody()
         glm::mat4 projection = perspectiveViewMatrices[1];
 
         ImGuizmo::BeginFrame();
-        ImGuizmo::SetDrawlist(ImGui::GetBackgroundDrawList());
+        ImGuizmo::SetDrawlist(ImGui::GetForegroundDrawList());
 
         ImGuiIO& io = ImGui::GetIO();
         ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);

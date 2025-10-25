@@ -7,14 +7,17 @@
 #include "core/vk-renderer/buffers/CommandBuffer.h"
 #include "core/tools/Logger.h"
 #include "core/ui/ProfilingUIWindow.h"
-#include "core/ui/CameraUIWindow.h"
 #include "core/ui/SceneUIWindow.h"
-#include "core/ui/RenderingUIWindow.h"
+#include "imgui_internal.h"
+#include "MiscUIWindow.h"
 
 bool Core::Renderer::UserInterface::init(VkRenderData& renderData)
 {
     IMGUI_CHECKVERSION();
+
     ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
     VkDescriptorPoolSize imguiPoolSizes[] = {{VK_DESCRIPTOR_TYPE_SAMPLER, 1000},
                                              {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000},
@@ -143,25 +146,45 @@ void Core::Renderer::UserInterface::update(VkRenderData& renderData)
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
-    ImGuiWindowFlags imguiWindowFlags = 0;
-    imguiWindowFlags |= ImGuiWindowFlags_NoCollapse;
-    imguiWindowFlags |= ImGuiWindowFlags_AlwaysAutoResize;
+    ImGuiViewport* viewport = ImGui::GetMainViewport();
+
+    ImGuiID dockspaceID =  ImGui::GetID("SokudoEngineDockspace");
+
+    if (!ImGui::DockBuilderGetNode(dockspaceID))
+    {
+        ImGui::DockBuilderAddNode(dockspaceID, ImGuiDockNodeFlags_DockSpace);
+        ImGui::DockBuilderSetNodeSize(dockspaceID, viewport->Size);
+
+        ImGuiID dockLeft, dockRight;
+        ImGui::DockBuilderSplitNode(dockspaceID, ImGuiDir_Left, 0.25f, &dockLeft, &dockRight);
+
+        ImGuiID dockBottom, dockTop;
+        ImGui::DockBuilderSplitNode(dockRight, ImGuiDir_Down, 0.25f, &dockBottom, &dockTop);
+
+        ImGuiID dockRightMisc, dockCenterViewport;
+        ImGui::DockBuilderSplitNode(dockTop, ImGuiDir_Right, 0.25f, &dockRightMisc, &dockCenterViewport);
+
+        ImGui::DockBuilderDockWindow("Scene", dockLeft);
+        ImGui::DockBuilderDockWindow("Profiling", dockBottom);
+        ImGui::DockBuilderDockWindow("Viewport", dockCenterViewport);
+        ImGui::DockBuilderDockWindow("Misc", dockRightMisc);
+
+        ImGui::DockBuilderFinish(dockspaceID);
+    }
+
+    ImGui::DockSpaceOverViewport(dockspaceID, viewport, ImGuiDockNodeFlags_PassthruCentralNode);
 
     setupImGuiStyle();
 
-    ImGui::Begin("Sokudo Engine", nullptr, imguiWindowFlags);
+    Core::UI::SceneUIWindow::getBody();
+    Core::UI::ProfilingUIWindow::getBody();
+    Core::UI::MiscUIWindow::getBody();
 
-    if (ImGui::BeginTabBar("Tabs"))
-    {
-        Core::UI::ProfilingUIWindow::getBody();
-        Core::UI::CameraUIWindow::getBody();
-        Core::UI::RenderingUIWindow::getBody();
-        Core::UI::SceneUIWindow::getBody();
-
-        ImGui::EndTabBar();
-    }
-
+    ImGui::Begin("Viewport");
+    ImGui::Text("Game viewport here...");
     ImGui::End();
+
+    ImGui::EndFrame();
 }
 
 void Core::Renderer::UserInterface::draw(VkRenderData& renderData)

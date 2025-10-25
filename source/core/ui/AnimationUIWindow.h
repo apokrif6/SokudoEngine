@@ -12,7 +12,7 @@ class AnimationUIWindow : public UIWindow<AnimationUIWindow>
   public:
     static bool getBody()
     {
-        if (!ImGui::BeginTabItem("Animation"))
+        if (!ImGui::Begin("Animation"))
         {
             return false;
         }
@@ -22,7 +22,7 @@ class AnimationUIWindow : public UIWindow<AnimationUIWindow>
         if (!meshObject)
         {
             ImGui::Text("No mesh object selected");
-            ImGui::EndTabItem();
+            ImGui::End();
             return true;
         }
 
@@ -62,7 +62,7 @@ class AnimationUIWindow : public UIWindow<AnimationUIWindow>
             ImGui::EndCombo();
         }
 
-        ImGui::EndTabItem();
+        ImGui::End();
 
         return true;
     }

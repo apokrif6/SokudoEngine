@@ -13,7 +13,7 @@ class ProfilingUIWindow : public UIWindow<ProfilingUIWindow>
   public:
     static bool getBody()
     {
-        if (!ImGui::BeginTabItem("Profiling"))
+        if (!ImGui::Begin("Profiling"))
         {
             return false;
         }
@@ -55,7 +55,7 @@ class ProfilingUIWindow : public UIWindow<ProfilingUIWindow>
         mAnimationPlot.push(renderData.rdAnimationBonesTransformCalculationTime);
         mAnimationPlot.draw("Animation Update Time");
 
-        ImGui::EndTabItem();
+        ImGui::End();
 
         return true;
     }
