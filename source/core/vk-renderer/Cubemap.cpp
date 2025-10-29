@@ -9,7 +9,7 @@ std::future<bool> Core::Renderer::Cubemap::loadCubemap(Core::Renderer::VkRenderD
 {
     return std::async(
             std::launch::async,
-            [&renderData, &cubemapData, &faces]()
+            [&renderData, &cubemapData, faces]
             {
                 std::vector<unsigned char*> imageData;
                 imageData.reserve(6);

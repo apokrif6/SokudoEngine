@@ -13,7 +13,7 @@ std::future<bool> Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderD
 {
     return std::async(
         std::launch::async,
-        [&renderData, &textureData, &textureFilename, &format]()
+        [&renderData, &textureData, &textureFilename, format]
         {
             const std::string texturePath = TEXTURE_FOLDER_PATH + textureFilename;;
 
