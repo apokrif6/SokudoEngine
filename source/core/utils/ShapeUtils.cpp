@@ -6,10 +6,6 @@
 #include <assimp/scene.h>
 #include <glm/gtc/type_ptr.hpp>
 
-// TODO
-// find better place for it
-int boneCounter = 0;
-
 int getBoneID(Core::Utils::PrimitiveData& primitiveData, const aiBone* bone)
 {
     int boneID;
@@ -17,9 +13,9 @@ int getBoneID(Core::Utils::PrimitiveData& primitiveData, const aiBone* bone)
 
     if (!primitiveData.bones.boneNameToIndexMap.contains(boneName))
     {
+        boneID = static_cast<int>(primitiveData.bones.bones.size());
         Core::Animations::Bone newBone;
         primitiveData.bones.bones.emplace_back(newBone);
-        boneID = boneCounter++;
     }
     else
     {
@@ -76,7 +72,6 @@ void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiSc
                  const glm::mat4& transform, Core::Renderer::VkRenderData& renderData,
                  std::vector<Core::Renderer::VkTextureData> loadedTextures)
 {
-    boneCounter = 0;
     Core::Utils::PrimitiveData primitiveData;
     Core::Renderer::MaterialInfo materialInfo = {};
 
