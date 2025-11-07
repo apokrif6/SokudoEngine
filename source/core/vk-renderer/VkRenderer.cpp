@@ -26,7 +26,6 @@
 #include "core/vk-renderer/pipelines/MeshPipeline.h"
 #include "core/vk-renderer/pipelines/layouts/MeshPipelineLayout.h"
 #include "core/animations/Animator.h"
-#include "core/animations/AnimationsUtils.h"
 #include <core/events/input-events/MouseLockEvent.h>
 #include <algorithm>
 #include <glm/gtc/matrix_transform.hpp>
@@ -34,6 +33,9 @@
 #include "core/vk-renderer/pipelines/layouts/DebugSkeletonPipelineLayout.h"
 #include "core/vk-renderer/Cubemap.h"
 #include "core/engine/Engine.h"
+#include "core/vk-renderer/viewport/ViewportRenderpass.h"
+#include "core/vk-renderer/viewport/ViewportTarget.h"
+#include "imgui_impl_vulkan.h"
 
 bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned int height)
 {
@@ -102,6 +104,11 @@ bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned i
     }
 
     if (!createRenderPass())
+    {
+        return false;
+    }
+
+    if (!createViewportRenderpass())
     {
         return false;
     }
@@ -379,6 +386,7 @@ void Core::Renderer::VkRenderer::cleanup(VkRenderData& renderData)
     Core::Renderer::DebugSkeletonPipelineLayout::cleanup(renderData, renderData.rdDebugSkeletonPipelineLayout);
     Core::Renderer::PipelineLayout::cleanup(renderData, renderData.rdSkyboxPipelineLayout);
 
+    Core::Renderer::ViewportRenderpass::cleanup(renderData);
     Core::Renderer::Renderpass::cleanup(renderData);
 
     Core::Renderer::UniformBuffer::cleanup(renderData, renderData.rdPerspectiveViewMatrixUBO);
@@ -389,6 +397,11 @@ void Core::Renderer::VkRenderer::cleanup(VkRenderData& renderData)
     Core::Renderer::UniformBuffer::cleanup(renderData, renderData.rdDummyBonesUBO);
 
     Core::Renderer::Cubemap::cleanup(renderData, renderData.rdSkyboxData);
+
+    if (mViewportTarget)
+    {
+        mViewportTarget->cleanup(Core::Engine::getInstance().getRenderData());
+    }
 
     vkDestroyImageView(renderData.rdVkbDevice.device, renderData.rdDepthImageView, nullptr);
     vmaDestroyImage(renderData.rdAllocator, renderData.rdDepthImage,
@@ -652,6 +665,16 @@ bool Core::Renderer::VkRenderer::createRenderPass()
     return true;
 }
 
+bool Core::Renderer::VkRenderer::createViewportRenderpass()
+{
+    if (!Core::Renderer::ViewportRenderpass::init(Core::Engine::getInstance().getRenderData()))
+    {
+        Logger::log(1, "%s error: could not init viewport renderpass\n", __FUNCTION__);
+        return false;
+    }
+    return true;
+}
+
 bool Core::Renderer::VkRenderer::createPipelineLayout()
 {
     if (!Core::Renderer::PipelineLayout::init(Core::Engine::getInstance().getRenderData(),
@@ -705,6 +728,19 @@ bool Core::Renderer::VkRenderer::createFramebuffer()
     return true;
 }
 
+bool Core::Renderer::VkRenderer::createViewportTarget()
+{
+    mViewportTarget = std::make_unique<Core::Renderer::ViewportTarget>();
+
+    if (!mViewportTarget->init(Core::Engine::getInstance().getRenderData()))
+    {
+        Logger::log(1, "%s error: could not init viewport target\n", __FUNCTION__);
+        return false;
+    }
+
+    return true;
+}
+
 bool Core::Renderer::VkRenderer::createCommandPool()
 {
     if (!Core::Renderer::CommandPool::init(Core::Engine::getInstance().getRenderData()))
@@ -751,7 +787,6 @@ bool Core::Renderer::VkRenderer::loadPlaceholderTexture()
 
     return true;
 }
-
 
 bool Core::Renderer::VkRenderer::createDummyBonesTransformUBO()
 {

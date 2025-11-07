@@ -14,6 +14,7 @@
 #include "Primitive.h"
 #include "core/scene/objects/Mesh.h"
 #include "core/scene/Scene.h"
+#include "core/vk-renderer/viewport/ViewportTarget.h"
 #include <glm/detail/type_quat.hpp>
 
 namespace Core::Renderer
@@ -48,7 +49,9 @@ class VkRenderer final : public EventListener
         return mPerspectiveViewMatrices;
     }
 
-  private:
+    bool createViewportTarget();
+
+private:
     Timer mUploadToVBOTimer{};
     Timer mUploadToUBOTimer{};
     Timer mMatrixGenerateTimer{};
@@ -60,6 +63,8 @@ class VkRenderer final : public EventListener
     std::vector<glm::mat4> mPerspectiveViewMatrices{};
 
     unsigned int VertexBufferSize = 2000;
+
+    std::unique_ptr<Core::Renderer::ViewportTarget> mViewportTarget;
 
 #pragma region Camera
     Camera mCamera{};
@@ -83,6 +88,8 @@ class VkRenderer final : public EventListener
     bool createVBO();
 
     bool createRenderPass();
+
+    bool createViewportRenderpass();
 
     bool createPipelineLayout();
 
@@ -135,5 +142,5 @@ class VkRenderer final : public EventListener
 
     void handleMouseEnterLeaveEvents(int enter);
 #pragma endregion HandleGLFWEvents
- };
+    };
 }

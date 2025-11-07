@@ -178,6 +178,17 @@ struct VkCubemapData
     int height = 0;
 };
 
+struct ViewportData
+{
+    VkImage image;
+    VkImageView imageView;
+    VmaAllocation imageAlloc;
+
+    VkRenderPass renderpass;
+    VkFramebuffer framebuffer;
+    VkDescriptorSet descriptorSet;
+};
+
 struct VkRenderData
 {
     GLFWwindow* rdWindow = nullptr;
@@ -277,5 +288,7 @@ struct VkRenderData
 #pragma region DummyDescriptors
         VkUniformBufferData rdDummyBonesUBO{};
 #pragma endregion
+
+    ViewportData rdViewportTarget{};
 };
 } // namespace Core::Renderer
