@@ -316,6 +316,7 @@ void Core::Renderer::VkRenderer::beginRenderFrame(Core::Renderer::VkRenderData& 
     vkCmdSetScissor(renderData.rdCommandBuffer, 0, 1, &offScissor);
 
     draw(renderData);
+    Engine::getInstance().getSystem<Scene::Scene>()->draw(renderData);
 
     vkCmdEndRenderPass(renderData.rdCommandBuffer);
 
