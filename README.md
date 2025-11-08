@@ -35,4 +35,4 @@ I am writing this in my free time to learn and experiment with new technologies 
 
 ## 💜 Special Thanks
 
-Special thanks to https://github.com/Niyoofficial for the help with debugging, architecture, and just generally being an awesome guy!
+Special thanks to ![@Niyoofficial](https://github.com/Niyoofficial) for the help with debugging, architecture, and just generally being an awesome guy!
