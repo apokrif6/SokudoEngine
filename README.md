@@ -31,3 +31,8 @@ I am writing this in my free time to learn and experiment with new technologies 
 - Uses meta-data to store asset paths instead of raw data
 
 ![Serialization Example](https://github.com/apokrif6/apokrif6.github.io/blob/main/assets/images/portfolio/sokudoengine/SokudoEngine_SceneSerialization.gif)
+
+
+## 💜 Special Thanks
+
+Special thanks to https://github.com/Niyoofficial for the help with debugging, architecture, and just generally being an awesome guy!
