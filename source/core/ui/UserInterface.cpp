@@ -181,14 +181,8 @@ void Core::Renderer::UserInterface::update(VkRenderData& renderData)
     Core::UI::MiscUIWindow::getBody();
 
     ImGui::Begin("Viewport");
-    ImGui::Text("Game viewport here...");
-/*    ImVec2 size = ImGui::GetContentRegionAvail();
-    ImGui::Image(
-            (ImTextureID)renderData.rdViewportTarget.descriptorSet,
-            size,
-            ImVec2(0, 0),
-            ImVec2(1, 1)
-    );*/
+    ImVec2 size = ImGui::GetContentRegionAvail();
+    ImGui::Image((ImTextureID)renderData.rdViewportTarget.descriptorSet,size);
     ImGui::End();
 
     ImGui::EndFrame();

@@ -135,7 +135,7 @@ bool Core::Renderer::MeshPipeline::init(Core::Renderer::VkRenderData& renderData
     pipelineCreateInfo.pDepthStencilState = &depthStencilInfo;
     pipelineCreateInfo.pDynamicState = &dynStatesInfo;
     pipelineCreateInfo.layout = pipelineLayout;
-    pipelineCreateInfo.renderPass = renderData.rdRenderpass;
+    pipelineCreateInfo.renderPass = renderData.rdViewportTarget.renderpass;
     pipelineCreateInfo.subpass = 0;
     pipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
 

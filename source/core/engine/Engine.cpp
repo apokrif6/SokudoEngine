@@ -56,8 +56,8 @@ void Core::Engine::draw()
 {
     mRenderer->beginRenderFrame(mRenderData);
 
-    mRenderer->draw(mRenderData);
-    mScene->draw(mRenderData);
+    //mRenderer->draw(mRenderData);
+    //mScene->draw(mRenderData);
     mUserInterface->draw(mRenderData);
 
     mRenderer->endRenderFrame(mRenderData);

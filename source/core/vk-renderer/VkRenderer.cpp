@@ -292,6 +292,33 @@ void Core::Renderer::VkRenderer::beginRenderFrame(Core::Renderer::VkRenderData& 
         return;
     }
 
+    VkClearValue offscreenClear[2] = {{{{0.f, 0.f, 0.f, 1.0f}}}, {1.0f, 0}};
+    VkRenderPassBeginInfo offscreenRenderPassInfo{VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
+    offscreenRenderPassInfo.renderPass = renderData.rdViewportTarget.renderpass;
+    offscreenRenderPassInfo.framebuffer = renderData.rdViewportTarget.framebuffer;
+    offscreenRenderPassInfo.renderArea.offset = {0, 0};
+    offscreenRenderPassInfo.renderArea.extent = { (uint32_t)renderData.rdWidth, (uint32_t)renderData.rdHeight };
+    offscreenRenderPassInfo.clearValueCount = 2;
+    offscreenRenderPassInfo.pClearValues = offscreenClear;
+
+    vkCmdBeginRenderPass(renderData.rdCommandBuffer, &offscreenRenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+    VkViewport offViewport{
+            0.0f,
+            static_cast<float>(renderData.rdHeight),
+            static_cast<float>(renderData.rdWidth),
+            -static_cast<float>(renderData.rdHeight),
+            0.0f,
+            1.0f
+    };
+    VkRect2D offScissor{{0,0}, { (uint32_t)renderData.rdWidth, (uint32_t)renderData.rdHeight }};
+    vkCmdSetViewport(renderData.rdCommandBuffer, 0, 1, &offViewport);
+    vkCmdSetScissor(renderData.rdCommandBuffer, 0, 1, &offScissor);
+
+    draw(renderData);
+
+    vkCmdEndRenderPass(renderData.rdCommandBuffer);
+
     VkClearValue clearValues[2] = {{{{0.f, 0.f, 0.f, 1.0f}}}, {1.0f, 0}};
     VkRenderPassBeginInfo renderPassInfo{VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
     renderPassInfo.renderPass = renderData.rdRenderpass;
