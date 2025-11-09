@@ -719,10 +719,16 @@ bool Core::Renderer::VkRenderer::createGridPipeline()
 {
     const std::string vertexShaderFile = "shaders/grid.vert.spv";
     const std::string fragmentShaderFile = "shaders/grid.frag.spv";
-    if (!Pipeline::init(Core::Engine::getInstance().getRenderData(),
-                        Core::Engine::getInstance().getRenderData().rdPipelineLayout,
-                        Core::Engine::getInstance().getRenderData().rdGridPipeline, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-                        vertexShaderFile, fragmentShaderFile))
+
+    PipelineConfig pipelineConfig{};
+    pipelineConfig.enableBlending = VK_TRUE;
+    pipelineConfig.srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+    pipelineConfig.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+
+    auto& renderData = Core::Engine::getInstance().getRenderData();
+
+    if (!Pipeline::init(renderData,renderData.rdPipelineLayout,renderData.rdGridPipeline,VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+                        vertexShaderFile, fragmentShaderFile, pipelineConfig))
     {
         Logger::log(1, "%s error: could not init grid shader pipeline\n", __FUNCTION__);
         return false;
@@ -968,7 +974,9 @@ bool Core::Renderer::VkRenderer::createSkyboxPipeline()
 {
     const std::string vertexShaderFile = "shaders/skybox.vert.spv";
     const std::string fragmentShaderFile = "shaders/skybox.frag.spv";
+
     auto& renderData = Core::Engine::getInstance().getRenderData();
+
     if (!Pipeline::init(renderData, renderData.rdSkyboxPipelineLayout,
                         renderData.rdSkyboxPipeline, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile,
                         fragmentShaderFile))

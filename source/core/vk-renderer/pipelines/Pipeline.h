@@ -9,7 +9,7 @@ class Pipeline
   public:
     static bool init(Core::Renderer::VkRenderData& renderData, VkPipelineLayout& pipelineLayout, VkPipeline& pipeline,
                      VkPrimitiveTopology topology, const std::string& vertexShaderFilename,
-                     const std::string& fragmentShaderFilename);
+                     const std::string& fragmentShaderFilename, const PipelineConfig& config = {});
 
     static void cleanup(Core::Renderer::VkRenderData& renderData, VkPipeline& pipeline);
 };

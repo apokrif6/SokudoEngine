@@ -189,6 +189,22 @@ struct ViewportData
     VkDescriptorSet descriptorSet;
 };
 
+struct PipelineConfig
+{
+    VkBool32 enableDepthTest = VK_TRUE;
+    VkBool32 enableDepthWrite = VK_FALSE;
+
+    VkBool32 enableBlending = VK_FALSE;
+    VkBlendOp colorBlendOp = VK_BLEND_OP_ADD;
+    VkBlendFactor srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+    VkBlendFactor dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+    VkBlendOp alphaBlendOp = VK_BLEND_OP_ADD;
+
+    VkCompareOp depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+    VkCullModeFlags cullMode = VK_CULL_MODE_BACK_BIT;
+    VkFrontFace frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+};
+
 struct VkRenderData
 {
     GLFWwindow* rdWindow = nullptr;

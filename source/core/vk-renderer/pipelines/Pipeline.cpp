@@ -5,7 +5,7 @@
 
 bool Core::Renderer::Pipeline::init(Core::Renderer::VkRenderData& renderData, VkPipelineLayout& pipelineLayout, VkPipeline& pipeline,
                     VkPrimitiveTopology topology, const std::string& vertexShaderFilename,
-                    const std::string& fragmentShaderFilename)
+                    const std::string& fragmentShaderFilename,const PipelineConfig& config)
 {
     VkShaderModule vertexModule = Core::Renderer::Shader::loadShader(renderData.rdVkbDevice.device, vertexShaderFilename);
     VkShaderModule fragmentModule = Core::Renderer::Shader::loadShader(renderData.rdVkbDevice.device, fragmentShaderFilename);
@@ -70,9 +70,9 @@ bool Core::Renderer::Pipeline::init(Core::Renderer::VkRenderData& renderData, Vk
     rasterizerInfo.rasterizerDiscardEnable = VK_FALSE;
     rasterizerInfo.polygonMode = VK_POLYGON_MODE_FILL;
     rasterizerInfo.lineWidth = 1.0f;
-    rasterizerInfo.cullMode = VK_CULL_MODE_BACK_BIT;
+    rasterizerInfo.cullMode = config.cullMode;
     /* to match inverted viewport from OpenGL */
-    rasterizerInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+    rasterizerInfo.frontFace = config.frontFace;
     rasterizerInfo.depthBiasEnable = VK_FALSE;
 
     VkPipelineMultisampleStateCreateInfo multisamplingInfo{};
@@ -83,13 +83,13 @@ bool Core::Renderer::Pipeline::init(Core::Renderer::VkRenderData& renderData, Vk
     VkPipelineColorBlendAttachmentState colorBlendAttachment{};
     colorBlendAttachment.colorWriteMask =
         VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-    colorBlendAttachment.blendEnable = VK_FALSE;
+    colorBlendAttachment.blendEnable = config.enableBlending;
     colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
     colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-    colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
-    colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-    colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-    colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
+    colorBlendAttachment.colorBlendOp = config.colorBlendOp;
+    colorBlendAttachment.srcAlphaBlendFactor = config.srcAlphaBlendFactor;
+    colorBlendAttachment.dstAlphaBlendFactor = config.dstAlphaBlendFactor;
+    colorBlendAttachment.alphaBlendOp = config.alphaBlendOp;
 
     VkPipelineColorBlendStateCreateInfo colorBlendingInfo{};
     colorBlendingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -104,9 +104,9 @@ bool Core::Renderer::Pipeline::init(Core::Renderer::VkRenderData& renderData, Vk
 
     VkPipelineDepthStencilStateCreateInfo depthStencilInfo{};
     depthStencilInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-    depthStencilInfo.depthTestEnable = VK_TRUE;
-    depthStencilInfo.depthWriteEnable = VK_FALSE;
-    depthStencilInfo.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+    depthStencilInfo.depthTestEnable = config.enableDepthTest;
+    depthStencilInfo.depthWriteEnable = config.enableDepthWrite;
+    depthStencilInfo.depthCompareOp = config.depthCompareOp;
     depthStencilInfo.depthBoundsTestEnable = VK_FALSE;
     depthStencilInfo.minDepthBounds = 0.0f;
     depthStencilInfo.maxDepthBounds = 1.0f;
