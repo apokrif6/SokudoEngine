@@ -10,6 +10,7 @@
 #include "core/ui/SceneUIWindow.h"
 #include "imgui_internal.h"
 #include "MiscUIWindow.h"
+#include "ViewportUIWindow.h"
 
 bool Core::Renderer::UserInterface::init(VkRenderData& renderData)
 {
@@ -176,14 +177,10 @@ void Core::Renderer::UserInterface::update(VkRenderData& renderData)
 
     setupImGuiStyle();
 
-    Core::UI::SceneUIWindow::getBody();
-    Core::UI::ProfilingUIWindow::getBody();
-    Core::UI::MiscUIWindow::getBody();
-
-    ImGui::Begin("Viewport");
-    ImVec2 size = ImGui::GetContentRegionAvail();
-    ImGui::Image((ImTextureID)renderData.rdViewportTarget.descriptorSet,size);
-    ImGui::End();
+    UI::SceneUIWindow::getBody();
+    UI::ProfilingUIWindow::getBody();
+    UI::MiscUIWindow::getBody();
+    UI::ViewportUIWindow::getBody();
 
     ImGui::EndFrame();
 }
