@@ -23,7 +23,6 @@
 #include "core/vk-renderer/buffers/VertexBuffer.h"
 #include "core/events/input-events/MouseMovementEvent.h"
 #include "core/utils/ShapeUtils.h"
-#include "core/vk-renderer/pipelines/MeshPipeline.h"
 #include "core/vk-renderer/pipelines/layouts/MeshPipelineLayout.h"
 #include "core/animations/Animator.h"
 #include <core/events/input-events/MouseLockEvent.h>
@@ -404,7 +403,7 @@ void Core::Renderer::VkRenderer::cleanup(VkRenderData& renderData)
 
     Core::Renderer::Framebuffer::cleanup(renderData);
 
-    Core::Renderer::MeshPipeline::cleanup(renderData, renderData.rdMeshPipeline);
+    Core::Renderer::Pipeline::cleanup(renderData, renderData.rdMeshPipeline);
     Core::Renderer::DebugSkeletonPipeline::cleanup(renderData, renderData.rdDebugSkeletonPipeline);
     Core::Renderer::Pipeline::cleanup(renderData, renderData.rdGridPipeline);
     Core::Renderer::Pipeline::cleanup(renderData, renderData.rdSkyboxPipeline);
@@ -882,8 +881,14 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
         return false;
     }
 
-    if (!MeshPipeline::init(renderData,renderData.rdMeshPipelineLayout,renderData.rdMeshPipeline,
-                            VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile))
+    PipelineConfig pipelineConfig{};
+    pipelineConfig.enableBlending = VK_TRUE;
+    pipelineConfig.enableDepthTest = VK_TRUE;
+    pipelineConfig.enableDepthWrite = VK_TRUE;
+    pipelineConfig.depthCompareOp = VK_COMPARE_OP_LESS;
+
+    if (!Pipeline::init(renderData,renderData.rdMeshPipelineLayout,renderData.rdMeshPipeline,VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+                        vertexShaderFile, fragmentShaderFile, pipelineConfig))
     {
         Logger::log(1, "%s error: could not init mesh pipeline\n", __FUNCTION__);
         return false;
