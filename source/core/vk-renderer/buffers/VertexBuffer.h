@@ -12,12 +12,6 @@ class VertexBuffer
     static bool init(Core::Renderer::VkRenderData& renderData, VkVertexBufferData& VkVertexBufferData,
                      unsigned int bufferSize, const std::string& name);
 
-    // TODO
-    // to remove!
-    static bool uploadData(Core::Renderer::VkRenderData& renderData, VkVertexBufferData& vertexBufferData,
-                           Core::Renderer::VkMesh vertexData);
-
-
     template<typename T>
     static bool uploadData(Core::Renderer::VkRenderData& renderData,
                            VkVertexBufferData& vertexBufferData,
