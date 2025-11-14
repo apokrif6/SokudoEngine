@@ -17,10 +17,6 @@ class Animator
         mMeshes.push_back(mesh);
     }
 
-    // TODO
-    // should be refactored when Scene system will be written. should be stored per mesh
-    std::vector<std::string> loadedAnimations{};
-
   private:
     std::vector<Renderer::Mesh*> mMeshes;
 

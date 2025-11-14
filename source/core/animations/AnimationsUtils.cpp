@@ -68,8 +68,6 @@ Core::Animations::AnimationClip Core::Animations::AnimationsUtils::loadAnimation
         clip.channels.push_back(animChannel);
     }
 
-    Core::Engine::getInstance().getSystem<Animator>()->loadedAnimations.push_back(filePath);
-
     return clip;
 }
 

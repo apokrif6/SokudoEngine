@@ -41,23 +41,27 @@ struct BonesInfo
     std::vector<glm::mat4> finalTransforms;
 };
 
-struct KeyframeVec3 {
+struct KeyframeVec3
+{
     float time;
     glm::vec3 value;
 };
 
-struct KeyframeQuat {
+struct KeyframeQuat
+{
     float time;
     glm::quat value;
 };
 
-struct Node {
+struct Node
+{
     std::string name;
     glm::mat4 transform;
     std::vector<std::shared_ptr<Node>> children;
 };
 
-struct AnimationChannel {
+struct AnimationChannel
+{
     std::string boneName;
     std::vector<KeyframeVec3> positions;
     std::vector<KeyframeQuat> rotations;
