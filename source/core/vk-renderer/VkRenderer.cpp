@@ -612,29 +612,30 @@ bool Core::Renderer::VkRenderer::createDepthBuffer()
 
 bool Core::Renderer::VkRenderer::recreateSwapchain()
 {
-    while (Core::Engine::getInstance().getRenderData().rdWidth == 0 ||
-           Core::Engine::getInstance().getRenderData().rdHeight == 0)
+    auto& renderData = Core::Engine::getInstance().getRenderData();
+
+    while (renderData.rdWidth == 0 || renderData.rdHeight == 0)
     {
-        glfwGetFramebufferSize(Core::Engine::getInstance().getRenderData().rdWindow,
-                               &Core::Engine::getInstance().getRenderData().rdWidth,
-                               &Core::Engine::getInstance().getRenderData().rdHeight);
+        glfwGetFramebufferSize(renderData.rdWindow,
+                               &renderData.rdWidth,
+                               &renderData.rdHeight);
         glfwWaitEvents();
     }
 
-    vkDeviceWaitIdle(Core::Engine::getInstance().getRenderData().rdVkbDevice.device);
+    vkDeviceWaitIdle(renderData.rdVkbDevice.device);
 
-    /* cleanup */
-    Core::Renderer::Framebuffer::cleanup(Core::Engine::getInstance().getRenderData());
-    vkDestroyImageView(Core::Engine::getInstance().getRenderData().rdVkbDevice.device,
-                       Core::Engine::getInstance().getRenderData().rdDepthImageView, nullptr);
-    vmaDestroyImage(Core::Engine::getInstance().getRenderData().rdAllocator,
-                    Core::Engine::getInstance().getRenderData().rdDepthImage,
-                    Core::Engine::getInstance().getRenderData().rdDepthImageAlloc);
+    Core::Renderer::Framebuffer::cleanup(renderData);
+    vkDestroyImageView(renderData.rdVkbDevice.device,renderData.rdDepthImageView, nullptr);
+    vmaDestroyImage(renderData.rdAllocator,renderData.rdDepthImage,renderData.rdDepthImageAlloc);
 
-    Core::Engine::getInstance().getRenderData().rdVkbSwapchain.destroy_image_views(
-        Core::Engine::getInstance().getRenderData().rdSwapchainImageViews);
+    renderData.rdVkbSwapchain.destroy_image_views(
+        renderData.rdSwapchainImageViews);
 
-    /* and recreate */
+    if (mViewportTarget)
+    {
+        mViewportTarget->cleanup(renderData);
+    }
+
     if (!createSwapchain())
     {
         Logger::log(1, "%s error: could not recreate swapchain\n", __FUNCTION__);
@@ -650,6 +651,12 @@ bool Core::Renderer::VkRenderer::recreateSwapchain()
     if (!createFramebuffer())
     {
         Logger::log(1, "%s error: could not recreate framebuffers\n", __FUNCTION__);
+        return false;
+    }
+
+    if (mViewportTarget && !mViewportTarget->init(renderData))
+    {
+        Logger::log(1, "%s error: could not recreate viewport target\n", __FUNCTION__);
         return false;
     }
 
