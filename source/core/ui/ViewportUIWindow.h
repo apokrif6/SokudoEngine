@@ -18,8 +18,17 @@ public:
             return false;
         }
 
-        ImGui::Image(reinterpret_cast<ImTextureID>(Engine::getInstance().getRenderData().rdViewportTarget.descriptorSet),
-            ImGui::GetContentRegionAvail());
+        Renderer::VkRenderData& renderData = Core::Engine::getInstance().getRenderData();
+
+        auto viewportSize = ImGui::GetContentRegionAvail();
+        if (renderData.rdViewportTarget.size.x != static_cast<int>(viewportSize.x) ||
+            renderData.rdViewportTarget.size.y != static_cast<int>(viewportSize.y))
+        {
+            Core::Engine::getInstance().getSystem<Renderer::VkRenderer>()->resizeViewportTarget({viewportSize.x, viewportSize.y});
+        }
+
+        ImGui::Image(reinterpret_cast<ImTextureID>(renderData.rdViewportTarget.descriptorSet),
+                     viewportSize);
 
         ImGui::End();
 

@@ -49,7 +49,7 @@ class VkRenderer final : public EventListener
         return mPerspectiveViewMatrices;
     }
 
-    bool createViewportTarget();
+    void resizeViewportTarget(glm::int2 size);
 
 private:
     Timer mUploadToVBOTimer{};
@@ -64,7 +64,7 @@ private:
 
     unsigned int VertexBufferSize = 2000;
 
-    std::unique_ptr<Core::Renderer::ViewportTarget> mViewportTarget;
+    std::unique_ptr<Core::Renderer::ViewportTarget> mViewportTarget = std::make_unique<Core::Renderer::ViewportTarget>();
 
 #pragma region Camera
     Camera mCamera{};

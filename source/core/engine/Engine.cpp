@@ -17,11 +17,11 @@ void Core::Engine::init()
         return;
     }
 
-    if (!mRenderer->createViewportTarget())
+  /*  if (!mRenderer->createViewportTarget(glm::int2()))
     {
         Logger::log(1, "%s error: could not create viewport target\n", __FUNCTION__);
         return;
-    }
+    }*/
 
     ApplicationWindow->mainLoop();
     ApplicationWindow->cleanup();

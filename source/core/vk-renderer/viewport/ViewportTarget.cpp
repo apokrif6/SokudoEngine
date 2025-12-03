@@ -3,8 +3,10 @@
 #include <imgui_impl_vulkan.h>
 
 
-bool Core::Renderer::ViewportTarget::init(VkRenderData& renderData)
+bool Core::Renderer::ViewportTarget::init(VkRenderData &renderData, glm::int2 size)
 {
+    renderData.rdViewportTarget.size = size;
+
     if (!createImage(renderData)) return false;
     if (!createImageView(renderData)) return false;
     if (!createFramebuffer(renderData)) return false;
@@ -14,7 +16,8 @@ bool Core::Renderer::ViewportTarget::init(VkRenderData& renderData)
 
 bool Core::Renderer::ViewportTarget::createImage(VkRenderData& renderData)
 {
-    VkExtent2D extent = { (uint32_t)renderData.rdWidth, (uint32_t)renderData.rdHeight };
+    VkExtent2D extent = { static_cast<uint32_t>(renderData.rdViewportTarget.size.x),
+                          static_cast<uint32_t>(renderData.rdViewportTarget.size.y)};
 
     VkImageCreateInfo imageInfo{};
     imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -72,8 +75,8 @@ bool Core::Renderer::ViewportTarget::createFramebuffer(VkRenderData& renderData)
     fbInfo.renderPass = renderData.rdViewportTarget.renderpass;
     fbInfo.attachmentCount = 2;
     fbInfo.pAttachments = attachments;
-    fbInfo.width = renderData.rdWidth;
-    fbInfo.height = renderData.rdHeight;
+    fbInfo.width = static_cast<uint32_t>(renderData.rdViewportTarget.size.x);
+    fbInfo.height = static_cast<uint32_t>(renderData.rdViewportTarget.size.y);
     fbInfo.layers = 1;
 
     if (vkCreateFramebuffer(renderData.rdVkbDevice.device, &fbInfo, nullptr,

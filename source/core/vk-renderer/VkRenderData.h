@@ -3,6 +3,8 @@
 #include "vk_mem_alloc.h"
 #include "VkBootstrap.h"
 #include <glm/glm.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/compatibility.hpp>
 #include <GLFW/glfw3.h>
 #include <array>
 
@@ -187,6 +189,8 @@ struct ViewportData
     VkRenderPass renderpass;
     VkFramebuffer framebuffer;
     VkDescriptorSet descriptorSet;
+
+    glm::int2 size = glm::int2{0, 0};
 };
 
 struct PipelineConfig
@@ -306,5 +310,7 @@ struct VkRenderData
 #pragma endregion
 
     ViewportData rdViewportTarget{};
+
+    bool rdViewportTargetDirty = false;
 };
 } // namespace Core::Renderer

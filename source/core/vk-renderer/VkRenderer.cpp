@@ -295,22 +295,26 @@ void Core::Renderer::VkRenderer::beginRenderFrame(Core::Renderer::VkRenderData& 
     VkRenderPassBeginInfo offscreenRenderPassInfo{VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
     offscreenRenderPassInfo.renderPass = renderData.rdViewportTarget.renderpass;
     offscreenRenderPassInfo.framebuffer = renderData.rdViewportTarget.framebuffer;
-    offscreenRenderPassInfo.renderArea.offset = {0, 0};
-    offscreenRenderPassInfo.renderArea.extent = { (uint32_t)renderData.rdWidth, (uint32_t)renderData.rdHeight };
+    offscreenRenderPassInfo.renderArea.extent = {static_cast<uint32_t>(renderData.rdViewportTarget.size.x),
+                                                 static_cast<uint32_t>(renderData.rdViewportTarget.size.y)};
     offscreenRenderPassInfo.clearValueCount = 2;
     offscreenRenderPassInfo.pClearValues = offscreenClear;
 
     vkCmdBeginRenderPass(renderData.rdCommandBuffer, &offscreenRenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
     VkViewport offViewport{
-            0.0f,
-            static_cast<float>(renderData.rdHeight),
-            static_cast<float>(renderData.rdWidth),
-            -static_cast<float>(renderData.rdHeight),
-            0.0f,
-            1.0f
+            0.f,
+            static_cast<float>(renderData.rdViewportTarget.size.y),
+            static_cast<float>(renderData.rdViewportTarget.size.x),
+            -static_cast<float>(renderData.rdViewportTarget.size.y),
+            0.f,
+            1.f
     };
-    VkRect2D offScissor{{0,0}, { (uint32_t)renderData.rdWidth, (uint32_t)renderData.rdHeight }};
+    VkRect2D offScissor{{0,0}, {
+        static_cast<uint32_t>(renderData.rdViewportTarget.size.x),
+        static_cast<uint32_t>(renderData.rdViewportTarget.size.y)
+    }};
+
     vkCmdSetViewport(renderData.rdCommandBuffer, 0, 1, &offViewport);
     vkCmdSetScissor(renderData.rdCommandBuffer, 0, 1, &offScissor);
 
@@ -654,7 +658,8 @@ bool Core::Renderer::VkRenderer::recreateSwapchain()
         return false;
     }
 
-    if (mViewportTarget && !mViewportTarget->init(renderData))
+    if (mViewportTarget && !mViewportTarget->init(renderData, {renderData.rdViewportTarget.size.x,
+                                                  renderData.rdViewportTarget.size.y}))
     {
         Logger::log(1, "%s error: could not recreate viewport target\n", __FUNCTION__);
         return false;
@@ -768,18 +773,26 @@ bool Core::Renderer::VkRenderer::createFramebuffer()
     return true;
 }
 
-bool Core::Renderer::VkRenderer::createViewportTarget()
+void Core::Renderer::VkRenderer::resizeViewportTarget(glm::int2 size)
 {
-    mViewportTarget = std::make_unique<Core::Renderer::ViewportTarget>();
+    auto& renderData = Core::Engine::getInstance().getRenderData();
 
-    if (!mViewportTarget->init(Core::Engine::getInstance().getRenderData()))
+    VkDevice device = renderData.rdVkbDevice.device;
+
+    vkDeviceWaitIdle(device);
+
+    mViewportTarget->cleanup(renderData);
+
+    if (!mViewportTarget->init(renderData, size))
     {
-        Logger::log(1, "%s error: could not init viewport target\n", __FUNCTION__);
-        return false;
+        Logger::log(1, "resizeViewportTarget: failed to recreate viewport target\n");
+        return;
     }
 
-    return true;
+    Logger::log(1, "%s: recreated viewport target %ix%i\n", __FUNCTION__, renderData.rdViewportTarget.size.x,
+                renderData.rdViewportTarget.size.y);
 }
+
 
 bool Core::Renderer::VkRenderer::createCommandPool()
 {
