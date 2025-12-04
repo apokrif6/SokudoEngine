@@ -12,11 +12,9 @@ class SceneUIWindow : public UIWindow<SceneUIWindow>
 {
 public:
     static bool getBody();
-    static void setSceneObjectManipulationOperation(ImGuizmo::OPERATION manipulateOperation);
 
 private:
     static inline int selectedSceneObjectIndex = 0;
-    static inline ImGuizmo::OPERATION currentManipulateOperation = ImGuizmo::TRANSLATE;
 
     static inline bool showSaveDialog = false;
     static inline bool showLoadDialog = false;

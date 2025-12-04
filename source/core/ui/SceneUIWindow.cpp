@@ -4,11 +4,7 @@
 #include "core/scene/SceneEditor.h"
 #include "core/scene/Serialization.h"
 #include "AnimationUIWindow.h"
-
 #include "imgui_stdlib.h"
-
-#include "glm/gtc/type_ptr.hpp"
-#include "glm/gtx/matrix_decompose.hpp"
 #include "glm/gtx/string_cast.hpp"
 
 #include <filesystem>
@@ -174,45 +170,7 @@ bool Core::UI::SceneUIWindow::getBody()
 
     ImGui::End();
 
-    if (sceneObjectSelection.selectedObject)
-    {
-        auto perspectiveViewMatrices =
-                Core::Engine::getInstance().getSystem<Renderer::VkRenderer>()->getPerspectiveViewMatrices();
-        glm::mat4 view = perspectiveViewMatrices[0];
-        glm::mat4 projection = perspectiveViewMatrices[1];
-
-        ImGuizmo::BeginFrame();
-        ImGuizmo::SetDrawlist(ImGui::GetForegroundDrawList());
-
-        ImGuiIO& io = ImGui::GetIO();
-        ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
-
-        glm::mat4 objectMatrix = sceneObjectTransform.getMatrix();
-
-        ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(projection),
-                             currentManipulateOperation, ImGuizmo::LOCAL,
-                             glm::value_ptr(objectMatrix));
-
-        if (ImGuizmo::IsUsing())
-        {
-            glm::vec3 translation, scale, skew;
-            glm::vec4 perspective;
-            glm::quat rotation;
-
-            glm::decompose(objectMatrix, scale, rotation, translation, skew, perspective);
-
-            sceneObjectTransform.position = translation;
-            sceneObjectTransform.rotation = rotation;
-            sceneObjectTransform.scale = scale;
-        }
-    }
-
     return true;
-}
-
-void Core::UI::SceneUIWindow::setSceneObjectManipulationOperation(ImGuizmo::OPERATION manipulateOperation)
-{
-    currentManipulateOperation = manipulateOperation;
 }
 
 void Core::UI::SceneUIWindow::refreshSceneFiles()
