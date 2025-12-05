@@ -122,11 +122,6 @@ bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned i
         return false;
     }
 
-    if (!loadMeshWithAssimp())
-    {
-        return false;
-    }
-
     if (!loadSkybox())
     {
         return false;
@@ -265,6 +260,19 @@ void Core::Renderer::VkRenderer::endUploadFrame(Core::Renderer::VkRenderData& re
     }
 }
 
+void Core::Renderer::VkRenderer::draw(VkRenderData& renderData)
+{
+    if (renderData.shouldDrawSkybox)
+    {
+        drawSkybox();
+    }
+
+    if (renderData.shouldDrawGrid)
+    {
+        drawGrid();
+    }
+}
+
 void Core::Renderer::VkRenderer::beginRenderFrame(Core::Renderer::VkRenderData& renderData)
 {
     uint32_t imageIndex = 0;
@@ -285,24 +293,23 @@ void Core::Renderer::VkRenderer::beginRenderFrame(Core::Renderer::VkRenderData& 
     VkCommandBufferBeginInfo beginInfo{VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-    if (vkBeginCommandBuffer(renderData.rdCommandBuffer, &beginInfo) != VK_SUCCESS)
-    {
-        Logger::log(1, "VkRenderer::beginRenderFrame - vkBeginCommandBuffer failed");
-        return;
-    }
+    vkBeginCommandBuffer(renderData.rdCommandBuffer, &beginInfo);
+}
 
-    VkClearValue offscreenClear[2] = {{{{0.f, 0.f, 0.f, 1.0f}}}, {1.0f, 0}};
+void Core::Renderer::VkRenderer::beginOffscreenRenderPass(Core::Renderer::VkRenderData& renderData)
+{
+    VkClearValue clearValues[2] = {{{{0.f, 0.f, 0.f, 1.0f}}}, {1.0f, 0}};
     VkRenderPassBeginInfo offscreenRenderPassInfo{VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
     offscreenRenderPassInfo.renderPass = renderData.rdViewportTarget.renderpass;
     offscreenRenderPassInfo.framebuffer = renderData.rdViewportTarget.framebuffer;
     offscreenRenderPassInfo.renderArea.extent = {static_cast<uint32_t>(renderData.rdViewportTarget.size.x),
                                                  static_cast<uint32_t>(renderData.rdViewportTarget.size.y)};
     offscreenRenderPassInfo.clearValueCount = 2;
-    offscreenRenderPassInfo.pClearValues = offscreenClear;
+    offscreenRenderPassInfo.pClearValues = clearValues;
 
     vkCmdBeginRenderPass(renderData.rdCommandBuffer, &offscreenRenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-    VkViewport offViewport{
+    VkViewport viewport = {
             0.f,
             static_cast<float>(renderData.rdViewportTarget.size.y),
             static_cast<float>(renderData.rdViewportTarget.size.x),
@@ -310,62 +317,53 @@ void Core::Renderer::VkRenderer::beginRenderFrame(Core::Renderer::VkRenderData& 
             0.f,
             1.f
     };
-    VkRect2D offScissor{{0,0}, {
-        static_cast<uint32_t>(renderData.rdViewportTarget.size.x),
-        static_cast<uint32_t>(renderData.rdViewportTarget.size.y)
+    VkRect2D scissor{{0,0}, {
+                         static_cast<uint32_t>(renderData.rdViewportTarget.size.x),
+                           static_cast<uint32_t>(renderData.rdViewportTarget.size.y)
     }};
 
-    vkCmdSetViewport(renderData.rdCommandBuffer, 0, 1, &offViewport);
-    vkCmdSetScissor(renderData.rdCommandBuffer, 0, 1, &offScissor);
-
-    draw(renderData);
-    Engine::getInstance().getSystem<Scene::Scene>()->draw(renderData);
-
-    vkCmdEndRenderPass(renderData.rdCommandBuffer);
-
-    VkClearValue clearValues[2] = {{{{0.f, 0.f, 0.f, 1.0f}}}, {1.0f, 0}};
-    VkRenderPassBeginInfo renderPassInfo{VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
-    renderPassInfo.renderPass = renderData.rdRenderpass;
-    renderPassInfo.framebuffer = renderData.rdFramebuffers[imageIndex];
-    renderPassInfo.renderArea.extent = renderData.rdVkbSwapchain.extent;
-    renderPassInfo.clearValueCount = 2;
-    renderPassInfo.pClearValues = clearValues;
-
-    VkViewport viewport{
-        0,
-        static_cast<float>(renderData.rdVkbSwapchain.extent.height),
-        static_cast<float>(renderData.rdVkbSwapchain.extent.width),
-        -static_cast<float>(renderData.rdVkbSwapchain.extent.height),
-        0.0f,
-        1.0f
-    };
-
-    VkRect2D scissor{{0, 0}, renderData.rdVkbSwapchain.extent};
-
-    vkCmdBeginRenderPass(renderData.rdCommandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
     vkCmdSetViewport(renderData.rdCommandBuffer, 0, 1, &viewport);
     vkCmdSetScissor(renderData.rdCommandBuffer, 0, 1, &scissor);
 }
 
-bool Core::Renderer::VkRenderer::draw(VkRenderData& renderData)
+void Core::Renderer::VkRenderer::endOffscreenRenderPass(Core::Renderer::VkRenderData& renderData)
 {
-    if (renderData.shouldDrawSkybox)
-    {
-        drawSkybox();
-    }
+    vkCmdEndRenderPass(renderData.rdCommandBuffer);
+}
 
-    if (renderData.shouldDrawGrid)
-    {
-        drawGrid();
-    }
+void Core::Renderer::VkRenderer::beginFinalRenderPass(Core::Renderer::VkRenderData& renderData)
+{
+    VkClearValue clearValues[2] = {{{{0.f, 0.f, 0.f, 1.0f}}}, {1.0f, 0}};
+    VkRenderPassBeginInfo renderPassBeginInfo{VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
+    renderPassBeginInfo.renderPass = renderData.rdRenderpass;
+    renderPassBeginInfo.framebuffer = renderData.rdFramebuffers[renderData.rdCurrentImageIndex];
+    renderPassBeginInfo.renderArea.extent = renderData.rdVkbSwapchain.extent;
+    renderPassBeginInfo.clearValueCount = 2;
+    renderPassBeginInfo.pClearValues = clearValues;
 
-    return true;
+    vkCmdBeginRenderPass(renderData.rdCommandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+    VkViewport viewport = {
+            0.f,
+            static_cast<float>(renderData.rdVkbSwapchain.extent.height),
+            static_cast<float>(renderData.rdVkbSwapchain.extent.width),
+            -static_cast<float>(renderData.rdVkbSwapchain.extent.height),
+            0.f,
+            1.f
+    };
+    VkRect2D scissor = {{0,0}, renderData.rdVkbSwapchain.extent};
+
+    vkCmdSetViewport(renderData.rdCommandBuffer, 0, 1, &viewport);
+    vkCmdSetScissor(renderData.rdCommandBuffer, 0, 1, &scissor);
+}
+
+void Core::Renderer::VkRenderer::endFinalRenderPass(Core::Renderer::VkRenderData& renderData)
+{
+    vkCmdEndRenderPass(renderData.rdCommandBuffer);
 }
 
 void Core::Renderer::VkRenderer::endRenderFrame(Core::Renderer::VkRenderData& renderData)
 {
-    vkCmdEndRenderPass(renderData.rdCommandBuffer);
-
     if (vkEndCommandBuffer(renderData.rdCommandBuffer) != VK_SUCCESS)
     {
         Logger::log(1, "VkRenderer::endRenderFrame - vkEndCommandBuffer failed");

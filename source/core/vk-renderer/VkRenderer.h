@@ -15,11 +15,14 @@
 #include "core/scene/objects/Mesh.h"
 #include "core/scene/Scene.h"
 #include "core/vk-renderer/viewport/ViewportTarget.h"
+#include "core/system/System.h"
+#include "core/system/Updatable.h"
+#include "core/system/Drawable.h"
 #include <glm/detail/type_quat.hpp>
 
 namespace Core::Renderer
 {
-class VkRenderer final : public EventListener
+class VkRenderer final : public EventListener, public System::ISystem, public System::IUpdatable, public System::IDrawable
 {
   public:
     explicit VkRenderer(GLFWwindow* inWindow);
@@ -30,15 +33,27 @@ class VkRenderer final : public EventListener
 
     void onEvent(const Event& event) override;
 
+    virtual System::DrawLayer getDrawLayer() const override { return System::DrawLayer::World; }
+
+    // TODO
+    // probably should be moved to some RenderSystem, I don't know yet
+    virtual void draw(VkRenderData& renderData) override;
+
     void beginUploadFrame(VkRenderData& renderData);
 
-    void update(VkRenderData& renderData, float deltaTime);
+    virtual void update(VkRenderData& renderData, float deltaTime) override;
 
     void endUploadFrame(VkRenderData& renderData);
 
     void beginRenderFrame(VkRenderData& renderData);
 
-    bool draw(VkRenderData& renderData);
+    void beginOffscreenRenderPass(VkRenderData& renderData);
+
+    void endOffscreenRenderPass(VkRenderData& renderData);
+
+    void beginFinalRenderPass(VkRenderData& renderData);
+
+    void endFinalRenderPass(VkRenderData& renderData);
 
     void endRenderFrame(VkRenderData& renderData);
 
@@ -50,6 +65,10 @@ class VkRenderer final : public EventListener
     }
 
     void resizeViewportTarget(glm::int2 size);
+
+    // TODO
+    // move to Sandbox
+    bool loadMeshWithAssimp();
 
 private:
     Timer mUploadToVBOTimer{};
@@ -106,8 +125,6 @@ private:
     bool createDummyBonesTransformUBO();
 
     bool initVma();
-
-    bool loadMeshWithAssimp();
 
     bool createDebugSkeletonPipelineLayout();
 

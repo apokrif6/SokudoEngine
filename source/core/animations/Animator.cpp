@@ -1,7 +1,7 @@
 #include "Animator.h"
 #include "AnimationsUtils.h"
 
-void Core::Animations::Animator::update(Renderer::VkRenderData& renderData)
+void Core::Animations::Animator::update(Renderer::VkRenderData& renderData, float deltaTime)
 {
     mAnimationBonesTransformCalculationTimer.start();
     for (Renderer::Mesh* mesh : mMeshes)
@@ -14,7 +14,7 @@ void Core::Animations::Animator::update(Renderer::VkRenderData& renderData)
     }
     renderData.rdAnimationBonesTransformCalculationTime = mAnimationBonesTransformCalculationTimer.stop();
 
-    mAnimationTime += renderData.rdTickDiff;
+    mAnimationTime += deltaTime;
 }
 
 void Core::Animations::Animator::updateBonesTransform(Renderer::Mesh* mesh, uint16_t animationToPlayIndex)

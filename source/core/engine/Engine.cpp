@@ -3,28 +3,35 @@
 
 void Core::Engine::init()
 {
-    std::unique_ptr<Core::Application::Window> ApplicationWindow = std::make_unique<Core::Application::Window>();
+    Core::Application::Window* applicationWindow = new Core::Application::Window();
+    applicationWindow->init(1280, 900, "Sokudo Engine");
 
-    if (mRenderer = ApplicationWindow->init(1280, 900, "Sokudo Engine"); !mRenderer)
+    auto* renderer = createSystem<Renderer::VkRenderer>(applicationWindow->getGLFWwindow());
+    if (!renderer->init(1280, 900))
     {
-        Logger::log(1, "%s error: window init error\n", __FUNCTION__);
+        Logger::log(1, "%s error: could not init renderer", __FUNCTION__);
         return;
     }
 
-    if (!mUserInterface->init(mRenderData))
+    auto* userInterface = createSystem<Renderer::UserInterface>();
+    if (!userInterface->init(mRenderData))
     {
-        Logger::log(1, "%s error: could not init ImGui\n", __FUNCTION__);
+        Logger::log(1, "%s error: could not init ImGui", __FUNCTION__);
         return;
     }
 
-  /*  if (!mRenderer->createViewportTarget(glm::int2()))
-    {
-        Logger::log(1, "%s error: could not create viewport target\n", __FUNCTION__);
-        return;
-    }*/
+    createSystem<Scene::Scene>();
+    createSystem<Animations::Animator>();
 
-    ApplicationWindow->mainLoop();
-    ApplicationWindow->cleanup();
+    // Sandbox
+    if (!renderer->loadMeshWithAssimp())
+    {
+        Logger::log(1, "%s error: could not load mesh with assimp", __FUNCTION__);
+        return;
+    }
+
+    applicationWindow->mainLoop();
+    applicationWindow->cleanup();
 }
 
 void Core::Engine::update()
@@ -40,34 +47,54 @@ void Core::Engine::update()
     mRenderData.rdFrameTime = mFrameTimer.stop();
     mFrameTimer.start();
 
-    mRenderer->beginUploadFrame(mRenderData);
+    getSystem<Core::Renderer::VkRenderer>()->beginUploadFrame(mRenderData);
 
-    mRenderer->update(mRenderData, mRenderData.rdTickDiff);
-    mAnimator->update(mRenderData);
-    mScene->update(mRenderData, mRenderData.rdTickDiff);
-    mUserInterface->update(mRenderData);
+    for (auto* updatable : mUpdatables)
+    {
+        updatable->update(mRenderData, mRenderData.rdTickDiff);
+    }
 
-    mRenderer->endUploadFrame(mRenderData);
+    getSystem<Core::Renderer::VkRenderer>()->endUploadFrame(mRenderData);
 
     mLastTickTime = tickTime;
 }
 
 void Core::Engine::draw()
 {
-    mRenderer->beginRenderFrame(mRenderData);
+    getSystem<Core::Renderer::VkRenderer>()->beginRenderFrame(mRenderData);
 
-    //mRenderer->draw(mRenderData);
-    //mScene->draw(mRenderData);
-    mUserInterface->draw(mRenderData);
+    getSystem<Core::Renderer::VkRenderer>()->beginOffscreenRenderPass(mRenderData);
 
-    mRenderer->endRenderFrame(mRenderData);
+    for (auto* drawable : mDrawables)
+    {
+        if (drawable->getDrawLayer() == System::DrawLayer::World)
+        {
+            drawable->draw(mRenderData);
+        }
+    }
+
+    getSystem<Core::Renderer::VkRenderer>()->endOffscreenRenderPass(mRenderData);
+
+    getSystem<Core::Renderer::VkRenderer>()->beginFinalRenderPass(mRenderData);
+
+    for (auto* drawable : mDrawables)
+    {
+        if (drawable->getDrawLayer() == System::DrawLayer::Overlay)
+        {
+            drawable->draw(mRenderData);
+        }
+    }
+
+    getSystem<Core::Renderer::VkRenderer>()->endFinalRenderPass(mRenderData);
+
+    getSystem<Core::Renderer::VkRenderer>()->endRenderFrame(mRenderData);
 }
 
 void Core::Engine::cleanup()
 {
     vkDeviceWaitIdle(mRenderData.rdVkbDevice);
 
-    mScene->cleanup(mRenderData);
-    mUserInterface->cleanup(mRenderData);
-    mRenderer->cleanup(mRenderData);
+    getSystem<Core::Scene::Scene>()->cleanup(mRenderData);
+    getSystem<Core::Renderer::UserInterface>()->cleanup(mRenderData);
+    getSystem<Core::Renderer::VkRenderer>()->cleanup(mRenderData);
 }

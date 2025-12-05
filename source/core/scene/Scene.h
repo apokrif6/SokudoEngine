@@ -4,17 +4,22 @@
 #include "core/scene/objects/SceneObject.h"
 #include "SceneEditor.h"
 #include "core/tools/Timer.h"
+#include "core/system/System.h"
+#include "core/system/Updatable.h"
+#include "core/system/Drawable.h"
 
 namespace Core::Scene
 {
-class Scene
+class Scene : public System::ISystem, public System::IUpdatable, public System::IDrawable
 {
   public:
     void addObject(std::shared_ptr<SceneObject> object);
 
-    void update(Core::Renderer::VkRenderData& renderData, float deltaTime);
+    virtual void update(Core::Renderer::VkRenderData& renderData, float deltaTime) override;
 
-    void draw(Core::Renderer::VkRenderData& renderData);
+    virtual System::DrawLayer getDrawLayer() const override { return System::DrawLayer::World; }
+
+    virtual void draw(Core::Renderer::VkRenderData& renderData) override;
 
     void cleanup(Core::Renderer::VkRenderData& renderData);
 

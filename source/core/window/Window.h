@@ -13,11 +13,10 @@ namespace Core::Application
 {
 class Window
 {
-  public:
-    // TODO
-    // remove this dependency on VkRenderer
-    // init should not return VkRenderer xd
-    std::unique_ptr<Core::Renderer::VkRenderer> init(int width, int height, const std::string& title);
+public:
+    bool init(int width, int height, const std::string& title);
+
+    GLFWwindow* getGLFWwindow() const { return mWindow; }
 
     void mainLoop();
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <typeindex>
 #include "core/scene/Scene.h"
 #include "core/vk-renderer/VkRenderer.h"
 #include "core/animations/Animator.h"
@@ -24,31 +25,35 @@ class Engine
     void draw();
     void cleanup();
 
+    template<typename T, typename... Args>
+    T* createSystem(Args&&... args)
+    {
+        static_assert(std::is_base_of_v<System::ISystem, T>, "T must derive from ISystem");
+
+        auto ptr = std::make_unique<T>(std::forward<Args>(args)...);
+        T* raw = ptr.get();
+
+        mSystems[typeid(T)] = std::move(ptr);
+
+        if constexpr (std::is_base_of_v<System::IUpdatable, T>)
+        {
+            mUpdatables.push_back(raw);
+        }
+
+        if constexpr (std::is_base_of_v<System::IDrawable, T>)
+        {
+            mDrawables.push_back(raw);
+        }
+
+        return raw;
+    }
+
     template<typename T>
     T* getSystem()
     {
-        // TODO
-        // should be replaced with a more generic solution when vkCommand buffer will be handled
-        if constexpr (std::is_same_v<T, Scene::Scene>)
-        {
-            return mScene.get();
-        }
-        else if constexpr (std::is_same_v<T, Renderer::VkRenderer>)
-        {
-            return mRenderer.get();
-        }
-        else if constexpr (std::is_same_v<T, Animations::Animator>)
-        {
-            return mAnimator.get();
-        }
-        else if constexpr (std::is_same_v<T, Renderer::UserInterface>)
-        {
-            return mUserInterface.get();
-        }
-        else
-        {
-            static_assert(always_false_v<T>, "Unsupported system type");
-        }
+        static_assert(std::is_base_of_v<System::ISystem, T>, "T must derive from ISystem");
+        auto it = mSystems.find(typeid(T));
+        return (it != mSystems.end()) ? static_cast<T*>(it->second.get()) : nullptr;
     }
 
     Core::Renderer::VkRenderData& getRenderData()
@@ -67,10 +72,9 @@ class Engine
 
     Core::Renderer::VkRenderData mRenderData;
 
-    std::unique_ptr<Renderer::VkRenderer> mRenderer;
-    std::unique_ptr<Scene::Scene> mScene = std::make_unique<Scene::Scene>();
-    std::unique_ptr<Animations::Animator> mAnimator = std::make_unique<Animations::Animator>();
-    std::unique_ptr<Renderer::UserInterface> mUserInterface = std::make_unique<Renderer::UserInterface>();
+    std::unordered_map<std::type_index, std::unique_ptr<System::ISystem>> mSystems;
+    std::vector<System::IUpdatable*> mUpdatables;
+    std::vector<System::IDrawable*> mDrawables;
 
     // TODO
     // replace it with EngineState enum

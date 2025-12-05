@@ -141,7 +141,7 @@ bool Core::Renderer::UserInterface::init(VkRenderData& renderData)
     return true;
 }
 
-void Core::Renderer::UserInterface::update(VkRenderData& renderData)
+void Core::Renderer::UserInterface::update(VkRenderData& renderData, float deltaTime)
 {
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplGlfw_NewFrame();
