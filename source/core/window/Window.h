@@ -22,7 +22,9 @@ public:
 
     void cleanup();
 
-  private:
+    void bindInputs();
+
+private:
     GLFWwindow* mWindow = nullptr;
 
     std::unique_ptr<InputHandler> mInputHandler;

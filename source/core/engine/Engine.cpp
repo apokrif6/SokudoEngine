@@ -30,8 +30,11 @@ void Core::Engine::init()
         return;
     }
 
+    applicationWindow->bindInputs();
     applicationWindow->mainLoop();
     applicationWindow->cleanup();
+
+    delete applicationWindow;
 }
 
 void Core::Engine::update()
