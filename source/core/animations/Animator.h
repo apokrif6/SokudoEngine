@@ -19,7 +19,15 @@ class Animator : public System::ISystem, public System::IUpdatable
         mMeshes.push_back(mesh);
     }
 
-  private:
+    void removeMesh(Renderer::Mesh* mesh)
+    {
+        if (auto it = std::find(mMeshes.begin(), mMeshes.end(), mesh); it != mMeshes.end())
+        {
+            mMeshes.erase(it);
+        }
+    }
+
+private:
     std::vector<Renderer::Mesh*> mMeshes;
 
     void updateBonesTransform(Renderer::Mesh* mesh, uint16_t animationToPlayIndex);
