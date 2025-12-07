@@ -17,8 +17,10 @@ class AnimationUIWindow : public UIWindow<AnimationUIWindow>
             return false;
         }
 
-        std::shared_ptr<Core::Renderer::Mesh> meshObject = std::static_pointer_cast<Core::Renderer::Mesh>(
-            Core::Engine::getInstance().getSystem<Scene::Scene>()->getSceneObjectSelection().selectedObject);
+        auto& objectSelection = Core::Engine::getInstance().getSystem<Scene::Scene>()->getSceneObjectSelection();
+        auto selectedObject = objectSelection.selectedObject.lock();
+
+        std::shared_ptr<Core::Renderer::Mesh> meshObject = std::static_pointer_cast<Core::Renderer::Mesh>(selectedObject);
         if (!meshObject)
         {
             ImGui::Text("No mesh object selected");

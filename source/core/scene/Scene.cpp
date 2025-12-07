@@ -3,9 +3,9 @@
 void Core::Scene::Scene::addObject(std::shared_ptr<SceneObject> object)
 {
     mObjects.emplace_back(std::move(object));
-    if (sceneObjectSelection.selectedObject == nullptr)
+    if (sceneObjectSelection.selectedObject.expired())
     {
-        sceneObjectSelection.selectedObject = mObjects[0];
+        sceneObjectSelection.selectedObject = mObjects.back();
     }
 }
 

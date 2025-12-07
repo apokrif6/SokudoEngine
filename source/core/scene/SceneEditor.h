@@ -7,6 +7,6 @@ namespace Core::Scene
 {
 struct SceneObjectSelection
 {
-    std::shared_ptr<Core::Scene::SceneObject> selectedObject;
+    std::weak_ptr<Core::Scene::SceneObject> selectedObject;
 };
 }

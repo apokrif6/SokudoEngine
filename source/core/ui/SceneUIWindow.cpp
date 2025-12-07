@@ -109,62 +109,53 @@ bool Core::UI::SceneUIWindow::getBody()
         }
     }
 
-    auto loadedObjects = Core::Engine::getInstance().getSystem<Scene::Scene>()->getObjects();
-    std::vector<std::string> loadedSceneObjectsNames;
-    for (const auto& object : loadedObjects)
+    ImGui::Separator();
+
+    auto* scene = Core::Engine::getInstance().getSystem<Scene::Scene>();
+    auto objects = scene->getObjects();
+    auto& selection = scene->getSceneObjectSelection();
+
+    ImGui::Text("Scene Hierarchy:");
+
+    if (objects.empty())
     {
-        loadedSceneObjectsNames.push_back(object->getName());
+        ImGui::Text("No objects in scene");
     }
 
-    if (loadedSceneObjectsNames.empty())
+    for (auto& obj : objects)
     {
-        ImGui::Text("No objects loaded");
-        ImGui::End();
-        return true;
+        if (obj->getParent() == nullptr)
+        {
+            drawSceneObjectNode(obj, selection);
+        }
     }
-
-    Core::Scene::SceneObjectSelection& sceneObjectSelection =
-            Core::Engine::getInstance().getSystem<Scene::Scene>()->getSceneObjectSelection();
 
     ImGui::Separator();
-    ImGui::Text("Selected Scene Object:");
-    ImGui::SameLine();
-    if (ImGui::BeginCombo("##Loaded objects", loadedSceneObjectsNames[selectedSceneObjectIndex].c_str(),
-                          ImGuiComboFlags_WidthFitPreview))
+    ImGui::Text("Inspector:");
+    ImGui::Separator();
+
+    auto selectedObject = selection.selectedObject.lock();
+    if (selectedObject)
     {
-        for (int i = 0; i < loadedSceneObjectsNames.size(); ++i)
+        auto& transform = selectedObject->getTransform();
+
+        ImGui::Text("Selected: %s", selectedObject->getName().c_str());
+
+        ImGui::DragFloat3("Position", &transform.position.x, 0.1f);
+        ImGui::DragFloat4("Rotation", &transform.rotation.x, 0.1f);
+        ImGui::DragFloat3("Scale", &transform.scale.x, 0.1f);
+
+        if (auto meshObject = static_pointer_cast<Core::Renderer::Mesh>(selectedObject))
         {
-            const bool isSceneObjectSelected = (selectedSceneObjectIndex == i);
-            if (ImGui::Selectable(loadedSceneObjectsNames[i].c_str(), isSceneObjectSelected))
+            if (ImGui::BeginTabBar("SceneSubTabs"))
             {
-                selectedSceneObjectIndex = i;
-                sceneObjectSelection.selectedObject = loadedObjects[selectedSceneObjectIndex];
+                if (meshObject->hasAnimations())
+                {
+                    AnimationUIWindow::getBody();
+                }
+
+                ImGui::EndTabBar();
             }
-
-            if (isSceneObjectSelected)
-            {
-                ImGui::SetItemDefaultFocus();
-            }
-        }
-
-        ImGui::EndCombo();
-    }
-    Scene::Transform& sceneObjectTransform = sceneObjectSelection.selectedObject->getTransform();
-
-    ImGui::Text("Position: %s", glm::to_string(sceneObjectTransform.position).c_str());
-    ImGui::Text("Rotation: %s", glm::to_string(sceneObjectTransform.rotation).c_str());
-    ImGui::Text("Scale: %s", glm::to_string(sceneObjectTransform.scale).c_str());
-
-    if (auto meshObject = std::static_pointer_cast<Core::Renderer::Mesh>(sceneObjectSelection.selectedObject))
-    {
-        if (ImGui::BeginTabBar("SceneSubTabs"))
-        {
-            if (meshObject->hasAnimations())
-            {
-                AnimationUIWindow::getBody();
-            }
-
-            ImGui::EndTabBar();
         }
     }
 
@@ -189,5 +180,74 @@ void Core::UI::SceneUIWindow::refreshSceneFiles()
         {
             sceneFileList.push_back(entry.path().filename().string());
         }
+    }
+}
+
+void Core::UI::SceneUIWindow::drawSceneObjectNode(std::shared_ptr<Core::Scene::SceneObject> object,
+                                Core::Scene::SceneObjectSelection& selection)
+{
+    // TODO
+    // add ensure
+    if (!object)
+    {
+        return;
+    }
+
+    auto selectedObject = selection.selectedObject.lock();
+    ImGuiTreeNodeFlags flags =
+            ImGuiTreeNodeFlags_OpenOnArrow |
+            (selectedObject == object ? ImGuiTreeNodeFlags_Selected : 0);
+
+    bool isLeaf = object->getChildren().empty();
+    if (isLeaf)
+    {
+        flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+    }
+
+    bool opened = ImGui::TreeNodeEx(
+            (void*)object.get(),
+            flags,
+            "%s", object->getName().c_str()
+    );
+
+    if (ImGui::IsItemClicked())
+    {
+        selection.selectedObject = object;
+    }
+
+    if (ImGui::BeginDragDropSource())
+    {
+        ImGui::SetDragDropPayload("SCENE_NODE", &object, sizeof(std::shared_ptr<Core::Scene::SceneObject>));
+        ImGui::Text("%s", object->getName().c_str());
+        ImGui::EndDragDropSource();
+    }
+
+    if (ImGui::BeginDragDropTarget())
+    {
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_NODE"))
+        {
+            auto dropped = *(std::shared_ptr<Core::Scene::SceneObject>*)payload->Data;
+
+            if (dropped != object)
+            {
+                if (dropped->getParent())
+                {
+                    dropped->getParent()->removeChild(dropped.get());
+                }
+
+                object->addChild(dropped);
+            }
+        }
+        ImGui::EndDragDropTarget();
+    }
+
+    if (!isLeaf && opened)
+    {
+        for (auto& child : object->getChildren())
+        {
+            drawSceneObjectNode(child, selection);
+        }
+
+        ImGui::TreePop();
     }
 }

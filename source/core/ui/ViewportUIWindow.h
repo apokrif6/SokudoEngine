@@ -34,7 +34,7 @@ public:
 
         Scene::SceneObjectSelection sceneObjectSelection = Core::Engine::getInstance().getSystem<Scene::Scene>()->getSceneObjectSelection();
 
-        if (sceneObjectSelection.selectedObject)
+        if (auto selectedObject = sceneObjectSelection.selectedObject.lock())
         {
             auto perspectiveViewMatrices =
                     Core::Engine::getInstance().getSystem<Renderer::VkRenderer>()->getPerspectiveViewMatrices();
@@ -46,9 +46,11 @@ public:
             ImGuizmo::SetDrawlist(ImGui::GetWindowDrawList());
 
             ImVec2 windowPos  = ImGui::GetWindowPos();
-            ImGuizmo::SetRect(windowPos.x, windowPos.y, renderData.rdViewportTarget.size.x, renderData.rdViewportTarget.size.y);
+            ImGuizmo::SetRect(windowPos.x, windowPos.y,
+                              static_cast<float>(renderData.rdViewportTarget.size.x),
+                              static_cast<float>(renderData.rdViewportTarget.size.y));
 
-            Scene::Transform& sceneObjectTransform = sceneObjectSelection.selectedObject->getTransform();
+            Scene::Transform& sceneObjectTransform = selectedObject->getTransform();
 
             glm::mat4 objectMatrix = sceneObjectTransform.getMatrix();
 
