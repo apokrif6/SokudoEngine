@@ -452,7 +452,9 @@ bool Core::Renderer::VkRenderer::deviceInit()
 {
     vkb::InstanceBuilder instBuild;
     auto instRet = instBuild.use_default_debug_messenger()
+#if defined(_DEBUG) || !defined(NDEBUG)
                        .request_validation_layers()
+#endif
                        .set_minimum_instance_version(VKB_VK_API_VERSION_1_1)
                        .require_api_version(VKB_VK_API_VERSION_1_3)
                        .build();
