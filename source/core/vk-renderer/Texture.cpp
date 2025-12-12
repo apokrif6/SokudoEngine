@@ -5,7 +5,7 @@
 #include "core/vk-renderer/buffers/CommandBuffer.h"
 #include "core/tools/Logger.h"
 
-#define TEXTURE_FOLDER_PATH "assets/textures/"
+constexpr std::string_view textureFolderPath = "assets/textures/";
 
 std::future<bool> Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderData& renderData,
                                                        VkTextureData& textureData, const std::string& textureFilename,
@@ -15,7 +15,7 @@ std::future<bool> Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderD
         std::launch::async,
         [&renderData, &textureData, &textureFilename, format]
         {
-            const std::string texturePath = TEXTURE_FOLDER_PATH + textureFilename;;
+            const std::string texturePath = textureFolderPath.data() + textureFilename;;
 
             int texWidth;
             int texHeight;

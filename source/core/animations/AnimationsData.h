@@ -11,14 +11,14 @@
 #include <memory>
 #include <unordered_map>
 
-#define MAX_NUM_BONES_PER_VERTEX 4
+constexpr size_t maxNumberOfBonesPerVertex = 4;
 
 namespace Core::Animations
 {
 struct VertexBoneData
 {
-    unsigned int boneIDs[MAX_NUM_BONES_PER_VERTEX] = {0};
-    float weights[MAX_NUM_BONES_PER_VERTEX] = {0.f};
+    unsigned int boneIDs[maxNumberOfBonesPerVertex] = {0};
+    float weights[maxNumberOfBonesPerVertex] = {0.f};
 
     VertexBoneData() = default;
 };

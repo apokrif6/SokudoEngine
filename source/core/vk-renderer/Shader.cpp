@@ -5,7 +5,7 @@
 #include "core/tools/Logger.h"
 #include "spirv-reflect/spirv_reflect.h"
 
-#define SPV_REFLECTINTERFACEVARIABLE_LOCATION_NOTFOUND 0xFFFFFFFF
+constexpr uint32_t spvReflectionInterfaceVariableLocationNotFound = 0xFFFFFFFF;
 
 VkShaderModule Core::Renderer::Shader::loadShader(VkDevice device, const std::string& shaderFileName)
 {
@@ -58,7 +58,7 @@ Core::Renderer::Shader::getAttributeDescriptionsBySpvReflect(const std::string& 
 
     for (const SpvReflectInterfaceVariable* inputVariable : inputVariables)
     {
-        if (inputVariable->location == SPV_REFLECTINTERFACEVARIABLE_LOCATION_NOTFOUND)
+        if (inputVariable->location == spvReflectionInterfaceVariableLocationNotFound)
         {
             Logger::log(1, "%s: input variable '%s' has no location assigned, skipping\n",
                         __FUNCTION__, inputVariable->name);
