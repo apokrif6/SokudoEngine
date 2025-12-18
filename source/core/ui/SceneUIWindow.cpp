@@ -3,9 +3,7 @@
 #include "core/engine/Engine.h"
 #include "core/scene/SceneEditor.h"
 #include "core/scene/Serialization.h"
-#include "AnimationUIWindow.h"
 #include "imgui_stdlib.h"
-#include "glm/gtx/string_cast.hpp"
 
 #include <filesystem>
 
@@ -127,35 +125,6 @@ bool Core::UI::SceneUIWindow::getBody()
         if (obj->getParent() == nullptr)
         {
             drawSceneObjectNode(obj, selection);
-        }
-    }
-
-    ImGui::Separator();
-    ImGui::Text("Inspector:");
-    ImGui::Separator();
-
-    auto selectedObject = selection.selectedObject.lock();
-    if (selectedObject)
-    {
-        auto& transform = selectedObject->getTransform();
-
-        ImGui::Text("Selected: %s", selectedObject->getName().c_str());
-
-        ImGui::DragFloat3("Position", &transform.position.x, 0.1f);
-        ImGui::DragFloat4("Rotation", &transform.rotation.x, 0.1f);
-        ImGui::DragFloat3("Scale", &transform.scale.x, 0.1f);
-
-        if (auto meshObject = static_pointer_cast<Core::Renderer::Mesh>(selectedObject))
-        {
-            if (ImGui::BeginTabBar("SceneSubTabs"))
-            {
-                if (meshObject->hasAnimations())
-                {
-                    AnimationUIWindow::getBody();
-                }
-
-                ImGui::EndTabBar();
-            }
         }
     }
 

@@ -9,6 +9,7 @@
 #include "core/ui/ProfilingUIWindow.h"
 #include "core/ui/SceneUIWindow.h"
 #include "imgui_internal.h"
+#include "InspectorUIWindow.h"
 #include "MiscUIWindow.h"
 #include "ViewportUIWindow.h"
 
@@ -159,13 +160,17 @@ void Core::Renderer::UserInterface::update(VkRenderData& renderData, float delta
         ImGuiID dockLeft, dockRight;
         ImGui::DockBuilderSplitNode(dockspaceID, ImGuiDir_Left, 0.25f, &dockLeft, &dockRight);
 
+        ImGuiID dockLeftBottom, dockLeftTop;
+        ImGui::DockBuilderSplitNode(dockLeft, ImGuiDir_Down, 0.35f, &dockLeftBottom, &dockLeftTop);
+
         ImGuiID dockBottom, dockTop;
         ImGui::DockBuilderSplitNode(dockRight, ImGuiDir_Down, 0.25f, &dockBottom, &dockTop);
 
         ImGuiID dockRightMisc, dockCenterViewport;
         ImGui::DockBuilderSplitNode(dockTop, ImGuiDir_Right, 0.25f, &dockRightMisc, &dockCenterViewport);
 
-        ImGui::DockBuilderDockWindow("Scene", dockLeft);
+        ImGui::DockBuilderDockWindow("Scene", dockLeftTop);
+        ImGui::DockBuilderDockWindow("Inspector", dockLeftBottom);
         ImGui::DockBuilderDockWindow("Profiling", dockBottom);
         ImGui::DockBuilderDockWindow("Viewport", dockCenterViewport);
         ImGui::DockBuilderDockWindow("Misc", dockRightMisc);
@@ -178,6 +183,7 @@ void Core::Renderer::UserInterface::update(VkRenderData& renderData, float delta
     setupImGuiStyle();
 
     UI::SceneUIWindow::getBody();
+    UI::InspectorUIWindow::getBody();
     UI::ProfilingUIWindow::getBody();
     UI::MiscUIWindow::getBody();
     UI::ViewportUIWindow::getBody();
