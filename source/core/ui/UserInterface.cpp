@@ -9,7 +9,7 @@
 #include "core/ui/ProfilingUIWindow.h"
 #include "core/ui/SceneUIWindow.h"
 #include "imgui_internal.h"
-#include "InspectorUIWindow.h"
+#include "inspector/InspectorUIWindow.h"
 #include "MiscUIWindow.h"
 #include "ViewportUIWindow.h"
 

@@ -1,9 +1,10 @@
 #pragma once
 
-#include "AnimationUIWindow.h"
+#include "AnimationInspectorUIWindow.h"
 #include "UIWindow.h"
 #include "imgui.h"
 #include "string"
+#include "TransformInspectorUIWindow.h"
 #include "core/engine/Engine.h"
 
 namespace Core::UI
@@ -14,21 +15,24 @@ public:
     {
         ImGui::Begin("Inspector");
 
-        auto* scene = Core::Engine::getInstance().getSystem<Scene::Scene>();
+        ImGui::BeginChild(
+            "InspectorScroll",
+            ImVec2(0, 0),
+            false,
+            ImGuiWindowFlags_AlwaysVerticalScrollbar
+        );
+
+        auto* scene = Engine::getInstance().getSystem<Scene::Scene>();
         auto objects = scene->getObjects();
         auto& selection = scene->getSceneObjectSelection();
 
         auto selectedObject = selection.selectedObject.lock();
         if (selectedObject)
         {
-            auto& transform = selectedObject->getTransform();
-
-            ImGui::Text("Selected: %s", selectedObject->getName().c_str());
-            ImGui::Separator();
-
-            ImGui::DragFloat3("Position", &transform.position.x, 0.1f);
-            ImGui::DragFloat4("Rotation", &transform.rotation.x, 0.1f);
-            ImGui::DragFloat3("Scale", &transform.scale.x, 0.1f);
+            if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                TransformInspectorUIWindow::getBody();
+            }
 
             if (auto meshObject = static_pointer_cast<Renderer::Mesh>(selectedObject))
             {
@@ -36,13 +40,22 @@ public:
                 {
                     if (meshObject->hasAnimations())
                     {
-                        AnimationUIWindow::getBody();
+                        if (ImGui::CollapsingHeader("Animation", ImGuiTreeNodeFlags_DefaultOpen))
+                        {
+                            AnimationInspectorUIWindow::getBody();
+                        }
                     }
 
                     ImGui::EndTabBar();
                 }
             }
         }
+        else
+        {
+            ImGui::TextDisabled("No object selected");
+        }
+
+        ImGui::EndChild();
 
         ImGui::End();
 

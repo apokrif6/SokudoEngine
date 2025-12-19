@@ -7,24 +7,17 @@
 
 namespace Core::UI
 {
-class AnimationUIWindow : public UIWindow<AnimationUIWindow>
+class AnimationInspectorUIWindow : public UIWindow<AnimationInspectorUIWindow>
 {
-  public:
+public:
     static bool getBody()
     {
-        if (!ImGui::Begin("Animation"))
-        {
-            return false;
-        }
-
         auto& objectSelection = Core::Engine::getInstance().getSystem<Scene::Scene>()->getSceneObjectSelection();
         auto selectedObject = objectSelection.selectedObject.lock();
 
         std::shared_ptr<Core::Renderer::Mesh> meshObject = std::static_pointer_cast<Core::Renderer::Mesh>(selectedObject);
         if (!meshObject)
         {
-            ImGui::Text("No mesh object selected");
-            ImGui::End();
             return true;
         }
 
@@ -62,8 +55,6 @@ class AnimationUIWindow : public UIWindow<AnimationUIWindow>
 
             ImGui::EndCombo();
         }
-
-        ImGui::End();
 
         return true;
     }
