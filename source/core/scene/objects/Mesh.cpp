@@ -34,19 +34,29 @@ void buildDebugSkeletonLines(const Core::Animations::Skeleton& skeleton, const C
     }
 }
 
-Core::Renderer::Mesh::Mesh(std::string name, Core::Animations::Skeleton skeleton)
-    : Core::Scene::SceneObject(std::move(name)), mSkeleton(std::move(skeleton))
+Core::Renderer::Mesh::Mesh(std::string name, Animations::Skeleton skeleton)
+    : SceneObject(std::move(name)), mSkeleton(std::move(skeleton))
 {
     Logger::log(1, "%s: Created mesh %s", __FUNCTION__, getName().c_str());
-
-    Core::Engine::getInstance().getSystem<Animations::Animator>()->addMesh(this);
 }
 
 Core::Renderer::Mesh::~Mesh()
 {
     Logger::log(1, "%s: Destroyed mesh %s", __FUNCTION__, getName().c_str());
+}
 
-    Core::Engine::getInstance().getSystem<Animations::Animator>()->removeMesh(this);
+void Core::Renderer::Mesh::onAddedToScene()
+{
+    Logger::log(1, "%s: Mesh %s added to scene", __FUNCTION__, getName().c_str());
+
+    Engine::getInstance().getSystem<Animations::Animator>()->addMesh(this);
+}
+
+void Core::Renderer::Mesh::onRemovedFromScene()
+{
+    Logger::log(1, "%s: Mesh %s removed to scene", __FUNCTION__, getName().c_str());
+
+    Engine::getInstance().getSystem<Animations::Animator>()->removeMesh(this);
 }
 
 void Core::Renderer::Mesh::addPrimitive(const std::vector<Core::Renderer::NewVertex>& vertexBufferData,

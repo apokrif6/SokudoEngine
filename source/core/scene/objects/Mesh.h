@@ -18,6 +18,10 @@ class Mesh : public Core::Scene::SceneObject
 
     ~Mesh() override;
 
+    virtual void onAddedToScene() override;
+
+    virtual void onRemovedFromScene() override;
+
     void addPrimitive(const std::vector<Core::Renderer::NewVertex>& vertexBufferData,
                       const std::vector<uint32_t>& indexBufferData,
                       const std::unordered_map<aiTextureType, Renderer::VkTextureData>& textures,

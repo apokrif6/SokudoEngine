@@ -22,6 +22,10 @@ class SceneObject : public Serialization::ISerializable
 
     [[nodiscard]] virtual Scene::ObjectType getType() const { return ObjectType::Empty; }
 
+    virtual void onAddedToScene() {}
+
+    virtual void onRemovedFromScene() {}
+
     virtual void update(Renderer::VkRenderData& renderData) {};
 
     virtual void draw(Renderer::VkRenderData& renderData) {};

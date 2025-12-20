@@ -2,6 +2,7 @@
 
 void Core::Scene::Scene::addObject(std::shared_ptr<SceneObject> object)
 {
+    object->onAddedToScene();
     mObjects.emplace_back(std::move(object));
     if (sceneObjectSelection.selectedObject.expired())
     {
@@ -30,6 +31,7 @@ void Core::Scene::Scene::cleanup(Core::Renderer::VkRenderData& renderData)
 {
     for (auto& object : mObjects)
     {
+        object->onRemovedFromScene();
         object->cleanup(renderData);
     }
 }
