@@ -101,7 +101,7 @@ void InputHandler::handleMousePositionEvents(double xPosition, double yPosition)
     const int deltaX = static_cast<int>(xPosition) - mMouseXPosition;
     const int deltaY = static_cast<int>(yPosition) - mMouseYPosition;
 
-    if (mMouseLock && Core::Engine::getInstance().getRenderData().rdViewportHovered)
+    if (mMouseLock)
     {
         mEventDispatcher.dispatch(MouseMovementEvent(deltaX, deltaY));
     }
