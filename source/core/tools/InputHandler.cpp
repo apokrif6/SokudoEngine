@@ -8,6 +8,8 @@
 #include <string>
 #include <GLFW/glfw3.h>
 
+#include "core/engine/Engine.h"
+
 void InputHandler::subscribeToEvents(EventListener* listener) { mEventDispatcher.subscribe(listener); }
 
 void InputHandler::handleKeyEvents(int key, int scancode, int action, int mods)
@@ -96,18 +98,10 @@ void InputHandler::handleMouseButtonEvents(int button, int action, int mods)
 
 void InputHandler::handleMousePositionEvents(double xPosition, double yPosition)
 {
-    ImGuiIO& io = ImGui::GetIO();
-    io.AddMousePosEvent(static_cast<float>(xPosition), static_cast<float>(yPosition));
-
-    if (io.WantCaptureMouse)
-    {
-        return;
-    }
-
     const int deltaX = static_cast<int>(xPosition) - mMouseXPosition;
     const int deltaY = static_cast<int>(yPosition) - mMouseYPosition;
 
-    if (mMouseLock)
+    if (mMouseLock && Core::Engine::getInstance().getRenderData().rdViewportHovered)
     {
         mEventDispatcher.dispatch(MouseMovementEvent(deltaX, deltaY));
     }

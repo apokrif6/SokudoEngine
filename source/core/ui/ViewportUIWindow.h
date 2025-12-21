@@ -20,24 +20,26 @@ public:
             return false;
         }
 
-        Renderer::VkRenderData& renderData = Core::Engine::getInstance().getRenderData();
+        Renderer::VkRenderData& renderData = Engine::getInstance().getRenderData();
+
+        renderData.rdViewportHovered = ImGui::IsWindowHovered();
 
         auto viewportSize = ImGui::GetContentRegionAvail();
         if (renderData.rdViewportTarget.size.x != static_cast<int>(viewportSize.x) ||
             renderData.rdViewportTarget.size.y != static_cast<int>(viewportSize.y))
         {
-            Core::Engine::getInstance().getSystem<Renderer::VkRenderer>()->resizeViewportTarget({viewportSize.x, viewportSize.y});
+            Engine::getInstance().getSystem<Renderer::VkRenderer>()->resizeViewportTarget({viewportSize.x, viewportSize.y});
         }
 
         ImGui::Image(reinterpret_cast<ImTextureID>(renderData.rdViewportTarget.descriptorSet),
                      viewportSize);
 
-        Scene::SceneObjectSelection sceneObjectSelection = Core::Engine::getInstance().getSystem<Scene::Scene>()->getSceneObjectSelection();
+        Scene::SceneObjectSelection sceneObjectSelection = Engine::getInstance().getSystem<Scene::Scene>()->getSceneObjectSelection();
 
         if (auto selectedObject = sceneObjectSelection.selectedObject.lock())
         {
             auto perspectiveViewMatrices =
-                    Core::Engine::getInstance().getSystem<Renderer::VkRenderer>()->getPerspectiveViewMatrices();
+                    Engine::getInstance().getSystem<Renderer::VkRenderer>()->getPerspectiveViewMatrices();
             glm::mat4 view = perspectiveViewMatrices[0];
             glm::mat4 projection = perspectiveViewMatrices[1];
 

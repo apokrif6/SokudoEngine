@@ -309,8 +309,10 @@ struct VkRenderData
         VkUniformBufferData rdDummyBonesUBO{};
 #pragma endregion
 
+#pragma region Viewport
     ViewportData rdViewportTarget{};
 
-    bool rdViewportTargetDirty = false;
+    bool rdViewportHovered = false;
+#pragma endregion
 };
 } // namespace Core::Renderer
