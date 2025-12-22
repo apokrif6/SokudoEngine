@@ -1,5 +1,6 @@
 #pragma once
 
+#include "EngineState.h"
 #include <memory>
 #include <typeindex>
 #include "core/scene/Scene.h"
@@ -8,6 +9,7 @@
 
 namespace Core
 {
+enum class EngineState;
 template <class> inline constexpr bool always_false_v = false;
 
 class Engine
@@ -55,7 +57,9 @@ public:
 
     Core::Renderer::VkRenderData& getRenderData() { return mRenderData; }
 
-    void setPaused(bool paused) { mPaused = paused; }
+    void setState(EngineState state) { mState = state; }
+
+    EngineState getState() { return mState; }
 
 private:
     Engine() = default;
@@ -72,6 +76,6 @@ private:
 
     // TODO
     // replace it with EngineState enum
-    bool mPaused = false;
+    EngineState mState = EngineState::Running;
 };
 } // namespace Core

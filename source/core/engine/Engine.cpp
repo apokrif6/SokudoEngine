@@ -3,7 +3,7 @@
 
 void Core::Engine::init()
 {
-    Core::Application::Window* applicationWindow = new Core::Application::Window();
+    Application::Window* applicationWindow = new Application::Window();
     applicationWindow->init(1280, 900, "Sokudo Engine");
 
     auto* renderer = createSystem<Renderer::VkRenderer>(applicationWindow->getGLFWwindow());
@@ -39,7 +39,7 @@ void Core::Engine::init()
 
 void Core::Engine::update()
 {
-    if (mPaused)
+    if (mState == EngineState::Paused || mState == EngineState::Loading)
     {
         return;
     }
@@ -50,23 +50,23 @@ void Core::Engine::update()
     mRenderData.rdFrameTime = mFrameTimer.stop();
     mFrameTimer.start();
 
-    getSystem<Core::Renderer::VkRenderer>()->beginUploadFrame(mRenderData);
+    getSystem<Renderer::VkRenderer>()->beginUploadFrame(mRenderData);
 
     for (auto* updatable : mUpdatables)
     {
         updatable->update(mRenderData, mRenderData.rdTickDiff);
     }
 
-    getSystem<Core::Renderer::VkRenderer>()->endUploadFrame(mRenderData);
+    getSystem<Renderer::VkRenderer>()->endUploadFrame(mRenderData);
 
     mLastTickTime = tickTime;
 }
 
 void Core::Engine::draw()
 {
-    getSystem<Core::Renderer::VkRenderer>()->beginRenderFrame(mRenderData);
+    getSystem<Renderer::VkRenderer>()->beginRenderFrame(mRenderData);
 
-    getSystem<Core::Renderer::VkRenderer>()->beginOffscreenRenderPass(mRenderData);
+    getSystem<Renderer::VkRenderer>()->beginOffscreenRenderPass(mRenderData);
 
     for (auto* drawable : mDrawables)
     {
@@ -76,9 +76,9 @@ void Core::Engine::draw()
         }
     }
 
-    getSystem<Core::Renderer::VkRenderer>()->endOffscreenRenderPass(mRenderData);
+    getSystem<Renderer::VkRenderer>()->endOffscreenRenderPass(mRenderData);
 
-    getSystem<Core::Renderer::VkRenderer>()->beginFinalRenderPass(mRenderData);
+    getSystem<Renderer::VkRenderer>()->beginFinalRenderPass(mRenderData);
 
     for (auto* drawable : mDrawables)
     {
@@ -88,16 +88,16 @@ void Core::Engine::draw()
         }
     }
 
-    getSystem<Core::Renderer::VkRenderer>()->endFinalRenderPass(mRenderData);
+    getSystem<Renderer::VkRenderer>()->endFinalRenderPass(mRenderData);
 
-    getSystem<Core::Renderer::VkRenderer>()->endRenderFrame(mRenderData);
+    getSystem<Renderer::VkRenderer>()->endRenderFrame(mRenderData);
 }
 
 void Core::Engine::cleanup()
 {
     vkDeviceWaitIdle(mRenderData.rdVkbDevice);
 
-    getSystem<Core::Scene::Scene>()->cleanup(mRenderData);
-    getSystem<Core::Renderer::UserInterface>()->cleanup(mRenderData);
-    getSystem<Core::Renderer::VkRenderer>()->cleanup(mRenderData);
+    getSystem<Scene::Scene>()->cleanup(mRenderData);
+    getSystem<Renderer::UserInterface>()->cleanup(mRenderData);
+    getSystem<Renderer::VkRenderer>()->cleanup(mRenderData);
 }
