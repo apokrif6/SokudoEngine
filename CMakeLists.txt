@@ -72,3 +72,8 @@ if (NOT MSVC)
 endif ()
 
 target_link_libraries(SokudoEngine PRIVATE ${DEPENDENCIES})
+
+target_compile_definitions(SokudoEngine PUBLIC
+        $<$<CONFIG:Debug>:SE_LOG_INPUT=0>
+        $<$<CONFIG:Release>:SE_LOG_INPUT=0>
+)
