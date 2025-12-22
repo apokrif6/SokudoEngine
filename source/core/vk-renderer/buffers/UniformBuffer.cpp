@@ -163,6 +163,17 @@ void Core::Renderer::UniformBuffer::uploadData(Core::Renderer::VkRenderData& ren
     vmaUnmapMemory(renderData.rdAllocator, UBOData.rdUniformBufferAlloc);
 }
 
+void Core::Renderer::UniformBuffer::uploadData(Core::Renderer::VkRenderData& renderData,
+                                               Core::Renderer::VkUniformBufferData& UBOData,
+                                               const Core::Renderer::CaptureInfo& captureInfo)
+{
+    void* data;
+    vmaMapMemory(renderData.rdAllocator, UBOData.rdUniformBufferAlloc, &data);
+    std::memcpy(data, &captureInfo, sizeof(Core::Renderer::CaptureInfo));
+    vmaUnmapMemory(renderData.rdAllocator, UBOData.rdUniformBufferAlloc);
+}
+
+
 void Core::Renderer::UniformBuffer::cleanup(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData)
 {
     vkDestroyDescriptorPool(renderData.rdVkbDevice.device, UBOData.rdUBODescriptorPool, nullptr);

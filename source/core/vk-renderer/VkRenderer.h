@@ -133,6 +133,10 @@ private:
 #pragma endregion Renderer
 
 #pragma region Skybox
+    bool createHDRToCubemapPipelineLayout();
+
+    bool createHDRToCubemapPipeline();
+
     bool createSkyboxPipelineLayout();
 
     bool createSkyboxPipeline();

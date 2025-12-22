@@ -8,7 +8,7 @@ class PipelineLayout
 {
 public:
     static bool init(Core::Renderer::VkRenderData& renderData, VkTextureData& textureData,
-                     VkPipelineLayout& pipelineLayout);
+                     VkPipelineLayout& pipelineLayout, const PipelineLayoutConfig& pipelineLayoutConfig = {});
 
     static void cleanup(Core::Renderer::VkRenderData& renderData, VkPipelineLayout& pipelineLayout);
 };

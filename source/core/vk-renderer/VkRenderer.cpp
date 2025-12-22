@@ -35,6 +35,7 @@
 #include "core/vk-renderer/viewport/ViewportRenderpass.h"
 #include "core/vk-renderer/viewport/ViewportTarget.h"
 #include "imgui_impl_vulkan.h"
+#include "cubemap_generator/HDRToCubemapRenderpass.h"
 
 bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned int height)
 {
@@ -959,6 +960,65 @@ bool Core::Renderer::VkRenderer::createDebugSkeletonPipeline()
     return true;
 }
 
+bool Core::Renderer::VkRenderer::createHDRToCubemapPipelineLayout()
+{
+    auto& renderData = Core::Engine::getInstance().getRenderData();
+
+    std::vector<VkDescriptorSetLayout> layouts = {
+        renderData.rdCaptureUBO.rdUBODescriptorLayout,
+        renderData.rdHDRTexture.descriptorSetLayout
+    };
+
+    VkPushConstantRange pushConstantRange{};
+    pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    pushConstantRange.offset = 0;
+    pushConstantRange.size = sizeof(int);
+
+    // TODO
+    // replace with PipelineLayout::init and PipelineLayoutConfig
+    VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(layouts.size());
+    pipelineLayoutInfo.pSetLayouts = layouts.data();
+    pipelineLayoutInfo.pushConstantRangeCount = 1;
+    pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+
+    if (vkCreatePipelineLayout(renderData.rdVkbDevice.device, &pipelineLayoutInfo, nullptr,
+                               &renderData.rdHDRToCubemapPipelineLayout) != VK_SUCCESS)
+    {
+        Logger::log(1, "%s error: could not create HDR to Cubemap pipeline layout", __FUNCTION__);
+        return false;
+    }
+
+    return true;
+}
+
+bool Core::Renderer::VkRenderer::createHDRToCubemapPipeline()
+{
+    const std::string vertexShaderFile = "shaders/equirectangular_to_cubemap.vert.spv";
+    const std::string fragmentShaderFile = "shaders/equirectangular_to_cubemap.frag.spv";
+
+    auto& renderData = Core::Engine::getInstance().getRenderData();
+
+    PipelineConfig hdrToCubemapConfig{};
+    hdrToCubemapConfig.enableDepthTest = VK_FALSE;
+    hdrToCubemapConfig.enableDepthWrite = VK_FALSE;
+    hdrToCubemapConfig.enableBlending = VK_FALSE;
+    hdrToCubemapConfig.cullMode = VK_CULL_MODE_NONE;
+    hdrToCubemapConfig.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+    hdrToCubemapConfig.depthCompareOp = VK_COMPARE_OP_ALWAYS;
+
+    if (!Pipeline::init(renderData, renderData.rdHDRToCubemapPipelineLayout, renderData.rdHDRToCubemapPipeline,
+                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile, hdrToCubemapConfig,
+                        renderData.rdHDRToCubemapRenderpass))
+    {
+        Logger::log(1, "%s error: could not init HDR to Cubemap pipeline\n", __FUNCTION__);
+        return false;
+    }
+
+    return true;
+}
+
 bool Core::Renderer::VkRenderer::createSkyboxPipelineLayout()
 {
     auto& renderData = Core::Engine::getInstance().getRenderData();
@@ -1004,17 +1064,104 @@ bool Core::Renderer::VkRenderer::createSkyboxPipeline()
 
 bool Core::Renderer::VkRenderer::loadSkybox()
 {
-    std::vector<std::string> faces = {
-        "assets/textures/cubemaps/Yokohama2/posx.jpg", "assets/textures/cubemaps/Yokohama2/negx.jpg",
-        "assets/textures/cubemaps/Yokohama2/posy.jpg", "assets/textures/cubemaps/Yokohama2/negy.jpg",
-        "assets/textures/cubemaps/Yokohama2/posz.jpg", "assets/textures/cubemaps/Yokohama2/negz.jpg"};
-
     auto& renderData = Core::Engine::getInstance().getRenderData();
 
-    std::future<bool> loadSkyboxFuture = Cubemap::loadCubemap(renderData, renderData.rdSkyboxData, faces);
-    if (!loadSkyboxFuture.get())
+    if (!Cubemap::loadHDRTexture(renderData, renderData.rdHDRTexture, "assets/textures/hdr/skybox.hdr"))
     {
-        Logger::log(1, "%s error: could not load skybox textures\n", __FUNCTION__);
+        Logger::log(1, "%s error: could not load HDR texture", __FUNCTION__);
+        return false;
+    }
+
+    CaptureInfo captureInfo{};
+    captureInfo.projection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
+    captureInfo.views[0] = glm::lookAt(glm::vec3(0), glm::vec3(1,0,0), glm::vec3(0,-1,0));
+    captureInfo.views[1] = glm::lookAt(glm::vec3(0), glm::vec3(-1,0,0), glm::vec3(0,-1,0));
+    captureInfo.views[2] = glm::lookAt(glm::vec3(0), glm::vec3(0,1,0), glm::vec3(0,0,1));
+    captureInfo.views[3] = glm::lookAt(glm::vec3(0), glm::vec3(0,-1,0), glm::vec3(0,0,-1));
+    captureInfo.views[4] = glm::lookAt(glm::vec3(0), glm::vec3(0,0,1), glm::vec3(0,-1,0));
+    captureInfo.views[5] = glm::lookAt(glm::vec3(0), glm::vec3(0,0,-1), glm::vec3(0,-1,0));
+
+    UniformBuffer::init(renderData, renderData.rdCaptureUBO, sizeof(CaptureInfo), "CaptureInfo");
+    UniformBuffer::uploadData(renderData, renderData.rdCaptureUBO, captureInfo);
+
+    if (!HDRToCubemapRenderpass::init(Core::Engine::getInstance().getRenderData()))
+    {
+        Logger::log(1, "%s error: could not init HDR to Cubemap renderpass\n", __FUNCTION__);
+        return false;
+    }
+
+    // TODO
+    // move from here lol
+    {
+        VkDescriptorSetLayoutBinding samplerBinding{};
+        samplerBinding.binding = 0;
+        samplerBinding.descriptorCount = 1;
+        samplerBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        samplerBinding.pImmutableSamplers = nullptr;
+        samplerBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        VkDescriptorSetLayoutCreateInfo layoutInfo{};
+        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        layoutInfo.bindingCount = 1;
+        layoutInfo.pBindings = &samplerBinding;
+
+        vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &layoutInfo, nullptr,
+                                    &renderData.rdHDRTexture.descriptorSetLayout);
+
+        VkDescriptorPoolSize poolSize{};
+        poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSize.descriptorCount = 1;
+
+        VkDescriptorPoolCreateInfo poolInfo{};
+        poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        poolInfo.poolSizeCount = 1;
+        poolInfo.pPoolSizes = &poolSize;
+        poolInfo.maxSets = 1;
+
+        vkCreateDescriptorPool(renderData.rdVkbDevice.device, &poolInfo, nullptr,
+                               &renderData.rdHDRTexture.descriptorPool);
+
+        VkDescriptorSetAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocInfo.descriptorPool = renderData.rdHDRTexture.descriptorPool;
+        allocInfo.descriptorSetCount = 1;
+        allocInfo.pSetLayouts = &renderData.rdHDRTexture.descriptorSetLayout;
+
+        vkAllocateDescriptorSets(renderData.rdVkbDevice.device, &allocInfo,
+                                 &renderData.rdHDRTexture.descriptorSet);
+
+        VkDescriptorImageInfo imageInfo{};
+        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imageInfo.imageView = renderData.rdHDRTexture.imageView;
+        imageInfo.sampler = renderData.rdHDRTexture.sampler;
+
+        VkWriteDescriptorSet write{};
+        write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write.dstSet = renderData.rdHDRTexture.descriptorSet;
+        write.dstBinding = 0;
+        write.descriptorCount = 1;
+        write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        write.pImageInfo = &imageInfo;
+
+        vkUpdateDescriptorSets(renderData.rdVkbDevice.device, 1, &write, 0, nullptr);
+    }
+    //
+
+    if (!createHDRToCubemapPipelineLayout())
+    {
+        Logger::log(1, "%s error: could not create HDR to Cubemap pipeline layout\n", __FUNCTION__);
+        return false;
+    }
+
+    if (!createHDRToCubemapPipeline())
+    {
+        Logger::log(1, "%s error: could not create HDR to Cubemap pipeline\n", __FUNCTION__);
+        return false;
+    }
+
+    if (!Cubemap::convertHDRToCubemap(renderData, renderData.rdHDRTexture, renderData.rdSkyboxData))
+    {
+        Logger::log(1, "%s error: could not convert HDR to Cubemap", __FUNCTION__);
         return false;
     }
 

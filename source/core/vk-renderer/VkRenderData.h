@@ -61,6 +61,12 @@ struct alignas(16) LightsInfo
     glm::ivec4 count;
 };
 
+struct alignas(16) CaptureInfo
+{
+    glm::mat4 views[6];
+    glm::mat4 projection;
+};
+
 struct alignas(16) PrimitiveFlagsPushConstants
 {
     int hasSkinning = 0;
@@ -180,6 +186,18 @@ struct VkCubemapData
     int height = 0;
 };
 
+struct VkHDRTextureData
+{
+    VkImage image = VK_NULL_HANDLE;
+    VkImageView imageView = VK_NULL_HANDLE;
+    VmaAllocation imageAlloc = nullptr;
+    VkSampler sampler = VK_NULL_HANDLE;
+
+    VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
+    VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
+    VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
+};
+
 struct ViewportData
 {
     VkImage image;
@@ -207,6 +225,12 @@ struct PipelineConfig
     VkCompareOp depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
     VkCullModeFlags cullMode = VK_CULL_MODE_BACK_BIT;
     VkFrontFace frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+};
+
+struct PipelineLayoutConfig
+{
+    std::vector<VkDescriptorSetLayout> setLayouts;
+    std::vector<VkPushConstantRange> pushConstantRanges;
 };
 
 struct VkRenderData
@@ -282,13 +306,19 @@ struct VkRenderData
     VkPipelineLayout rdMeshPipelineLayout = VK_NULL_HANDLE;
     VkPipelineLayout rdDebugSkeletonPipelineLayout = VK_NULL_HANDLE;
     VkPipelineLayout rdSkyboxPipelineLayout = VK_NULL_HANDLE;
+    VkPipelineLayout rdHDRToCubemapPipelineLayout = VK_NULL_HANDLE;
     VkPipeline rdGridPipeline = VK_NULL_HANDLE;
     VkPipeline rdMeshPipeline = VK_NULL_HANDLE;
     VkPipeline rdDebugSkeletonPipeline = VK_NULL_HANDLE;
     VkPipeline rdSkyboxPipeline = VK_NULL_HANDLE;
+    VkPipeline rdHDRToCubemapPipeline = VK_NULL_HANDLE;
 
     VkCommandPool rdCommandPool = VK_NULL_HANDLE;
     VkCommandBuffer rdCommandBuffer = VK_NULL_HANDLE;
+
+    // TODO
+    // probably should be stored in HDRToCubemapRenderpass object itself, or be returned by reference from init method
+    VkRenderPass rdHDRToCubemapRenderpass = VK_NULL_HANDLE;
 
     VkSemaphore rdPresentSemaphore = VK_NULL_HANDLE;
     VkSemaphore rdRenderSemaphore = VK_NULL_HANDLE;
@@ -300,7 +330,11 @@ struct VkRenderData
 
     VkUniformBufferData rdPerspectiveViewMatrixUBO{};
 
+    VkUniformBufferData rdCaptureUBO{};
+
     VkCubemapData rdSkyboxData{};
+
+    VkHDRTextureData rdHDRTexture{};
 
     VkDescriptorPool rdImguiDescriptorPool = VK_NULL_HANDLE;
 

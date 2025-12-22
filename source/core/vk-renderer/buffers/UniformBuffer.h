@@ -30,6 +30,9 @@ public:
     static void uploadData(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData,
                            const Core::Renderer::LightsInfo& lightsInfo);
 
+    static void uploadData(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData,
+                           const Core::Renderer::CaptureInfo& captureInfo);
+
     static void cleanup(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData);
 };
 } // namespace Core::Renderer

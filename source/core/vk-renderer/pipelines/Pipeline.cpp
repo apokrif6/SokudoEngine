@@ -6,7 +6,7 @@
 bool Core::Renderer::Pipeline::init(Core::Renderer::VkRenderData& renderData, VkPipelineLayout& pipelineLayout,
                                     VkPipeline& pipeline, VkPrimitiveTopology topology,
                                     const std::string& vertexShaderFilename, const std::string& fragmentShaderFilename,
-                                    const PipelineConfig& config)
+                                    const PipelineConfig& config, VkRenderPass renderPass)
 {
     VkShaderModule vertexModule =
         Core::Renderer::Shader::loadShader(renderData.rdVkbDevice.device, vertexShaderFilename);
@@ -136,7 +136,7 @@ bool Core::Renderer::Pipeline::init(Core::Renderer::VkRenderData& renderData, Vk
     pipelineCreateInfo.pDepthStencilState = &depthStencilInfo;
     pipelineCreateInfo.pDynamicState = &dynStatesInfo;
     pipelineCreateInfo.layout = pipelineLayout;
-    pipelineCreateInfo.renderPass = renderData.rdViewportTarget.renderpass;
+    pipelineCreateInfo.renderPass = renderPass != VK_NULL_HANDLE ? renderPass : renderData.rdViewportTarget.renderpass;
     pipelineCreateInfo.subpass = 0;
     pipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
 
