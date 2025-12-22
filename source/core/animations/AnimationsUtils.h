@@ -12,7 +12,7 @@ namespace Core::Animations
 {
 class AnimationsUtils
 {
-  public:
+public:
     static inline glm::mat4 convertMatrixToGlm(aiMatrix4x4 from)
     {
         glm::mat4 to;

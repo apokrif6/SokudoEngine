@@ -22,9 +22,12 @@
 
 namespace Core::Renderer
 {
-class VkRenderer final : public EventListener, public System::ISystem, public System::IUpdatable, public System::IDrawable
+class VkRenderer final : public EventListener,
+                         public System::ISystem,
+                         public System::IUpdatable,
+                         public System::IDrawable
 {
-  public:
+public:
     explicit VkRenderer(GLFWwindow* inWindow);
 
     bool init(unsigned int width, unsigned int height);
@@ -59,10 +62,7 @@ class VkRenderer final : public EventListener, public System::ISystem, public Sy
 
     void cleanup(VkRenderData& renderData);
 
-    const std::vector<glm::mat4>& getPerspectiveViewMatrices()
-    {
-        return mPerspectiveViewMatrices;
-    }
+    const std::vector<glm::mat4>& getPerspectiveViewMatrices() { return mPerspectiveViewMatrices; }
 
     void resizeViewportTarget(glm::int2 size);
 
@@ -83,7 +83,8 @@ private:
 
     unsigned int VertexBufferSize = 2000;
 
-    std::unique_ptr<Core::Renderer::ViewportTarget> mViewportTarget = std::make_unique<Core::Renderer::ViewportTarget>();
+    std::unique_ptr<Core::Renderer::ViewportTarget> mViewportTarget =
+        std::make_unique<Core::Renderer::ViewportTarget>();
 
 #pragma region Camera
     Camera mCamera{};
@@ -148,7 +149,7 @@ private:
 #pragma endregion Grid
 
 #pragma region HandleGLFWEvents
-  public:
+public:
     void handleWindowMoveEvents(int xPosition, int yPosition);
 
     void handleWindowMinimizedEvents(int minimized);
@@ -159,5 +160,5 @@ private:
 
     void handleMouseEnterLeaveEvents(int enter);
 #pragma endregion HandleGLFWEvents
-    };
-}
+};
+} // namespace Core::Renderer

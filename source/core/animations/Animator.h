@@ -11,13 +11,10 @@ namespace Core::Animations
 {
 class Animator : public System::ISystem, public System::IUpdatable
 {
-  public:
+public:
     virtual void update(Renderer::VkRenderData& renderData, float deltaTime) override;
 
-    void addMesh(Renderer::Mesh* mesh)
-    {
-        mMeshes.push_back(mesh);
-    }
+    void addMesh(Renderer::Mesh* mesh) { mMeshes.push_back(mesh); }
 
     void removeMesh(Renderer::Mesh* mesh)
     {

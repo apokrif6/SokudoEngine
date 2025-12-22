@@ -3,12 +3,15 @@
 #include "core/tools/Logger.h"
 #include "core/vk-renderer/Shader.h"
 
-bool Core::Renderer::Pipeline::init(Core::Renderer::VkRenderData& renderData, VkPipelineLayout& pipelineLayout, VkPipeline& pipeline,
-                    VkPrimitiveTopology topology, const std::string& vertexShaderFilename,
-                    const std::string& fragmentShaderFilename, const PipelineConfig& config)
+bool Core::Renderer::Pipeline::init(Core::Renderer::VkRenderData& renderData, VkPipelineLayout& pipelineLayout,
+                                    VkPipeline& pipeline, VkPrimitiveTopology topology,
+                                    const std::string& vertexShaderFilename, const std::string& fragmentShaderFilename,
+                                    const PipelineConfig& config)
 {
-    VkShaderModule vertexModule = Core::Renderer::Shader::loadShader(renderData.rdVkbDevice.device, vertexShaderFilename);
-    VkShaderModule fragmentModule = Core::Renderer::Shader::loadShader(renderData.rdVkbDevice.device, fragmentShaderFilename);
+    VkShaderModule vertexModule =
+        Core::Renderer::Shader::loadShader(renderData.rdVkbDevice.device, vertexShaderFilename);
+    VkShaderModule fragmentModule =
+        Core::Renderer::Shader::loadShader(renderData.rdVkbDevice.device, fragmentShaderFilename);
 
     if (vertexModule == VK_NULL_HANDLE || fragmentModule == VK_NULL_HANDLE)
     {

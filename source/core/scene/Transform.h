@@ -8,9 +8,9 @@ namespace Core::Scene
 {
 struct Transform
 {
-    glm::vec3 position {0.0f};
-    glm::quat rotation {1.0f, 0.0f, 0.0f, 0.0f};
-    glm::vec3 scale {1.0f};
+    glm::vec3 position{0.0f};
+    glm::quat rotation{1.0f, 0.0f, 0.0f, 0.0f};
+    glm::vec3 scale{1.0f};
 
     glm::mat4 getMatrix() const
     {
@@ -21,14 +21,8 @@ struct Transform
         return translate * rotate * scaling;
     }
 
-    void setEulerRotation(const glm::vec3& eulerAngles)
-    {
-        rotation = glm::quat(glm::radians(eulerAngles));
-    }
+    void setEulerRotation(const glm::vec3& eulerAngles) { rotation = glm::quat(glm::radians(eulerAngles)); }
 
-    glm::vec3 getEulerRotation() const
-    {
-        return glm::degrees(glm::eulerAngles(rotation));
-    }
+    glm::vec3 getEulerRotation() const { return glm::degrees(glm::eulerAngles(rotation)); }
 };
-}
+} // namespace Core::Scene

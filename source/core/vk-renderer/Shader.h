@@ -8,15 +8,15 @@ namespace Core::Renderer
 {
 class Shader
 {
-  public:
+public:
     static VkShaderModule loadShader(VkDevice device, const std::string& shaderFileName);
 
     static std::vector<VkVertexInputAttributeDescription>
     getAttributeDescriptionsBySpvReflect(const std::string& shaderFileName);
 
-  private:
+private:
     static std::string loadFileToString(const std::string& fileName);
 
     static std::vector<char> readBinaryFile(const std::string& fileName);
 };
-}
+} // namespace Core::Renderer

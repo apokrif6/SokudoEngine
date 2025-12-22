@@ -15,7 +15,8 @@ std::future<bool> Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderD
         std::launch::async,
         [&renderData, &textureData, &textureFilename, format]
         {
-            const std::string texturePath = textureFolderPath.data() + textureFilename;;
+            const std::string texturePath = textureFolderPath.data() + textureFilename;
+            ;
 
             int texWidth;
             int texHeight;
@@ -27,7 +28,8 @@ std::future<bool> Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderD
             if (!texData)
             {
                 perror("Error");
-                Logger::log(1, "Could not load file '%s', because of '%s'\n",texturePath.c_str(), stbi_failure_reason());
+                Logger::log(1, "Could not load file '%s', because of '%s'\n", texturePath.c_str(),
+                            stbi_failure_reason());
                 stbi_image_free(texData);
                 return false;
             }
@@ -79,9 +81,7 @@ std::future<bool> Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderD
                 return false;
             }
 
-            vmaSetAllocationName(renderData.rdAllocator,
-                                 stagingBufferAlloc,
-                                 "Texture Staging Buffer");
+            vmaSetAllocationName(renderData.rdAllocator, stagingBufferAlloc, "Texture Staging Buffer");
 
             void* data;
             vmaMapMemory(renderData.rdAllocator, stagingBufferAlloc, &data);
@@ -262,8 +262,8 @@ std::future<bool> Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderD
 
             textureData.texName = texturePath;
 
-            Logger::log(1, "Texture '%s' loaded (%dx%d, %d channels)\n", texturePath.c_str(),
-                        texWidth, texHeight, numberOfChannels);
+            Logger::log(1, "Texture '%s' loaded (%dx%d, %d channels)\n", texturePath.c_str(), texWidth, texHeight,
+                        numberOfChannels);
             return true;
         });
 }

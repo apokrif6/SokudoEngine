@@ -7,7 +7,7 @@ namespace Core::Renderer
 class ViewportTarget
 {
 public:
-    bool init(VkRenderData &renderData, glm::int2 size);
+    bool init(VkRenderData& renderData, glm::int2 size);
     void cleanup(VkRenderData& renderData);
 
 private:
@@ -18,4 +18,4 @@ private:
 
     VkSampler mSampler = VK_NULL_HANDLE;
 };
-}
+} // namespace Core::Renderer

@@ -7,11 +7,8 @@ namespace Core::Animations
 {
 class Skeleton : public Serialization::ISerializable
 {
-  public:
-    void setRootNode(const BoneNode& node)
-    {
-        rootNode = node;
-    }
+public:
+    void setRootNode(const BoneNode& node) { rootNode = node; }
 
     [[nodiscard]] const BoneNode& getRootNode() const { return rootNode; }
 
@@ -28,7 +25,7 @@ class Skeleton : public Serialization::ISerializable
 
     void deserialize(const YAML::Node& node) override;
 
-  private:
+private:
     BoneNode rootNode;
 
     std::shared_ptr<Core::Renderer::Debug::Skeleton> debugDraw;

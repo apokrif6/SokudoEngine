@@ -15,7 +15,8 @@ public:
         auto& objectSelection = Core::Engine::getInstance().getSystem<Scene::Scene>()->getSceneObjectSelection();
         auto selectedObject = objectSelection.selectedObject.lock();
 
-        std::shared_ptr<Core::Renderer::Mesh> meshObject = std::static_pointer_cast<Core::Renderer::Mesh>(selectedObject);
+        std::shared_ptr<Core::Renderer::Mesh> meshObject =
+            std::static_pointer_cast<Core::Renderer::Mesh>(selectedObject);
         if (!meshObject)
         {
             return true;
@@ -59,7 +60,7 @@ public:
         return true;
     }
 
-  private:
+private:
     static inline int selectedAnimationIndex = 0;
 };
 } // namespace Core::UI

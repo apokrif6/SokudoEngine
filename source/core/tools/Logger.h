@@ -3,9 +3,8 @@
 
 class Logger
 {
-  public:
-    template <typename... Args>
-    static void log(unsigned int logLevel, Args... args)
+public:
+    template <typename... Args> static void log(unsigned int logLevel, Args... args)
     {
         if (logLevel <= currentLogLevel)
         {
@@ -26,6 +25,6 @@ class Logger
 
     static void setLogLevel(unsigned int inLogLevel) { currentLogLevel = inLogLevel; }
 
-  private:
+private:
     static unsigned int currentLogLevel;
 };

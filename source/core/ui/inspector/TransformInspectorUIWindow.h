@@ -24,4 +24,4 @@ public:
         return true;
     }
 };
-}
+} // namespace Core::UI

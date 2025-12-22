@@ -4,13 +4,13 @@
 
 class Timer
 {
-  public:
+public:
     void start();
 
     // returns milliseconds since start
     float stop();
 
-  private:
+private:
     bool mRunning = false;
 
     std::chrono::time_point<std::chrono::steady_clock> mStartTime{};

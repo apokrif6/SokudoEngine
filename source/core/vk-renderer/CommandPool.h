@@ -6,9 +6,9 @@ namespace Core::Renderer
 {
 class CommandPool
 {
-  public:
+public:
     static bool init(Core::Renderer::VkRenderData& renderData);
 
     static void cleanup(const Core::Renderer::VkRenderData& renderData);
 };
-}
+} // namespace Core::Renderer

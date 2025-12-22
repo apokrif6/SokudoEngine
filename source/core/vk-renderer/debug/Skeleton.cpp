@@ -1,18 +1,16 @@
 #include "Skeleton.h"
 #include "core/vk-renderer/buffers/VertexBuffer.h"
 
-void Core::Renderer::Debug::Skeleton::init(Core::Renderer::VkRenderData& renderData)
-{
-    createVertexBuffer(renderData);
-}
+void Core::Renderer::Debug::Skeleton::init(Core::Renderer::VkRenderData& renderData) { createVertexBuffer(renderData); }
 
 void Core::Renderer::Debug::Skeleton::createVertexBuffer(Core::Renderer::VkRenderData& renderData)
 {
-    Core::Renderer::VertexBuffer::init(renderData, mDebugLinesBuffer, sizeof(LineVertex) * MAX_DEBUG_BONES_LINES, "DebugSkeleton");
+    Core::Renderer::VertexBuffer::init(renderData, mDebugLinesBuffer, sizeof(LineVertex) * MAX_DEBUG_BONES_LINES,
+                                       "DebugSkeleton");
 }
 
 void Core::Renderer::Debug::Skeleton::update(Core::Renderer::VkRenderData& renderData,
-                                                          const std::vector<DebugBone>& bones)
+                                             const std::vector<DebugBone>& bones)
 {
     std::vector<LineVertex> lineVertices;
     for (const auto& bone : bones)

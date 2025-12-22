@@ -35,8 +35,8 @@ constexpr int MAX_MATERIALS = 128;
 struct alignas(16) MaterialInfo
 {
     glm::vec4 baseColorFactor = glm::vec4(1.0f);
-    float metallicFactor  = 0.f;
-    float roughnessFactor  = 1.f;
+    float metallicFactor = 0.f;
+    float roughnessFactor = 1.f;
 
     alignas(16) glm::vec3 emissiveFactor = {0.f, 0.f, 0.f};
 
@@ -306,7 +306,7 @@ struct VkRenderData
     VkDescriptorPool rdMaterialDescriptorPool;
 
 #pragma region DummyDescriptors
-        VkUniformBufferData rdDummyBonesUBO{};
+    VkUniformBufferData rdDummyBonesUBO{};
 #pragma endregion
 
 #pragma region Viewport

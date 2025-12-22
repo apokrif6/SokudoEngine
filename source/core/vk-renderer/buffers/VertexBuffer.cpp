@@ -2,7 +2,7 @@
 #include "VertexBuffer.h"
 #include "core/vk-renderer/debug/DebugUtils.h"
 
-bool Core::Renderer::VertexBuffer::init(Core::Renderer::VkRenderData &renderData, VkVertexBufferData &vertexBufferData,
+bool Core::Renderer::VertexBuffer::init(Core::Renderer::VkRenderData& renderData, VkVertexBufferData& vertexBufferData,
                                         unsigned int bufferSize, const std::string& name)
 {
     VkBufferCreateInfo bufferInfo{};
@@ -17,20 +17,17 @@ bool Core::Renderer::VertexBuffer::init(Core::Renderer::VkRenderData &renderData
     VmaAllocationInfo bufferAllocInfo{};
 
     if (vmaCreateBuffer(renderData.rdAllocator, &bufferInfo, &bufferAllocCreateInfo, &vertexBufferData.rdVertexBuffer,
-                        &vertexBufferData.rdVertexBufferAlloc, &bufferAllocInfo) != VK_SUCCESS) {
+                        &vertexBufferData.rdVertexBufferAlloc, &bufferAllocInfo) != VK_SUCCESS)
+    {
         Logger::log(1, "%s error: could not allocate vertex buffer via VMA\n", __FUNCTION__);
         return false;
     }
 
     vertexBufferData.rdName = "Vertex Buffer " + name;
-    vmaSetAllocationName(renderData.rdAllocator,
-                         vertexBufferData.rdVertexBufferAlloc,
-                         vertexBufferData.rdName.c_str());
+    vmaSetAllocationName(renderData.rdAllocator, vertexBufferData.rdVertexBufferAlloc, vertexBufferData.rdName.c_str());
 
-    Core::Renderer::Debug::setObjectName(renderData.rdVkbDevice.device,
-                  (uint64_t)vertexBufferData.rdVertexBuffer,
-                  VK_OBJECT_TYPE_BUFFER,
-                  vertexBufferData.rdName);
+    Core::Renderer::Debug::setObjectName(renderData.rdVkbDevice.device, (uint64_t)vertexBufferData.rdVertexBuffer,
+                                         VK_OBJECT_TYPE_BUFFER, vertexBufferData.rdName);
 
     VkBufferCreateInfo stagingBufferInfo{};
     stagingBufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -44,14 +41,14 @@ bool Core::Renderer::VertexBuffer::init(Core::Renderer::VkRenderData &renderData
 
     if (vmaCreateBuffer(renderData.rdAllocator, &stagingBufferInfo, &stagingAllocCreateInfo,
                         &vertexBufferData.rdStagingBuffer, &vertexBufferData.rdStagingBufferAlloc,
-                        &stagingAllocInfo) != VK_SUCCESS) {
+                        &stagingAllocInfo) != VK_SUCCESS)
+    {
         Logger::log(1, "%s error: could not allocate vertex staging buffer via VMA\n", __FUNCTION__);
         return false;
     }
 
     vertexBufferData.rdName = "Vertex Staging Buffer " + name;
-    vmaSetAllocationName(renderData.rdAllocator,
-                         vertexBufferData.rdStagingBufferAlloc,
+    vmaSetAllocationName(renderData.rdAllocator, vertexBufferData.rdStagingBufferAlloc,
                          vertexBufferData.rdName.c_str());
 
     vertexBufferData.rdVertexBufferSize = bufferSize;
@@ -59,8 +56,8 @@ bool Core::Renderer::VertexBuffer::init(Core::Renderer::VkRenderData &renderData
     return true;
 }
 
-void Core::Renderer::VertexBuffer::cleanup(Core::Renderer::VkRenderData &renderData,
-                                           VkVertexBufferData &vertexBufferData)
+void Core::Renderer::VertexBuffer::cleanup(Core::Renderer::VkRenderData& renderData,
+                                           VkVertexBufferData& vertexBufferData)
 {
     vmaDestroyBuffer(renderData.rdAllocator, vertexBufferData.rdStagingBuffer, vertexBufferData.rdStagingBufferAlloc);
     vmaDestroyBuffer(renderData.rdAllocator, vertexBufferData.rdVertexBuffer, vertexBufferData.rdVertexBufferAlloc);

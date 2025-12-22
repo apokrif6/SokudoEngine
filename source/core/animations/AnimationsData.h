@@ -30,7 +30,10 @@ struct Bone
     glm::mat4 finalTransform{};
 
     Bone() = default;
-    explicit Bone(const glm::mat4& inOffset) : offset(inOffset), animatedGlobalTransform(glm::mat4(0.0)), finalTransform(glm::mat4(0.0)) {}
+    explicit Bone(const glm::mat4& inOffset)
+        : offset(inOffset), animatedGlobalTransform(glm::mat4(0.0)), finalTransform(glm::mat4(0.0))
+    {
+    }
 };
 
 struct BonesInfo
@@ -68,13 +71,13 @@ struct AnimationChannel
     std::vector<KeyframeVec3> scalings;
 };
 
-struct AnimationClip {
+struct AnimationClip
+{
     std::string name;
     float duration;
     float ticksPerSecond;
     std::vector<AnimationChannel> channels;
 };
-
 
 struct BoneNode : public Serialization::ISerializable
 {
@@ -128,4 +131,4 @@ struct BoneNode : public Serialization::ISerializable
         }
     }
 };
-}
+} // namespace Core::Animations

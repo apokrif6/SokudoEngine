@@ -55,9 +55,8 @@ bool Core::UI::SceneUIWindow::getBody()
                     {
                         saveFilename += ".yaml";
                     }
-                    Core::Scene::Serialization::saveSceneToFile(
-                            *Core::Engine::getInstance().getSystem<Scene::Scene>(),
-                            "assets/scenes/" + saveFilename);
+                    Core::Scene::Serialization::saveSceneToFile(*Core::Engine::getInstance().getSystem<Scene::Scene>(),
+                                                                "assets/scenes/" + saveFilename);
                     showSaveDialog = false;
                 }
             }
@@ -91,8 +90,8 @@ bool Core::UI::SceneUIWindow::getBody()
 
             if (ImGui::Button("Load", ImVec2(120, 0)) && !selectedSceneFile.empty())
             {
-                Scene::Scene loadedScene = Core::Scene::Serialization::loadSceneFromFile(
-                        "assets/scenes/" + selectedSceneFile);
+                Scene::Scene loadedScene =
+                    Core::Scene::Serialization::loadSceneFromFile("assets/scenes/" + selectedSceneFile);
                 *Core::Engine::getInstance().getSystem<Scene::Scene>() = loadedScene;
                 showLoadDialog = false;
             }
@@ -153,7 +152,7 @@ void Core::UI::SceneUIWindow::refreshSceneFiles()
 }
 
 void Core::UI::SceneUIWindow::drawSceneObjectNode(std::shared_ptr<Core::Scene::SceneObject> object,
-                                Core::Scene::SceneObjectSelection& selection)
+                                                  Core::Scene::SceneObjectSelection& selection)
 {
     // TODO
     // add ensure
@@ -164,8 +163,7 @@ void Core::UI::SceneUIWindow::drawSceneObjectNode(std::shared_ptr<Core::Scene::S
 
     auto selectedObject = selection.selectedObject.lock();
     ImGuiTreeNodeFlags flags =
-            ImGuiTreeNodeFlags_OpenOnArrow |
-            (selectedObject == object ? ImGuiTreeNodeFlags_Selected : 0);
+        ImGuiTreeNodeFlags_OpenOnArrow | (selectedObject == object ? ImGuiTreeNodeFlags_Selected : 0);
 
     bool isLeaf = object->getChildren().empty();
     if (isLeaf)
@@ -173,11 +171,7 @@ void Core::UI::SceneUIWindow::drawSceneObjectNode(std::shared_ptr<Core::Scene::S
         flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
     }
 
-    bool opened = ImGui::TreeNodeEx(
-            (void*)object.get(),
-            flags,
-            "%s", object->getName().c_str()
-    );
+    bool opened = ImGui::TreeNodeEx((void*)object.get(), flags, "%s", object->getName().c_str());
 
     if (ImGui::IsItemClicked())
     {

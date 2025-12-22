@@ -7,11 +7,11 @@ namespace Core::Model
 class CoordinateArrowModel
 {
 public:
-  Core::Renderer::VkMesh getVertexData();
+    Core::Renderer::VkMesh getVertexData();
 
 private:
-  void init();
+    void init();
 
-  Core::Renderer::VkMesh mVertexData;
+    Core::Renderer::VkMesh mVertexData;
 };
-}
+} // namespace Core::Model

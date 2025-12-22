@@ -4,8 +4,9 @@
 #include "VkBootstrap.h"
 #include "core/vk-renderer/debug/DebugUtils.h"
 
-bool Core::Renderer::ShaderStorageBuffer::init(Core::Renderer::VkRenderData& renderData, VkShaderStorageBufferData &SSBOData,
-                                               size_t bufferSize, const std::string& name)
+bool Core::Renderer::ShaderStorageBuffer::init(Core::Renderer::VkRenderData& renderData,
+                                               VkShaderStorageBufferData& SSBOData, size_t bufferSize,
+                                               const std::string& name)
 {
     VkBufferCreateInfo bufferInfo{};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -17,22 +18,18 @@ bool Core::Renderer::ShaderStorageBuffer::init(Core::Renderer::VkRenderData& ren
 
     VmaAllocationInfo vmaAllocInfo{};
 
-    if (vmaCreateBuffer(renderData.rdAllocator, &bufferInfo, &vmaAllocCreateInfo, 
-                        &SSBOData.rdShaderStorageBuffer,&SSBOData.rdShaderStorageBufferAlloc, &vmaAllocInfo) != VK_SUCCESS)
+    if (vmaCreateBuffer(renderData.rdAllocator, &bufferInfo, &vmaAllocCreateInfo, &SSBOData.rdShaderStorageBuffer,
+                        &SSBOData.rdShaderStorageBufferAlloc, &vmaAllocInfo) != VK_SUCCESS)
     {
         Logger::log(1, "%s error: could not allocate shader storage buffer via VMA\n", __FUNCTION__);
         return false;
     }
 
     SSBOData.rdName = "Shader Storage Buffer " + name;
-    vmaSetAllocationName(renderData.rdAllocator,
-                         SSBOData.rdShaderStorageBufferAlloc,
-                         SSBOData.rdName.c_str());
+    vmaSetAllocationName(renderData.rdAllocator, SSBOData.rdShaderStorageBufferAlloc, SSBOData.rdName.c_str());
 
-    Core::Renderer::Debug::setObjectName(renderData.rdVkbDevice.device,
-                                         (uint64_t)SSBOData.rdShaderStorageBuffer,
-                                         VK_OBJECT_TYPE_BUFFER,
-                                         SSBOData.rdName);
+    Core::Renderer::Debug::setObjectName(renderData.rdVkbDevice.device, (uint64_t)SSBOData.rdShaderStorageBuffer,
+                                         VK_OBJECT_TYPE_BUFFER, SSBOData.rdName);
 
     VkDescriptorSetLayoutBinding ssboBind{};
     ssboBind.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
@@ -105,10 +102,12 @@ bool Core::Renderer::ShaderStorageBuffer::init(Core::Renderer::VkRenderData& ren
     return true;
 }
 
-void Core::Renderer::ShaderStorageBuffer::uploadData(Core::Renderer::VkRenderData& renderData, VkShaderStorageBufferData &SSBOData,
+void Core::Renderer::ShaderStorageBuffer::uploadData(Core::Renderer::VkRenderData& renderData,
+                                                     VkShaderStorageBufferData& SSBOData,
                                                      std::vector<glm::mat4> matrices)
 {
-    if (matrices.empty()) {
+    if (matrices.empty())
+    {
         return;
     }
 
@@ -118,7 +117,8 @@ void Core::Renderer::ShaderStorageBuffer::uploadData(Core::Renderer::VkRenderDat
     vmaUnmapMemory(renderData.rdAllocator, SSBOData.rdShaderStorageBufferAlloc);
 }
 
-void Core::Renderer::ShaderStorageBuffer::cleanup(Core::Renderer::VkRenderData& renderData, VkShaderStorageBufferData &SSBOData)
+void Core::Renderer::ShaderStorageBuffer::cleanup(Core::Renderer::VkRenderData& renderData,
+                                                  VkShaderStorageBufferData& SSBOData)
 {
     vkDestroyDescriptorPool(renderData.rdVkbDevice.device, SSBOData.rdSSBODescriptorPool, nullptr);
     vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, SSBOData.rdSSBODescriptorLayout, nullptr);

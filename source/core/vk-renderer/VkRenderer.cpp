@@ -170,7 +170,7 @@ void Core::Renderer::VkRenderer::handleWindowResizeEvents(int width, int height)
 void Core::Renderer::VkRenderer::onEvent(const Event& event)
 {
     VkRenderData& renderData = Core::Engine::getInstance().getRenderData();
-    
+
     if (const auto* mouseMovementEvent = dynamic_cast<const MouseMovementEvent*>(&event))
     {
         renderData.rdViewYaw += static_cast<float>(mouseMovementEvent->deltaX) / 10.f;
@@ -195,8 +195,7 @@ void Core::Renderer::VkRenderer::onEvent(const Event& event)
             glfwSetInputMode(renderData.rdWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
             if (glfwRawMouseMotionSupported())
             {
-                glfwSetInputMode(renderData.rdWindow, GLFW_RAW_MOUSE_MOTION,
-                                 GLFW_TRUE);
+                glfwSetInputMode(renderData.rdWindow, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
             }
         }
         else
@@ -309,18 +308,15 @@ void Core::Renderer::VkRenderer::beginOffscreenRenderPass(Core::Renderer::VkRend
 
     vkCmdBeginRenderPass(renderData.rdCommandBuffer, &offscreenRenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-    VkViewport viewport = {
-            0.f,
-            static_cast<float>(renderData.rdViewportTarget.size.y),
-            static_cast<float>(renderData.rdViewportTarget.size.x),
-            -static_cast<float>(renderData.rdViewportTarget.size.y),
-            0.f,
-            1.f
-    };
-    VkRect2D scissor{{0,0}, {
-                         static_cast<uint32_t>(renderData.rdViewportTarget.size.x),
-                           static_cast<uint32_t>(renderData.rdViewportTarget.size.y)
-    }};
+    VkViewport viewport = {0.f,
+                           static_cast<float>(renderData.rdViewportTarget.size.y),
+                           static_cast<float>(renderData.rdViewportTarget.size.x),
+                           -static_cast<float>(renderData.rdViewportTarget.size.y),
+                           0.f,
+                           1.f};
+    VkRect2D scissor{{0, 0},
+                     {static_cast<uint32_t>(renderData.rdViewportTarget.size.x),
+                      static_cast<uint32_t>(renderData.rdViewportTarget.size.y)}};
 
     vkCmdSetViewport(renderData.rdCommandBuffer, 0, 1, &viewport);
     vkCmdSetScissor(renderData.rdCommandBuffer, 0, 1, &scissor);
@@ -343,15 +339,13 @@ void Core::Renderer::VkRenderer::beginFinalRenderPass(Core::Renderer::VkRenderDa
 
     vkCmdBeginRenderPass(renderData.rdCommandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-    VkViewport viewport = {
-            0.f,
-            static_cast<float>(renderData.rdVkbSwapchain.extent.height),
-            static_cast<float>(renderData.rdVkbSwapchain.extent.width),
-            -static_cast<float>(renderData.rdVkbSwapchain.extent.height),
-            0.f,
-            1.f
-    };
-    VkRect2D scissor = {{0,0}, renderData.rdVkbSwapchain.extent};
+    VkViewport viewport = {0.f,
+                           static_cast<float>(renderData.rdVkbSwapchain.extent.height),
+                           static_cast<float>(renderData.rdVkbSwapchain.extent.width),
+                           -static_cast<float>(renderData.rdVkbSwapchain.extent.height),
+                           0.f,
+                           1.f};
+    VkRect2D scissor = {{0, 0}, renderData.rdVkbSwapchain.extent};
 
     vkCmdSetViewport(renderData.rdCommandBuffer, 0, 1, &viewport);
     vkCmdSetScissor(renderData.rdCommandBuffer, 0, 1, &scissor);
@@ -451,7 +445,8 @@ void Core::Renderer::VkRenderer::cleanup(VkRenderData& renderData)
 bool Core::Renderer::VkRenderer::deviceInit()
 {
     vkb::InstanceBuilder instBuild;
-    auto instRet = instBuild.use_default_debug_messenger()
+    auto instRet = instBuild
+                       .use_default_debug_messenger()
 #if defined(_DEBUG) || !defined(NDEBUG)
                        .request_validation_layers()
 #endif
@@ -620,20 +615,17 @@ bool Core::Renderer::VkRenderer::recreateSwapchain()
 
     while (renderData.rdWidth == 0 || renderData.rdHeight == 0)
     {
-        glfwGetFramebufferSize(renderData.rdWindow,
-                               &renderData.rdWidth,
-                               &renderData.rdHeight);
+        glfwGetFramebufferSize(renderData.rdWindow, &renderData.rdWidth, &renderData.rdHeight);
         glfwWaitEvents();
     }
 
     vkDeviceWaitIdle(renderData.rdVkbDevice.device);
 
     Core::Renderer::Framebuffer::cleanup(renderData);
-    vkDestroyImageView(renderData.rdVkbDevice.device,renderData.rdDepthImageView, nullptr);
-    vmaDestroyImage(renderData.rdAllocator,renderData.rdDepthImage,renderData.rdDepthImageAlloc);
+    vkDestroyImageView(renderData.rdVkbDevice.device, renderData.rdDepthImageView, nullptr);
+    vmaDestroyImage(renderData.rdAllocator, renderData.rdDepthImage, renderData.rdDepthImageAlloc);
 
-    renderData.rdVkbSwapchain.destroy_image_views(
-        renderData.rdSwapchainImageViews);
+    renderData.rdVkbSwapchain.destroy_image_views(renderData.rdSwapchainImageViews);
 
     if (mViewportTarget)
     {
@@ -658,8 +650,8 @@ bool Core::Renderer::VkRenderer::recreateSwapchain()
         return false;
     }
 
-    if (mViewportTarget && !mViewportTarget->init(renderData, {renderData.rdViewportTarget.size.x,
-                                                  renderData.rdViewportTarget.size.y}))
+    if (mViewportTarget &&
+        !mViewportTarget->init(renderData, {renderData.rdViewportTarget.size.x, renderData.rdViewportTarget.size.y}))
     {
         Logger::log(1, "%s error: could not recreate viewport target\n", __FUNCTION__);
         return false;
@@ -738,8 +730,8 @@ bool Core::Renderer::VkRenderer::createGridPipeline()
 
     auto& renderData = Core::Engine::getInstance().getRenderData();
 
-    if (!Pipeline::init(renderData,renderData.rdPipelineLayout,renderData.rdGridPipeline,VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-                        vertexShaderFile, fragmentShaderFile, pipelineConfig))
+    if (!Pipeline::init(renderData, renderData.rdPipelineLayout, renderData.rdGridPipeline,
+                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile, pipelineConfig))
     {
         Logger::log(1, "%s error: could not init grid shader pipeline\n", __FUNCTION__);
         return false;
@@ -792,7 +784,6 @@ void Core::Renderer::VkRenderer::resizeViewportTarget(glm::int2 size)
     Logger::log(1, "%s: recreated viewport target %ix%i\n", __FUNCTION__, renderData.rdViewportTarget.size.x,
                 renderData.rdViewportTarget.size.y);
 }
-
 
 bool Core::Renderer::VkRenderer::createCommandPool()
 {
@@ -879,7 +870,7 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
 
     std::string vertexShaderFile = "shaders/primitive.vert.spv";
     std::string fragmentShaderFile = "shaders/primitive.frag.spv";
-    if (!Core::Renderer::MeshPipelineLayout::init(renderData,renderData.rdMeshPipelineLayout))
+    if (!Core::Renderer::MeshPipelineLayout::init(renderData, renderData.rdMeshPipelineLayout))
     {
         Logger::log(1, "%s error: could not init mesh pipeline layout\n", __FUNCTION__);
         return false;
@@ -896,7 +887,8 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
     poolInfo.maxSets = MAX_MATERIALS;
 
     if (vkCreateDescriptorPool(renderData.rdVkbDevice.device, &poolInfo, nullptr,
-                               &renderData.rdMaterialDescriptorPool) != VK_SUCCESS) {
+                               &renderData.rdMaterialDescriptorPool) != VK_SUCCESS)
+    {
         Logger::log(1, "failed to create material descriptor pool!\n");
         return false;
     }
@@ -907,8 +899,8 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
     pipelineConfig.enableDepthWrite = VK_TRUE;
     pipelineConfig.depthCompareOp = VK_COMPARE_OP_LESS;
 
-    if (!Pipeline::init(renderData,renderData.rdMeshPipelineLayout,renderData.rdMeshPipeline,VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-                        vertexShaderFile, fragmentShaderFile, pipelineConfig))
+    if (!Pipeline::init(renderData, renderData.rdMeshPipelineLayout, renderData.rdMeshPipeline,
+                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile, pipelineConfig))
     {
         Logger::log(1, "%s error: could not init mesh pipeline\n", __FUNCTION__);
         return false;
@@ -916,8 +908,7 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
 
     const std::string modelFileName = "assets/damaged_helmet/DamagedHelmet.gltf";
 
-    Core::Utils::MeshData primitiveMeshData =
-            Core::Utils::loadMeshFromFile(modelFileName, renderData);
+    Core::Utils::MeshData primitiveMeshData = Core::Utils::loadMeshFromFile(modelFileName, renderData);
 
     createDebugSkeletonPipelineLayout();
     createDebugSkeletonPipeline();
@@ -932,8 +923,8 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
 
     for (auto& primitive : primitiveMeshData.primitives)
     {
-        testMesh->addPrimitive(primitive.vertices, primitive.indices, primitive.textures,
-                               renderData, primitive.material, primitive.bones, primitive.materialDescriptorSet);
+        testMesh->addPrimitive(primitive.vertices, primitive.indices, primitive.textures, renderData,
+                               primitive.material, primitive.bones, primitive.materialDescriptorSet);
     }
 
     return true;
@@ -968,7 +959,6 @@ bool Core::Renderer::VkRenderer::createDebugSkeletonPipeline()
     return true;
 }
 
-
 bool Core::Renderer::VkRenderer::createSkyboxPipelineLayout()
 {
     auto& renderData = Core::Engine::getInstance().getRenderData();
@@ -1002,9 +992,8 @@ bool Core::Renderer::VkRenderer::createSkyboxPipeline()
 
     auto& renderData = Core::Engine::getInstance().getRenderData();
 
-    if (!Pipeline::init(renderData, renderData.rdSkyboxPipelineLayout,
-                        renderData.rdSkyboxPipeline, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile,
-                        fragmentShaderFile))
+    if (!Pipeline::init(renderData, renderData.rdSkyboxPipelineLayout, renderData.rdSkyboxPipeline,
+                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile))
     {
         Logger::log(1, "%s error: could not init cubemap pipeline\n", __FUNCTION__);
         return false;
@@ -1016,13 +1005,9 @@ bool Core::Renderer::VkRenderer::createSkyboxPipeline()
 bool Core::Renderer::VkRenderer::loadSkybox()
 {
     std::vector<std::string> faces = {
-            "assets/textures/cubemaps/Yokohama2/posx.jpg",
-            "assets/textures/cubemaps/Yokohama2/negx.jpg",
-            "assets/textures/cubemaps/Yokohama2/posy.jpg",
-            "assets/textures/cubemaps/Yokohama2/negy.jpg",
-            "assets/textures/cubemaps/Yokohama2/posz.jpg",
-            "assets/textures/cubemaps/Yokohama2/negz.jpg"
-    };
+        "assets/textures/cubemaps/Yokohama2/posx.jpg", "assets/textures/cubemaps/Yokohama2/negx.jpg",
+        "assets/textures/cubemaps/Yokohama2/posy.jpg", "assets/textures/cubemaps/Yokohama2/negy.jpg",
+        "assets/textures/cubemaps/Yokohama2/posz.jpg", "assets/textures/cubemaps/Yokohama2/negz.jpg"};
 
     auto& renderData = Core::Engine::getInstance().getRenderData();
 
@@ -1053,22 +1038,18 @@ void Core::Renderer::VkRenderer::drawSkybox() const
 {
     auto& renderData = Core::Engine::getInstance().getRenderData();
 
-    if (renderData.rdSkyboxPipeline == VK_NULL_HANDLE ||
-        renderData.rdSkyboxData.descriptorSet == VK_NULL_HANDLE)
+    if (renderData.rdSkyboxPipeline == VK_NULL_HANDLE || renderData.rdSkyboxData.descriptorSet == VK_NULL_HANDLE)
     {
         return;
     }
 
     vkCmdBindPipeline(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdSkyboxPipeline);
 
-    std::vector<VkDescriptorSet> descriptorSets = {
-            renderData.rdPerspectiveViewMatrixUBO.rdUBODescriptorSet,
-            renderData.rdSkyboxData.descriptorSet
-    };
+    std::vector<VkDescriptorSet> descriptorSets = {renderData.rdPerspectiveViewMatrixUBO.rdUBODescriptorSet,
+                                                   renderData.rdSkyboxData.descriptorSet};
 
     vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            renderData.rdSkyboxPipelineLayout, 0,
-                            static_cast<uint32_t>(descriptorSets.size()),
+                            renderData.rdSkyboxPipelineLayout, 0, static_cast<uint32_t>(descriptorSets.size()),
                             descriptorSets.data(), 0, nullptr);
 
     VkDeviceSize offset = 0;

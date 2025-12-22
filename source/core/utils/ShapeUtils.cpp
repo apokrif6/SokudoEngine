@@ -88,19 +88,18 @@ void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiSc
     material->Get(AI_MATKEY_METALLIC_FACTOR, materialInfo.metallicFactor);
     material->Get(AI_MATKEY_ROUGHNESS_FACTOR, materialInfo.roughnessFactor);
 
-    if (material->GetTextureCount(aiTextureType_BASE_COLOR) > 0 ||
-        material->GetTextureCount(aiTextureType_DIFFUSE) > 0)
+    if (material->GetTextureCount(aiTextureType_BASE_COLOR) > 0 || material->GetTextureCount(aiTextureType_DIFFUSE) > 0)
     {
-        aiTextureType textureType = material->GetTextureCount(aiTextureType_BASE_COLOR) > 0 ?
-                                    aiTextureType_BASE_COLOR : aiTextureType_DIFFUSE;
+        aiTextureType textureType =
+            material->GetTextureCount(aiTextureType_BASE_COLOR) > 0 ? aiTextureType_BASE_COLOR : aiTextureType_DIFFUSE;
 
         aiString path;
         if (material->GetTexture(textureType, 0, &path) == AI_SUCCESS)
         {
             std::string textureFileName = path.C_Str();
             Core::Renderer::VkTextureData textureData;
-            std::future<bool> textureLoadFuture = Core::Renderer::Texture::loadTexture(
-                    renderData, textureData, textureFileName);
+            std::future<bool> textureLoadFuture =
+                Core::Renderer::Texture::loadTexture(renderData, textureData, textureFileName);
 
             if (textureLoadFuture.get())
             {
@@ -118,7 +117,7 @@ void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiSc
             std::string textureFileName = path.C_Str();
             Core::Renderer::VkTextureData textureData;
             std::future<bool> textureLoadFuture = Core::Renderer::Texture::loadTexture(
-                    renderData, textureData, textureFileName, VK_FORMAT_R8G8B8A8_UNORM);
+                renderData, textureData, textureFileName, VK_FORMAT_R8G8B8A8_UNORM);
 
             if (textureLoadFuture.get())
             {
@@ -132,16 +131,16 @@ void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiSc
         material->GetTextureCount(aiTextureType_DIFFUSE_ROUGHNESS) > 0)
     {
         aiTextureType textureType = material->GetTextureCount(aiTextureType_METALNESS) > 0
-                                    ? aiTextureType_METALNESS
-                                    : aiTextureType_DIFFUSE_ROUGHNESS;
+                                        ? aiTextureType_METALNESS
+                                        : aiTextureType_DIFFUSE_ROUGHNESS;
 
         aiString path;
         if (material->GetTexture(textureType, 0, &path) == AI_SUCCESS)
         {
             std::string textureFileName = path.C_Str();
             Core::Renderer::VkTextureData textureData;
-            std::future<bool> textureLoadFuture = Core::Renderer::Texture::loadTexture(
-                    renderData, textureData, textureFileName, VK_FORMAT_R8G8_UNORM);
+            std::future<bool> textureLoadFuture =
+                Core::Renderer::Texture::loadTexture(renderData, textureData, textureFileName, VK_FORMAT_R8G8_UNORM);
 
             if (textureLoadFuture.get())
             {
@@ -154,16 +153,17 @@ void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiSc
     if (material->GetTextureCount(aiTextureType_AMBIENT_OCCLUSION) > 0 ||
         material->GetTextureCount(aiTextureType_LIGHTMAP) > 0)
     {
-        aiTextureType textureType = material->GetTextureCount(aiTextureType_AMBIENT_OCCLUSION) > 0 ?
-                                    aiTextureType_AMBIENT_OCCLUSION : aiTextureType_LIGHTMAP;
+        aiTextureType textureType = material->GetTextureCount(aiTextureType_AMBIENT_OCCLUSION) > 0
+                                        ? aiTextureType_AMBIENT_OCCLUSION
+                                        : aiTextureType_LIGHTMAP;
 
         aiString path;
         if (material->GetTexture(textureType, 0, &path) == AI_SUCCESS)
         {
             std::string textureFileName = path.C_Str();
             Core::Renderer::VkTextureData textureData;
-            std::future<bool> textureLoadFuture = Core::Renderer::Texture::loadTexture(
-                    renderData, textureData, textureFileName, VK_FORMAT_R8_UNORM);
+            std::future<bool> textureLoadFuture =
+                Core::Renderer::Texture::loadTexture(renderData, textureData, textureFileName, VK_FORMAT_R8_UNORM);
 
             if (textureLoadFuture.get())
             {
@@ -180,8 +180,8 @@ void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiSc
         {
             std::string textureFileName = path.C_Str();
             Core::Renderer::VkTextureData textureData;
-            std::future<bool> textureLoadFuture = Core::Renderer::Texture::loadTexture(
-                    renderData, textureData, textureFileName);
+            std::future<bool> textureLoadFuture =
+                Core::Renderer::Texture::loadTexture(renderData, textureData, textureFileName);
 
             if (textureLoadFuture.get())
             {
@@ -205,14 +205,15 @@ void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiSc
     allocInfo.descriptorSetCount = 1;
     allocInfo.pSetLayouts = &renderData.rdMeshTextureDescriptorLayout;
 
-    if (vkAllocateDescriptorSets(renderData.rdVkbDevice.device, &allocInfo,
-                                 &primitiveData.materialDescriptorSet) != VK_SUCCESS)
+    if (vkAllocateDescriptorSets(renderData.rdVkbDevice.device, &allocInfo, &primitiveData.materialDescriptorSet) !=
+        VK_SUCCESS)
     {
         Logger::log(1, "Failed to allocate material descriptor set!\n");
     }
     else
     {
-        auto makeInfo = [](const Core::Renderer::VkTextureData& tex) {
+        auto makeInfo = [](const Core::Renderer::VkTextureData& tex)
+        {
             VkDescriptorImageInfo info{};
             info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             info.imageView = tex.texTextureImageView;
@@ -223,20 +224,20 @@ void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiSc
         VkDescriptorImageInfo imageInfos[5]{};
 
         imageInfos[0] = primitiveData.textures.count(aiTextureType_DIFFUSE)
-                        ? makeInfo(primitiveData.textures[aiTextureType_DIFFUSE])
-                        : makeInfo(renderData.rdPlaceholderTexture);
+                            ? makeInfo(primitiveData.textures[aiTextureType_DIFFUSE])
+                            : makeInfo(renderData.rdPlaceholderTexture);
         imageInfos[1] = primitiveData.textures.count(aiTextureType_NORMALS)
-                        ? makeInfo(primitiveData.textures[aiTextureType_NORMALS])
-                        : makeInfo(renderData.rdPlaceholderTexture);
+                            ? makeInfo(primitiveData.textures[aiTextureType_NORMALS])
+                            : makeInfo(renderData.rdPlaceholderTexture);
         imageInfos[2] = primitiveData.textures.count(aiTextureType_METALNESS)
-                        ? makeInfo(primitiveData.textures[aiTextureType_METALNESS])
-                        : makeInfo(renderData.rdPlaceholderTexture);
+                            ? makeInfo(primitiveData.textures[aiTextureType_METALNESS])
+                            : makeInfo(renderData.rdPlaceholderTexture);
         imageInfos[3] = primitiveData.textures.count(aiTextureType_AMBIENT_OCCLUSION)
-                        ? makeInfo(primitiveData.textures[aiTextureType_AMBIENT_OCCLUSION])
-                        : makeInfo(renderData.rdPlaceholderTexture);
+                            ? makeInfo(primitiveData.textures[aiTextureType_AMBIENT_OCCLUSION])
+                            : makeInfo(renderData.rdPlaceholderTexture);
         imageInfos[4] = primitiveData.textures.count(aiTextureType_EMISSIVE)
-                        ? makeInfo(primitiveData.textures[aiTextureType_EMISSIVE])
-                        : makeInfo(renderData.rdPlaceholderTexture);
+                            ? makeInfo(primitiveData.textures[aiTextureType_EMISSIVE])
+                            : makeInfo(renderData.rdPlaceholderTexture);
 
         std::array<VkWriteDescriptorSet, 5> writes{};
         for (uint32_t i = 0; i < 5; ++i)
@@ -249,9 +250,8 @@ void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiSc
             writes[i].pImageInfo = &imageInfos[i];
         }
 
-        vkUpdateDescriptorSets(renderData.rdVkbDevice.device,
-                               static_cast<uint32_t>(writes.size()), writes.data(),
-                               0, nullptr);
+        vkUpdateDescriptorSets(renderData.rdVkbDevice.device, static_cast<uint32_t>(writes.size()), writes.data(), 0,
+                               nullptr);
     }
 
     for (size_t i = 0; i < mesh->mNumVertices; ++i)
@@ -334,7 +334,7 @@ Core::Utils::MeshData Core::Utils::loadMeshFromFile(const std::string& fileName,
 {
     Assimp::Importer importer{};
     importer.ReadFile(fileName, aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_JoinIdenticalVertices |
-                                     aiProcess_TransformUVCoords | aiProcess_GlobalScale | aiProcess_CalcTangentSpace);
+                                    aiProcess_TransformUVCoords | aiProcess_GlobalScale | aiProcess_CalcTangentSpace);
 
     const aiScene* scene = importer.GetScene();
 

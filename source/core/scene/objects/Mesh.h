@@ -13,7 +13,7 @@ namespace Core::Renderer
 // in future animation-related code should be moved to a separate SkeletalMesh class
 class Mesh : public Core::Scene::SceneObject
 {
-  public:
+public:
     explicit Mesh(std::string name, Animations::Skeleton skeleton);
 
     ~Mesh() override;
@@ -26,8 +26,7 @@ class Mesh : public Core::Scene::SceneObject
                       const std::vector<uint32_t>& indexBufferData,
                       const std::unordered_map<aiTextureType, Renderer::VkTextureData>& textures,
                       VkRenderData& renderData, const MaterialInfo& materialInfo,
-                      const Animations::BonesInfo& bonesInfo,
-                      VkDescriptorSet materialDescriptorSet);
+                      const Animations::BonesInfo& bonesInfo, VkDescriptorSet materialDescriptorSet);
 
     [[nodiscard]] Scene::ObjectType getType() const override { return Scene::ObjectType::Mesh; }
 
@@ -52,17 +51,11 @@ class Mesh : public Core::Scene::SceneObject
 
     [[nodiscard]] bool shouldPlayAnimation() const { return mShouldPlayAnimation; }
 
-    void setShouldPlayAnimation(bool shouldPlay)
-    {
-        mShouldPlayAnimation = shouldPlay;
-    }
+    void setShouldPlayAnimation(bool shouldPlay) { mShouldPlayAnimation = shouldPlay; }
 
     [[nodiscard]] bool shouldDrawDebugSkeleton() const { return mShouldDrawDebugSkeleton; }
 
-    void setShouldDrawDebugSkeleton(bool shouldDraw)
-    {
-        mShouldDrawDebugSkeleton = shouldDraw;
-    }
+    void setShouldDrawDebugSkeleton(bool shouldDraw) { mShouldDrawDebugSkeleton = shouldDraw; }
 
     void setCurrentAnimationIndex(uint32_t index)
     {
@@ -74,15 +67,9 @@ class Mesh : public Core::Scene::SceneObject
 
     [[nodiscard]] uint16_t getCurrentAnimationIndex() const { return mCurrentAnimationIndex; }
 
-    [[nodiscard]] Core::Animations::AnimationClip& getCurrentAnimation()
-    {
-        return mAnimations[mCurrentAnimationIndex];
-    }
+    [[nodiscard]] Core::Animations::AnimationClip& getCurrentAnimation() { return mAnimations[mCurrentAnimationIndex]; }
 
-    void initDebugSkeleton(Core::Renderer::VkRenderData& renderData)
-    {
-        mSkeleton.initDebug(renderData);
-    }
+    void initDebugSkeleton(Core::Renderer::VkRenderData& renderData) { mSkeleton.initDebug(renderData); }
 
     void setMeshFilePath(std::string path) { mMeshFilePath = std::move(path); }
 
@@ -92,7 +79,7 @@ class Mesh : public Core::Scene::SceneObject
 
     void deserialize(const YAML::Node& node) override;
 
-  private:
+private:
     std::vector<Core::Renderer::Primitive> mPrimitives;
     Core::Animations::Skeleton mSkeleton;
     std::vector<Core::Animations::AnimationClip> mAnimations;

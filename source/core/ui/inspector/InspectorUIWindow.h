@@ -9,18 +9,14 @@
 
 namespace Core::UI
 {
-class InspectorUIWindow : public UIWindow<InspectorUIWindow> {
+class InspectorUIWindow : public UIWindow<InspectorUIWindow>
+{
 public:
     static bool getBody()
     {
         ImGui::Begin("Inspector");
 
-        ImGui::BeginChild(
-            "InspectorScroll",
-            ImVec2(0, 0),
-            false,
-            ImGuiWindowFlags_AlwaysVerticalScrollbar
-        );
+        ImGui::BeginChild("InspectorScroll", ImVec2(0, 0), false, ImGuiWindowFlags_AlwaysVerticalScrollbar);
 
         auto* scene = Engine::getInstance().getSystem<Scene::Scene>();
         auto objects = scene->getObjects();
@@ -62,4 +58,4 @@ public:
         return true;
     }
 };
-}
+} // namespace Core::UI

@@ -8,12 +8,11 @@
 
 namespace Core
 {
-template<class>
-inline constexpr bool always_false_v = false;
+template <class> inline constexpr bool always_false_v = false;
 
 class Engine
 {
-  public:
+public:
     static Engine& getInstance()
     {
         static Engine instance;
@@ -25,8 +24,7 @@ class Engine
     void draw();
     void cleanup();
 
-    template<typename T, typename... Args>
-    T* createSystem(Args&&... args)
+    template <typename T, typename... Args> T* createSystem(Args&&... args)
     {
         static_assert(std::is_base_of_v<System::ISystem, T>, "T must derive from ISystem");
 
@@ -48,22 +46,18 @@ class Engine
         return raw;
     }
 
-    template<typename T>
-    T* getSystem()
+    template <typename T> T* getSystem()
     {
         static_assert(std::is_base_of_v<System::ISystem, T>, "T must derive from ISystem");
         auto it = mSystems.find(typeid(T));
         return (it != mSystems.end()) ? static_cast<T*>(it->second.get()) : nullptr;
     }
 
-    Core::Renderer::VkRenderData& getRenderData()
-    {
-        return mRenderData;
-    }
+    Core::Renderer::VkRenderData& getRenderData() { return mRenderData; }
 
     void setPaused(bool paused) { mPaused = paused; }
 
-  private:
+private:
     Engine() = default;
     ~Engine() = default;
 
@@ -80,4 +74,4 @@ class Engine
     // replace it with EngineState enum
     bool mPaused = false;
 };
-}
+} // namespace Core

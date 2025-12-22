@@ -40,29 +40,21 @@ Core::Animations::AnimationClip Core::Animations::AnimationsUtils::loadAnimation
         {
             const auto& key = channel->mPositionKeys[j];
             auto convertedPosition = Core::Animations::AnimationsUtils::convertVectorToGlm(key.mValue);
-            animChannel.positions.push_back({
-                static_cast<float>(key.mTime),
-                convertedPosition
-            });
+            animChannel.positions.push_back({static_cast<float>(key.mTime), convertedPosition});
         }
 
         for (unsigned int j = 0; j < channel->mNumRotationKeys; j++)
         {
             const auto& key = channel->mRotationKeys[j];
             auto convertedRotation = Core::Animations::AnimationsUtils::convertQuaternionToGlm(key.mValue);
-            animChannel.rotations.push_back({
-                static_cast<float>(key.mTime),
-                convertedRotation
-            });
+            animChannel.rotations.push_back({static_cast<float>(key.mTime), convertedRotation});
         }
 
         for (unsigned int j = 0; j < channel->mNumScalingKeys; j++)
         {
             const auto& key = channel->mScalingKeys[j];
-            animChannel.scalings.push_back({
-                static_cast<float>(key.mTime),
-                glm::vec3(key.mValue.x, key.mValue.y, key.mValue.z)
-            });
+            animChannel.scalings.push_back(
+                {static_cast<float>(key.mTime), glm::vec3(key.mValue.x, key.mValue.y, key.mValue.z)});
         }
 
         clip.channels.push_back(animChannel);

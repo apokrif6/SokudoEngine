@@ -66,8 +66,8 @@ bool Core::Renderer::ViewportRenderpass::init(Core::Renderer::VkRenderData& rend
     info.dependencyCount = 2;
     info.pDependencies = deps;
 
-    if (vkCreateRenderPass(renderData.rdVkbDevice.device, &info, nullptr,
-                           &renderData.rdViewportTarget.renderpass) != VK_SUCCESS)
+    if (vkCreateRenderPass(renderData.rdVkbDevice.device, &info, nullptr, &renderData.rdViewportTarget.renderpass) !=
+        VK_SUCCESS)
     {
         Logger::log(1, "%s error: could not create viewport renderpass\n", __FUNCTION__);
         return false;

@@ -5,7 +5,7 @@
 
 class InputHandler
 {
-  public:
+public:
     void subscribeToEvents(EventListener* listener);
 
     EventDispatcher& getDispatcher() { return mEventDispatcher; }
@@ -16,7 +16,7 @@ class InputHandler
 
     void handleMousePositionEvents(double xPosition, double yPosition);
 
-  private:
+private:
     EventDispatcher mEventDispatcher;
 
     bool mMouseLock = false;

@@ -16,7 +16,7 @@ enum class ObjectType
 
 class SceneObject : public Serialization::ISerializable
 {
-  public:
+public:
     explicit SceneObject(std::string name) : mName(std::move(name)) {}
     virtual ~SceneObject() = default;
 
@@ -48,7 +48,7 @@ class SceneObject : public Serialization::ISerializable
 
     void removeChild(SceneObject* child);
 
-  protected:
+protected:
     std::string mName;
     Transform mTransform;
     SceneObject* mParent = nullptr;

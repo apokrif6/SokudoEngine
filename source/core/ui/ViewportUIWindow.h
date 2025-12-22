@@ -28,18 +28,19 @@ public:
         if (renderData.rdViewportTarget.size.x != static_cast<int>(viewportSize.x) ||
             renderData.rdViewportTarget.size.y != static_cast<int>(viewportSize.y))
         {
-            Engine::getInstance().getSystem<Renderer::VkRenderer>()->resizeViewportTarget({viewportSize.x, viewportSize.y});
+            Engine::getInstance().getSystem<Renderer::VkRenderer>()->resizeViewportTarget(
+                {viewportSize.x, viewportSize.y});
         }
 
-        ImGui::Image(reinterpret_cast<ImTextureID>(renderData.rdViewportTarget.descriptorSet),
-                     viewportSize);
+        ImGui::Image(reinterpret_cast<ImTextureID>(renderData.rdViewportTarget.descriptorSet), viewportSize);
 
-        Scene::SceneObjectSelection sceneObjectSelection = Engine::getInstance().getSystem<Scene::Scene>()->getSceneObjectSelection();
+        Scene::SceneObjectSelection sceneObjectSelection =
+            Engine::getInstance().getSystem<Scene::Scene>()->getSceneObjectSelection();
 
         if (auto selectedObject = sceneObjectSelection.selectedObject.lock())
         {
             auto perspectiveViewMatrices =
-                    Engine::getInstance().getSystem<Renderer::VkRenderer>()->getPerspectiveViewMatrices();
+                Engine::getInstance().getSystem<Renderer::VkRenderer>()->getPerspectiveViewMatrices();
             glm::mat4 view = perspectiveViewMatrices[0];
             glm::mat4 projection = perspectiveViewMatrices[1];
 
@@ -47,18 +48,16 @@ public:
 
             ImGuizmo::SetDrawlist(ImGui::GetWindowDrawList());
 
-            ImVec2 windowPos  = ImGui::GetWindowPos();
-            ImGuizmo::SetRect(windowPos.x, windowPos.y,
-                              static_cast<float>(renderData.rdViewportTarget.size.x),
+            ImVec2 windowPos = ImGui::GetWindowPos();
+            ImGuizmo::SetRect(windowPos.x, windowPos.y, static_cast<float>(renderData.rdViewportTarget.size.x),
                               static_cast<float>(renderData.rdViewportTarget.size.y));
 
             Scene::Transform& sceneObjectTransform = selectedObject->getTransform();
 
             glm::mat4 objectMatrix = sceneObjectTransform.getMatrix();
 
-            ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(projection),
-                                 currentManipulateOperation, ImGuizmo::LOCAL,
-                                 glm::value_ptr(objectMatrix));
+            ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(projection), currentManipulateOperation,
+                                 ImGuizmo::LOCAL, glm::value_ptr(objectMatrix));
 
             if (ImGuizmo::IsUsing())
             {
@@ -87,4 +86,4 @@ public:
 private:
     static inline ImGuizmo::OPERATION currentManipulateOperation = ImGuizmo::TRANSLATE;
 };
-}  // namespace Core::UI
+} // namespace Core::UI

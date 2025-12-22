@@ -10,7 +10,8 @@ enum class DrawLayer
     Overlay
 };
 
-class IDrawable {
+class IDrawable
+{
 public:
     virtual ~IDrawable() = default;
 
@@ -18,4 +19,4 @@ public:
 
     virtual void draw(Renderer::VkRenderData& renderData) = 0;
 };
-}
+} // namespace Core::System

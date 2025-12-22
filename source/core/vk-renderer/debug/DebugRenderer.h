@@ -4,7 +4,8 @@
 
 namespace Core::Renderer::Debug
 {
-struct LineVertex {
+struct LineVertex
+{
     glm::vec3 position;
     glm::vec3 color;
 
@@ -18,4 +19,4 @@ struct LineVertex {
         return bindingDescription;
     }
 };
-}
+} // namespace Core::Renderer::Debug

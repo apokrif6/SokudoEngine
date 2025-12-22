@@ -9,7 +9,7 @@ namespace Core::Renderer
 {
 class Primitive
 {
-  public:
+public:
     Primitive(const std::vector<Renderer::NewVertex>& vertexBufferData, const std::vector<uint32_t>& indexBufferData,
               const std::unordered_map<aiTextureType, Renderer::VkTextureData>& textures,
               const Renderer::MaterialInfo& materialInfo, const Animations::BonesInfo& bonesInfo,
@@ -27,7 +27,7 @@ class Primitive
 
     Animations::BonesInfo& getBonesInfo() { return mBonesInfo; }
 
-  private:
+private:
     void createVertexBuffer(Renderer::VkRenderData& renderData);
 
     void createIndexBuffer(Renderer::VkRenderData& renderData);

@@ -8,8 +8,9 @@ namespace Core::Renderer
 {
 class UniformBuffer
 {
-  public:
-    static bool init(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData, size_t bufferSize, const std::string& name);
+public:
+    static bool init(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData, size_t bufferSize,
+                     const std::string& name);
 
     static void uploadData(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData,
                            const glm::vec3& vector);

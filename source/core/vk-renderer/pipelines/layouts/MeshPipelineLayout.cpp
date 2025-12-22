@@ -110,7 +110,8 @@ bool Core::Renderer::MeshPipelineLayout::init(Core::Renderer::VkRenderData& rend
     cameraLayoutInfo.pBindings = &cameraBinding;
 
     if (vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &cameraLayoutInfo, nullptr,
-                                    &renderData.rdMeshCameraDescriptorLayout) != VK_SUCCESS) {
+                                    &renderData.rdMeshCameraDescriptorLayout) != VK_SUCCESS)
+    {
         Logger::log(1, "%s error: failed to create camera descriptor layout\n", __FUNCTION__);
         return false;
     }
@@ -127,20 +128,17 @@ bool Core::Renderer::MeshPipelineLayout::init(Core::Renderer::VkRenderData& rend
     lightsLayoutInfo.pBindings = &lightsBinding;
 
     if (vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &lightsLayoutInfo, nullptr,
-                                    &renderData.rdMeshLightsDescriptorLayout) != VK_SUCCESS) {
+                                    &renderData.rdMeshLightsDescriptorLayout) != VK_SUCCESS)
+    {
         Logger::log(1, "%s error: failed to create lights descriptor layout\n", __FUNCTION__);
         return false;
     }
 
     VkDescriptorSetLayout layouts[] = {
-        renderData.rdMeshTextureDescriptorLayout,
-        renderData.rdMeshViewMatrixDescriptorLayout,
-        renderData.rdMeshMaterialDescriptorLayout,
-        renderData.rdMeshBonesTransformDescriptorLayout,
-        renderData.rdMeshModelDescriptorLayout,
-        renderData.rdMeshCameraDescriptorLayout,
-        renderData.rdMeshLightsDescriptorLayout
-    };
+        renderData.rdMeshTextureDescriptorLayout,  renderData.rdMeshViewMatrixDescriptorLayout,
+        renderData.rdMeshMaterialDescriptorLayout, renderData.rdMeshBonesTransformDescriptorLayout,
+        renderData.rdMeshModelDescriptorLayout,    renderData.rdMeshCameraDescriptorLayout,
+        renderData.rdMeshLightsDescriptorLayout};
 
     VkPushConstantRange pushConstantRange{};
     pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
@@ -170,7 +168,8 @@ void Core::Renderer::MeshPipelineLayout::cleanup(Core::Renderer::VkRenderData& r
     vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdMeshTextureDescriptorLayout, nullptr);
     vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdMeshViewMatrixDescriptorLayout, nullptr);
     vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdMeshMaterialDescriptorLayout, nullptr);
-    vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdMeshBonesTransformDescriptorLayout, nullptr);
+    vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdMeshBonesTransformDescriptorLayout,
+                                 nullptr);
     vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdMeshModelDescriptorLayout, nullptr);
     vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdMeshCameraDescriptorLayout, nullptr);
     vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdMeshLightsDescriptorLayout, nullptr);

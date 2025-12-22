@@ -22,14 +22,15 @@ Core::Scene::Scene Core::Scene::Serialization::deserializeScene(const YAML::Node
         auto type = static_cast<ObjectType>(objectNode["type"].as<int>());
         std::shared_ptr<SceneObject> object;
 
-        switch (type) {
-            case ObjectType::Mesh:
-                object = std::make_shared<Core::Renderer::Mesh>("", Animations::Skeleton{});
-                break;
-            case ObjectType::Empty:
-            default:
-                object = std::make_shared<SceneObject>("");
-                break;
+        switch (type)
+        {
+        case ObjectType::Mesh:
+            object = std::make_shared<Core::Renderer::Mesh>("", Animations::Skeleton{});
+            break;
+        case ObjectType::Empty:
+        default:
+            object = std::make_shared<SceneObject>("");
+            break;
         }
 
         object->deserialize(objectNode);

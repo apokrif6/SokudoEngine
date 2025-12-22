@@ -9,4 +9,4 @@ struct SceneObjectSelection
 {
     std::weak_ptr<Core::Scene::SceneObject> selectedObject;
 };
-}
+} // namespace Core::Scene

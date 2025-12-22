@@ -14,4 +14,4 @@ public:
     static void saveSceneToFile(const Scene& scene, const std::string& filename);
     static Scene loadSceneFromFile(const std::string& filename);
 };
-}
+} // namespace Core::Scene

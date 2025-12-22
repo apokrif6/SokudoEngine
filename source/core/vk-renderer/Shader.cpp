@@ -60,8 +60,8 @@ Core::Renderer::Shader::getAttributeDescriptionsBySpvReflect(const std::string& 
     {
         if (inputVariable->location == spvReflectionInterfaceVariableLocationNotFound)
         {
-            Logger::log(1, "%s: input variable '%s' has no location assigned, skipping\n",
-                        __FUNCTION__, inputVariable->name);
+            Logger::log(1, "%s: input variable '%s' has no location assigned, skipping\n", __FUNCTION__,
+                        inputVariable->name);
             continue;
         }
 

@@ -10,7 +10,7 @@ namespace Core::UI
 {
 class ProfilingUIWindow : public UIWindow<ProfilingUIWindow>
 {
-  public:
+public:
     static bool getBody()
     {
         if (!ImGui::Begin("Profiling"))
@@ -60,7 +60,7 @@ class ProfilingUIWindow : public UIWindow<ProfilingUIWindow>
         return true;
     }
 
-  private:
+private:
     inline static float mFramesPerSecond = 0.0f;
     inline static float mAveragingAlpha = 0.95f;
 

@@ -11,4 +11,4 @@ public:
 
     static void cleanup(Core::Renderer::VkRenderData& renderData);
 };
-}
+} // namespace Core::Renderer

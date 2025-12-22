@@ -2,6 +2,6 @@
 
 struct Event
 {
-  public:
+public:
     virtual ~Event() = default;
 };

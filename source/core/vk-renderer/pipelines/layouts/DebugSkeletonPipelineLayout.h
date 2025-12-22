@@ -6,7 +6,7 @@ namespace Core::Renderer
 {
 class DebugSkeletonPipelineLayout
 {
-  public:
+public:
     static bool init(Core::Renderer::VkRenderData& renderData, VkPipelineLayout& pipelineLayout);
 
     static void cleanup(Core::Renderer::VkRenderData& renderData, VkPipelineLayout& pipelineLayout);

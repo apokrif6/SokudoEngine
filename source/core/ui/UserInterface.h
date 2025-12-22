@@ -11,7 +11,7 @@ namespace Core::Renderer
 {
 class UserInterface : public EventListener, public System::ISystem, public System::IUpdatable, public System::IDrawable
 {
-  public:
+public:
     bool init(VkRenderData& renderData);
 
     virtual void update(VkRenderData& renderData, float deltaTime) override;
@@ -24,7 +24,7 @@ class UserInterface : public EventListener, public System::ISystem, public Syste
 
     void onEvent(const Event& event) override;
 
-  private:
+private:
     void setupImGuiStyle() const;
 };
 } // namespace Core::Renderer

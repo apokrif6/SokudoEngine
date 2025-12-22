@@ -6,14 +6,14 @@ namespace Core::Profiling
 {
 class PlotBuffer
 {
-  public:
+public:
     explicit PlotBuffer(const size_t inMaxSize = 60) : maxSize(inMaxSize) {}
 
     void push(float value);
 
     void draw(const char* label);
 
-  private:
+private:
     std::deque<float> values;
     size_t maxSize;
 };

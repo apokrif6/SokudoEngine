@@ -286,5 +286,5 @@ void Core::Renderer::UserInterface::setupImGuiStyle() const
 
     colors[ImGuiCol_ResizeGrip] = ImVec4(0.30f, 0.12f, 0.5f, 0.5f);
     colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.45f, 0.20f, 0.7f, 0.7f);
-    colors[ImGuiCol_ResizeGripActive]  = ImVec4(0.6f, 0.25f, 0.85f, 0.9f);
+    colors[ImGuiCol_ResizeGripActive] = ImVec4(0.6f, 0.25f, 0.85f, 0.9f);
 }

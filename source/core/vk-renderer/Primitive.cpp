@@ -20,7 +20,8 @@ Core::Renderer::Primitive::Primitive(const std::vector<Core::Renderer::NewVertex
     else
     {
         auto foundBaseColorTexture = mTextures.find(aiTextureType_BASE_COLOR);
-        if (foundBaseColorTexture != mTextures.end()) {
+        if (foundBaseColorTexture != mTextures.end())
+        {
             mAlbedoTexture = foundBaseColorTexture->second;
         }
     }
@@ -66,12 +67,12 @@ void Core::Renderer::Primitive::createModelMatrixBuffer(Core::Renderer::VkRender
     Core::Renderer::UniformBuffer::init(renderData, mModelUBO, sizeof(glm::mat4), "ModelMatrix");
 }
 
-void Core::Renderer::Primitive::createCameraBuffer(Core::Renderer::VkRenderData &renderData)
+void Core::Renderer::Primitive::createCameraBuffer(Core::Renderer::VkRenderData& renderData)
 {
     UniformBuffer::init(renderData, mCameraUBO, sizeof(CameraInfo), "Camera");
 }
 
-void Core::Renderer::Primitive::createLightsBuffer(Core::Renderer::VkRenderData &renderData)
+void Core::Renderer::Primitive::createLightsBuffer(Core::Renderer::VkRenderData& renderData)
 {
     UniformBuffer::init(renderData, mLightsUBO, sizeof(LightsInfo), "Lights");
 
@@ -100,7 +101,8 @@ void Core::Renderer::Primitive::uploadIndexBuffer(Core::Renderer::VkRenderData& 
     Core::Renderer::IndexBuffer::uploadData(renderData, primitiveRenderData.rdModelIndexBufferData, mIndexBufferData);
 }
 
-void Core::Renderer::Primitive::uploadUniformBuffer(Core::Renderer::VkRenderData& renderData, const glm::mat4& modelMatrix)
+void Core::Renderer::Primitive::uploadUniformBuffer(Core::Renderer::VkRenderData& renderData,
+                                                    const glm::mat4& modelMatrix)
 {
     Core::Renderer::UniformBuffer::uploadData(renderData, mBonesTransformUBO, mBonesInfo.finalTransforms);
 
@@ -116,7 +118,7 @@ void Core::Renderer::Primitive::draw(const Core::Renderer::VkRenderData& renderD
     vkCmdBindPipeline(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdMeshPipeline);
 
     vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                        renderData.rdMeshPipelineLayout, 0, 1, &mMaterialDescriptorSet, 0, nullptr);
+                            renderData.rdMeshPipelineLayout, 0, 1, &mMaterialDescriptorSet, 0, nullptr);
 
     vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                             renderData.rdMeshPipelineLayout, 1, 1,
@@ -125,9 +127,8 @@ void Core::Renderer::Primitive::draw(const Core::Renderer::VkRenderData& renderD
     vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                             renderData.rdMeshPipelineLayout, 2, 1, &mMaterialUBO.rdUBODescriptorSet, 0, nullptr);
 
-    const VkDescriptorSet& bonesSet = mBonesInfo.bones.empty()
-                                      ? renderData.rdDummyBonesUBO.rdUBODescriptorSet
-                                      : mBonesTransformUBO.rdUBODescriptorSet;
+    const VkDescriptorSet& bonesSet = mBonesInfo.bones.empty() ? renderData.rdDummyBonesUBO.rdUBODescriptorSet
+                                                               : mBonesTransformUBO.rdUBODescriptorSet;
 
     vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                             renderData.rdMeshPipelineLayout, 3, 1, &bonesSet, 0, nullptr);
@@ -141,18 +142,17 @@ void Core::Renderer::Primitive::draw(const Core::Renderer::VkRenderData& renderD
     vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                             renderData.rdMeshPipelineLayout, 6, 1, &mLightsUBO.rdUBODescriptorSet, 0, nullptr);
 
-    vkCmdPushConstants(renderData.rdCommandBuffer, renderData.rdMeshPipelineLayout,
-                       VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PrimitiveFlagsPushConstants), &primitiveFlagsPushConstants);
+    vkCmdPushConstants(renderData.rdCommandBuffer, renderData.rdMeshPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0,
+                       sizeof(PrimitiveFlagsPushConstants), &primitiveFlagsPushConstants);
 
     VkDeviceSize offset = 0;
     vkCmdBindVertexBuffers(renderData.rdCommandBuffer, 0, 1,
                            &primitiveRenderData.rdModelVertexBufferData.rdVertexBuffer, &offset);
 
-    vkCmdBindIndexBuffer(renderData.rdCommandBuffer, primitiveRenderData.rdModelIndexBufferData.rdIndexBuffer,
-                         0, VK_INDEX_TYPE_UINT32);
+    vkCmdBindIndexBuffer(renderData.rdCommandBuffer, primitiveRenderData.rdModelIndexBufferData.rdIndexBuffer, 0,
+                         VK_INDEX_TYPE_UINT32);
 
-    vkCmdDrawIndexed(renderData.rdCommandBuffer,
-                     static_cast<uint32_t>(mIndexBufferData.size()), 1, 0, 0, 0);
+    vkCmdDrawIndexed(renderData.rdCommandBuffer, static_cast<uint32_t>(mIndexBufferData.size()), 1, 0, 0, 0);
 }
 
 void Core::Renderer::Primitive::cleanup(Core::Renderer::VkRenderData& renderData)

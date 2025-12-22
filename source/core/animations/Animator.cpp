@@ -39,8 +39,7 @@ void Core::Animations::Animator::updateBonesTransform(Renderer::Mesh* mesh, uint
 
         const Core::Animations::Skeleton& skeleton = mesh->getSkeleton();
 
-        readNodeHierarchyClip(animation, timeInTicks, skeleton.getRootNode(),
-                              glm::mat4(1.0f),bonesInfo, skeleton);
+        readNodeHierarchyClip(animation, timeInTicks, skeleton.getRootNode(), glm::mat4(1.0f), bonesInfo, skeleton);
 
         for (size_t i = 0; i < bonesInfoSize; ++i)
         {
@@ -63,7 +62,7 @@ const Core::Animations::AnimationChannel* findChannel(const Core::Animations::An
 }
 
 glm::vec3 Core::Animations::Animator::interpolatePositionClip(const std::vector<KeyframeVec3>& keyframes,
-                                                                       float animationTime)
+                                                              float animationTime)
 {
     if (keyframes.size() == 1)
     {
@@ -86,7 +85,7 @@ glm::vec3 Core::Animations::Animator::interpolatePositionClip(const std::vector<
 }
 
 glm::quat Core::Animations::Animator::interpolateRotationClip(const std::vector<KeyframeQuat>& keyframes,
-                                                                       float animationTime)
+                                                              float animationTime)
 {
     if (keyframes.size() == 1)
     {
@@ -109,14 +108,14 @@ glm::quat Core::Animations::Animator::interpolateRotationClip(const std::vector<
 }
 
 glm::vec3 Core::Animations::Animator::interpolateScaleClip(const std::vector<KeyframeVec3>& keyframes,
-                                                                    float animationTime)
+                                                           float animationTime)
 {
     return interpolatePositionClip(keyframes, animationTime);
 }
 
 void Core::Animations::Animator::readNodeHierarchyClip(const AnimationClip& clip, float animationTime,
-                                                                const BoneNode& node, const glm::mat4& parentTransform,
-                                                                BonesInfo& bonesInfo, const Skeleton& skeleton)
+                                                       const BoneNode& node, const glm::mat4& parentTransform,
+                                                       BonesInfo& bonesInfo, const Skeleton& skeleton)
 {
     std::string nodeName = node.name;
     glm::mat4 nodeTransform = node.localTransform;

@@ -5,13 +5,10 @@
 
 class EventDispatcher
 {
-  public:
+public:
     void subscribe(EventListener* listener) { mListeners.push_back(listener); }
 
-    void unsubscribe(EventListener* listener)
-    {
-        std::erase(mListeners, listener);
-    }
+    void unsubscribe(EventListener* listener) { std::erase(mListeners, listener); }
 
     void dispatch(const Event& event)
     {
@@ -21,6 +18,6 @@ class EventDispatcher
         }
     }
 
-  private:
+private:
     std::vector<EventListener*> mListeners;
 };

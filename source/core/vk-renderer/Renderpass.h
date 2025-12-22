@@ -6,9 +6,9 @@ namespace Core::Renderer
 {
 class Renderpass
 {
-  public:
+public:
     static bool init(Core::Renderer::VkRenderData& renderData);
 
     static void cleanup(Core::Renderer::VkRenderData& renderData);
 };
-}
+} // namespace Core::Renderer

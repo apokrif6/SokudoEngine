@@ -7,7 +7,7 @@ namespace Core::Renderer
 {
 class IndexBuffer
 {
-  public:
+public:
     static bool init(Core::Renderer::VkRenderData& renderData, VkIndexBufferData& indexBufferData,
                      unsigned int bufferSize, const std::string& name);
 

@@ -9,25 +9,25 @@
 
 namespace Core::Renderer::Debug
 {
-struct DebugBone {
+struct DebugBone
+{
     glm::vec3 start;
     glm::vec3 end;
 };
 
 class Skeleton
 {
-  public:
+public:
     void init(Core::Renderer::VkRenderData& renderData);
     void update(Core::Renderer::VkRenderData& renderData, const std::vector<DebugBone>& bones);
     void draw(Core::Renderer::VkRenderData& renderData);
     void cleanup(Core::Renderer::VkRenderData& renderData);
 
-  private:
+private:
     void createVertexBuffer(Renderer::VkRenderData& renderData);
 
     Core::Renderer::VkVertexBufferData mDebugLinesBuffer;
 
     uint32_t mDebugLinesCount = 0;
 };
-}
-
+} // namespace Core::Renderer::Debug

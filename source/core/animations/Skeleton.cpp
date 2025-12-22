@@ -1,6 +1,5 @@
 #include "Skeleton.h"
 
-
 void Core::Animations::Skeleton::initDebug(Core::Renderer::VkRenderData& renderData)
 {
     if (!debugDraw)
@@ -11,7 +10,7 @@ void Core::Animations::Skeleton::initDebug(Core::Renderer::VkRenderData& renderD
 }
 
 void Core::Animations::Skeleton::updateDebug(Core::Renderer::VkRenderData& renderData,
-                 const std::vector<Renderer::Debug::DebugBone>& bones) const
+                                             const std::vector<Renderer::Debug::DebugBone>& bones) const
 {
     if (debugDraw)
     {
@@ -27,7 +26,7 @@ void Core::Animations::Skeleton::drawDebug(Core::Renderer::VkRenderData& renderD
     }
 }
 
-void Core::Animations::Skeleton::cleanup(Core::Renderer::VkRenderData &renderData)
+void Core::Animations::Skeleton::cleanup(Core::Renderer::VkRenderData& renderData)
 {
     if (debugDraw)
     {
@@ -43,7 +42,4 @@ YAML::Node Core::Animations::Skeleton::serialize() const
     return node;
 }
 
-void Core::Animations::Skeleton::deserialize(const YAML::Node& node)
-{
-    rootNode.deserialize(node["rootNode"]);
-}
+void Core::Animations::Skeleton::deserialize(const YAML::Node& node) { rootNode.deserialize(node["rootNode"]); }

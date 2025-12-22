@@ -34,24 +34,14 @@ void Core::Scene::SceneObject::deserialize(const YAML::Node& node)
     mName = node["name"].as<std::string>();
 
     auto transformNode = node["transform"];
-    mTransform.position = glm::vec3(
-            transformNode["position"][0].as<float>(),
-            transformNode["position"][1].as<float>(),
-            transformNode["position"][2].as<float>()
-    );
+    mTransform.position = glm::vec3(transformNode["position"][0].as<float>(), transformNode["position"][1].as<float>(),
+                                    transformNode["position"][2].as<float>());
 
-    mTransform.rotation = glm::quat(
-            transformNode["rotation"][0].as<float>(),
-            transformNode["rotation"][1].as<float>(),
-            transformNode["rotation"][2].as<float>(),
-            transformNode["rotation"][3].as<float>()
-    );
+    mTransform.rotation = glm::quat(transformNode["rotation"][0].as<float>(), transformNode["rotation"][1].as<float>(),
+                                    transformNode["rotation"][2].as<float>(), transformNode["rotation"][3].as<float>());
 
-    mTransform.scale = glm::vec3(
-            transformNode["scale"][0].as<float>(),
-            transformNode["scale"][1].as<float>(),
-            transformNode["scale"][2].as<float>()
-    );
+    mTransform.scale = glm::vec3(transformNode["scale"][0].as<float>(), transformNode["scale"][1].as<float>(),
+                                 transformNode["scale"][2].as<float>());
 };
 
 void Core::Scene::SceneObject::addChild(const std::shared_ptr<SceneObject>& child)
@@ -62,7 +52,6 @@ void Core::Scene::SceneObject::addChild(const std::shared_ptr<SceneObject>& chil
 
 void Core::Scene::SceneObject::removeChild(SceneObject* child)
 {
-    mChildren.erase(std::remove_if(mChildren.begin(), mChildren.end(),
-                           [&](const auto& c){ return c.get() == child; }),
-            mChildren.end());
+    mChildren.erase(std::remove_if(mChildren.begin(), mChildren.end(), [&](const auto& c) { return c.get() == child; }),
+                    mChildren.end());
 }

@@ -27,14 +27,10 @@ bool Core::Renderer::IndexBuffer::init(Core::Renderer::VkRenderData& renderData,
     }
 
     indexBufferData.rdName = "Index Buffer " + name;
-    vmaSetAllocationName(renderData.rdAllocator,
-                         indexBufferData.rdIndexBufferAlloc,
-                         indexBufferData.rdName.c_str());
+    vmaSetAllocationName(renderData.rdAllocator, indexBufferData.rdIndexBufferAlloc, indexBufferData.rdName.c_str());
 
-    Core::Renderer::Debug::setObjectName(renderData.rdVkbDevice.device,
-                                         (uint64_t)indexBufferData.rdIndexBuffer,
-                                         VK_OBJECT_TYPE_BUFFER,
-                                         indexBufferData.rdName);
+    Core::Renderer::Debug::setObjectName(renderData.rdVkbDevice.device, (uint64_t)indexBufferData.rdIndexBuffer,
+                                         VK_OBJECT_TYPE_BUFFER, indexBufferData.rdName);
 
     VkBufferCreateInfo stagingBufferInfo{};
     stagingBufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -46,18 +42,16 @@ bool Core::Renderer::IndexBuffer::init(Core::Renderer::VkRenderData& renderData,
 
     VmaAllocationInfo stagingAllocInfo{};
 
-    if (vmaCreateBuffer(renderData.rdAllocator, &stagingBufferInfo, &stagingAllocCreateInfo, &indexBufferData.rdStagingBuffer,
-                        &indexBufferData.rdStagingBufferAlloc, &stagingAllocInfo) != VK_SUCCESS)
+    if (vmaCreateBuffer(renderData.rdAllocator, &stagingBufferInfo, &stagingAllocCreateInfo,
+                        &indexBufferData.rdStagingBuffer, &indexBufferData.rdStagingBufferAlloc,
+                        &stagingAllocInfo) != VK_SUCCESS)
     {
         Logger::log(1, "%s error: could not allocate index staging buffer via VMA\n", __FUNCTION__);
         return false;
     }
 
     indexBufferData.rdName = "Index Staging Buffer " + name;
-    vmaSetAllocationName(renderData.rdAllocator,
-                         indexBufferData.rdStagingBufferAlloc,
-                         indexBufferData.rdName.c_str());
-
+    vmaSetAllocationName(renderData.rdAllocator, indexBufferData.rdStagingBufferAlloc, indexBufferData.rdName.c_str());
 
     indexBufferData.rdIndexBufferSize = bufferSize;
     return true;

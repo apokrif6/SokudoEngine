@@ -12,7 +12,7 @@ namespace Core::Scene
 {
 class Scene : public System::ISystem, public System::IUpdatable, public System::IDrawable
 {
-  public:
+public:
     void addObject(std::shared_ptr<SceneObject> object);
 
     virtual void update(Core::Renderer::VkRenderData& renderData, float deltaTime) override;
@@ -27,7 +27,7 @@ class Scene : public System::ISystem, public System::IUpdatable, public System::
 
     [[nodiscard]] SceneObjectSelection& getSceneObjectSelection() { return sceneObjectSelection; }
 
-  private:
+private:
     std::vector<std::shared_ptr<SceneObject>> mObjects;
 
     SceneObjectSelection sceneObjectSelection;

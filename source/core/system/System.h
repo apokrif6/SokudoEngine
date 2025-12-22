@@ -2,8 +2,9 @@
 
 namespace Core::System
 {
-class ISystem {
+class ISystem
+{
 public:
     virtual ~ISystem() = default;
 };
-}
+} // namespace Core::System
