@@ -1,6 +1,7 @@
 #include "SceneUIWindow.h"
 
 #include "core/engine/Engine.h"
+#include "core/engine/ScopedEngineState.h"
 #include "core/scene/SceneEditor.h"
 #include "core/scene/Serialization.h"
 #include "imgui_stdlib.h"
@@ -51,11 +52,13 @@ bool Core::UI::SceneUIWindow::getBody()
             {
                 if (!saveFilename.empty())
                 {
+                    ScopedEngineState pause{EngineState::Loading};
+
                     if (saveFilename.find(".yaml") == std::string::npos)
                     {
                         saveFilename += ".yaml";
                     }
-                    Core::Scene::Serialization::saveSceneToFile(*Core::Engine::getInstance().getSystem<Scene::Scene>(),
+                    Scene::Serialization::saveSceneToFile(*Engine::getInstance().getSystem<Scene::Scene>(),
                                                                 "assets/scenes/" + saveFilename);
                     showSaveDialog = false;
                 }
@@ -90,9 +93,13 @@ bool Core::UI::SceneUIWindow::getBody()
 
             if (ImGui::Button("Load", ImVec2(120, 0)) && !selectedSceneFile.empty())
             {
-                Scene::Scene loadedScene =
-                    Core::Scene::Serialization::loadSceneFromFile("assets/scenes/" + selectedSceneFile);
-                *Core::Engine::getInstance().getSystem<Scene::Scene>() = loadedScene;
+                ScopedEngineState pause{EngineState::Loading};
+
+                const Scene::Scene loadedScene =
+                    Scene::Serialization::loadSceneFromFile("assets/scenes/" + selectedSceneFile);
+                
+                Engine::getInstance().getSystem<Scene::Scene>()->cleanup(Engine::getInstance().getRenderData());
+                *Engine::getInstance().getSystem<Scene::Scene>() = loadedScene;
                 showLoadDialog = false;
             }
 
@@ -108,7 +115,7 @@ bool Core::UI::SceneUIWindow::getBody()
 
     ImGui::Separator();
 
-    auto* scene = Core::Engine::getInstance().getSystem<Scene::Scene>();
+    auto* scene = Engine::getInstance().getSystem<Scene::Scene>();
     auto objects = scene->getObjects();
     auto& selection = scene->getSceneObjectSelection();
 
@@ -151,8 +158,8 @@ void Core::UI::SceneUIWindow::refreshSceneFiles()
     }
 }
 
-void Core::UI::SceneUIWindow::drawSceneObjectNode(std::shared_ptr<Core::Scene::SceneObject> object,
-                                                  Core::Scene::SceneObjectSelection& selection)
+void Core::UI::SceneUIWindow::drawSceneObjectNode(std::shared_ptr<Scene::SceneObject> object,
+                                                  Scene::SceneObjectSelection& selection)
 {
     // TODO
     // add ensure
@@ -180,7 +187,7 @@ void Core::UI::SceneUIWindow::drawSceneObjectNode(std::shared_ptr<Core::Scene::S
 
     if (ImGui::BeginDragDropSource())
     {
-        ImGui::SetDragDropPayload("SCENE_NODE", &object, sizeof(std::shared_ptr<Core::Scene::SceneObject>));
+        ImGui::SetDragDropPayload("SCENE_NODE", &object, sizeof(std::shared_ptr<Scene::SceneObject>));
         ImGui::Text("%s", object->getName().c_str());
         ImGui::EndDragDropSource();
     }
@@ -189,7 +196,7 @@ void Core::UI::SceneUIWindow::drawSceneObjectNode(std::shared_ptr<Core::Scene::S
     {
         if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_NODE"))
         {
-            auto dropped = *(std::shared_ptr<Core::Scene::SceneObject>*)payload->Data;
+            auto dropped = *(std::shared_ptr<Scene::SceneObject>*)payload->Data;
 
             if (dropped != object)
             {

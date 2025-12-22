@@ -1,6 +1,5 @@
 #include "Serialization.h"
 #include "core/scene/objects/Mesh.h"
-#include "core/engine/ScopedEngineState.h"
 #include <fstream>
 
 YAML::Node Core::Scene::Serialization::serialize(const Scene& scene)
@@ -41,8 +40,6 @@ Core::Scene::Scene Core::Scene::Serialization::deserializeScene(const YAML::Node
 
 void Core::Scene::Serialization::saveSceneToFile(const Scene& scene, const std::string& filename)
 {
-    ScopedEngineState pause{EngineState::Loading};
-
     YAML::Node sceneNode = serialize(scene);
     std::ofstream fout(filename, std::ios::out | std::ios::trunc);
     if (fout.is_open())
@@ -54,8 +51,6 @@ void Core::Scene::Serialization::saveSceneToFile(const Scene& scene, const std::
 
 Core::Scene::Scene Core::Scene::Serialization::loadSceneFromFile(const std::string& filename)
 {
-    ScopedEngineState pause{EngineState::Loading};
-
     std::ifstream fin(filename);
     if (!fin.is_open())
     {
