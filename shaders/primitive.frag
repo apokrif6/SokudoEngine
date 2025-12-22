@@ -155,14 +155,19 @@ void main() {
     }
 
     vec3 R = reflect(-V, N);
-    vec3 envColor = texture(environmentMap, R).rgb;
+    vec3 R_rough = normalize(mix(R, N, roughness * roughness));
+    vec3 envColor = texture(environmentMap, R_rough).rgb;
 
     vec3 F0 = mix(vec3(0.04), albedo, metallic);
     vec3 F = fresnelSchlick(max(dot(N, V), 0.0), F0);
+    F = clamp(F, 0.0, 0.9);
 
-    vec3 ambientSpecular = envColor * F;
+    vec3 ambientSpecular = envColor * F * (1.0 - roughness);
 
-    vec3 ambient = 0.03 * albedo * ao;
+    vec3 kS = F;
+    vec3 kD = (1.0 - kS) * (1.0 - metallic);
+    vec3 ambient = kD * envColor * albedo * 0.2 * ao;
+
     vec3 color = ambient + Lo + ambientSpecular + emissive;
 
     color = color / (color + vec3(1.0));
