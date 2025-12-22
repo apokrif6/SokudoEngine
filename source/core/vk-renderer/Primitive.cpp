@@ -3,12 +3,12 @@
 #include "Texture.h"
 #include "core/scene/objects/Mesh.h"
 
-Core::Renderer::Primitive::Primitive(const std::vector<Core::Renderer::NewVertex>& vertexBufferData,
+Core::Renderer::Primitive::Primitive(const std::vector<NewVertex>& vertexBufferData,
                                      const std::vector<uint32_t>& indexBufferData,
-                                     const std::unordered_map<aiTextureType, Renderer::VkTextureData>& textures,
-                                     const Core::Renderer::MaterialInfo& materialInfo,
-                                     const Core::Animations::BonesInfo& bonesInfo,
-                                     Core::Renderer::VkRenderData& renderData, VkDescriptorSet materialDescriptorSet)
+                                     const std::unordered_map<aiTextureType, VkTextureData>& textures,
+                                     const MaterialInfo& materialInfo,
+                                     const Animations::BonesInfo& bonesInfo,
+                                     VkRenderData& renderData, VkDescriptorSet materialDescriptorSet)
     : mVertexBufferData(vertexBufferData), mIndexBufferData(indexBufferData), mTextures(textures),
       mMaterialInfo(materialInfo), mBonesInfo(bonesInfo), mMaterialDescriptorSet(materialDescriptorSet)
 {
@@ -37,42 +37,42 @@ Core::Renderer::Primitive::Primitive(const std::vector<Core::Renderer::NewVertex
     primitiveFlagsPushConstants.hasSkinning = mBonesInfo.bones.empty() ? 0 : 1;
 }
 
-void Core::Renderer::Primitive::createVertexBuffer(Core::Renderer::VkRenderData& renderData)
+void Core::Renderer::Primitive::createVertexBuffer(VkRenderData& renderData)
 {
-    Core::Renderer::VertexBuffer::init(renderData, primitiveRenderData.rdModelVertexBufferData,
-                                       mVertexBufferData.size() * sizeof(Core::Renderer::NewVertex), "Primitive");
+    VertexBuffer::init(renderData, primitiveRenderData.rdModelVertexBufferData,
+                                       mVertexBufferData.size() * sizeof(NewVertex), "Primitive");
 }
 
-void Core::Renderer::Primitive::createIndexBuffer(Core::Renderer::VkRenderData& renderData)
+void Core::Renderer::Primitive::createIndexBuffer(VkRenderData& renderData)
 {
-    Core::Renderer::IndexBuffer::init(renderData, primitiveRenderData.rdModelIndexBufferData,
+    IndexBuffer::init(renderData, primitiveRenderData.rdModelIndexBufferData,
                                       static_cast<int64_t>(mIndexBufferData.size()), "Primitive");
 }
 
-void Core::Renderer::Primitive::createMaterialBuffer(Core::Renderer::VkRenderData& renderData)
+void Core::Renderer::Primitive::createMaterialBuffer(VkRenderData& renderData)
 {
-    Core::Renderer::UniformBuffer::init(renderData, mMaterialUBO, sizeof(Renderer::MaterialInfo), "Material");
+    UniformBuffer::init(renderData, mMaterialUBO, sizeof(MaterialInfo), "Material");
 
-    Core::Renderer::UniformBuffer::uploadData(renderData, mMaterialUBO, mMaterialInfo);
+    UniformBuffer::uploadData(renderData, mMaterialUBO, mMaterialInfo);
 }
 
-void Core::Renderer::Primitive::createBonesTransformBuffer(Core::Renderer::VkRenderData& renderData)
+void Core::Renderer::Primitive::createBonesTransformBuffer(VkRenderData& renderData)
 {
-    Core::Renderer::UniformBuffer::init(renderData, mBonesTransformUBO,
+    UniformBuffer::init(renderData, mBonesTransformUBO,
                                         mBonesInfo.finalTransforms.size() * sizeof(glm::mat4), "BonesTransform");
 }
 
-void Core::Renderer::Primitive::createModelMatrixBuffer(Core::Renderer::VkRenderData& renderData)
+void Core::Renderer::Primitive::createModelMatrixBuffer(VkRenderData& renderData)
 {
-    Core::Renderer::UniformBuffer::init(renderData, mModelUBO, sizeof(glm::mat4), "ModelMatrix");
+    UniformBuffer::init(renderData, mModelUBO, sizeof(glm::mat4), "ModelMatrix");
 }
 
-void Core::Renderer::Primitive::createCameraBuffer(Core::Renderer::VkRenderData& renderData)
+void Core::Renderer::Primitive::createCameraBuffer(VkRenderData& renderData)
 {
     UniformBuffer::init(renderData, mCameraUBO, sizeof(CameraInfo), "Camera");
 }
 
-void Core::Renderer::Primitive::createLightsBuffer(Core::Renderer::VkRenderData& renderData)
+void Core::Renderer::Primitive::createLightsBuffer(VkRenderData& renderData)
 {
     UniformBuffer::init(renderData, mLightsUBO, sizeof(LightsInfo), "Lights");
 
@@ -87,33 +87,33 @@ void Core::Renderer::Primitive::createLightsBuffer(Core::Renderer::VkRenderData&
         lightsData.colors[i] = glm::vec4(0.f);
     }
 
-    Core::Renderer::UniformBuffer::uploadData(renderData, mLightsUBO, lightsData);
+    UniformBuffer::uploadData(renderData, mLightsUBO, lightsData);
 }
 
-void Core::Renderer::Primitive::uploadVertexBuffer(Core::Renderer::VkRenderData& renderData)
+void Core::Renderer::Primitive::uploadVertexBuffer(VkRenderData& renderData)
 {
-    Core::Renderer::VertexBuffer::uploadData(renderData, primitiveRenderData.rdModelVertexBufferData,
+    VertexBuffer::uploadData(renderData, primitiveRenderData.rdModelVertexBufferData,
                                              mVertexBufferData);
 }
 
-void Core::Renderer::Primitive::uploadIndexBuffer(Core::Renderer::VkRenderData& renderData)
+void Core::Renderer::Primitive::uploadIndexBuffer(VkRenderData& renderData)
 {
-    Core::Renderer::IndexBuffer::uploadData(renderData, primitiveRenderData.rdModelIndexBufferData, mIndexBufferData);
+    IndexBuffer::uploadData(renderData, primitiveRenderData.rdModelIndexBufferData, mIndexBufferData);
 }
 
-void Core::Renderer::Primitive::uploadUniformBuffer(Core::Renderer::VkRenderData& renderData,
+void Core::Renderer::Primitive::uploadUniformBuffer(VkRenderData& renderData,
                                                     const glm::mat4& modelMatrix)
 {
-    Core::Renderer::UniformBuffer::uploadData(renderData, mBonesTransformUBO, mBonesInfo.finalTransforms);
+    UniformBuffer::uploadData(renderData, mBonesTransformUBO, mBonesInfo.finalTransforms);
 
-    Core::Renderer::UniformBuffer::uploadData(renderData, mModelUBO, modelMatrix);
+    UniformBuffer::uploadData(renderData, mModelUBO, modelMatrix);
 
     CameraInfo cameraInfo{};
     cameraInfo.position = renderData.rdCameraWorldPosition;
-    Core::Renderer::UniformBuffer::uploadData(renderData, mCameraUBO, cameraInfo);
+    UniformBuffer::uploadData(renderData, mCameraUBO, cameraInfo);
 }
 
-void Core::Renderer::Primitive::draw(const Core::Renderer::VkRenderData& renderData)
+void Core::Renderer::Primitive::draw(const VkRenderData& renderData)
 {
     vkCmdBindPipeline(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdMeshPipeline);
 
@@ -142,6 +142,9 @@ void Core::Renderer::Primitive::draw(const Core::Renderer::VkRenderData& renderD
     vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                             renderData.rdMeshPipelineLayout, 6, 1, &mLightsUBO.rdUBODescriptorSet, 0, nullptr);
 
+    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                        renderData.rdMeshPipelineLayout, 7, 1, &renderData.rdSkyboxData.descriptorSet, 0, nullptr);
+
     vkCmdPushConstants(renderData.rdCommandBuffer, renderData.rdMeshPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0,
                        sizeof(PrimitiveFlagsPushConstants), &primitiveFlagsPushConstants);
 
@@ -155,20 +158,20 @@ void Core::Renderer::Primitive::draw(const Core::Renderer::VkRenderData& renderD
     vkCmdDrawIndexed(renderData.rdCommandBuffer, static_cast<uint32_t>(mIndexBufferData.size()), 1, 0, 0, 0);
 }
 
-void Core::Renderer::Primitive::cleanup(Core::Renderer::VkRenderData& renderData)
+void Core::Renderer::Primitive::cleanup(VkRenderData& renderData)
 {
-    Core::Renderer::VertexBuffer::cleanup(renderData, primitiveRenderData.rdModelVertexBufferData);
+    VertexBuffer::cleanup(renderData, primitiveRenderData.rdModelVertexBufferData);
 
-    Core::Renderer::IndexBuffer::cleanup(renderData, primitiveRenderData.rdModelIndexBufferData);
+    IndexBuffer::cleanup(renderData, primitiveRenderData.rdModelIndexBufferData);
 
     for (auto texture : mTextures)
     {
-        Core::Renderer::Texture::cleanup(renderData, texture.second);
+        Texture::cleanup(renderData, texture.second);
     }
 
-    Core::Renderer::UniformBuffer::cleanup(renderData, mModelUBO);
-    Core::Renderer::UniformBuffer::cleanup(renderData, mBonesTransformUBO);
-    Core::Renderer::UniformBuffer::cleanup(renderData, mMaterialUBO);
-    Core::Renderer::UniformBuffer::cleanup(renderData, mCameraUBO);
-    Core::Renderer::UniformBuffer::cleanup(renderData, mLightsUBO);
+    UniformBuffer::cleanup(renderData, mModelUBO);
+    UniformBuffer::cleanup(renderData, mBonesTransformUBO);
+    UniformBuffer::cleanup(renderData, mMaterialUBO);
+    UniformBuffer::cleanup(renderData, mCameraUBO);
+    UniformBuffer::cleanup(renderData, mLightsUBO);
 }

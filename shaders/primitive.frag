@@ -42,6 +42,8 @@ layout (set = 6, binding = 0) uniform Lights {
     int lightCount;
 };
 
+layout (set = 7, binding = 0) uniform samplerCube environmentMap;
+
 const float PI = 3.14159265359;
 
 float DistributionGGX(vec3 N, vec3 H, float roughness)
@@ -152,8 +154,16 @@ void main() {
         Lo += (kD*albedo/PI + specular) * radiance * max(dot(N, L), 0.0);
     }
 
+    vec3 R = reflect(-V, N);
+    vec3 envColor = texture(environmentMap, R).rgb;
+
+    vec3 F0 = mix(vec3(0.04), albedo, metallic);
+    vec3 F = fresnelSchlick(max(dot(N, V), 0.0), F0);
+
+    vec3 ambientSpecular = envColor * F;
+
     vec3 ambient = 0.03 * albedo * ao;
-    vec3 color = ambient + Lo + emissive;
+    vec3 color = ambient + Lo + ambientSpecular + emissive;
 
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0/2.2));

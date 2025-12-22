@@ -1,7 +1,7 @@
 #include "MeshPipelineLayout.h"
 #include "core/tools/Logger.h"
 
-bool Core::Renderer::MeshPipelineLayout::init(Core::Renderer::VkRenderData& renderData,
+bool Core::Renderer::MeshPipelineLayout::init(VkRenderData& renderData,
                                               VkPipelineLayout& pipelineLayout)
 {
     std::array<VkDescriptorSetLayoutBinding, 5> textureBindings{};
@@ -133,12 +133,30 @@ bool Core::Renderer::MeshPipelineLayout::init(Core::Renderer::VkRenderData& rend
         Logger::log(1, "%s error: failed to create lights descriptor layout\n", __FUNCTION__);
         return false;
     }
+    
+    VkDescriptorSetLayoutBinding environmentMapBinding{};
+    environmentMapBinding.binding = 0;
+    environmentMapBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    environmentMapBinding.descriptorCount = 1;
+    environmentMapBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    VkDescriptorSetLayoutCreateInfo environmentMapLayoutInfo{};
+    environmentMapLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    environmentMapLayoutInfo.bindingCount = 1;
+    environmentMapLayoutInfo.pBindings = &environmentMapBinding;
+
+    if (vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &environmentMapLayoutInfo, nullptr,
+                                    &renderData.rdMeshEnvironmentMapDescriptorLayout) != VK_SUCCESS)
+    {
+        Logger::log(1, "%s error: failed to create environment map descriptor layout\n", __FUNCTION__);
+        return false;
+    }
 
     VkDescriptorSetLayout layouts[] = {
         renderData.rdMeshTextureDescriptorLayout,  renderData.rdMeshViewMatrixDescriptorLayout,
         renderData.rdMeshMaterialDescriptorLayout, renderData.rdMeshBonesTransformDescriptorLayout,
         renderData.rdMeshModelDescriptorLayout,    renderData.rdMeshCameraDescriptorLayout,
-        renderData.rdMeshLightsDescriptorLayout};
+        renderData.rdMeshLightsDescriptorLayout,   renderData.rdMeshEnvironmentMapDescriptorLayout};
 
     VkPushConstantRange pushConstantRange{};
     pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
@@ -162,7 +180,7 @@ bool Core::Renderer::MeshPipelineLayout::init(Core::Renderer::VkRenderData& rend
     return true;
 }
 
-void Core::Renderer::MeshPipelineLayout::cleanup(Core::Renderer::VkRenderData& renderData,
+void Core::Renderer::MeshPipelineLayout::cleanup(VkRenderData& renderData,
                                                  VkPipelineLayout& pipelineLayout)
 {
     vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdMeshTextureDescriptorLayout, nullptr);
@@ -173,5 +191,6 @@ void Core::Renderer::MeshPipelineLayout::cleanup(Core::Renderer::VkRenderData& r
     vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdMeshModelDescriptorLayout, nullptr);
     vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdMeshCameraDescriptorLayout, nullptr);
     vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdMeshLightsDescriptorLayout, nullptr);
+    vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdMeshEnvironmentMapDescriptorLayout, nullptr);
     vkDestroyPipelineLayout(renderData.rdVkbDevice.device, pipelineLayout, nullptr);
 }

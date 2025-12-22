@@ -275,6 +275,7 @@ struct VkRenderData
     VkDescriptorSetLayout rdMeshModelDescriptorLayout = VK_NULL_HANDLE;
     VkDescriptorSetLayout rdMeshCameraDescriptorLayout = VK_NULL_HANDLE;
     VkDescriptorSetLayout rdMeshLightsDescriptorLayout = VK_NULL_HANDLE;
+    VkDescriptorSetLayout rdMeshEnvironmentMapDescriptorLayout = VK_NULL_HANDLE;
 
     VkRenderPass rdRenderpass = VK_NULL_HANDLE;
     VkPipelineLayout rdPipelineLayout = VK_NULL_HANDLE;
