@@ -342,7 +342,7 @@ struct VkRenderData
     
     VkCubemapData rdSkyboxData{};
 
-    VkCubemapData rdIrradianceMap{}
+    VkCubemapData rdIrradianceMap{};
 
     VkDescriptorPool rdImguiDescriptorPool;
 
