@@ -109,7 +109,7 @@ void Core::Renderer::Primitive::uploadUniformBuffer(VkRenderData& renderData,
     UniformBuffer::uploadData(renderData, mModelUBO, modelMatrix);
 
     CameraInfo cameraInfo{};
-    cameraInfo.position = renderData.rdCameraWorldPosition;
+    cameraInfo.position = glm::vec4(renderData.rdCameraWorldPosition, 1.f);
     UniformBuffer::uploadData(renderData, mCameraUBO, cameraInfo);
 }
 

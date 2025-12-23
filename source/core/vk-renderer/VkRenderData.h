@@ -14,11 +14,11 @@ struct NewVertex
 {
     glm::vec3 position{};
     glm::vec3 normal{};
-    glm::vec3 tangent{};
+    glm::vec4 tangent{};
     glm::vec4 color{};
     glm::vec2 uv{};
-    float weights[4]{};
-    int boneID[4]{};
+    glm::vec4 weights{};
+    glm::ivec4 boneID{};
 
     static VkVertexInputBindingDescription getBindingDescription()
     {
@@ -32,29 +32,32 @@ struct NewVertex
 };
 
 constexpr int MAX_MATERIALS = 128;
-struct alignas(16) MaterialInfo
+struct MaterialInfo
 {
-    glm::vec4 baseColorFactor = glm::vec4(1.0f);
+    glm::vec4 baseColorFactor = glm::vec4(1.f);
+    glm::vec4 emissiveFactor = glm::vec4(0.f);
     float metallicFactor = 0.f;
     float roughnessFactor = 1.f;
 
-    alignas(16) glm::vec3 emissiveFactor = {0.f, 0.f, 0.f};
+    float padding[2];
 
     int useAlbedoMap = 0;
     int useNormalMap = 0;
     int useMetallicRoughnessMap = 0;
     int useAOMap = 0;
     int useEmissiveMap = 0;
+
+    int padding2[3];
 };
 
 // dude move this somewhere else
-struct alignas(16) CameraInfo
+struct CameraInfo
 {
-    glm::vec3 position;
+    glm::vec4 position;
 };
 
 constexpr int MAX_LIGHTS = 4;
-struct alignas(16) LightsInfo
+struct LightsInfo
 {
     glm::vec4 positions[MAX_LIGHTS];
     glm::vec4 colors[MAX_LIGHTS];

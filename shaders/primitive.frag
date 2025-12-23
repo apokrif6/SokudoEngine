@@ -21,9 +21,10 @@ layout (set = 1, binding = 0) uniform Matrices {
 
 layout (set = 2, binding = 0) uniform Material {
     vec4 baseColorFactor;
+    vec4 emissiveFactor;
     float metallicFactor;
     float roughnessFactor;
-    vec3 emissiveFactor;
+float padding[2];
     int useAlbedoMap;
     int useNormalMap;
     int useMetallicRoughnessMap;
@@ -32,14 +33,14 @@ layout (set = 2, binding = 0) uniform Material {
 };
 
 layout (set = 5, binding = 0) uniform Camera {
-    vec3 camPos;
+    vec4 camPos;
 };
 
 const int MAX_LIGHTS = 4;
 layout (set = 6, binding = 0) uniform Lights {
-    vec3 lightPositions[MAX_LIGHTS];
-    vec3 lightColors[MAX_LIGHTS];
-    int lightCount;
+    vec4 lightPositions[MAX_LIGHTS];
+    vec4 lightColors[MAX_LIGHTS];
+    ivec4 lightCount;
 };
 
 layout (set = 7, binding = 0) uniform samplerCube irradianceMap;
@@ -103,7 +104,7 @@ void main() {
         N = normalize(TBN * normalFromMap);
     }
 
-    vec3 V = normalize(camPos - worldPos);
+    vec3 V = normalize(camPos.xyz - worldPos);
 
     vec3 albedo = baseColorFactor.rgb;
     if (useAlbedoMap != 0)
@@ -129,23 +130,24 @@ void main() {
     vec3 emissive = vec3(0.0);
     if (useEmissiveMap != 0)
     {
-        emissive = emissiveFactor * texture(emissiveMap, textCoord).rgb;
+        emissive = emissiveFactor.rgb * texture(emissiveMap, textCoord).rgb;
     }
 
     vec3 Lo = vec3(0.0);
-    for (int i = 0 ; i < lightCount; i++)
+    int count = lightCount.x; // lol
+    for (int i = 0 ; i < count; i++)
     {
-        vec3 L = normalize(lightPositions[i] - worldPos);
+        vec3 L = normalize(lightPositions[i].xyz - worldPos);
         vec3 H = normalize(V + L);
 
-        float distance = length(lightPositions[i] - worldPos);
+        float distance = length(lightPositions[i].xyz - worldPos);
         float attenuation = 1.0 / (distance*distance);
-        vec3 radiance = lightColors[i] * attenuation;
+        vec3 radiance = lightColors[i].rgb * attenuation;
 
         float NDF = DistributionGGX(N, H, roughness);
         float G = GeometrySmith(N, V, L, roughness);
         vec3 F = fresnelSchlick(max(dot(H, V), 0.0), mix(vec3(0.04), albedo, metallic));
-        vec3 specular = NDF * G * F / (4*max(dot(N, V), 0.0)*max(dot(N, L), 0.0)+0.001);
+        vec3 specular = NDF * G * F / (4 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.001);
 
         vec3 kS = F;
         vec3 kD = vec3(1.0)-kS;

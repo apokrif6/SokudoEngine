@@ -191,10 +191,10 @@ void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiSc
         }
     }
 
-    aiColor3D emissiveColor(0.0f, 0.0f, 0.0f);
+    aiColor3D emissiveColor(0.f, 0.f, 0.f);
     if (AI_SUCCESS == material->Get(AI_MATKEY_COLOR_EMISSIVE, emissiveColor))
     {
-        materialInfo.emissiveFactor = glm::vec3(emissiveColor.r, emissiveColor.g, emissiveColor.b);
+        materialInfo.emissiveFactor = glm::vec4(emissiveColor.r, emissiveColor.g, emissiveColor.b, 1.f);
     }
 
     primitiveData.material = materialInfo;
@@ -286,7 +286,7 @@ void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiSc
         if (mesh->HasTextureCoords(0))
         {
             aiVector3D& texCoords = mesh->mTextureCoords[0][i];
-            vertex.uv = {texCoords.x, 1.f - texCoords.y};
+            vertex.uv = {texCoords.x, texCoords.y};
         }
 
         primitiveData.vertices.emplace_back(vertex);
@@ -334,7 +334,8 @@ Core::Utils::MeshData Core::Utils::loadMeshFromFile(const std::string& fileName,
 {
     Assimp::Importer importer{};
     importer.ReadFile(fileName, aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_JoinIdenticalVertices |
-                                    aiProcess_TransformUVCoords | aiProcess_GlobalScale | aiProcess_CalcTangentSpace);
+                                    aiProcess_TransformUVCoords | aiProcess_GlobalScale | aiProcess_CalcTangentSpace |
+                                    aiProcess_FlipUVs);
 
     const aiScene* scene = importer.GetScene();
 
