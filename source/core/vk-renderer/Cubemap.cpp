@@ -455,6 +455,167 @@ bool Core::Renderer::Cubemap::convertHDRToCubemap(VkRenderData& renderData, VkHD
     return true;
 }
 
+bool Core::Renderer::Cubemap::convertCubemapToIrradiance(VkRenderData& renderData, VkCubemapData& cubemapData,
+    VkCubemapData& irradianceData)
+{
+     constexpr uint32_t irradianceSize = 32;
+
+    VkImageCreateInfo imageInfo{};
+    imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    imageInfo.imageType = VK_IMAGE_TYPE_2D;
+    imageInfo.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+    imageInfo.extent = { irradianceSize, irradianceSize, 1 };
+    imageInfo.mipLevels = 1;
+    imageInfo.arrayLayers = 6;
+    imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+    imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+    imageInfo.usage =
+        VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
+        VK_IMAGE_USAGE_TRANSFER_DST_BIT |
+        VK_IMAGE_USAGE_SAMPLED_BIT;
+    imageInfo.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+
+    VmaAllocationCreateInfo allocInfo{};
+    allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+
+    vmaCreateImage(renderData.rdAllocator, &imageInfo, &allocInfo,
+                   &irradianceData.image, &irradianceData.imageAlloc, nullptr);
+
+    VkImageViewCreateInfo viewInfo{};
+    viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    viewInfo.image = irradianceData.image;
+    viewInfo.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
+    viewInfo.format = imageInfo.format;
+    viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    viewInfo.subresourceRange.levelCount = 1;
+    viewInfo.subresourceRange.layerCount = 6;
+
+    vkCreateImageView(renderData.rdVkbDevice.device, &viewInfo, nullptr,
+                      &irradianceData.imageView);
+
+    VkImage offscreenImage;
+    VmaAllocation offscreenAlloc;
+
+    imageInfo.arrayLayers = 1;
+    imageInfo.flags = 0;
+    imageInfo.usage =
+        VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
+        VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+
+    vmaCreateImage(renderData.rdAllocator, &imageInfo, &allocInfo, &offscreenImage, &offscreenAlloc, nullptr);
+
+    VkImageView offscreenView;
+    VkImageViewCreateInfo offscreenViewInfo{};
+    offscreenViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    offscreenViewInfo.image = offscreenImage;
+    offscreenViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    offscreenViewInfo.format = imageInfo.format;
+    offscreenViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    offscreenViewInfo.subresourceRange.levelCount = 1;
+    offscreenViewInfo.subresourceRange.layerCount = 1;
+
+    vkCreateImageView(renderData.rdVkbDevice.device, &offscreenViewInfo, nullptr, &offscreenView);
+
+    VkFramebuffer framebuffer;
+    VkFramebufferCreateInfo fb{};
+    fb.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+    fb.renderPass = renderData.rdIrradianceRenderpass;
+    fb.attachmentCount = 1;
+    fb.pAttachments = &offscreenView;
+    fb.width = irradianceSize;
+    fb.height = irradianceSize;
+    fb.layers = 1;
+
+    vkCreateFramebuffer(renderData.rdVkbDevice.device, &fb, nullptr, &framebuffer);
+
+    VkCommandBuffer cmd;
+    CommandBuffer::init(renderData, cmd);
+
+    VkCommandBufferBeginInfo begin{};
+    begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    vkBeginCommandBuffer(cmd, &begin);
+
+    VkImageMemoryBarrier barrier{};
+    barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    barrier.image = irradianceData.image;
+    barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    barrier.srcAccessMask = 0;
+    barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    barrier.subresourceRange.levelCount = 1;
+    barrier.subresourceRange.layerCount = 6;
+
+    vkCmdPipelineBarrier(cmd,
+        VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+        VK_PIPELINE_STAGE_TRANSFER_BIT,
+        0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+    for (uint32_t face = 0; face < 6; ++face)
+    {
+        vkCmdPushConstants(
+            cmd,
+            renderData.rdIrradiancePipelineLayout,
+            VK_SHADER_STAGE_VERTEX_BIT,
+            0, sizeof(uint32_t),
+            &face
+        );
+
+        VkRenderPassBeginInfo rp{};
+        rp.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        rp.renderPass = renderData.rdIrradianceRenderpass;
+        rp.framebuffer = framebuffer;
+        rp.renderArea.extent = { irradianceSize, irradianceSize };
+
+        VkClearValue clear{};
+        clear.color = {{0,0,0,1}};
+        rp.clearValueCount = 1;
+        rp.pClearValues = &clear;
+
+        vkCmdBeginRenderPass(cmd, &rp, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdIrradiancePipeline);
+
+        VkDescriptorSet sets[] = {
+            renderData.rdCaptureUBO.rdUBODescriptorSet,
+            cubemapData.descriptorSet
+        };
+
+        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdIrradiancePipelineLayout,
+            0, 2, sets, 0, nullptr);
+
+        vkCmdDraw(cmd, 36, 1, 0, 0);
+        vkCmdEndRenderPass(cmd);
+
+        VkImageCopy copy{};
+        copy.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        copy.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        copy.dstSubresource.baseArrayLayer = face;
+        copy.extent = { irradianceSize, irradianceSize, 1 };
+
+        vkCmdCopyImage(
+            cmd,
+            offscreenImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+            irradianceData.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            1, &copy
+        );
+    }
+
+    vkEndCommandBuffer(cmd);
+
+    VkSubmitInfo submit{};
+    submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submit.commandBufferCount = 1;
+    submit.pCommandBuffers = &cmd;
+
+    vkQueueSubmit(renderData.rdGraphicsQueue, 1, &submit, VK_NULL_HANDLE);
+    vkQueueWaitIdle(renderData.rdGraphicsQueue);
+
+    Logger::log(1, "%s: Irradiance cubemap generated", __FUNCTION__);
+
+    return true;
+}
+
 void Core::Renderer::Cubemap::cleanup(VkRenderData& renderData,VkCubemapData& cubemapData)
 {
     vkDestroySampler(renderData.rdVkbDevice.device, cubemapData.sampler, nullptr);

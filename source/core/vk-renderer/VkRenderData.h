@@ -309,11 +309,13 @@ struct VkRenderData
     VkPipelineLayout rdDebugSkeletonPipelineLayout = VK_NULL_HANDLE;
     VkPipelineLayout rdSkyboxPipelineLayout = VK_NULL_HANDLE;
     VkPipelineLayout rdHDRToCubemapPipelineLayout = VK_NULL_HANDLE;
+    VkPipelineLayout rdIrradiancePipelineLayout = VK_NULL_HANDLE;
     VkPipeline rdGridPipeline = VK_NULL_HANDLE;
     VkPipeline rdMeshPipeline = VK_NULL_HANDLE;
     VkPipeline rdDebugSkeletonPipeline = VK_NULL_HANDLE;
     VkPipeline rdSkyboxPipeline = VK_NULL_HANDLE;
     VkPipeline rdHDRToCubemapPipeline = VK_NULL_HANDLE;
+    VkPipeline rdIrradiancePipeline = VK_NULL_HANDLE;
 
     VkCommandPool rdCommandPool = VK_NULL_HANDLE;
     VkCommandBuffer rdCommandBuffer = VK_NULL_HANDLE;
@@ -321,6 +323,8 @@ struct VkRenderData
     // TODO
     // probably should be stored in HDRToCubemapRenderpass object itself, or be returned by reference from init method
     VkRenderPass rdHDRToCubemapRenderpass = VK_NULL_HANDLE;
+
+    VkRenderPass rdIrradianceRenderpass = VK_NULL_HANDLE;
 
     VkSemaphore rdPresentSemaphore = VK_NULL_HANDLE;
     VkSemaphore rdRenderSemaphore = VK_NULL_HANDLE;
@@ -334,11 +338,13 @@ struct VkRenderData
 
     VkUniformBufferData rdCaptureUBO{};
 
+    VkHDRTextureData rdHDRTexture{};
+    
     VkCubemapData rdSkyboxData{};
 
-    VkHDRTextureData rdHDRTexture{};
+    VkCubemapData rdIrradianceMap{}
 
-    VkDescriptorPool rdImguiDescriptorPool = VK_NULL_HANDLE;
+    VkDescriptorPool rdImguiDescriptorPool;
 
     VkDescriptorPool rdMaterialDescriptorPool;
 

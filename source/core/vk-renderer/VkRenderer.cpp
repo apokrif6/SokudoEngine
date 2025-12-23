@@ -1064,6 +1064,66 @@ bool Core::Renderer::VkRenderer::createSkyboxPipeline()
     return true;
 }
 
+bool Core::Renderer::VkRenderer::createIrradiancePipelineLayout()
+{
+    auto& renderData = Core::Engine::getInstance().getRenderData();
+
+    std::vector<VkDescriptorSetLayout> layouts = {
+        renderData.rdCaptureUBO.rdUBODescriptorLayout,
+        renderData.rdSkyboxData.descriptorSetLayout 
+    };
+
+    VkPushConstantRange pushConstantRange{};
+    pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    pushConstantRange.offset = 0;
+    pushConstantRange.size = sizeof(int);
+
+    // TODO
+    // replace with PipelineLayout::init and PipelineLayoutConfig
+    VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(layouts.size());
+    pipelineLayoutInfo.pSetLayouts = layouts.data();
+    pipelineLayoutInfo.pushConstantRangeCount = 1;
+    pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+
+    if (vkCreatePipelineLayout(renderData.rdVkbDevice.device, &pipelineLayoutInfo, nullptr,
+                               &renderData.rdIrradiancePipelineLayout) != VK_SUCCESS)
+    {
+        Logger::log(1, "%s error: could not create irradiance pipeline layout", __FUNCTION__);
+        return false;
+    }
+
+    return true;
+}
+
+bool Core::Renderer::VkRenderer::createIrradiancePipeline()
+{
+    const std::string vertexShaderFile = "shaders/equirectangular_to_cubemap.vert.spv";
+    const std::string fragmentShaderFile = "shaders/irradiance_convolution.frag.spv";
+
+    auto& renderData = Core::Engine::getInstance().getRenderData();
+
+    PipelineConfig hdrToCubemapConfig{};
+    hdrToCubemapConfig.useVertexInput = VK_FALSE;
+    hdrToCubemapConfig.enableDepthTest = VK_FALSE;
+    hdrToCubemapConfig.enableDepthWrite = VK_FALSE;
+    hdrToCubemapConfig.enableBlending = VK_FALSE;
+    hdrToCubemapConfig.cullMode = VK_CULL_MODE_NONE;
+    hdrToCubemapConfig.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+    hdrToCubemapConfig.depthCompareOp = VK_COMPARE_OP_ALWAYS;
+
+    if (!Pipeline::init(renderData, renderData.rdIrradiancePipelineLayout, renderData.rdIrradiancePipeline,
+                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile, hdrToCubemapConfig,
+                        renderData.rdIrradianceRenderpass))
+    {
+        Logger::log(1, "%s error: could not init irradiance pipeline\n", __FUNCTION__);
+        return false;
+    }
+
+    return true;
+}
+
 bool Core::Renderer::VkRenderer::loadSkybox()
 {
     auto& renderData = Core::Engine::getInstance().getRenderData();
@@ -1086,7 +1146,7 @@ bool Core::Renderer::VkRenderer::loadSkybox()
     UniformBuffer::init(renderData, renderData.rdCaptureUBO, sizeof(CaptureInfo), "CaptureInfo");
     UniformBuffer::uploadData(renderData, renderData.rdCaptureUBO, captureInfo);
 
-    if (!HDRToCubemapRenderpass::init(Core::Engine::getInstance().getRenderData()))
+    if (!HDRToCubemapRenderpass::init(Core::Engine::getInstance().getRenderData(), renderData.rdHDRToCubemapRenderpass))
     {
         Logger::log(1, "%s error: could not init HDR to Cubemap renderpass\n", __FUNCTION__);
         return false;
@@ -1176,6 +1236,30 @@ bool Core::Renderer::VkRenderer::loadSkybox()
     if (!createSkyboxPipeline())
     {
         Logger::log(1, "%s error: could not create skybox pipeline\n", __FUNCTION__);
+        return false;
+    }
+
+    if (!HDRToCubemapRenderpass::init(Core::Engine::getInstance().getRenderData(), renderData.rdIrradianceRenderpass))
+    {
+        Logger::log(1, "%s error: could not init irradiance renderpass\n", __FUNCTION__);
+        return false;
+    }
+
+    if (!createIrradiancePipelineLayout())
+    {
+        Logger::log(1, "%s error: could not creat irradiance pipeline layout\n", __FUNCTION__);
+        return false;
+    }
+
+    if (!createIrradiancePipeline())
+    {
+        Logger::log(1, "%s error: could not create irradiance pipeline\n", __FUNCTION__);
+        return false;
+    }
+
+    if (!Cubemap::convertCubemapToIrradiance(renderData, renderData.rdSkyboxData, renderData.rdIrradianceMap))
+    {
+        Logger::log(1, "%s error: could not convert cubemap to irradiance", __FUNCTION__);
         return false;
     }
 

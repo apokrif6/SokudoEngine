@@ -42,7 +42,7 @@ layout (set = 6, binding = 0) uniform Lights {
     int lightCount;
 };
 
-layout (set = 7, binding = 0) uniform samplerCube environmentMap;
+layout (set = 7, binding = 0) uniform samplerCube irradianceMap;
 
 const float PI = 3.14159265359;
 
@@ -153,22 +153,17 @@ void main() {
 
         Lo += (kD*albedo/PI + specular) * radiance * max(dot(N, L), 0.0);
     }
-
-    vec3 R = reflect(-V, N);
-    vec3 R_rough = normalize(mix(R, N, roughness * roughness));
-    vec3 envColor = texture(environmentMap, R_rough).rgb;
-
+    
     vec3 F0 = mix(vec3(0.04), albedo, metallic);
     vec3 F = fresnelSchlick(max(dot(N, V), 0.0), F0);
-    F = clamp(F, 0.0, 0.9);
-
-    vec3 ambientSpecular = envColor * F * (1.0 - roughness);
-
+    
     vec3 kS = F;
     vec3 kD = (1.0 - kS) * (1.0 - metallic);
-    vec3 ambient = kD * envColor * albedo * 0.2 * ao;
+    
+    vec3 irradiance = texture(irradianceMap, N).rgb;
+    vec3 ambient = kD * irradiance * albedo * ao;
 
-    vec3 color = ambient + Lo + ambientSpecular + emissive;
+    vec3 color = ambient + Lo + emissive;
 
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0/2.2));

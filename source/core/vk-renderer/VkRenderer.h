@@ -140,6 +140,10 @@ private:
     bool createSkyboxPipelineLayout();
 
     bool createSkyboxPipeline();
+    
+    bool createIrradiancePipelineLayout();
+    
+    bool createIrradiancePipeline();
 
     bool loadSkybox();
 
