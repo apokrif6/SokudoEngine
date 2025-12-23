@@ -328,9 +328,6 @@ bool Core::Renderer::Cubemap::convertHDRToCubemap(VkRenderData& renderData, VkHD
            0, static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(),
            0, nullptr);
 
-        VkDeviceSize offsets[] = {0};
-        vkCmdBindVertexBuffers(cmd, 0, 1, &renderData.rdVertexBufferData.rdVertexBuffer, offsets);
-
         vkCmdDraw(cmd, 36, 1, 0, 0);
         vkCmdEndRenderPass(cmd);
 

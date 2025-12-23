@@ -12,9 +12,9 @@ const float PI = 3.14159265359;
 
 vec2 sampleSphericalMap(vec3 v)
 {
-    vec2 uv = vec2(atan(v.z, v.x), asin(v.y));
-    uv *= vec2(2 * PI, 1 / PI);
-    uv += 0.5;
+    vec2 uv;
+    uv.x = atan(v.z, v.x) / (2.0 * PI) + 0.5;
+    uv.y = asin(clamp(v.y, -1.0, 1.0)) / PI + 0.5;
     return uv;
 }
 

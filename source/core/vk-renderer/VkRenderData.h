@@ -213,6 +213,8 @@ struct ViewportData
 
 struct PipelineConfig
 {
+    VkBool32 useVertexInput = VK_TRUE;
+
     VkBool32 enableDepthTest = VK_TRUE;
     VkBool32 enableDepthWrite = VK_FALSE;
 
