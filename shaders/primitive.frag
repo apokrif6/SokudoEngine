@@ -24,7 +24,6 @@ layout (set = 2, binding = 0) uniform Material {
     vec4 emissiveFactor;
     float metallicFactor;
     float roughnessFactor;
-float padding[2];
     int useAlbedoMap;
     int useNormalMap;
     int useMetallicRoughnessMap;
@@ -155,7 +154,7 @@ void main() {
 
         Lo += (kD*albedo/PI + specular) * radiance * max(dot(N, L), 0.0);
     }
-    
+
     vec3 F0 = mix(vec3(0.04), albedo, metallic);
     vec3 F = fresnelSchlick(max(dot(N, V), 0.0), F0);
     

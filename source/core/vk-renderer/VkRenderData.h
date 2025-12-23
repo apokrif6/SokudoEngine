@@ -38,16 +38,13 @@ struct MaterialInfo
     glm::vec4 emissiveFactor = glm::vec4(0.f);
     float metallicFactor = 0.f;
     float roughnessFactor = 1.f;
-
-    float padding[2];
-
     int useAlbedoMap = 0;
     int useNormalMap = 0;
     int useMetallicRoughnessMap = 0;
     int useAOMap = 0;
     int useEmissiveMap = 0;
 
-    int padding2[3];
+    int padding[2];
 };
 
 // dude move this somewhere else
