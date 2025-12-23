@@ -414,6 +414,7 @@ void Core::Renderer::VkRenderer::cleanup(VkRenderData& renderData)
     Core::Renderer::Renderpass::cleanup(renderData);
 
     Core::Renderer::UniformBuffer::cleanup(renderData, renderData.rdPerspectiveViewMatrixUBO);
+    Core::Renderer::UniformBuffer::cleanup(renderData, renderData.rdCaptureUBO);
     Core::Renderer::VertexBuffer::cleanup(renderData, renderData.rdVertexBufferData);
 
     Core::Renderer::Texture::cleanup(renderData, renderData.rdPlaceholderTexture);
