@@ -86,19 +86,18 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
     return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
-mat3 calculateTBN(vec3 N, vec3 T)
+mat3 calculateTBN(vec3 N, vec3 T, float handedness)
 {
     T = normalize(T - dot(T, N) * N);
-    vec3 B = cross(N, T);
+    vec3 B = cross(N, T) * handedness;
     return mat3(T, B, N);
 }
-
 
 void main() {
     vec3 N = normalize(normal);
     if (useNormalMap != 0)
     {
-        mat3 TBN = calculateTBN(N, tangent.xyz);
+        mat3 TBN = calculateTBN(N, tangent.xyz, tangent.w);
         vec3 normalFromMap = texture(normalMap, textCoord).rgb * 2.0 - 1.0;
         N = normalize(TBN * normalFromMap);
     }
