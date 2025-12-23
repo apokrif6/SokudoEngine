@@ -1002,6 +1002,7 @@ bool Core::Renderer::VkRenderer::createHDRToCubemapPipeline()
     auto& renderData = Core::Engine::getInstance().getRenderData();
 
     PipelineConfig hdrToCubemapConfig{};
+    hdrToCubemapConfig.useVertexInput = VK_FALSE;
     hdrToCubemapConfig.enableDepthTest = VK_FALSE;
     hdrToCubemapConfig.enableDepthWrite = VK_FALSE;
     hdrToCubemapConfig.enableBlending = VK_FALSE;
