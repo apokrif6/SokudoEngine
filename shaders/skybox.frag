@@ -9,5 +9,5 @@ layout (location = 0) out vec4 outColor;
 layout (set = 1, binding = 0) uniform samplerCube cubemapSampler;
 
 void main() {
-    outColor = texture(cubemapSampler, texCoord);
+    outColor = texture(cubemapSampler, normalize(texCoord));
 }

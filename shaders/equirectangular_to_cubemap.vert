@@ -20,5 +20,7 @@ layout (push_constant) uniform PushConstants
 void main()
 {
     fragDir = localDir;
-    gl_Position = projection * views[faceIndex] * vec4(localDir, 1.0);
+    
+    mat4 viewNoTranslation = mat4(mat3(views[faceIndex]));
+    gl_Position = projection * viewNoTranslation * vec4(localDir, 1.0);
 }
