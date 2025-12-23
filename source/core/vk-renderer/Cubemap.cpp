@@ -632,6 +632,23 @@ bool Core::Renderer::Cubemap::convertCubemapToIrradiance(VkRenderData& renderDat
             irradianceData.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy);
     }
 
+    VkImageMemoryBarrier irradianceToSample{};
+    irradianceToSample.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    irradianceToSample.image = irradianceData.image;
+    irradianceToSample.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    irradianceToSample.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    irradianceToSample.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    irradianceToSample.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+    irradianceToSample.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    irradianceToSample.subresourceRange.baseMipLevel = 0;
+    irradianceToSample.subresourceRange.levelCount = 1;
+    irradianceToSample.subresourceRange.baseArrayLayer = 0;
+    irradianceToSample.subresourceRange.layerCount = 6;
+
+    vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+        0, 0, nullptr, 0, nullptr,
+        1, &irradianceToSample);
+
     vkEndCommandBuffer(cmd);
 
     VkSubmitInfo submit{};
@@ -641,6 +658,71 @@ bool Core::Renderer::Cubemap::convertCubemapToIrradiance(VkRenderData& renderDat
 
     vkQueueSubmit(renderData.rdGraphicsQueue, 1, &submit, VK_NULL_HANDLE);
     vkQueueWaitIdle(renderData.rdGraphicsQueue);
+
+    VkSamplerCreateInfo samplerInfo{};
+    samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    samplerInfo.magFilter = VK_FILTER_LINEAR;
+    samplerInfo.minFilter = VK_FILTER_LINEAR;
+    samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    samplerInfo.minLod = 0.0f;
+    samplerInfo.maxLod = 1.0f;
+
+    if (vkCreateSampler(renderData.rdVkbDevice.device, &samplerInfo, nullptr, &irradianceData.sampler) != VK_SUCCESS)
+    {
+        Logger::log(1, "%s error: failed to create cubemap sampler", __FUNCTION__);
+        return false;
+    }
+
+    VkDescriptorSetLayoutBinding binding{};
+    binding.binding = 0;
+    binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    binding.descriptorCount = 1;
+    binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    VkDescriptorSetLayoutCreateInfo layoutInfo{};
+    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    layoutInfo.bindingCount = 1;
+    layoutInfo.pBindings = &binding;
+
+    vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &layoutInfo, nullptr, &irradianceData.descriptorSetLayout);
+
+    VkDescriptorPoolSize poolSize{};
+    poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    poolSize.descriptorCount = 1;
+
+    VkDescriptorPoolCreateInfo poolInfo{};
+    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    poolInfo.poolSizeCount = 1;
+    poolInfo.pPoolSizes = &poolSize;
+    poolInfo.maxSets = 1;
+
+    vkCreateDescriptorPool(renderData.rdVkbDevice.device, &poolInfo, nullptr, &irradianceData.descriptorPool);
+
+    VkDescriptorSetAllocateInfo allocInfoDS{};
+    allocInfoDS.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    allocInfoDS.descriptorPool = irradianceData.descriptorPool;
+    allocInfoDS.descriptorSetCount = 1;
+    allocInfoDS.pSetLayouts = &irradianceData.descriptorSetLayout;
+
+    vkAllocateDescriptorSets(renderData.rdVkbDevice.device, &allocInfoDS, &irradianceData.descriptorSet);
+
+    VkDescriptorImageInfo imageInfoDS{};
+    imageInfoDS.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    imageInfoDS.imageView = irradianceData.imageView;
+    imageInfoDS.sampler = irradianceData.sampler;
+
+    VkWriteDescriptorSet write{};
+    write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    write.dstSet = irradianceData.descriptorSet;
+    write.dstBinding = 0;
+    write.descriptorCount = 1;
+    write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    write.pImageInfo = &imageInfoDS;
+
+    vkUpdateDescriptorSets(renderData.rdVkbDevice.device, 1, &write, 0, nullptr);
 
     Logger::log(1, "%s: Irradiance cubemap generated", __FUNCTION__);
 
