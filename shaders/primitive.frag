@@ -3,7 +3,7 @@
 layout (location = 0) in vec3 worldPos;
 layout (location = 1) in vec3 normal;
 layout (location = 2) in vec2 textCoord;
-layout (location = 3) in vec3 tangent;
+layout (location = 3) in vec4 tangent;
 layout (location = 4) in vec4 vertColor;
 
 layout (location = 0) out vec4 FragColor;
@@ -98,7 +98,7 @@ void main() {
     vec3 N = normalize(normal);
     if (useNormalMap != 0)
     {
-        mat3 TBN = calculateTBN(N, tangent);
+        mat3 TBN = calculateTBN(N, tangent.xyz);
         vec3 normalFromMap = texture(normalMap, textCoord).rgb * 2.0 - 1.0;
         N = normalize(TBN * normalFromMap);
     }
