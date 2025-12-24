@@ -843,7 +843,7 @@ bool Core::Renderer::Cubemap::convertCubemapToPrefilteredMap(VkRenderData& rende
             rp.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
             rp.renderPass = renderData.rdIBLRenderpass;
             rp.framebuffer = framebuffer;
-            rp.renderArea.extent = { prefilteredMapSize, prefilteredMapSize };
+            rp.renderArea.extent = { mipSize, mipSize };
 
             VkClearValue clear{};
             clear.color = {{0,0,0,1}};
