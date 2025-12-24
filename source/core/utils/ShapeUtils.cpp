@@ -140,7 +140,7 @@ void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiSc
             std::string textureFileName = path.C_Str();
             Core::Renderer::VkTextureData textureData;
             std::future<bool> textureLoadFuture =
-                Core::Renderer::Texture::loadTexture(renderData, textureData, textureFileName, VK_FORMAT_R8G8_UNORM);
+                Core::Renderer::Texture::loadTexture(renderData, textureData, textureFileName, VK_FORMAT_R8G8B8A8_UNORM);
 
             if (textureLoadFuture.get())
             {
@@ -163,7 +163,7 @@ void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiSc
             std::string textureFileName = path.C_Str();
             Core::Renderer::VkTextureData textureData;
             std::future<bool> textureLoadFuture =
-                Core::Renderer::Texture::loadTexture(renderData, textureData, textureFileName, VK_FORMAT_R8_UNORM);
+                Core::Renderer::Texture::loadTexture(renderData, textureData, textureFileName, VK_FORMAT_R8G8B8A8_UNORM);
 
             if (textureLoadFuture.get())
             {
