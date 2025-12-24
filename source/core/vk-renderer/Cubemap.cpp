@@ -519,7 +519,7 @@ bool Core::Renderer::Cubemap::convertCubemapToIrradiance(VkRenderData& renderDat
     VkFramebuffer framebuffer;
     VkFramebufferCreateInfo fb{};
     fb.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-    fb.renderPass = renderData.rdIrradianceRenderpass;
+    fb.renderPass = renderData.rdIBLRenderpass;
     fb.attachmentCount = 1;
     fb.pAttachments = &offscreenView;
     fb.width = irradianceSize;
@@ -564,7 +564,7 @@ bool Core::Renderer::Cubemap::convertCubemapToIrradiance(VkRenderData& renderDat
 
         VkRenderPassBeginInfo rp{};
         rp.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        rp.renderPass = renderData.rdIrradianceRenderpass;
+        rp.renderPass = renderData.rdIBLRenderpass;
         rp.framebuffer = framebuffer;
         rp.renderArea.extent = { irradianceSize, irradianceSize };
 
@@ -729,7 +729,477 @@ bool Core::Renderer::Cubemap::convertCubemapToIrradiance(VkRenderData& renderDat
     return true;
 }
 
-void Core::Renderer::Cubemap::cleanup(VkRenderData& renderData,VkCubemapData& cubemapData)
+bool Core::Renderer::Cubemap::convertCubemapToPrefilteredMap(VkRenderData& renderData, VkCubemapData& cubemapData,
+    VkCubemapData& prefilteredMapData)
+{
+    constexpr uint32_t prefilteredMapSize = 512;
+    constexpr uint32_t maxMipLevels = 5;
+
+    VkImageCreateInfo imageInfo{};
+    imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    imageInfo.imageType = VK_IMAGE_TYPE_2D;
+    imageInfo.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+    imageInfo.extent = { prefilteredMapSize, prefilteredMapSize, 1 };
+    imageInfo.mipLevels = maxMipLevels;
+    imageInfo.arrayLayers = 6;
+    imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+    imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+    imageInfo.usage =
+        VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
+        VK_IMAGE_USAGE_TRANSFER_DST_BIT |
+        VK_IMAGE_USAGE_SAMPLED_BIT;
+    imageInfo.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+
+    VmaAllocationCreateInfo allocInfo{};
+    allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+
+    vmaCreateImage(renderData.rdAllocator, &imageInfo, &allocInfo,
+                   &prefilteredMapData.image, &prefilteredMapData.imageAlloc, nullptr);
+
+    VkImageViewCreateInfo viewInfo{};
+    viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    viewInfo.image = prefilteredMapData.image;
+    viewInfo.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
+    viewInfo.format = imageInfo.format;
+    viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    viewInfo.subresourceRange.baseMipLevel = 0;
+    viewInfo.subresourceRange.levelCount = maxMipLevels;
+    viewInfo.subresourceRange.layerCount = 6;
+
+    vkCreateImageView(renderData.rdVkbDevice.device, &viewInfo, nullptr,
+                      &prefilteredMapData.imageView);
+
+    VkImage offscreenImage;
+    VmaAllocation offscreenAlloc;
+
+    imageInfo.mipLevels = 1;
+    imageInfo.arrayLayers = 1;
+    imageInfo.flags = 0;
+    imageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+
+    vmaCreateImage(renderData.rdAllocator, &imageInfo, &allocInfo, &offscreenImage, &offscreenAlloc, nullptr);
+
+    VkImageView offscreenView;
+    VkImageViewCreateInfo offscreenViewInfo{};
+    offscreenViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    offscreenViewInfo.image = offscreenImage;
+    offscreenViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    offscreenViewInfo.format = imageInfo.format;
+    offscreenViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    offscreenViewInfo.subresourceRange.levelCount = 1;
+    offscreenViewInfo.subresourceRange.layerCount = 1;
+
+    vkCreateImageView(renderData.rdVkbDevice.device, &offscreenViewInfo, nullptr, &offscreenView);
+
+    VkFramebuffer framebuffer;
+    VkFramebufferCreateInfo fb{};
+    fb.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+    fb.renderPass = renderData.rdIBLRenderpass;
+    fb.attachmentCount = 1;
+    fb.pAttachments = &offscreenView;
+    fb.width = prefilteredMapSize;
+    fb.height = prefilteredMapSize;
+    fb.layers = 1;
+
+    vkCreateFramebuffer(renderData.rdVkbDevice.device, &fb, nullptr, &framebuffer);
+
+    VkCommandBuffer cmd;
+    CommandBuffer::init(renderData, cmd);
+
+    VkCommandBufferBeginInfo begin{};
+    begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    vkBeginCommandBuffer(cmd, &begin);
+
+    VkImageMemoryBarrier barrier{};
+    barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    barrier.image = prefilteredMapData.image;
+    barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    barrier.srcAccessMask = 0;
+    barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    barrier.subresourceRange.baseMipLevel = 0;
+    barrier.subresourceRange.levelCount = maxMipLevels;
+    barrier.subresourceRange.baseArrayLayer = 0;
+    barrier.subresourceRange.layerCount = 6;
+
+    vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,VK_PIPELINE_STAGE_TRANSFER_BIT,
+        0, 0, nullptr, 0, nullptr,
+        1, &barrier);
+
+    for (uint32_t mip = 0; mip < maxMipLevels; ++mip)
+    {
+        uint32_t mipSize = prefilteredMapSize >> mip;
+        float roughness = static_cast<float>(mip) / static_cast<float>(maxMipLevels - 1);
+
+        for (uint32_t face = 0; face < 6; ++face)
+        {
+            struct { uint32_t face; float roughness; } pushData = { face, roughness };
+            vkCmdPushConstants(cmd, renderData.rdPrefilterPipelineLayout,
+                            VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushData), &pushData);
+
+            VkRenderPassBeginInfo rp{};
+            rp.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+            rp.renderPass = renderData.rdIBLRenderpass;
+            rp.framebuffer = framebuffer;
+            rp.renderArea.extent = { prefilteredMapSize, prefilteredMapSize };
+
+            VkClearValue clear{};
+            clear.color = {{0,0,0,1}};
+            rp.clearValueCount = 1;
+            rp.pClearValues = &clear;
+
+            vkCmdBeginRenderPass(cmd, &rp, VK_SUBPASS_CONTENTS_INLINE);
+
+            VkViewport viewport{};
+            viewport.x = 0.0f;
+            viewport.y = 0.0f;
+            viewport.width = static_cast<float>(mipSize);
+            viewport.height =  static_cast<float>(mipSize);
+            viewport.minDepth = 0.f;
+            viewport.maxDepth = 1.f;
+
+            VkRect2D scissor{};
+            scissor.offset = {0, 0};
+            scissor.extent = {mipSize, mipSize};
+
+            vkCmdSetViewport(cmd, 0, 1, &viewport);
+            vkCmdSetScissor(cmd, 0, 1, &scissor);
+
+            vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdPrefilterPipeline);
+
+            VkDescriptorSet sets[] = {
+                renderData.rdCaptureUBO.rdUBODescriptorSet,
+                cubemapData.descriptorSet
+            };
+
+            vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdPrefilterPipelineLayout,
+                0, 2, sets, 0, nullptr);
+
+            vkCmdDraw(cmd, 36, 1, 0, 0);
+            vkCmdEndRenderPass(cmd);
+
+            VkImageMemoryBarrier toSrcImageMemoryBarrier{};
+            toSrcImageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+            toSrcImageMemoryBarrier.image = offscreenImage;
+            toSrcImageMemoryBarrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            toSrcImageMemoryBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+            toSrcImageMemoryBarrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+            toSrcImageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            toSrcImageMemoryBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            toSrcImageMemoryBarrier.subresourceRange.baseMipLevel = 0;
+            toSrcImageMemoryBarrier.subresourceRange.levelCount = 1;
+            toSrcImageMemoryBarrier.subresourceRange.baseArrayLayer = 0;
+            toSrcImageMemoryBarrier.subresourceRange.layerCount = 1;
+
+            vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                0, 0, nullptr, 0, nullptr,
+                1, &toSrcImageMemoryBarrier);
+
+            VkImageCopy copy{};
+            copy.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            copy.srcSubresource.mipLevel = 0;
+            copy.srcSubresource.baseArrayLayer = 0;
+            copy.srcSubresource.layerCount = 1;
+            copy.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            copy.dstSubresource.mipLevel = mip;
+            copy.dstSubresource.baseArrayLayer = face;
+            copy.dstSubresource.layerCount = 1;
+            copy.extent = { mipSize, mipSize, 1 };
+
+            vkCmdCopyImage(cmd, offscreenImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                prefilteredMapData.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy);
+
+            VkImageMemoryBarrier backToColorBarrier{};
+            backToColorBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+            backToColorBarrier.image = offscreenImage;
+            backToColorBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+            backToColorBarrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            backToColorBarrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            backToColorBarrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+            backToColorBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            backToColorBarrier.subresourceRange.levelCount = 1;
+            backToColorBarrier.subresourceRange.layerCount = 1;
+
+            vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0, 0, nullptr,
+                0, nullptr, 1, &backToColorBarrier);
+        }
+    }
+
+    VkImageMemoryBarrier prefilteredToSample{};
+    prefilteredToSample.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    prefilteredToSample.image = prefilteredMapData.image;
+    prefilteredToSample.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    prefilteredToSample.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    prefilteredToSample.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    prefilteredToSample.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+    prefilteredToSample.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    prefilteredToSample.subresourceRange.baseMipLevel = 0;
+    prefilteredToSample.subresourceRange.levelCount = maxMipLevels;
+    prefilteredToSample.subresourceRange.baseArrayLayer = 0;
+    prefilteredToSample.subresourceRange.layerCount = 6;
+
+    vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+        0, 0, nullptr, 0, nullptr,
+        1, &prefilteredToSample);
+
+    vkEndCommandBuffer(cmd);
+
+    VkSubmitInfo submit{};
+    submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submit.commandBufferCount = 1;
+    submit.pCommandBuffers = &cmd;
+
+    vkQueueSubmit(renderData.rdGraphicsQueue, 1, &submit, VK_NULL_HANDLE);
+    vkQueueWaitIdle(renderData.rdGraphicsQueue);
+
+    VkSamplerCreateInfo samplerInfo{};
+    samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    samplerInfo.magFilter = VK_FILTER_LINEAR;
+    samplerInfo.minFilter = VK_FILTER_LINEAR;
+    samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    samplerInfo.minLod = 0.0f;
+    samplerInfo.maxLod = static_cast<float>(maxMipLevels);
+
+    if (vkCreateSampler(renderData.rdVkbDevice.device, &samplerInfo, nullptr, &prefilteredMapData.sampler) != VK_SUCCESS)
+    {
+        Logger::log(1, "%s error: failed to create cubemap sampler", __FUNCTION__);
+        return false;
+    }
+
+    VkDescriptorSetLayoutBinding binding{};
+    binding.binding = 0;
+    binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    binding.descriptorCount = 1;
+    binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    VkDescriptorSetLayoutCreateInfo layoutInfo{};
+    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    layoutInfo.bindingCount = 1;
+    layoutInfo.pBindings = &binding;
+
+    vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &layoutInfo, nullptr, &prefilteredMapData.descriptorSetLayout);
+
+    VkDescriptorPoolSize poolSize{};
+    poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    poolSize.descriptorCount = 1;
+
+    VkDescriptorPoolCreateInfo poolInfo{};
+    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    poolInfo.poolSizeCount = 1;
+    poolInfo.pPoolSizes = &poolSize;
+    poolInfo.maxSets = 1;
+
+    vkCreateDescriptorPool(renderData.rdVkbDevice.device, &poolInfo, nullptr, &prefilteredMapData.descriptorPool);
+
+    VkDescriptorSetAllocateInfo allocInfoDS{};
+    allocInfoDS.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    allocInfoDS.descriptorPool = prefilteredMapData.descriptorPool;
+    allocInfoDS.descriptorSetCount = 1;
+    allocInfoDS.pSetLayouts = &prefilteredMapData.descriptorSetLayout;
+
+    vkAllocateDescriptorSets(renderData.rdVkbDevice.device, &allocInfoDS, &prefilteredMapData.descriptorSet);
+
+    VkDescriptorImageInfo imageInfoDS{};
+    imageInfoDS.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    imageInfoDS.imageView = prefilteredMapData.imageView;
+    imageInfoDS.sampler = prefilteredMapData.sampler;
+
+    VkWriteDescriptorSet write{};
+    write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    write.dstSet = prefilteredMapData.descriptorSet;
+    write.dstBinding = 0;
+    write.descriptorCount = 1;
+    write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    write.pImageInfo = &imageInfoDS;
+
+    vkUpdateDescriptorSets(renderData.rdVkbDevice.device, 1, &write, 0, nullptr);
+
+    Logger::log(1, "%s: PrefilteredMap cubemap generated", __FUNCTION__);
+
+    return true;
+}
+
+bool Core::Renderer::Cubemap::generateBRDFLUT(VkRenderData& renderData, VkTextureData& brdfLutData)
+{
+    constexpr uint32_t lutSize = 512;
+
+    VkImageCreateInfo imageInfo{};
+    imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    imageInfo.imageType = VK_IMAGE_TYPE_2D;
+    imageInfo.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+    imageInfo.extent = { lutSize, lutSize, 1 };
+    imageInfo.mipLevels = 1;
+    imageInfo.arrayLayers = 1;
+    imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+    imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+    imageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+
+    VmaAllocationCreateInfo allocInfo{};
+    allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+
+    vmaCreateImage(renderData.rdAllocator, &imageInfo, &allocInfo,
+                   &brdfLutData.image, &brdfLutData.imageAlloc, nullptr);
+
+    VkImageViewCreateInfo viewInfo{};
+    viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    viewInfo.image = brdfLutData.image;
+    viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    viewInfo.format = imageInfo.format;
+    viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    viewInfo.subresourceRange.levelCount = 1;
+    viewInfo.subresourceRange.layerCount = 1;
+
+    vkCreateImageView(renderData.rdVkbDevice.device, &viewInfo, nullptr, &brdfLutData.imageView);
+
+    VkFramebuffer framebuffer;
+    VkFramebufferCreateInfo fb{};
+    fb.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+    fb.renderPass = renderData.rdIBLRenderpass;
+    fb.attachmentCount = 1;
+    fb.pAttachments = &brdfLutData.imageView;
+    fb.width = lutSize;
+    fb.height = lutSize;
+    fb.layers = 1;
+
+    vkCreateFramebuffer(renderData.rdVkbDevice.device, &fb, nullptr, &framebuffer);
+
+    VkCommandBuffer cmd;
+    CommandBuffer::init(renderData, cmd);
+
+    VkCommandBufferBeginInfo begin{};
+    begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    vkBeginCommandBuffer(cmd, &begin);
+
+    VkImageMemoryBarrier barrier{};
+    barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    barrier.image = brdfLutData.image;
+    barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    barrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    barrier.srcAccessMask = 0;
+    barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    barrier.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+
+    vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                         0, 0, nullptr, 0,
+                         nullptr, 1, &barrier);
+
+    VkRenderPassBeginInfo rp{};
+    rp.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    rp.renderPass = renderData.rdIBLRenderpass;
+    rp.framebuffer = framebuffer;
+    rp.renderArea.extent = { lutSize, lutSize };
+    VkClearValue clear = {{{0,0,0,1}}};
+    rp.clearValueCount = 1;
+    rp.pClearValues = &clear;
+
+    vkCmdBeginRenderPass(cmd, &rp, VK_SUBPASS_CONTENTS_INLINE);
+
+    VkViewport viewport{0.0f, 0.0f, static_cast<float>(lutSize), static_cast<float>(lutSize), 0.0f, 1.0f};
+    VkRect2D scissor{{0, 0}, {lutSize, lutSize}};
+    vkCmdSetViewport(cmd, 0, 1, &viewport);
+    vkCmdSetScissor(cmd, 0, 1, &scissor);
+
+    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdBRDFLUTPipeline);
+
+    vkCmdDraw(cmd, 3, 1, 0, 0);
+
+    vkCmdEndRenderPass(cmd);
+
+    barrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+    vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                         0, 0, nullptr, 0,
+                         nullptr, 1, &barrier);
+
+    vkEndCommandBuffer(cmd);
+
+    VkSubmitInfo submit{};
+    submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submit.commandBufferCount = 1;
+    submit.pCommandBuffers = &cmd;
+    vkQueueSubmit(renderData.rdGraphicsQueue, 1, &submit, VK_NULL_HANDLE);
+    vkQueueWaitIdle(renderData.rdGraphicsQueue);
+
+    vkDestroyFramebuffer(renderData.rdVkbDevice.device, framebuffer, nullptr);
+
+    VkSamplerCreateInfo samplerInfo{};
+    samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    samplerInfo.magFilter = VK_FILTER_LINEAR;
+    samplerInfo.minFilter = VK_FILTER_LINEAR;
+    samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+
+    if (vkCreateSampler(renderData.rdVkbDevice.device, &samplerInfo, nullptr, &brdfLutData.sampler) != VK_SUCCESS)
+    {
+        Logger::log(1, "%s error: failed to create cubemap sampler", __FUNCTION__);
+        return false;
+    }
+
+    VkDescriptorSetLayoutBinding binding{};
+    binding.binding = 0;
+    binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    binding.descriptorCount = 1;
+    binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    VkDescriptorSetLayoutCreateInfo layoutInfo{};
+    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    layoutInfo.bindingCount = 1;
+    layoutInfo.pBindings = &binding;
+
+    vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &layoutInfo, nullptr, &brdfLutData.descriptorSetLayout);
+
+    VkDescriptorPoolSize poolSize{};
+    poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    poolSize.descriptorCount = 1;
+
+    VkDescriptorPoolCreateInfo poolInfo{};
+    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    poolInfo.poolSizeCount = 1;
+    poolInfo.pPoolSizes = &poolSize;
+    poolInfo.maxSets = 1;
+
+    vkCreateDescriptorPool(renderData.rdVkbDevice.device, &poolInfo, nullptr, &brdfLutData.descriptorPool);
+
+    VkDescriptorSetAllocateInfo allocInfoDS{};
+    allocInfoDS.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    allocInfoDS.descriptorPool = brdfLutData.descriptorPool;
+    allocInfoDS.descriptorSetCount = 1;
+    allocInfoDS.pSetLayouts = &brdfLutData.descriptorSetLayout;
+
+    vkAllocateDescriptorSets(renderData.rdVkbDevice.device, &allocInfoDS, &brdfLutData.descriptorSet);
+
+    VkDescriptorImageInfo imageInfoDS{};
+    imageInfoDS.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    imageInfoDS.imageView = brdfLutData.imageView;
+    imageInfoDS.sampler = brdfLutData.sampler;
+
+    VkWriteDescriptorSet write{};
+    write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    write.dstSet = brdfLutData.descriptorSet;
+    write.dstBinding = 0;
+    write.descriptorCount = 1;
+    write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    write.pImageInfo = &imageInfoDS;
+
+    vkUpdateDescriptorSets(renderData.rdVkbDevice.device, 1, &write, 0, nullptr);
+
+    Logger::log(1, "%s: BRDF LUT generated successfully", __FUNCTION__);
+
+    return true;
+}
+
+void Core::Renderer::Cubemap::cleanup(VkRenderData& renderData, VkCubemapData& cubemapData)
 {
     vkDestroySampler(renderData.rdVkbDevice.device, cubemapData.sampler, nullptr);
     vkDestroyImageView(renderData.rdVkbDevice.device, cubemapData.imageView, nullptr);

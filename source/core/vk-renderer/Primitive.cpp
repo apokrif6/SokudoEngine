@@ -145,6 +145,12 @@ void Core::Renderer::Primitive::draw(const VkRenderData& renderData)
     vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                         renderData.rdMeshPipelineLayout, 7, 1, &renderData.rdIrradianceMap.descriptorSet, 0, nullptr);
 
+    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                        renderData.rdMeshPipelineLayout, 8, 1, &renderData.rdPrefilterMap.descriptorSet, 0, nullptr);
+
+    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                        renderData.rdMeshPipelineLayout, 9, 1, &renderData.rdBRDFLUT.descriptorSet, 0, nullptr);
+
     vkCmdPushConstants(renderData.rdCommandBuffer, renderData.rdMeshPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0,
                        sizeof(PrimitiveFlagsPushConstants), &primitiveFlagsPushConstants);
 

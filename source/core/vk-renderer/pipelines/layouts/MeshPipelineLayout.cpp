@@ -152,11 +152,48 @@ bool Core::Renderer::MeshPipelineLayout::init(VkRenderData& renderData,
         return false;
     }
 
+    VkDescriptorSetLayoutBinding prefilterMapBinding{};
+    prefilterMapBinding.binding = 0;
+    prefilterMapBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    prefilterMapBinding.descriptorCount = 1;
+    prefilterMapBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    VkDescriptorSetLayoutCreateInfo prefilterMapLayoutInfo{};
+    prefilterMapLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    prefilterMapLayoutInfo.bindingCount = 1;
+    prefilterMapLayoutInfo.pBindings = &prefilterMapBinding;
+
+    if (vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &prefilterMapLayoutInfo, nullptr,
+                                   &renderData.rdMeshPrefilteredMapDescriptorLayout) != VK_SUCCESS)
+    {
+        Logger::log(1, "%s error: failed to create environment map descriptor layout\n", __FUNCTION__);
+        return false;
+    }
+
+    VkDescriptorSetLayoutBinding brdfLutBinding{};
+    brdfLutBinding.binding = 0;
+    brdfLutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    brdfLutBinding.descriptorCount = 1;
+    brdfLutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    VkDescriptorSetLayoutCreateInfo brdfLutLayoutInfo{};
+    brdfLutLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    brdfLutLayoutInfo.bindingCount = 1;
+    brdfLutLayoutInfo.pBindings = &brdfLutBinding;
+
+    if (vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &brdfLutLayoutInfo, nullptr,
+                                    &renderData.rdMeshBRDFLUTDescriptorLayout) != VK_SUCCESS)
+    {
+        Logger::log(1, "%s error: failed to create BRDF LUT descriptor layout\n", __FUNCTION__);
+        return false;
+    }
+
     VkDescriptorSetLayout layouts[] = {
-        renderData.rdMeshTextureDescriptorLayout,  renderData.rdMeshViewMatrixDescriptorLayout,
+        renderData.rdMeshTextureDescriptorLayout, renderData.rdMeshViewMatrixDescriptorLayout,
         renderData.rdMeshMaterialDescriptorLayout, renderData.rdMeshBonesTransformDescriptorLayout,
-        renderData.rdMeshModelDescriptorLayout,    renderData.rdMeshCameraDescriptorLayout,
-        renderData.rdMeshLightsDescriptorLayout,   renderData.rdMeshEnvironmentMapDescriptorLayout};
+        renderData.rdMeshModelDescriptorLayout, renderData.rdMeshCameraDescriptorLayout,
+        renderData.rdMeshLightsDescriptorLayout, renderData.rdMeshEnvironmentMapDescriptorLayout,
+        renderData.rdMeshPrefilteredMapDescriptorLayout, renderData.rdMeshBRDFLUTDescriptorLayout};
 
     VkPushConstantRange pushConstantRange{};
     pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
@@ -192,5 +229,7 @@ void Core::Renderer::MeshPipelineLayout::cleanup(VkRenderData& renderData,
     vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdMeshCameraDescriptorLayout, nullptr);
     vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdMeshLightsDescriptorLayout, nullptr);
     vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdMeshEnvironmentMapDescriptorLayout, nullptr);
+    vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdMeshPrefilteredMapDescriptorLayout, nullptr);
+    vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdMeshBRDFLUTDescriptorLayout, nullptr);
     vkDestroyPipelineLayout(renderData.rdVkbDevice.device, pipelineLayout, nullptr);
 }

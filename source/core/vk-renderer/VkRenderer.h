@@ -145,6 +145,14 @@ private:
     
     bool createIrradiancePipeline();
 
+    bool createPrefilterPipelineLayout();
+
+    bool createPrefilterPipeline();
+
+    bool createBRDFLUTPipelineLayout();
+
+    bool createBRDFLUTPipeline();
+
     bool loadSkybox();
 
     void drawSkybox() const;

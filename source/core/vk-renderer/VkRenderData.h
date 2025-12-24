@@ -96,12 +96,16 @@ struct VkMesh
 
 struct VkTextureData
 {
-    std::string texName;
+    std::string name;
 
-    VkImage texTextureImage = VK_NULL_HANDLE;
-    VkImageView texTextureImageView = VK_NULL_HANDLE;
-    VkSampler texTextureSampler = VK_NULL_HANDLE;
-    VmaAllocation texTextureImageAlloc = nullptr;
+    VkImage image = VK_NULL_HANDLE;
+    VkImageView imageView = VK_NULL_HANDLE;
+    VkSampler sampler = VK_NULL_HANDLE;
+    VmaAllocation imageAlloc = nullptr;
+
+    VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
+    VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
+    VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
 };
 
 struct VkVertexBufferData
@@ -181,9 +185,6 @@ struct VkCubemapData
     VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
     VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
     VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
-
-    int width = 0;
-    int height = 0;
 };
 
 struct VkHDRTextureData
@@ -294,6 +295,9 @@ struct VkRenderData
     VkFormat rdDepthFormat;
     VmaAllocation rdDepthImageAlloc = VK_NULL_HANDLE;
 
+    // TODO
+    // hm....
+    // probably should be moved elsewhere
     VkDescriptorSetLayout rdMeshTextureDescriptorLayout = VK_NULL_HANDLE;
     VkDescriptorSetLayout rdMeshViewMatrixDescriptorLayout = VK_NULL_HANDLE;
     VkDescriptorSetLayout rdMeshMaterialDescriptorLayout = VK_NULL_HANDLE;
@@ -302,6 +306,8 @@ struct VkRenderData
     VkDescriptorSetLayout rdMeshCameraDescriptorLayout = VK_NULL_HANDLE;
     VkDescriptorSetLayout rdMeshLightsDescriptorLayout = VK_NULL_HANDLE;
     VkDescriptorSetLayout rdMeshEnvironmentMapDescriptorLayout = VK_NULL_HANDLE;
+    VkDescriptorSetLayout rdMeshPrefilteredMapDescriptorLayout = VK_NULL_HANDLE;
+    VkDescriptorSetLayout rdMeshBRDFLUTDescriptorLayout = VK_NULL_HANDLE;
 
     VkRenderPass rdRenderpass = VK_NULL_HANDLE;
     VkPipelineLayout rdPipelineLayout = VK_NULL_HANDLE;
@@ -310,12 +316,16 @@ struct VkRenderData
     VkPipelineLayout rdSkyboxPipelineLayout = VK_NULL_HANDLE;
     VkPipelineLayout rdHDRToCubemapPipelineLayout = VK_NULL_HANDLE;
     VkPipelineLayout rdIrradiancePipelineLayout = VK_NULL_HANDLE;
+    VkPipelineLayout rdPrefilterPipelineLayout = VK_NULL_HANDLE;
+    VkPipelineLayout rdBRDFLUTPipelineLayout = VK_NULL_HANDLE;
     VkPipeline rdGridPipeline = VK_NULL_HANDLE;
     VkPipeline rdMeshPipeline = VK_NULL_HANDLE;
     VkPipeline rdDebugSkeletonPipeline = VK_NULL_HANDLE;
     VkPipeline rdSkyboxPipeline = VK_NULL_HANDLE;
     VkPipeline rdHDRToCubemapPipeline = VK_NULL_HANDLE;
     VkPipeline rdIrradiancePipeline = VK_NULL_HANDLE;
+    VkPipeline rdPrefilterPipeline = VK_NULL_HANDLE;
+    VkPipeline rdBRDFLUTPipeline = VK_NULL_HANDLE;
 
     VkCommandPool rdCommandPool = VK_NULL_HANDLE;
     VkCommandBuffer rdCommandBuffer = VK_NULL_HANDLE;
@@ -324,7 +334,7 @@ struct VkRenderData
     // probably should be stored in HDRToCubemapRenderpass object itself, or be returned by reference from init method
     VkRenderPass rdHDRToCubemapRenderpass = VK_NULL_HANDLE;
 
-    VkRenderPass rdIrradianceRenderpass = VK_NULL_HANDLE;
+    VkRenderPass rdIBLRenderpass = VK_NULL_HANDLE;
 
     VkSemaphore rdPresentSemaphore = VK_NULL_HANDLE;
     VkSemaphore rdRenderSemaphore = VK_NULL_HANDLE;
@@ -339,10 +349,16 @@ struct VkRenderData
     VkUniformBufferData rdCaptureUBO{};
 
     VkHDRTextureData rdHDRTexture{};
-    
+
     VkCubemapData rdSkyboxData{};
 
+    // TODO
+    // move it to IBL struct/class
     VkCubemapData rdIrradianceMap{};
+
+    VkCubemapData rdPrefilterMap{};
+
+    VkTextureData rdBRDFLUT{};
 
     VkDescriptorPool rdImguiDescriptorPool;
 

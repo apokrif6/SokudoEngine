@@ -14,6 +14,10 @@ public:
 
     static bool convertCubemapToIrradiance(VkRenderData& renderData, VkCubemapData& cubemapData, VkCubemapData& irradianceData);
 
+    static bool convertCubemapToPrefilteredMap(VkRenderData& renderData, VkCubemapData& cubemapData, VkCubemapData& prefilteredMapData);
+
+    static bool generateBRDFLUT(VkRenderData& renderData, VkTextureData& brdfLutData);
+
     static void cleanup(VkRenderData& renderData, VkCubemapData& cubemapData);
 };
 } // namespace Core::Renderer

@@ -1068,7 +1068,7 @@ bool Core::Renderer::VkRenderer::createIrradiancePipelineLayout()
 {
     auto& renderData = Core::Engine::getInstance().getRenderData();
 
-    std::vector<VkDescriptorSetLayout> layouts = {
+    std::vector layouts = {
         renderData.rdCaptureUBO.rdUBODescriptorLayout,
         renderData.rdSkyboxData.descriptorSetLayout 
     };
@@ -1104,20 +1104,126 @@ bool Core::Renderer::VkRenderer::createIrradiancePipeline()
 
     auto& renderData = Core::Engine::getInstance().getRenderData();
 
-    PipelineConfig hdrToCubemapConfig{};
-    hdrToCubemapConfig.useVertexInput = VK_FALSE;
-    hdrToCubemapConfig.enableDepthTest = VK_FALSE;
-    hdrToCubemapConfig.enableDepthWrite = VK_FALSE;
-    hdrToCubemapConfig.enableBlending = VK_FALSE;
-    hdrToCubemapConfig.cullMode = VK_CULL_MODE_NONE;
-    hdrToCubemapConfig.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-    hdrToCubemapConfig.depthCompareOp = VK_COMPARE_OP_ALWAYS;
+    PipelineConfig irradiancePipelineConfig{};
+    irradiancePipelineConfig.useVertexInput = VK_FALSE;
+    irradiancePipelineConfig.enableDepthTest = VK_FALSE;
+    irradiancePipelineConfig.enableDepthWrite = VK_FALSE;
+    irradiancePipelineConfig.enableBlending = VK_FALSE;
+    irradiancePipelineConfig.cullMode = VK_CULL_MODE_NONE;
+    irradiancePipelineConfig.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+    irradiancePipelineConfig.depthCompareOp = VK_COMPARE_OP_ALWAYS;
 
     if (!Pipeline::init(renderData, renderData.rdIrradiancePipelineLayout, renderData.rdIrradiancePipeline,
-                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile, hdrToCubemapConfig,
-                        renderData.rdIrradianceRenderpass))
+                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile, irradiancePipelineConfig,
+                        renderData.rdIBLRenderpass))
     {
         Logger::log(1, "%s error: could not init irradiance pipeline\n", __FUNCTION__);
+        return false;
+    }
+
+    return true;
+}
+
+bool Core::Renderer::VkRenderer::createPrefilterPipelineLayout()
+{
+    auto& renderData = Core::Engine::getInstance().getRenderData();
+
+    std::vector layouts = {
+        renderData.rdCaptureUBO.rdUBODescriptorLayout,
+        renderData.rdSkyboxData.descriptorSetLayout
+    };
+
+    VkPushConstantRange pushConstantRange{};
+    pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+    pushConstantRange.offset = 0;
+    pushConstantRange.size = sizeof(uint32_t) + sizeof(float);
+
+    // TODO
+    // replace with PipelineLayout::init and PipelineLayoutConfig
+    VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(layouts.size());
+    pipelineLayoutInfo.pSetLayouts = layouts.data();
+    pipelineLayoutInfo.pushConstantRangeCount = 1;
+    pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+
+    if (vkCreatePipelineLayout(renderData.rdVkbDevice.device, &pipelineLayoutInfo, nullptr,
+                               &renderData.rdPrefilterPipelineLayout) != VK_SUCCESS)
+    {
+        Logger::log(1, "%s error: could not create prefilter pipeline layout", __FUNCTION__);
+        return false;
+    }
+
+    return true;
+}
+
+bool Core::Renderer::VkRenderer::createPrefilterPipeline()
+{
+    const std::string vertexShaderFile = "shaders/prefilter.vert.spv";
+    const std::string fragmentShaderFile = "shaders/prefilter.frag.spv";
+
+    auto& renderData = Core::Engine::getInstance().getRenderData();
+
+    PipelineConfig prefilterPipelineConfig{};
+    prefilterPipelineConfig.useVertexInput = VK_FALSE;
+    prefilterPipelineConfig.enableDepthTest = VK_FALSE;
+    prefilterPipelineConfig.enableDepthWrite = VK_FALSE;
+    prefilterPipelineConfig.enableBlending = VK_FALSE;
+    prefilterPipelineConfig.cullMode = VK_CULL_MODE_NONE;
+    prefilterPipelineConfig.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+    prefilterPipelineConfig.depthCompareOp = VK_COMPARE_OP_ALWAYS;
+
+    if (!Pipeline::init(renderData, renderData.rdPrefilterPipelineLayout, renderData.rdPrefilterPipeline,
+                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile, prefilterPipelineConfig,
+                        renderData.rdIBLRenderpass))
+    {
+        Logger::log(1, "%s error: could not init irradiance pipeline\n", __FUNCTION__);
+        return false;
+    }
+
+    return true;
+}
+
+bool Core::Renderer::VkRenderer::createBRDFLUTPipelineLayout()
+{
+    auto& renderData = Core::Engine::getInstance().getRenderData();
+
+    // TODO
+    // replace with PipelineLayout::init and PipelineLayoutConfig
+    VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+
+    if (vkCreatePipelineLayout(renderData.rdVkbDevice.device, &pipelineLayoutInfo, nullptr,
+                               &renderData.rdBRDFLUTPipelineLayout) != VK_SUCCESS)
+    {
+        Logger::log(1, "%s error: could not create BRDF LUT pipeline layout", __FUNCTION__);
+        return false;
+    }
+
+    return true;
+}
+
+bool Core::Renderer::VkRenderer::createBRDFLUTPipeline()
+{
+    const std::string vertexShaderFile = "shaders/brdf_lut.vert.spv";
+    const std::string fragmentShaderFile = "shaders/brdf_lut.frag.spv";
+
+    auto& renderData = Core::Engine::getInstance().getRenderData();
+
+    PipelineConfig brdflutPipelineConfig{};
+    brdflutPipelineConfig.useVertexInput = VK_FALSE;
+    brdflutPipelineConfig.enableDepthTest = VK_FALSE;
+    brdflutPipelineConfig.enableDepthWrite = VK_FALSE;
+    brdflutPipelineConfig.enableBlending = VK_FALSE;
+    brdflutPipelineConfig.cullMode = VK_CULL_MODE_NONE;
+    brdflutPipelineConfig.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+    brdflutPipelineConfig.depthCompareOp = VK_COMPARE_OP_ALWAYS;
+
+    if (!Pipeline::init(renderData, renderData.rdBRDFLUTPipelineLayout, renderData.rdBRDFLUTPipeline,
+                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile, brdflutPipelineConfig,
+                        renderData.rdIBLRenderpass))
+    {
+        Logger::log(1, "%s error: could not init BRDF LUT pipeline\n", __FUNCTION__);
         return false;
     }
 
@@ -1239,7 +1345,7 @@ bool Core::Renderer::VkRenderer::loadSkybox()
         return false;
     }
 
-    if (!HDRToCubemapRenderpass::init(Core::Engine::getInstance().getRenderData(), renderData.rdIrradianceRenderpass))
+    if (!HDRToCubemapRenderpass::init(Core::Engine::getInstance().getRenderData(), renderData.rdIBLRenderpass))
     {
         Logger::log(1, "%s error: could not init irradiance renderpass\n", __FUNCTION__);
         return false;
@@ -1260,6 +1366,42 @@ bool Core::Renderer::VkRenderer::loadSkybox()
     if (!Cubemap::convertCubemapToIrradiance(renderData, renderData.rdSkyboxData, renderData.rdIrradianceMap))
     {
         Logger::log(1, "%s error: could not convert cubemap to irradiance", __FUNCTION__);
+        return false;
+    }
+
+    if (!createPrefilterPipelineLayout())
+    {
+        Logger::log(1, "%s error: could not creat prefilter pipeline layout\n", __FUNCTION__);
+        return false;
+    }
+
+    if (!createPrefilterPipeline())
+    {
+        Logger::log(1, "%s error: could not create prefilter pipeline\n", __FUNCTION__);
+        return false;
+    }
+
+    if (!Cubemap::convertCubemapToPrefilteredMap(renderData, renderData.rdSkyboxData, renderData.rdPrefilterMap))
+    {
+        Logger::log(1, "%s error: could not convert cubemap to irradiance", __FUNCTION__);
+        return false;
+    }
+
+    if (!createBRDFLUTPipelineLayout())
+    {
+        Logger::log(1, "%s error: could not creat BRDF LUT pipeline layout\n", __FUNCTION__);
+        return false;
+    }
+
+    if (!createBRDFLUTPipeline())
+    {
+        Logger::log(1, "%s error: could not create BRDF LUT pipeline\n", __FUNCTION__);
+        return false;
+    }
+
+    if (!Cubemap::generateBRDFLUT(renderData, renderData.rdBRDFLUT))
+    {
+        Logger::log(1, "%s error: could not generate BRDF LUT", __FUNCTION__);
         return false;
     }
 

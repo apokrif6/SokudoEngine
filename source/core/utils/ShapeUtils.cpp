@@ -216,8 +216,8 @@ void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiSc
         {
             VkDescriptorImageInfo info{};
             info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            info.imageView = tex.texTextureImageView;
-            info.sampler = tex.texTextureSampler;
+            info.imageView = tex.imageView;
+            info.sampler = tex.sampler;
             return info;
         };
 
