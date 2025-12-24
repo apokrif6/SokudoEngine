@@ -404,23 +404,37 @@ void Core::Renderer::VkRenderer::cleanup(VkRenderData& renderData)
     Core::Renderer::DebugSkeletonPipeline::cleanup(renderData, renderData.rdDebugSkeletonPipeline);
     Core::Renderer::Pipeline::cleanup(renderData, renderData.rdGridPipeline);
     Core::Renderer::Pipeline::cleanup(renderData, renderData.rdSkyboxPipeline);
+    Core::Renderer::Pipeline::cleanup(renderData, renderData.rdHDRToCubemapPipeline);
+    Core::Renderer::Pipeline::cleanup(renderData, renderData.rdIrradiancePipeline);
+    Core::Renderer::Pipeline::cleanup(renderData, renderData.rdPrefilterPipeline);
+    Core::Renderer::Pipeline::cleanup(renderData, renderData.rdBRDFLUTPipeline);
 
     Core::Renderer::PipelineLayout::cleanup(renderData, renderData.rdPipelineLayout);
     Core::Renderer::MeshPipelineLayout::cleanup(renderData, renderData.rdMeshPipelineLayout);
     Core::Renderer::DebugSkeletonPipelineLayout::cleanup(renderData, renderData.rdDebugSkeletonPipelineLayout);
     Core::Renderer::PipelineLayout::cleanup(renderData, renderData.rdSkyboxPipelineLayout);
+    Core::Renderer::PipelineLayout::cleanup(renderData, renderData.rdHDRToCubemapPipelineLayout);
+    Core::Renderer::PipelineLayout::cleanup(renderData, renderData.rdIrradiancePipelineLayout);
+    Core::Renderer::PipelineLayout::cleanup(renderData, renderData.rdPrefilterPipelineLayout);
+    Core::Renderer::PipelineLayout::cleanup(renderData, renderData.rdBRDFLUTPipelineLayout);
 
     Core::Renderer::ViewportRenderpass::cleanup(renderData);
     Core::Renderer::Renderpass::cleanup(renderData);
+    Core::Renderer::HDRToCubemapRenderpass::cleanup(renderData, renderData.rdIBLRenderpass);
+    Core::Renderer::HDRToCubemapRenderpass::cleanup(renderData, renderData.rdHDRToCubemapRenderpass);
 
     Core::Renderer::UniformBuffer::cleanup(renderData, renderData.rdPerspectiveViewMatrixUBO);
     Core::Renderer::UniformBuffer::cleanup(renderData, renderData.rdCaptureUBO);
     Core::Renderer::VertexBuffer::cleanup(renderData, renderData.rdVertexBufferData);
 
     Core::Renderer::Texture::cleanup(renderData, renderData.rdPlaceholderTexture);
+    Core::Renderer::Texture::cleanup(renderData, renderData.rdBRDFLUT);
+    Core::Renderer::Texture::cleanup(renderData, renderData.rdHDRTexture);
 
     Core::Renderer::UniformBuffer::cleanup(renderData, renderData.rdDummyBonesUBO);
 
+    Core::Renderer::Cubemap::cleanup(renderData, renderData.rdPrefilterMap);
+    Core::Renderer::Cubemap::cleanup(renderData, renderData.rdIrradianceMap);
     Core::Renderer::Cubemap::cleanup(renderData, renderData.rdSkyboxData);
 
     if (mViewportTarget)

@@ -3,7 +3,7 @@
 #include "stb_image.h"
 #include "core/vk-renderer/buffers/CommandBuffer.h"
 
-bool Core::Renderer::Cubemap::loadHDRTexture(VkRenderData& renderData, VkHDRTextureData& texture, const std::string& path)
+bool Core::Renderer::Cubemap::loadHDRTexture(VkRenderData& renderData, VkTextureData& texture, const std::string& path)
 {
     stbi_set_flip_vertically_on_load(true);
 
@@ -36,7 +36,7 @@ bool Core::Renderer::Cubemap::loadHDRTexture(VkRenderData& renderData, VkHDRText
         stbi_image_free(hdrData);
         return false;
     }
-    
+
     vmaSetAllocationName(renderData.rdAllocator, stagingAlloc, "HDR Texture Staging Buffer");
 
     void* mapped;
@@ -166,7 +166,7 @@ bool Core::Renderer::Cubemap::loadHDRTexture(VkRenderData& renderData, VkHDRText
     return true;
 }
 
-bool Core::Renderer::Cubemap::convertHDRToCubemap(VkRenderData& renderData, VkHDRTextureData& hdrTexture,
+bool Core::Renderer::Cubemap::convertHDRToCubemap(VkRenderData& renderData, VkTextureData& texture,
     VkCubemapData& cubemapData)
 {
     constexpr uint32_t cubemapSize = 512;
@@ -217,20 +217,22 @@ bool Core::Renderer::Cubemap::convertHDRToCubemap(VkRenderData& renderData, VkHD
     VkImage offscreenImage;
     VmaAllocation offscreenAlloc;
     vmaCreateImage(renderData.rdAllocator, &offscreenImageInfo, &allocInfo, &offscreenImage, &offscreenAlloc, nullptr);
-    
-    VkImageViewCreateInfo offscreenViewInfo{};
-    offscreenViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-    offscreenViewInfo.image = offscreenImage;
-    offscreenViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    offscreenViewInfo.format = offscreenImageInfo.format;
-    offscreenViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    offscreenViewInfo.subresourceRange.baseMipLevel = 0;
-    offscreenViewInfo.subresourceRange.levelCount = 1;
-    offscreenViewInfo.subresourceRange.baseArrayLayer = 0;
-    offscreenViewInfo.subresourceRange.layerCount = 1;
+
+    vmaSetAllocationName(renderData.rdAllocator, offscreenAlloc, "Convert HDR Cubemap Offscreen Alloc");
+
+    VkImageViewCreateInfo offscreenImageViewInfo{};
+    offscreenImageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    offscreenImageViewInfo.image = offscreenImage;
+    offscreenImageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    offscreenImageViewInfo.format = offscreenImageInfo.format;
+    offscreenImageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    offscreenImageViewInfo.subresourceRange.baseMipLevel = 0;
+    offscreenImageViewInfo.subresourceRange.levelCount = 1;
+    offscreenImageViewInfo.subresourceRange.baseArrayLayer = 0;
+    offscreenImageViewInfo.subresourceRange.layerCount = 1;
 
     VkImageView offscreenImageView;
-    vkCreateImageView(renderData.rdVkbDevice.device, &offscreenViewInfo, nullptr, &offscreenImageView);
+    vkCreateImageView(renderData.rdVkbDevice.device, &offscreenImageViewInfo, nullptr, &offscreenImageView);
 
     VkFramebufferCreateInfo framebufferCreateInfo{};
     framebufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -265,11 +267,11 @@ bool Core::Renderer::Cubemap::convertHDRToCubemap(VkRenderData& renderData, VkHD
     barrier.subresourceRange.baseArrayLayer  = 0;
     barrier.subresourceRange.layerCount = 6;
 
-    vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, 
-        VK_PIPELINE_STAGE_TRANSFER_BIT | VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0, 
+    vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+        VK_PIPELINE_STAGE_TRANSFER_BIT | VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0,
         0, nullptr, 0, nullptr, 1,
         &barrier);
-    
+
     VkImageMemoryBarrier offscreenToColor{};
     offscreenToColor.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
     offscreenToColor.image = offscreenImage;
@@ -319,10 +321,10 @@ bool Core::Renderer::Cubemap::convertHDRToCubemap(VkRenderData& renderData, VkHD
 
         vkCmdSetViewport(cmd, 0, 1, &viewport);
         vkCmdSetScissor(cmd, 0, 1, &scissor);
-        
+
         vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdHDRToCubemapPipeline);
 
-        std::vector descriptorSets = {renderData.rdCaptureUBO.rdUBODescriptorSet, hdrTexture.descriptorSet};
+        std::vector descriptorSets = {renderData.rdCaptureUBO.rdUBODescriptorSet, texture.descriptorSet};
 
         vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdHDRToCubemapPipelineLayout,
            0, static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(),
@@ -372,7 +374,7 @@ bool Core::Renderer::Cubemap::convertHDRToCubemap(VkRenderData& renderData, VkHD
     cubeToSampleImageMemoryBarrier.subresourceRange.layerCount = 6;
 
     vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-        0, 0, nullptr, 0, nullptr, 
+        0, 0, nullptr, 0, nullptr,
         1, &cubeToSampleImageMemoryBarrier);
 
     vkEndCommandBuffer(cmd);
@@ -384,6 +386,10 @@ bool Core::Renderer::Cubemap::convertHDRToCubemap(VkRenderData& renderData, VkHD
 
     vkQueueSubmit(renderData.rdGraphicsQueue, 1, &submit, VK_NULL_HANDLE);
     vkQueueWaitIdle(renderData.rdGraphicsQueue);
+
+    vkDestroyFramebuffer(renderData.rdVkbDevice.device, framebuffer, nullptr);
+    vkDestroyImageView(renderData.rdVkbDevice.device, offscreenImageView, nullptr);
+    vmaDestroyImage(renderData.rdAllocator, offscreenImage, offscreenAlloc);
 
     VkSamplerCreateInfo samplerInfo{};
     samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -401,7 +407,7 @@ bool Core::Renderer::Cubemap::convertHDRToCubemap(VkRenderData& renderData, VkHD
         Logger::log(1, "%s error: failed to create cubemap sampler", __FUNCTION__);
         return false;
     }
-    
+
     VkDescriptorSetLayoutBinding binding{};
     binding.binding = 0;
     binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -449,7 +455,7 @@ bool Core::Renderer::Cubemap::convertHDRToCubemap(VkRenderData& renderData, VkHD
     write.pImageInfo = &imageInfoDS;
 
     vkUpdateDescriptorSets(renderData.rdVkbDevice.device, 1, &write, 0, nullptr);
-    
+
     Logger::log(1, "%s: HDR converted to cubemap", __FUNCTION__);
 
     return true;
@@ -504,24 +510,26 @@ bool Core::Renderer::Cubemap::convertCubemapToIrradiance(VkRenderData& renderDat
 
     vmaCreateImage(renderData.rdAllocator, &imageInfo, &allocInfo, &offscreenImage, &offscreenAlloc, nullptr);
 
-    VkImageView offscreenView;
-    VkImageViewCreateInfo offscreenViewInfo{};
-    offscreenViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-    offscreenViewInfo.image = offscreenImage;
-    offscreenViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    offscreenViewInfo.format = imageInfo.format;
-    offscreenViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    offscreenViewInfo.subresourceRange.levelCount = 1;
-    offscreenViewInfo.subresourceRange.layerCount = 1;
+    vmaSetAllocationName(renderData.rdAllocator, offscreenAlloc, "Convert Cubemap to Irradiance Offscreen Alloc");
 
-    vkCreateImageView(renderData.rdVkbDevice.device, &offscreenViewInfo, nullptr, &offscreenView);
+    VkImageView offscreenImageView;
+    VkImageViewCreateInfo offscreenImageViewInfo{};
+    offscreenImageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    offscreenImageViewInfo.image = offscreenImage;
+    offscreenImageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    offscreenImageViewInfo.format = imageInfo.format;
+    offscreenImageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    offscreenImageViewInfo.subresourceRange.levelCount = 1;
+    offscreenImageViewInfo.subresourceRange.layerCount = 1;
+
+    vkCreateImageView(renderData.rdVkbDevice.device, &offscreenImageViewInfo, nullptr, &offscreenImageView);
 
     VkFramebuffer framebuffer;
     VkFramebufferCreateInfo fb{};
     fb.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
     fb.renderPass = renderData.rdIBLRenderpass;
     fb.attachmentCount = 1;
-    fb.pAttachments = &offscreenView;
+    fb.pAttachments = &offscreenImageView;
     fb.width = irradianceSize;
     fb.height = irradianceSize;
     fb.layers = 1;
@@ -659,6 +667,10 @@ bool Core::Renderer::Cubemap::convertCubemapToIrradiance(VkRenderData& renderDat
     vkQueueSubmit(renderData.rdGraphicsQueue, 1, &submit, VK_NULL_HANDLE);
     vkQueueWaitIdle(renderData.rdGraphicsQueue);
 
+    vkDestroyFramebuffer(renderData.rdVkbDevice.device, framebuffer, nullptr);
+    vkDestroyImageView(renderData.rdVkbDevice.device, offscreenImageView, nullptr);
+    vmaDestroyImage(renderData.rdAllocator, offscreenImage, offscreenAlloc);
+
     VkSamplerCreateInfo samplerInfo{};
     samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
     samplerInfo.magFilter = VK_FILTER_LINEAR;
@@ -779,24 +791,26 @@ bool Core::Renderer::Cubemap::convertCubemapToPrefilteredMap(VkRenderData& rende
 
     vmaCreateImage(renderData.rdAllocator, &imageInfo, &allocInfo, &offscreenImage, &offscreenAlloc, nullptr);
 
-    VkImageView offscreenView;
-    VkImageViewCreateInfo offscreenViewInfo{};
-    offscreenViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-    offscreenViewInfo.image = offscreenImage;
-    offscreenViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    offscreenViewInfo.format = imageInfo.format;
-    offscreenViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    offscreenViewInfo.subresourceRange.levelCount = 1;
-    offscreenViewInfo.subresourceRange.layerCount = 1;
+    vmaSetAllocationName(renderData.rdAllocator, offscreenAlloc, "Convert Cubemap to Prefiltered Offscreen Alloc");
 
-    vkCreateImageView(renderData.rdVkbDevice.device, &offscreenViewInfo, nullptr, &offscreenView);
+    VkImageView offscreenImageView;
+    VkImageViewCreateInfo offscreenImageViewInfo{};
+    offscreenImageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    offscreenImageViewInfo.image = offscreenImage;
+    offscreenImageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    offscreenImageViewInfo.format = imageInfo.format;
+    offscreenImageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    offscreenImageViewInfo.subresourceRange.levelCount = 1;
+    offscreenImageViewInfo.subresourceRange.layerCount = 1;
+
+    vkCreateImageView(renderData.rdVkbDevice.device, &offscreenImageViewInfo, nullptr, &offscreenImageView);
 
     VkFramebuffer framebuffer;
     VkFramebufferCreateInfo fb{};
     fb.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
     fb.renderPass = renderData.rdIBLRenderpass;
     fb.attachmentCount = 1;
-    fb.pAttachments = &offscreenView;
+    fb.pAttachments = &offscreenImageView;
     fb.width = prefilteredMapSize;
     fb.height = prefilteredMapSize;
     fb.layers = 1;
@@ -954,6 +968,10 @@ bool Core::Renderer::Cubemap::convertCubemapToPrefilteredMap(VkRenderData& rende
 
     vkQueueSubmit(renderData.rdGraphicsQueue, 1, &submit, VK_NULL_HANDLE);
     vkQueueWaitIdle(renderData.rdGraphicsQueue);
+
+    vkDestroyFramebuffer(renderData.rdVkbDevice.device, framebuffer, nullptr);
+    vkDestroyImageView(renderData.rdVkbDevice.device, offscreenImageView, nullptr);
+    vmaDestroyImage(renderData.rdAllocator, offscreenImage, offscreenAlloc);
 
     VkSamplerCreateInfo samplerInfo{};
     samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;

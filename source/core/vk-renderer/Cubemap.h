@@ -8,9 +8,9 @@ namespace Core::Renderer
 class Cubemap
 {
 public:
-    static bool loadHDRTexture(VkRenderData& renderData, VkHDRTextureData& texture, const std::string& path);
+    static bool loadHDRTexture(VkRenderData& renderData, VkTextureData& texture, const std::string& path);
 
-    static bool convertHDRToCubemap(VkRenderData& renderData, VkHDRTextureData& hdrTexture, VkCubemapData& cubemapData);
+    static bool convertHDRToCubemap(VkRenderData& renderData, VkTextureData& texture, VkCubemapData& cubemapData);
 
     static bool convertCubemapToIrradiance(VkRenderData& renderData, VkCubemapData& cubemapData, VkCubemapData& irradianceData);
 

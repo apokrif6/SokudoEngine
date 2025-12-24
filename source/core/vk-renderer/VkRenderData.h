@@ -187,18 +187,6 @@ struct VkCubemapData
     VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
 };
 
-struct VkHDRTextureData
-{
-    VkImage image = VK_NULL_HANDLE;
-    VkImageView imageView = VK_NULL_HANDLE;
-    VmaAllocation imageAlloc = nullptr;
-    VkSampler sampler = VK_NULL_HANDLE;
-
-    VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
-    VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
-    VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
-};
-
 struct ViewportData
 {
     VkImage image;
@@ -348,7 +336,7 @@ struct VkRenderData
 
     VkUniformBufferData rdCaptureUBO{};
 
-    VkHDRTextureData rdHDRTexture{};
+    VkTextureData rdHDRTexture{};
 
     VkCubemapData rdSkyboxData{};
 
