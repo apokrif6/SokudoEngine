@@ -7,7 +7,7 @@
 
 constexpr std::string_view textureFolderPath = "assets/textures/";
 
-std::future<bool> Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderData& renderData,
+std::future<bool> Core::Renderer::Texture::loadTexture(VkRenderData& renderData,
                                                        VkTextureData& textureData, const std::string& textureFilename,
                                                        VkFormat format)
 {
@@ -16,7 +16,6 @@ std::future<bool> Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderD
         [&renderData, &textureData, &textureFilename, format]
         {
             const std::string texturePath = textureFolderPath.data() + textureFilename;
-            ;
 
             int texWidth;
             int texHeight;
@@ -264,6 +263,181 @@ std::future<bool> Core::Renderer::Texture::loadTexture(Core::Renderer::VkRenderD
 
             Logger::log(1, "Texture '%s' loaded (%dx%d, %d channels)\n", texturePath.c_str(), texWidth, texHeight,
                         numberOfChannels);
+            return true;
+        });
+}
+
+std::future<bool> Core::Renderer::Texture::loadHDRTexture(VkRenderData& renderData, VkTextureData& textureData,
+    const std::string& textureFilename, VkFormat format)
+{
+    return std::async(
+        std::launch::async,
+        [&renderData, &textureData, textureFilename, format]
+        {
+            const std::string texturePath = textureFolderPath.data() + textureFilename;
+
+            stbi_set_flip_vertically_on_load(true);
+
+            int width, height, channels;
+            float* hdrData = stbi_loadf(texturePath.c_str(), &width, &height, &channels, STBI_rgb_alpha);
+
+            if (!hdrData)
+            {
+                Logger::log(1, "%s error: failed to load HDR texture %s", __FUNCTION__, texturePath.c_str());
+                return false;
+            }
+
+            VkDeviceSize imageSize = width * height * STBI_rgb_alpha * sizeof(float);
+
+            VkBuffer stagingBuffer;
+            VmaAllocation stagingAlloc;
+
+            VkBufferCreateInfo bufferInfo{};
+            bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+            bufferInfo.size = imageSize;
+            bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+
+            VmaAllocationCreateInfo allocInfo{};
+            allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
+
+            if (vmaCreateBuffer(renderData.rdAllocator, &bufferInfo, &allocInfo,
+                                &stagingBuffer, &stagingAlloc, nullptr) != VK_SUCCESS)
+            {
+                Logger::log(1, "%s error: failed to create HDR staging buffer", __FUNCTION__);
+                stbi_image_free(hdrData);
+                return false;
+            }
+
+            vmaSetAllocationName(renderData.rdAllocator, stagingAlloc, "HDR Texture Staging Buffer");
+
+            void* mapped;
+            vmaMapMemory(renderData.rdAllocator, stagingAlloc, &mapped);
+            memcpy(mapped, hdrData, imageSize);
+            vmaUnmapMemory(renderData.rdAllocator, stagingAlloc);
+
+            stbi_image_free(hdrData);
+
+            VkImageCreateInfo imageInfo{};
+            imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+            imageInfo.imageType = VK_IMAGE_TYPE_2D;
+            imageInfo.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+            imageInfo.extent = { static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1 };
+            imageInfo.mipLevels = 1;
+            imageInfo.arrayLayers = 1;
+            imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+            imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+            imageInfo.usage =
+                VK_IMAGE_USAGE_TRANSFER_DST_BIT |
+                VK_IMAGE_USAGE_SAMPLED_BIT;
+            imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+            VmaAllocationCreateInfo imageAllocInfo{};
+            imageAllocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+
+            if (vmaCreateImage(renderData.rdAllocator, &imageInfo, &imageAllocInfo,
+                               &textureData.image, &textureData.imageAlloc, nullptr) != VK_SUCCESS)
+            {
+                Logger::log(1, "%s error: failed to create HDR image", __FUNCTION__);
+                vmaDestroyBuffer(renderData.rdAllocator, stagingBuffer, stagingAlloc);
+                return false;
+            }
+
+            VkCommandBuffer stagingCommandBuffer;
+            if (!CommandBuffer::init(renderData, stagingCommandBuffer))
+
+                return false;
+
+            VkCommandBufferBeginInfo beginInfo{};
+            beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+            beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+            vkBeginCommandBuffer(stagingCommandBuffer, &beginInfo);
+
+            VkImageMemoryBarrier barrier{};
+            barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+            barrier.image = textureData.image;
+            barrier.srcAccessMask = 0;
+            barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+            barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            barrier.subresourceRange.baseMipLevel = 0;
+            barrier.subresourceRange.levelCount = 1;
+            barrier.subresourceRange.baseArrayLayer = 0;
+            barrier.subresourceRange.layerCount = 1;
+
+            vkCmdPipelineBarrier(stagingCommandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                0, 0, nullptr, 0, nullptr,
+                1, &barrier);
+
+            VkBufferImageCopy copy{};
+            copy.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            copy.imageSubresource.layerCount = 1;
+            copy.imageExtent = { static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1 };
+
+            vkCmdCopyBufferToImage(stagingCommandBuffer, stagingBuffer, textureData.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy);
+
+            barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+            barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+            vkCmdPipelineBarrier(stagingCommandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                0, 0, nullptr, 0, nullptr,
+                1, &barrier);
+
+            vkEndCommandBuffer(stagingCommandBuffer);
+
+            VkSubmitInfo submitInfo{};
+            submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+            submitInfo.commandBufferCount = 1;
+            submitInfo.pCommandBuffers = &stagingCommandBuffer;
+
+            vkQueueSubmit(renderData.rdGraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+            vkQueueWaitIdle(renderData.rdGraphicsQueue);
+
+            vkFreeCommandBuffers(renderData.rdVkbDevice.device, renderData.rdCommandPool, 1, &stagingCommandBuffer);
+            vmaDestroyBuffer(renderData.rdAllocator, stagingBuffer, stagingAlloc);
+
+            VkImageViewCreateInfo viewInfo{};
+            viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            viewInfo.image = textureData.image;
+            viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+            viewInfo.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+            viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            viewInfo.subresourceRange.baseMipLevel = 0;
+            viewInfo.subresourceRange.levelCount = 1;
+            viewInfo.subresourceRange.baseArrayLayer = 0;
+            viewInfo.subresourceRange.layerCount = 1;
+
+            if (vkCreateImageView(renderData.rdVkbDevice.device, &viewInfo, nullptr, &textureData.imageView) != VK_SUCCESS)
+            {
+                Logger::log(1, "%s error: failed to create HDR image view", __FUNCTION__);
+                return false;
+            }
+
+            VkSamplerCreateInfo samplerInfo{};
+            samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+            samplerInfo.magFilter = VK_FILTER_LINEAR;
+            samplerInfo.minFilter = VK_FILTER_LINEAR;
+            samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+            samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+            samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+            samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+            samplerInfo.minLod = 0.f;
+            samplerInfo.maxLod = 1.f;
+
+            if (vkCreateSampler(renderData.rdVkbDevice.device, &samplerInfo, nullptr, &textureData.sampler) != VK_SUCCESS)
+            {
+                Logger::log(1, "%s error: failed to create HDR sampler", __FUNCTION__);
+                return false;
+            }
+
+            textureData.name = texturePath;
+
+            Logger::log(1, "HDR Texture '%s' loaded (%dx%d, %d channels)\n", texturePath.c_str(), width, height,
+                        channels);
             return true;
         });
 }

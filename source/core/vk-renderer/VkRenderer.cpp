@@ -1246,9 +1246,11 @@ bool Core::Renderer::VkRenderer::createBRDFLUTPipeline()
 
 bool Core::Renderer::VkRenderer::loadSkybox()
 {
-    auto& renderData = Core::Engine::getInstance().getRenderData();
+    auto& renderData = Engine::getInstance().getRenderData();
 
-    if (!Cubemap::loadHDRTexture(renderData, renderData.rdHDRTexture, "assets/textures/hdr/skybox.hdr"))
+    std::future<bool> hdrTextureFuture = Texture::loadHDRTexture(renderData, renderData.rdHDRTexture,
+        "hdr/skybox.hdr");
+    if (!hdrTextureFuture.get())
     {
         Logger::log(1, "%s error: could not load HDR texture", __FUNCTION__);
         return false;
