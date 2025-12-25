@@ -1,6 +1,8 @@
 #include "SceneObject.h"
 #include "yaml-cpp/node/node.h"
 
+#include <algorithm>
+
 YAML::Node Core::Scene::SceneObject::serialize() const
 {
     YAML::Node node;

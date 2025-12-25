@@ -1,7 +1,7 @@
 #pragma once
 
 #include "AnimationInspectorUIWindow.h"
-#include "UIWindow.h"
+#include "core/ui/UIWindow.h"
 #include "imgui.h"
 #include "string"
 #include "TransformInspectorUIWindow.h"
