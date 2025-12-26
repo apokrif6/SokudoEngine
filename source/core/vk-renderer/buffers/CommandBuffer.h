@@ -7,8 +7,8 @@ namespace Core::Renderer
 class CommandBuffer
 {
 public:
-    static bool init(const Core::Renderer::VkRenderData& renderData, VkCommandBuffer& commandBuffer);
+    static bool init(const VkRenderData& renderData, VkCommandBuffer& commandBuffer);
 
-    static void cleanup(const Core::Renderer::VkRenderData& renderData, VkCommandBuffer& commandBuffer);
+    static void cleanup(const VkRenderData& renderData, VkCommandBuffer& commandBuffer);
 };
 } // namespace Core::Renderer

@@ -1,7 +1,7 @@
 #include "SyncObjects.h"
 #include "core/tools/Logger.h"
 
-bool Core::Renderer::SyncObjects::init(Core::Renderer::VkRenderData& renderData)
+bool Core::Renderer::SyncObjects::init(VkRenderData& renderData)
 {
     VkFenceCreateInfo fenceInfo{};
     fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
@@ -22,7 +22,7 @@ bool Core::Renderer::SyncObjects::init(Core::Renderer::VkRenderData& renderData)
     return true;
 }
 
-void Core::Renderer::SyncObjects::cleanup(Core::Renderer::VkRenderData& renderData)
+void Core::Renderer::SyncObjects::cleanup(VkRenderData& renderData)
 {
     vkDestroySemaphore(renderData.rdVkbDevice.device, renderData.rdPresentSemaphore, nullptr);
     vkDestroySemaphore(renderData.rdVkbDevice.device, renderData.rdRenderSemaphore, nullptr);

@@ -4,7 +4,7 @@
 #include "VkBootstrap.h"
 #include "core/vk-renderer/debug/DebugUtils.h"
 
-bool Core::Renderer::UniformBuffer::init(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData,
+bool Core::Renderer::UniformBuffer::init(VkRenderData& renderData, VkUniformBufferData& UBOData,
                                          size_t bufferSize, const std::string& name)
 {
     VkBufferCreateInfo bufferInfo{};
@@ -27,7 +27,7 @@ bool Core::Renderer::UniformBuffer::init(Core::Renderer::VkRenderData& renderDat
     UBOData.rdName = "Uniform Buffer " + name;
     vmaSetAllocationName(renderData.rdAllocator, UBOData.rdUniformBufferAlloc, UBOData.rdName.c_str());
 
-    Core::Renderer::Debug::setObjectName(renderData.rdVkbDevice.device, (uint64_t)UBOData.rdUniformBuffer,
+    Debug::setObjectName(renderData.rdVkbDevice.device, (uint64_t)UBOData.rdUniformBuffer,
                                          VK_OBJECT_TYPE_BUFFER, UBOData.rdName);
 
     VkDescriptorSetLayoutBinding uboBind{};
@@ -101,8 +101,8 @@ bool Core::Renderer::UniformBuffer::init(Core::Renderer::VkRenderData& renderDat
     return true;
 }
 
-void Core::Renderer::UniformBuffer::uploadData(Core::Renderer::VkRenderData& renderData,
-                                               Core::Renderer::VkUniformBufferData& UBOData, const glm::vec3& vector)
+void Core::Renderer::UniformBuffer::uploadData(VkRenderData& renderData,
+                                               VkUniformBufferData& UBOData, const glm::vec3& vector)
 {
     void* data;
     vmaMapMemory(renderData.rdAllocator, UBOData.rdUniformBufferAlloc, &data);
@@ -110,7 +110,7 @@ void Core::Renderer::UniformBuffer::uploadData(Core::Renderer::VkRenderData& ren
     vmaUnmapMemory(renderData.rdAllocator, UBOData.rdUniformBufferAlloc);
 }
 
-void Core::Renderer::UniformBuffer::uploadData(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData,
+void Core::Renderer::UniformBuffer::uploadData(VkRenderData& renderData, VkUniformBufferData& UBOData,
                                                const glm::mat4& matrix)
 {
     void* data;
@@ -119,7 +119,7 @@ void Core::Renderer::UniformBuffer::uploadData(Core::Renderer::VkRenderData& ren
     vmaUnmapMemory(renderData.rdAllocator, UBOData.rdUniformBufferAlloc);
 }
 
-void Core::Renderer::UniformBuffer::uploadData(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData,
+void Core::Renderer::UniformBuffer::uploadData(VkRenderData& renderData, VkUniformBufferData& UBOData,
                                                std::vector<glm::mat4> matrices)
 {
     if (matrices.empty())
@@ -133,48 +133,48 @@ void Core::Renderer::UniformBuffer::uploadData(Core::Renderer::VkRenderData& ren
     vmaUnmapMemory(renderData.rdAllocator, UBOData.rdUniformBufferAlloc);
 }
 
-void Core::Renderer::UniformBuffer::uploadData(Core::Renderer::VkRenderData& renderData,
-                                               Core::Renderer::VkUniformBufferData& UBOData,
-                                               const Core::Renderer::MaterialInfo& materialInfo)
+void Core::Renderer::UniformBuffer::uploadData(VkRenderData& renderData,
+                                               VkUniformBufferData& UBOData,
+                                               const MaterialInfo& materialInfo)
 {
     void* data;
     vmaMapMemory(renderData.rdAllocator, UBOData.rdUniformBufferAlloc, &data);
-    std::memcpy(data, &materialInfo, sizeof(Core::Renderer::MaterialInfo));
+    std::memcpy(data, &materialInfo, sizeof(MaterialInfo));
     vmaUnmapMemory(renderData.rdAllocator, UBOData.rdUniformBufferAlloc);
 }
 
-void Core::Renderer::UniformBuffer::uploadData(Core::Renderer::VkRenderData& renderData,
-                                               Core::Renderer::VkUniformBufferData& UBOData,
-                                               const Core::Renderer::CameraInfo& cameraInfo)
+void Core::Renderer::UniformBuffer::uploadData(VkRenderData& renderData,
+                                               VkUniformBufferData& UBOData,
+                                               const CameraInfo& cameraInfo)
 {
     void* data;
     vmaMapMemory(renderData.rdAllocator, UBOData.rdUniformBufferAlloc, &data);
-    std::memcpy(data, &cameraInfo, sizeof(Core::Renderer::CameraInfo));
+    std::memcpy(data, &cameraInfo, sizeof(CameraInfo));
     vmaUnmapMemory(renderData.rdAllocator, UBOData.rdUniformBufferAlloc);
 }
 
-void Core::Renderer::UniformBuffer::uploadData(Core::Renderer::VkRenderData& renderData,
-                                               Core::Renderer::VkUniformBufferData& UBOData,
-                                               const Core::Renderer::LightsInfo& lightsInfo)
+void Core::Renderer::UniformBuffer::uploadData(VkRenderData& renderData,
+                                               VkUniformBufferData& UBOData,
+                                               const LightsInfo& lightsInfo)
 {
     void* data;
     vmaMapMemory(renderData.rdAllocator, UBOData.rdUniformBufferAlloc, &data);
-    std::memcpy(data, &lightsInfo, sizeof(Core::Renderer::LightsInfo));
+    std::memcpy(data, &lightsInfo, sizeof(LightsInfo));
     vmaUnmapMemory(renderData.rdAllocator, UBOData.rdUniformBufferAlloc);
 }
 
-void Core::Renderer::UniformBuffer::uploadData(Core::Renderer::VkRenderData& renderData,
-                                               Core::Renderer::VkUniformBufferData& UBOData,
-                                               const Core::Renderer::CaptureInfo& captureInfo)
+void Core::Renderer::UniformBuffer::uploadData(VkRenderData& renderData,
+                                               VkUniformBufferData& UBOData,
+                                               const CaptureInfo& captureInfo)
 {
     void* data;
     vmaMapMemory(renderData.rdAllocator, UBOData.rdUniformBufferAlloc, &data);
-    std::memcpy(data, &captureInfo, sizeof(Core::Renderer::CaptureInfo));
+    std::memcpy(data, &captureInfo, sizeof(CaptureInfo));
     vmaUnmapMemory(renderData.rdAllocator, UBOData.rdUniformBufferAlloc);
 }
 
 
-void Core::Renderer::UniformBuffer::cleanup(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData)
+void Core::Renderer::UniformBuffer::cleanup(VkRenderData& renderData, VkUniformBufferData& UBOData)
 {
     vkDestroyDescriptorPool(renderData.rdVkbDevice.device, UBOData.rdUBODescriptorPool, nullptr);
     vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, UBOData.rdUBODescriptorLayout, nullptr);

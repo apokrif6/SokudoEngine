@@ -18,15 +18,15 @@ struct DebugBone
 class Skeleton
 {
 public:
-    void init(Core::Renderer::VkRenderData& renderData);
-    void update(Core::Renderer::VkRenderData& renderData, const std::vector<DebugBone>& bones);
-    void draw(Core::Renderer::VkRenderData& renderData);
-    void cleanup(Core::Renderer::VkRenderData& renderData);
+    void init(VkRenderData& renderData);
+    void update(VkRenderData& renderData, const std::vector<DebugBone>& bones);
+    void draw(VkRenderData& renderData);
+    void cleanup(VkRenderData& renderData);
 
 private:
-    void createVertexBuffer(Renderer::VkRenderData& renderData);
+    void createVertexBuffer(VkRenderData& renderData);
 
-    Core::Renderer::VkVertexBufferData mDebugLinesBuffer;
+    VkVertexBufferData mDebugLinesBuffer;
 
     uint32_t mDebugLinesCount = 0;
 };

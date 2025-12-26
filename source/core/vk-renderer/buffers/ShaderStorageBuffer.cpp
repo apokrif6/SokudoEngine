@@ -4,7 +4,7 @@
 #include "VkBootstrap.h"
 #include "core/vk-renderer/debug/DebugUtils.h"
 
-bool Core::Renderer::ShaderStorageBuffer::init(Core::Renderer::VkRenderData& renderData,
+bool Core::Renderer::ShaderStorageBuffer::init(VkRenderData& renderData,
                                                VkShaderStorageBufferData& SSBOData, size_t bufferSize,
                                                const std::string& name)
 {
@@ -28,7 +28,7 @@ bool Core::Renderer::ShaderStorageBuffer::init(Core::Renderer::VkRenderData& ren
     SSBOData.rdName = "Shader Storage Buffer " + name;
     vmaSetAllocationName(renderData.rdAllocator, SSBOData.rdShaderStorageBufferAlloc, SSBOData.rdName.c_str());
 
-    Core::Renderer::Debug::setObjectName(renderData.rdVkbDevice.device, (uint64_t)SSBOData.rdShaderStorageBuffer,
+    Debug::setObjectName(renderData.rdVkbDevice.device, (uint64_t)SSBOData.rdShaderStorageBuffer,
                                          VK_OBJECT_TYPE_BUFFER, SSBOData.rdName);
 
     VkDescriptorSetLayoutBinding ssboBind{};
@@ -102,7 +102,7 @@ bool Core::Renderer::ShaderStorageBuffer::init(Core::Renderer::VkRenderData& ren
     return true;
 }
 
-void Core::Renderer::ShaderStorageBuffer::uploadData(Core::Renderer::VkRenderData& renderData,
+void Core::Renderer::ShaderStorageBuffer::uploadData(VkRenderData& renderData,
                                                      VkShaderStorageBufferData& SSBOData,
                                                      std::vector<glm::mat4> matrices)
 {
@@ -117,7 +117,7 @@ void Core::Renderer::ShaderStorageBuffer::uploadData(Core::Renderer::VkRenderDat
     vmaUnmapMemory(renderData.rdAllocator, SSBOData.rdShaderStorageBufferAlloc);
 }
 
-void Core::Renderer::ShaderStorageBuffer::cleanup(Core::Renderer::VkRenderData& renderData,
+void Core::Renderer::ShaderStorageBuffer::cleanup(VkRenderData& renderData,
                                                   VkShaderStorageBufferData& SSBOData)
 {
     vkDestroyDescriptorPool(renderData.rdVkbDevice.device, SSBOData.rdSSBODescriptorPool, nullptr);

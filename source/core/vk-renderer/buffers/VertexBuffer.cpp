@@ -2,7 +2,7 @@
 #include "VertexBuffer.h"
 #include "core/vk-renderer/debug/DebugUtils.h"
 
-bool Core::Renderer::VertexBuffer::init(Core::Renderer::VkRenderData& renderData, VkVertexBufferData& vertexBufferData,
+bool Core::Renderer::VertexBuffer::init(VkRenderData& renderData, VkVertexBufferData& vertexBufferData,
                                         unsigned int bufferSize, const std::string& name)
 {
     VkBufferCreateInfo bufferInfo{};
@@ -26,7 +26,7 @@ bool Core::Renderer::VertexBuffer::init(Core::Renderer::VkRenderData& renderData
     vertexBufferData.rdName = "Vertex Buffer " + name;
     vmaSetAllocationName(renderData.rdAllocator, vertexBufferData.rdVertexBufferAlloc, vertexBufferData.rdName.c_str());
 
-    Core::Renderer::Debug::setObjectName(renderData.rdVkbDevice.device, (uint64_t)vertexBufferData.rdVertexBuffer,
+    Debug::setObjectName(renderData.rdVkbDevice.device, (uint64_t)vertexBufferData.rdVertexBuffer,
                                          VK_OBJECT_TYPE_BUFFER, vertexBufferData.rdName);
 
     VkBufferCreateInfo stagingBufferInfo{};
@@ -56,7 +56,7 @@ bool Core::Renderer::VertexBuffer::init(Core::Renderer::VkRenderData& renderData
     return true;
 }
 
-void Core::Renderer::VertexBuffer::cleanup(Core::Renderer::VkRenderData& renderData,
+void Core::Renderer::VertexBuffer::cleanup(VkRenderData& renderData,
                                            VkVertexBufferData& vertexBufferData)
 {
     vmaDestroyBuffer(renderData.rdAllocator, vertexBufferData.rdStagingBuffer, vertexBufferData.rdStagingBufferAlloc);

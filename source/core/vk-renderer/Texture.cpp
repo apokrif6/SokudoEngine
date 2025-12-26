@@ -133,7 +133,7 @@ std::future<bool> Core::Renderer::Texture::loadTexture(VkRenderData& renderData,
 
             VkCommandBuffer stagingCommandBuffer;
 
-            if (!Core::Renderer::CommandBuffer::init(renderData, stagingCommandBuffer))
+            if (!CommandBuffer::init(renderData, stagingCommandBuffer))
             {
                 Logger::log(1, "Could not create texture upload command buffers\n");
                 return false;
@@ -212,7 +212,7 @@ std::future<bool> Core::Renderer::Texture::loadTexture(VkRenderData& renderData,
             }
 
             vkDestroyFence(renderData.rdVkbDevice.device, stagingBufferFence, nullptr);
-            Core::Renderer::CommandBuffer::cleanup(renderData, stagingCommandBuffer);
+            CommandBuffer::cleanup(renderData, stagingCommandBuffer);
             vmaDestroyBuffer(renderData.rdAllocator, stagingBuffer, stagingBufferAlloc);
 
             /* image view and sampler */
@@ -442,7 +442,7 @@ std::future<bool> Core::Renderer::Texture::loadHDRTexture(VkRenderData& renderDa
         });
 }
 
-void Core::Renderer::Texture::cleanup(Core::Renderer::VkRenderData& renderData, VkTextureData& textureData)
+void Core::Renderer::Texture::cleanup(VkRenderData& renderData, VkTextureData& textureData)
 {
     vkDestroySampler(renderData.rdVkbDevice.device, textureData.sampler, nullptr);
     vkDestroyImageView(renderData.rdVkbDevice.device, textureData.imageView, nullptr);

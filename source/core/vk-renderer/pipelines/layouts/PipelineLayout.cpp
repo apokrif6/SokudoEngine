@@ -3,7 +3,7 @@
 
 #include "VkBootstrap.h"
 
-bool Core::Renderer::PipelineLayout::init(Core::Renderer::VkRenderData& renderData, VkTextureData& textureData,
+bool Core::Renderer::PipelineLayout::init(VkRenderData& renderData, VkTextureData& textureData,
                                           VkPipelineLayout& pipelineLayout, const PipelineLayoutConfig& pipelineLayoutConfig)
 {
     // TODO
@@ -27,7 +27,7 @@ bool Core::Renderer::PipelineLayout::init(Core::Renderer::VkRenderData& renderDa
     return true;
 }
 
-void Core::Renderer::PipelineLayout::cleanup(Core::Renderer::VkRenderData& renderData, VkPipelineLayout& pipelineLayout)
+void Core::Renderer::PipelineLayout::cleanup(VkRenderData& renderData, VkPipelineLayout& pipelineLayout)
 {
     vkDestroyPipelineLayout(renderData.rdVkbDevice.device, pipelineLayout, nullptr);
 }

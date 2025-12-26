@@ -1,7 +1,7 @@
 #include "CommandBuffer.h"
 #include "core/tools/Logger.h"
 
-bool Core::Renderer::CommandBuffer::init(const Core::Renderer::VkRenderData& renderData, VkCommandBuffer& commandBuffer)
+bool Core::Renderer::CommandBuffer::init(const VkRenderData& renderData, VkCommandBuffer& commandBuffer)
 {
     VkCommandBufferAllocateInfo bufferAllocInfo{};
     bufferAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -18,7 +18,7 @@ bool Core::Renderer::CommandBuffer::init(const Core::Renderer::VkRenderData& ren
     return true;
 }
 
-void Core::Renderer::CommandBuffer::cleanup(const Core::Renderer::VkRenderData& renderData,
+void Core::Renderer::CommandBuffer::cleanup(const VkRenderData& renderData,
                                             VkCommandBuffer& commandBuffer)
 {
     vkFreeCommandBuffers(renderData.rdVkbDevice.device, renderData.rdCommandPool, 1, &commandBuffer);

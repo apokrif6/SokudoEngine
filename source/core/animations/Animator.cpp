@@ -21,7 +21,7 @@ void Core::Animations::Animator::updateBonesTransform(Renderer::Mesh* mesh, uint
 {
     for (Renderer::Primitive& primitive : mesh->getPrimitives())
     {
-        Animations::BonesInfo& bonesInfo = primitive.getBonesInfo();
+        BonesInfo& bonesInfo = primitive.getBonesInfo();
         size_t bonesInfoSize = bonesInfo.bones.size();
         bonesInfo.finalTransforms.resize(bonesInfoSize, glm::mat4(1.0));
 
@@ -31,13 +31,13 @@ void Core::Animations::Animator::updateBonesTransform(Renderer::Mesh* mesh, uint
         }
 
         const auto& animations = mesh->getAnimations();
-        const Core::Animations::AnimationClip& animation = animations[animationToPlayIndex];
+        const AnimationClip& animation = animations[animationToPlayIndex];
 
         float duration = animation.duration;
         float ticksPerSecond = animation.ticksPerSecond != 0 ? animation.ticksPerSecond : 30.f;
         float timeInTicks = fmod(mAnimationTime * ticksPerSecond, duration);
 
-        const Core::Animations::Skeleton& skeleton = mesh->getSkeleton();
+        const Skeleton& skeleton = mesh->getSkeleton();
 
         readNodeHierarchyClip(animation, timeInTicks, skeleton.getRootNode(), glm::mat4(1.0f), bonesInfo, skeleton);
 

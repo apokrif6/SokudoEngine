@@ -9,11 +9,11 @@ namespace Core::Renderer
 class VertexBuffer
 {
 public:
-    static bool init(Core::Renderer::VkRenderData& renderData, VkVertexBufferData& VkVertexBufferData,
+    static bool init(VkRenderData& renderData, VkVertexBufferData& VkVertexBufferData,
                      unsigned int bufferSize, const std::string& name);
 
     template <typename T>
-    static bool uploadData(Core::Renderer::VkRenderData& renderData, VkVertexBufferData& vertexBufferData,
+    static bool uploadData(VkRenderData& renderData, VkVertexBufferData& vertexBufferData,
                            const std::vector<T>& vertexData)
     {
         unsigned int vertexDataSize = vertexData.size() * sizeof(T);
@@ -60,6 +60,6 @@ public:
         return true;
     }
 
-    static void cleanup(Core::Renderer::VkRenderData& renderData, VkVertexBufferData& vertexBufferData);
+    static void cleanup(VkRenderData& renderData, VkVertexBufferData& vertexBufferData);
 };
 } // namespace Core::Renderer

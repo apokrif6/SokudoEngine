@@ -24,7 +24,7 @@ Core::Scene::Scene Core::Scene::Serialization::deserializeScene(const YAML::Node
         switch (type)
         {
         case ObjectType::Mesh:
-            object = std::make_shared<Core::Renderer::Mesh>("", Animations::Skeleton{});
+            object = std::make_shared<Renderer::Mesh>("", Animations::Skeleton{});
             break;
         case ObjectType::Empty:
         default:

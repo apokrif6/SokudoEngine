@@ -5,7 +5,7 @@
 #include "core/tools/Logger.h"
 #include "core/vk-renderer/debug/DebugUtils.h"
 
-bool Core::Renderer::IndexBuffer::init(Core::Renderer::VkRenderData& renderData, VkIndexBufferData& indexBufferData,
+bool Core::Renderer::IndexBuffer::init(VkRenderData& renderData, VkIndexBufferData& indexBufferData,
                                        unsigned int bufferSize, const std::string& name)
 {
     VkBufferCreateInfo bufferInfo{};
@@ -29,7 +29,7 @@ bool Core::Renderer::IndexBuffer::init(Core::Renderer::VkRenderData& renderData,
     indexBufferData.rdName = "Index Buffer " + name;
     vmaSetAllocationName(renderData.rdAllocator, indexBufferData.rdIndexBufferAlloc, indexBufferData.rdName.c_str());
 
-    Core::Renderer::Debug::setObjectName(renderData.rdVkbDevice.device, (uint64_t)indexBufferData.rdIndexBuffer,
+    Debug::setObjectName(renderData.rdVkbDevice.device, (uint64_t)indexBufferData.rdIndexBuffer,
                                          VK_OBJECT_TYPE_BUFFER, indexBufferData.rdName);
 
     VkBufferCreateInfo stagingBufferInfo{};
@@ -57,8 +57,8 @@ bool Core::Renderer::IndexBuffer::init(Core::Renderer::VkRenderData& renderData,
     return true;
 }
 
-bool Core::Renderer::IndexBuffer::uploadData(Core::Renderer::VkRenderData& renderData,
-                                             Core::Renderer::VkIndexBufferData& indexBufferData,
+bool Core::Renderer::IndexBuffer::uploadData(VkRenderData& renderData,
+                                             VkIndexBufferData& indexBufferData,
                                              const std::vector<uint32_t>& indexData)
 {
     const unsigned int bufferSize = indexData.size() * sizeof(uint32_t);
@@ -104,7 +104,7 @@ bool Core::Renderer::IndexBuffer::uploadData(Core::Renderer::VkRenderData& rende
     return true;
 }
 
-void Core::Renderer::IndexBuffer::cleanup(Core::Renderer::VkRenderData& renderData, VkIndexBufferData& indexBufferData)
+void Core::Renderer::IndexBuffer::cleanup(VkRenderData& renderData, VkIndexBufferData& indexBufferData)
 {
     vmaDestroyBuffer(renderData.rdAllocator, indexBufferData.rdStagingBuffer, indexBufferData.rdStagingBufferAlloc);
     vmaDestroyBuffer(renderData.rdAllocator, indexBufferData.rdIndexBuffer, indexBufferData.rdIndexBufferAlloc);

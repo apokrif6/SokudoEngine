@@ -1,7 +1,7 @@
 #include "DebugSkeletonPipelineLayout.h"
 #include "core/tools/Logger.h"
 
-bool Core::Renderer::DebugSkeletonPipelineLayout::init(Core::Renderer::VkRenderData& renderData,
+bool Core::Renderer::DebugSkeletonPipelineLayout::init(VkRenderData& renderData,
                                                        VkPipelineLayout& pipelineLayout)
 {
     VkDescriptorSetLayout layouts[] = {renderData.rdPerspectiveViewMatrixUBO.rdUBODescriptorLayout};
@@ -22,7 +22,7 @@ bool Core::Renderer::DebugSkeletonPipelineLayout::init(Core::Renderer::VkRenderD
     return true;
 }
 
-void Core::Renderer::DebugSkeletonPipelineLayout::cleanup(Core::Renderer::VkRenderData& renderData,
+void Core::Renderer::DebugSkeletonPipelineLayout::cleanup(VkRenderData& renderData,
                                                           VkPipelineLayout& pipelineLayout)
 {
     vkDestroyPipelineLayout(renderData.rdVkbDevice.device, pipelineLayout, nullptr);

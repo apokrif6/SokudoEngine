@@ -36,8 +36,8 @@ void Core::Application::Window::mainLoop()
 {
     while (!glfwWindowShouldClose(mWindow))
     {
-        Core::Engine::getInstance().update();
-        Core::Engine::getInstance().draw();
+        Engine::getInstance().update();
+        Engine::getInstance().draw();
 
         glfwPollEvents();
     }
@@ -45,7 +45,7 @@ void Core::Application::Window::mainLoop()
 
 void Core::Application::Window::cleanup()
 {
-    Core::Engine::getInstance().cleanup();
+    Engine::getInstance().cleanup();
     glfwDestroyWindow(mWindow);
     glfwTerminate();
     Logger::log(1, "%s: Terminating window\n", __FUNCTION__);
@@ -74,7 +74,7 @@ void Core::Application::Window::bindInputs()
         mWindow,
         [](GLFWwindow* window, int xPosition, int yPosition)
         {
-            Core::Engine::getInstance().getSystem<Core::Renderer::VkRenderer>()->handleWindowMoveEvents(xPosition,
+            Engine::getInstance().getSystem<Renderer::VkRenderer>()->handleWindowMoveEvents(xPosition,
                                                                                                         yPosition);
         });
 
@@ -82,27 +82,27 @@ void Core::Application::Window::bindInputs()
         mWindow,
         [](GLFWwindow* window, int minimized)
         {
-            Core::Engine::getInstance().getSystem<Core::Renderer::VkRenderer>()->handleWindowMinimizedEvents(minimized);
+            Engine::getInstance().getSystem<Renderer::VkRenderer>()->handleWindowMinimizedEvents(minimized);
         });
 
     glfwSetWindowMaximizeCallback(
         mWindow,
         [](GLFWwindow* window, int maximized)
         {
-            Core::Engine::getInstance().getSystem<Core::Renderer::VkRenderer>()->handleWindowMaximizedEvents(maximized);
+            Engine::getInstance().getSystem<Renderer::VkRenderer>()->handleWindowMaximizedEvents(maximized);
         });
 
     glfwSetFramebufferSizeCallback(
         mWindow,
         [](GLFWwindow* window, int width, int height)
         {
-            Core::Engine::getInstance().getSystem<Core::Renderer::VkRenderer>()->handleWindowResizeEvents(width,
+            Engine::getInstance().getSystem<Renderer::VkRenderer>()->handleWindowResizeEvents(width,
                                                                                                           height);
         });
 
     glfwSetWindowCloseCallback(
         mWindow, [](GLFWwindow* window)
-        { Core::Engine::getInstance().getSystem<Core::Renderer::VkRenderer>()->handleWindowCloseEvents(); });
+        { Engine::getInstance().getSystem<Renderer::VkRenderer>()->handleWindowCloseEvents(); });
 
     glfwSetKeyCallback(mWindow,
                        [](GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -127,5 +127,5 @@ void Core::Application::Window::bindInputs()
 
     glfwSetCursorEnterCallback(
         mWindow, [](GLFWwindow* window, int enter)
-        { Core::Engine::getInstance().getSystem<Core::Renderer::VkRenderer>()->handleMouseEnterLeaveEvents(enter); });
+        { Engine::getInstance().getSystem<Renderer::VkRenderer>()->handleMouseEnterLeaveEvents(enter); });
 }

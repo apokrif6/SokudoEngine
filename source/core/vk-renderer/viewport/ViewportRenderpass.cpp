@@ -2,7 +2,7 @@
 #include "core/vk-renderer/VkRenderData.h"
 #include "core/tools/Logger.h"
 
-bool Core::Renderer::ViewportRenderpass::init(Core::Renderer::VkRenderData& renderData)
+bool Core::Renderer::ViewportRenderpass::init(VkRenderData& renderData)
 {
     VkAttachmentDescription colorAtt{};
     colorAtt.format = VK_FORMAT_B8G8R8A8_UNORM;
@@ -76,7 +76,7 @@ bool Core::Renderer::ViewportRenderpass::init(Core::Renderer::VkRenderData& rend
     return true;
 }
 
-void Core::Renderer::ViewportRenderpass::cleanup(Core::Renderer::VkRenderData& renderData)
+void Core::Renderer::ViewportRenderpass::cleanup(VkRenderData& renderData)
 {
     /* could not be done in a destructor */
     vkDestroyRenderPass(renderData.rdVkbDevice.device, renderData.rdViewportTarget.renderpass, nullptr);

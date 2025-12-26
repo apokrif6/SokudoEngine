@@ -14,22 +14,22 @@ namespace Core::Utils
 {
 struct PrimitiveData
 {
-    std::vector<Core::Renderer::NewVertex> vertices;
+    std::vector<Renderer::NewVertex> vertices;
     std::vector<uint32_t> indices;
-    std::unordered_map<aiTextureType, Core::Renderer::VkTextureData> textures;
-    Core::Renderer::MaterialInfo material;
+    std::unordered_map<aiTextureType, Renderer::VkTextureData> textures;
+    Renderer::MaterialInfo material;
     // TODO
     // should it be part of MaterialInfo?
     VkDescriptorSet materialDescriptorSet{};
-    Core::Animations::BonesInfo bones;
+    Animations::BonesInfo bones;
 };
 
 struct MeshData
 {
     std::vector<PrimitiveData> primitives;
-    Core::Animations::Skeleton skeleton;
-    std::vector<Core::Animations::AnimationClip> animations;
+    Animations::Skeleton skeleton;
+    std::vector<Animations::AnimationClip> animations;
 };
 
-MeshData loadMeshFromFile(const std::string& fileName, Core::Renderer::VkRenderData& renderData);
+MeshData loadMeshFromFile(const std::string& fileName, Renderer::VkRenderData& renderData);
 } // namespace Core::Utils

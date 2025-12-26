@@ -4,15 +4,15 @@
 #include "core/vk-renderer/Shader.h"
 #include "core/vk-renderer/debug/DebugRenderer.h"
 
-bool Core::Renderer::DebugSkeletonPipeline::init(Core::Renderer::VkRenderData& renderData,
+bool Core::Renderer::DebugSkeletonPipeline::init(VkRenderData& renderData,
                                                  VkPipelineLayout& pipelineLayout, VkPipeline& pipeline,
                                                  VkPrimitiveTopology topology, const std::string& vertexShaderFilename,
                                                  const std::string& fragmentShaderFilename)
 {
     VkShaderModule vertexModule =
-        Core::Renderer::Shader::loadShader(renderData.rdVkbDevice.device, vertexShaderFilename);
+        Shader::loadShader(renderData.rdVkbDevice.device, vertexShaderFilename);
     VkShaderModule fragmentModule =
-        Core::Renderer::Shader::loadShader(renderData.rdVkbDevice.device, fragmentShaderFilename);
+        Shader::loadShader(renderData.rdVkbDevice.device, fragmentShaderFilename);
 
     if (vertexModule == VK_NULL_HANDLE || fragmentModule == VK_NULL_HANDLE)
     {
@@ -34,8 +34,8 @@ bool Core::Renderer::DebugSkeletonPipeline::init(Core::Renderer::VkRenderData& r
 
     VkPipelineShaderStageCreateInfo shaderStagesInfo[] = {vertexStageInfo, fragmentStageInfo};
 
-    auto bindingDescription = Core::Renderer::Debug::LineVertex::getBindingDescription();
-    auto attributeDescriptions = Core::Renderer::Shader::getAttributeDescriptionsBySpvReflect(vertexShaderFilename);
+    auto bindingDescription = Debug::LineVertex::getBindingDescription();
+    auto attributeDescriptions = Shader::getAttributeDescriptionsBySpvReflect(vertexShaderFilename);
 
     VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -151,7 +151,7 @@ bool Core::Renderer::DebugSkeletonPipeline::init(Core::Renderer::VkRenderData& r
     return true;
 }
 
-void Core::Renderer::DebugSkeletonPipeline::cleanup(Core::Renderer::VkRenderData& renderData, VkPipeline& pipeline)
+void Core::Renderer::DebugSkeletonPipeline::cleanup(VkRenderData& renderData, VkPipeline& pipeline)
 {
     vkDestroyPipeline(renderData.rdVkbDevice.device, pipeline, nullptr);
 }

@@ -64,7 +64,7 @@ bool Core::Renderer::UserInterface::init(VkRenderData& renderData)
 
     VkCommandBuffer imguiCommandBuffer;
 
-    if (!Core::Renderer::CommandBuffer::init(renderData, imguiCommandBuffer))
+    if (!CommandBuffer::init(renderData, imguiCommandBuffer))
     {
         Logger::log(1, "%s error: could not create texture upload command buffers\n", __FUNCTION__);
         return false;
@@ -135,7 +135,7 @@ bool Core::Renderer::UserInterface::init(VkRenderData& renderData)
     }
 
     vkDestroyFence(renderData.rdVkbDevice.device, imguiBufferFence, nullptr);
-    Core::Renderer::CommandBuffer::cleanup(renderData, imguiCommandBuffer);
+    CommandBuffer::cleanup(renderData, imguiCommandBuffer);
 
     ImGui::StyleColorsDark();
 

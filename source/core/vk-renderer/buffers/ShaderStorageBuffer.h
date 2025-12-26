@@ -9,12 +9,12 @@ namespace Core::Renderer
 class ShaderStorageBuffer
 {
 public:
-    static bool init(Core::Renderer::VkRenderData& renderData, VkShaderStorageBufferData& SSBOData, size_t bufferSize,
+    static bool init(VkRenderData& renderData, VkShaderStorageBufferData& SSBOData, size_t bufferSize,
                      const std::string& name);
 
-    static void uploadData(Core::Renderer::VkRenderData& renderData, VkShaderStorageBufferData& SSBOData,
+    static void uploadData(VkRenderData& renderData, VkShaderStorageBufferData& SSBOData,
                            std::vector<glm::mat4> matrices);
 
-    static void cleanup(Core::Renderer::VkRenderData& renderData, VkShaderStorageBufferData& SSBOData);
+    static void cleanup(VkRenderData& renderData, VkShaderStorageBufferData& SSBOData);
 };
 } // namespace Core::Renderer

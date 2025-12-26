@@ -9,30 +9,30 @@ namespace Core::Renderer
 class UniformBuffer
 {
 public:
-    static bool init(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData, size_t bufferSize,
+    static bool init(VkRenderData& renderData, VkUniformBufferData& UBOData, size_t bufferSize,
                      const std::string& name);
 
-    static void uploadData(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData,
+    static void uploadData(VkRenderData& renderData, VkUniformBufferData& UBOData,
                            const glm::vec3& vector);
 
-    static void uploadData(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData,
+    static void uploadData(VkRenderData& renderData, VkUniformBufferData& UBOData,
                            const glm::mat4& matrix);
 
-    static void uploadData(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData,
+    static void uploadData(VkRenderData& renderData, VkUniformBufferData& UBOData,
                            std::vector<glm::mat4> matrices);
 
-    static void uploadData(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData,
-                           const Core::Renderer::MaterialInfo& materialInfo);
+    static void uploadData(VkRenderData& renderData, VkUniformBufferData& UBOData,
+                           const MaterialInfo& materialInfo);
 
-    static void uploadData(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData,
-                           const Core::Renderer::CameraInfo& cameraInfo);
+    static void uploadData(VkRenderData& renderData, VkUniformBufferData& UBOData,
+                           const CameraInfo& cameraInfo);
 
-    static void uploadData(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData,
-                           const Core::Renderer::LightsInfo& lightsInfo);
+    static void uploadData(VkRenderData& renderData, VkUniformBufferData& UBOData,
+                           const LightsInfo& lightsInfo);
 
-    static void uploadData(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData,
-                           const Core::Renderer::CaptureInfo& captureInfo);
+    static void uploadData(VkRenderData& renderData, VkUniformBufferData& UBOData,
+                           const CaptureInfo& captureInfo);
 
-    static void cleanup(Core::Renderer::VkRenderData& renderData, VkUniformBufferData& UBOData);
+    static void cleanup(VkRenderData& renderData, VkUniformBufferData& UBOData);
 };
 } // namespace Core::Renderer

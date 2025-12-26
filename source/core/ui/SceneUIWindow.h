@@ -25,7 +25,7 @@ private:
     static inline std::string selectedSceneFile;
 
     static void refreshSceneFiles();
-    static void drawSceneObjectNode(std::shared_ptr<Core::Scene::SceneObject> object,
-                                    Core::Scene::SceneObjectSelection& selection);
+    static void drawSceneObjectNode(std::shared_ptr<Scene::SceneObject> object,
+                                    Scene::SceneObjectSelection& selection);
 };
 } // namespace Core::UI

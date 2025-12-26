@@ -55,7 +55,7 @@ public:
         return (it != mSystems.end()) ? static_cast<T*>(it->second.get()) : nullptr;
     }
 
-    Core::Renderer::VkRenderData& getRenderData() { return mRenderData; }
+    Renderer::VkRenderData& getRenderData() { return mRenderData; }
 
     void setState(EngineState state) { mState = state; }
 
@@ -68,7 +68,7 @@ private:
     float mLastTickTime = 0.0;
     Timer mFrameTimer{};
 
-    Core::Renderer::VkRenderData mRenderData;
+    Renderer::VkRenderData mRenderData;
 
     std::unordered_map<std::type_index, std::unique_ptr<System::ISystem>> mSystems;
     std::vector<System::IUpdatable*> mUpdatables;

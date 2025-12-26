@@ -12,14 +12,14 @@ public:
 
     [[nodiscard]] const BoneNode& getRootNode() const { return rootNode; }
 
-    void initDebug(Core::Renderer::VkRenderData& renderData);
+    void initDebug(Renderer::VkRenderData& renderData);
 
-    void updateDebug(Core::Renderer::VkRenderData& renderData,
+    void updateDebug(Renderer::VkRenderData& renderData,
                      const std::vector<Renderer::Debug::DebugBone>& bones) const;
 
-    void drawDebug(Core::Renderer::VkRenderData& renderData) const;
+    void drawDebug(Renderer::VkRenderData& renderData) const;
 
-    void cleanup(Core::Renderer::VkRenderData& renderData);
+    void cleanup(Renderer::VkRenderData& renderData);
 
     YAML::Node serialize() const override;
 
@@ -28,6 +28,6 @@ public:
 private:
     BoneNode rootNode;
 
-    std::shared_ptr<Core::Renderer::Debug::Skeleton> debugDraw;
+    std::shared_ptr<Renderer::Debug::Skeleton> debugDraw;
 };
 } // namespace Core::Animations

@@ -25,7 +25,7 @@ Core::Animations::AnimationClip Core::Animations::AnimationsUtils::loadAnimation
         return {};
     }
 
-    Core::Animations::AnimationClip clip;
+    AnimationClip clip;
     clip.name = filePath;
     clip.duration = static_cast<float>(aiAnim->mDuration);
     clip.ticksPerSecond = aiAnim->mTicksPerSecond != 0.0 ? static_cast<float>(aiAnim->mTicksPerSecond) : 25.0f;
@@ -33,20 +33,20 @@ Core::Animations::AnimationClip Core::Animations::AnimationsUtils::loadAnimation
     for (unsigned int i = 0; i < aiAnim->mNumChannels; i++)
     {
         aiNodeAnim* channel = aiAnim->mChannels[i];
-        Core::Animations::AnimationChannel animChannel;
+        AnimationChannel animChannel;
         animChannel.boneName = channel->mNodeName.C_Str();
 
         for (unsigned int j = 0; j < channel->mNumPositionKeys; j++)
         {
             const auto& key = channel->mPositionKeys[j];
-            auto convertedPosition = Core::Animations::AnimationsUtils::convertVectorToGlm(key.mValue);
+            auto convertedPosition = convertVectorToGlm(key.mValue);
             animChannel.positions.push_back({static_cast<float>(key.mTime), convertedPosition});
         }
 
         for (unsigned int j = 0; j < channel->mNumRotationKeys; j++)
         {
             const auto& key = channel->mRotationKeys[j];
-            auto convertedRotation = Core::Animations::AnimationsUtils::convertQuaternionToGlm(key.mValue);
+            auto convertedRotation = convertQuaternionToGlm(key.mValue);
             animChannel.rotations.push_back({static_cast<float>(key.mTime), convertedRotation});
         }
 
@@ -65,7 +65,7 @@ Core::Animations::AnimationClip Core::Animations::AnimationsUtils::loadAnimation
 
 Core::Animations::BoneNode Core::Animations::AnimationsUtils::buildBoneHierarchy(const aiNode* node)
 {
-    Core::Animations::BoneNode boneNode;
+    BoneNode boneNode;
     boneNode.name = node->mName.C_Str();
     boneNode.localTransform = glm::transpose(glm::make_mat4(&node->mTransformation.a1));
 

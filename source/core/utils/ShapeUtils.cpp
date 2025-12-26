@@ -330,7 +330,7 @@ void processNode(Core::Utils::MeshData& meshData, aiNode* node, const aiScene* s
 }
 
 Core::Utils::MeshData Core::Utils::loadMeshFromFile(const std::string& fileName,
-                                                    Core::Renderer::VkRenderData& renderData)
+                                                    Renderer::VkRenderData& renderData)
 {
     Assimp::Importer importer{};
     importer.ReadFile(fileName, aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_JoinIdenticalVertices |
@@ -344,9 +344,9 @@ Core::Utils::MeshData Core::Utils::loadMeshFromFile(const std::string& fileName,
         return {};
     }
 
-    Core::Utils::MeshData mesh;
-    std::vector<Core::Renderer::VkTextureData> loadedTextures;
+    MeshData mesh;
+    std::vector<Renderer::VkTextureData> loadedTextures;
     processNode(mesh, scene->mRootNode, scene, glm::mat4(1.0f), renderData, loadedTextures);
-    mesh.skeleton.setRootNode(Core::Animations::AnimationsUtils::buildBoneHierarchy(scene->mRootNode));
+    mesh.skeleton.setRootNode(Animations::AnimationsUtils::buildBoneHierarchy(scene->mRootNode));
     return mesh;
 }

@@ -51,8 +51,8 @@ public:
         return {pOrientation.w, pOrientation.x, pOrientation.y, pOrientation.z};
     }
 
-    static Core::Animations::AnimationClip loadAnimationFromFile(const std::string& filePath);
+    static AnimationClip loadAnimationFromFile(const std::string& filePath);
 
-    static Core::Animations::BoneNode buildBoneHierarchy(const aiNode* node);
+    static BoneNode buildBoneHierarchy(const aiNode* node);
 };
 } // namespace Core::Animations

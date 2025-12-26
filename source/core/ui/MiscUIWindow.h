@@ -16,7 +16,7 @@ public:
             return false;
         }
 
-        Renderer::VkRenderData& renderData = Core::Engine::getInstance().getRenderData();
+        Renderer::VkRenderData& renderData = Engine::getInstance().getRenderData();
 
         ImGui::Checkbox("Should draw skybox", &renderData.shouldDrawSkybox);
         ImGui::Checkbox("Should draw grid", &renderData.shouldDrawGrid);

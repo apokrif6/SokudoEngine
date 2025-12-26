@@ -7,8 +7,8 @@ namespace Core::Renderer
 class MeshPipelineLayout
 {
 public:
-    static bool init(Core::Renderer::VkRenderData& renderData, VkPipelineLayout& pipelineLayout);
+    static bool init(VkRenderData& renderData, VkPipelineLayout& pipelineLayout);
 
-    static void cleanup(Core::Renderer::VkRenderData& renderData, VkPipelineLayout& pipelineLayout);
+    static void cleanup(VkRenderData& renderData, VkPipelineLayout& pipelineLayout);
 };
 } // namespace Core::Renderer

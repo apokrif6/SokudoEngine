@@ -56,9 +56,9 @@ void Core::Renderer::Mesh::onRemovedFromScene()
     Engine::getInstance().getSystem<Animations::Animator>()->removeMesh(this);
 }
 
-void Core::Renderer::Mesh::addPrimitive(const std::vector<Core::Renderer::NewVertex>& vertexBufferData,
+void Core::Renderer::Mesh::addPrimitive(const std::vector<NewVertex>& vertexBufferData,
                                         const std::vector<uint32_t>& indexBufferData,
-                                        const std::unordered_map<aiTextureType, Renderer::VkTextureData>& textures,
+                                        const std::unordered_map<aiTextureType, VkTextureData>& textures,
                                         VkRenderData& renderData, const MaterialInfo& materialInfo,
                                         const Animations::BonesInfo& bonesInfo, VkDescriptorSet materialDescriptorSet)
 {
@@ -66,7 +66,7 @@ void Core::Renderer::Mesh::addPrimitive(const std::vector<Core::Renderer::NewVer
                              materialDescriptorSet);
 }
 
-void Core::Renderer::Mesh::update(Core::Renderer::VkRenderData& renderData)
+void Core::Renderer::Mesh::update(VkRenderData& renderData)
 {
     for (auto& primitive : mPrimitives)
     {
@@ -84,7 +84,7 @@ void Core::Renderer::Mesh::update(Core::Renderer::VkRenderData& renderData)
     }
 }
 
-void Core::Renderer::Mesh::draw(Core::Renderer::VkRenderData& renderData)
+void Core::Renderer::Mesh::draw(VkRenderData& renderData)
 {
     for (auto& primitive : mPrimitives)
     {
@@ -97,7 +97,7 @@ void Core::Renderer::Mesh::draw(Core::Renderer::VkRenderData& renderData)
     }
 }
 
-void Core::Renderer::Mesh::cleanup(Core::Renderer::VkRenderData& renderData)
+void Core::Renderer::Mesh::cleanup(VkRenderData& renderData)
 {
     for (auto& primitive : mPrimitives)
     {
@@ -136,13 +136,13 @@ void Core::Renderer::Mesh::deserialize(const YAML::Node& node)
     mCurrentAnimationIndex = node["currentAnimationIndex"].as<uint16_t>();
 
     // I don't like this here, it should be done somewhere else (maybe time for a resource manager hehe?)
-    auto& renderData = Core::Engine::getInstance().getRenderData();
-    Core::Utils::MeshData meshData = Core::Utils::loadMeshFromFile(mMeshFilePath, renderData);
+    auto& renderData = Engine::getInstance().getRenderData();
+    Utils::MeshData meshData = Utils::loadMeshFromFile(mMeshFilePath, renderData);
 
-    std::vector<Core::Animations::AnimationClip> animations;
+    std::vector<Animations::AnimationClip> animations;
     for (auto& animPath : mAnimationFiles)
     {
-        animations.push_back(Core::Animations::AnimationsUtils::loadAnimationFromFile(animPath));
+        animations.push_back(Animations::AnimationsUtils::loadAnimationFromFile(animPath));
     }
     meshData.animations = animations;
     mSkeleton = meshData.skeleton;

@@ -39,7 +39,7 @@
 
 bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned int height)
 {
-    if (!Core::Engine::getInstance().getRenderData().rdWindow)
+    if (!Engine::getInstance().getRenderData().rdWindow)
     {
         Logger::log(1,
                     "%s error: Can't init Vulkan mCore::Renderer. Core::Engine::getInstance().getRenderData().rdWindow "
@@ -138,8 +138,8 @@ bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned i
         return false;
     }
 
-    Core::Engine::getInstance().getRenderData().rdWidth = static_cast<int>(width);
-    Core::Engine::getInstance().getRenderData().rdHeight = static_cast<int>(height);
+    Engine::getInstance().getRenderData().rdWidth = static_cast<int>(width);
+    Engine::getInstance().getRenderData().rdHeight = static_cast<int>(height);
 
     Logger::log(1, "%s: Vulkan Core::Renderer initialized to %ix%i\n", __FUNCTION__, width, height);
     return true;
@@ -147,14 +147,14 @@ bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned i
 
 Core::Renderer::VkRenderer::VkRenderer(GLFWwindow* inWindow)
 {
-    Core::Engine::getInstance().getRenderData().rdWindow = inWindow;
+    Engine::getInstance().getRenderData().rdWindow = inWindow;
     mPerspectiveViewMatrices.emplace_back(1.0f);
     mPerspectiveViewMatrices.emplace_back(1.0f);
 }
 
 void Core::Renderer::VkRenderer::handleWindowResizeEvents(int width, int height)
 {
-    Core::Renderer::VkRenderData& renderData = Core::Engine::getInstance().getRenderData();
+    VkRenderData& renderData = Engine::getInstance().getRenderData();
 
     vkDeviceWaitIdle(renderData.rdVkbDevice.device);
 
@@ -170,7 +170,7 @@ void Core::Renderer::VkRenderer::handleWindowResizeEvents(int width, int height)
 
 void Core::Renderer::VkRenderer::onEvent(const Event& event)
 {
-    VkRenderData& renderData = Core::Engine::getInstance().getRenderData();
+    VkRenderData& renderData = Engine::getInstance().getRenderData();
 
     if (const auto* mouseMovementEvent = dynamic_cast<const MouseMovementEvent*>(&event))
     {
@@ -208,7 +208,7 @@ void Core::Renderer::VkRenderer::onEvent(const Event& event)
     }
 }
 
-void Core::Renderer::VkRenderer::beginUploadFrame(Core::Renderer::VkRenderData& renderData)
+void Core::Renderer::VkRenderer::beginUploadFrame(VkRenderData& renderData)
 {
     vkWaitForFences(renderData.rdVkbDevice.device, 1, &renderData.rdRenderFence, VK_TRUE, UINT64_MAX);
 
@@ -244,7 +244,7 @@ void Core::Renderer::VkRenderer::update(VkRenderData& renderData, float deltaTim
     renderData.rdUploadToUBOTime = mUploadToUBOTimer.stop();
 }
 
-void Core::Renderer::VkRenderer::endUploadFrame(Core::Renderer::VkRenderData& renderData)
+void Core::Renderer::VkRenderer::endUploadFrame(VkRenderData& renderData)
 {
     vkEndCommandBuffer(renderData.rdCommandBuffer);
 
@@ -273,7 +273,7 @@ void Core::Renderer::VkRenderer::draw(VkRenderData& renderData)
     }
 }
 
-void Core::Renderer::VkRenderer::beginRenderFrame(Core::Renderer::VkRenderData& renderData)
+void Core::Renderer::VkRenderer::beginRenderFrame(VkRenderData& renderData)
 {
     uint32_t imageIndex = 0;
     VkResult result = vkAcquireNextImageKHR(renderData.rdVkbDevice.device, renderData.rdVkbSwapchain.swapchain,
@@ -296,7 +296,7 @@ void Core::Renderer::VkRenderer::beginRenderFrame(Core::Renderer::VkRenderData& 
     vkBeginCommandBuffer(renderData.rdCommandBuffer, &beginInfo);
 }
 
-void Core::Renderer::VkRenderer::beginOffscreenRenderPass(Core::Renderer::VkRenderData& renderData)
+void Core::Renderer::VkRenderer::beginOffscreenRenderPass(VkRenderData& renderData)
 {
     VkClearValue clearValues[2] = {{{{0.f, 0.f, 0.f, 1.0f}}}, {1.0f, 0}};
     VkRenderPassBeginInfo offscreenRenderPassInfo{VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
@@ -323,12 +323,12 @@ void Core::Renderer::VkRenderer::beginOffscreenRenderPass(Core::Renderer::VkRend
     vkCmdSetScissor(renderData.rdCommandBuffer, 0, 1, &scissor);
 }
 
-void Core::Renderer::VkRenderer::endOffscreenRenderPass(Core::Renderer::VkRenderData& renderData)
+void Core::Renderer::VkRenderer::endOffscreenRenderPass(VkRenderData& renderData)
 {
     vkCmdEndRenderPass(renderData.rdCommandBuffer);
 }
 
-void Core::Renderer::VkRenderer::beginFinalRenderPass(Core::Renderer::VkRenderData& renderData)
+void Core::Renderer::VkRenderer::beginFinalRenderPass(VkRenderData& renderData)
 {
     VkClearValue clearValues[2] = {{{{0.f, 0.f, 0.f, 1.0f}}}, {1.0f, 0}};
     VkRenderPassBeginInfo renderPassBeginInfo{VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
@@ -352,12 +352,12 @@ void Core::Renderer::VkRenderer::beginFinalRenderPass(Core::Renderer::VkRenderDa
     vkCmdSetScissor(renderData.rdCommandBuffer, 0, 1, &scissor);
 }
 
-void Core::Renderer::VkRenderer::endFinalRenderPass(Core::Renderer::VkRenderData& renderData)
+void Core::Renderer::VkRenderer::endFinalRenderPass(VkRenderData& renderData)
 {
     vkCmdEndRenderPass(renderData.rdCommandBuffer);
 }
 
-void Core::Renderer::VkRenderer::endRenderFrame(Core::Renderer::VkRenderData& renderData)
+void Core::Renderer::VkRenderer::endRenderFrame(VkRenderData& renderData)
 {
     if (vkEndCommandBuffer(renderData.rdCommandBuffer) != VK_SUCCESS)
     {
@@ -393,58 +393,58 @@ void Core::Renderer::VkRenderer::endRenderFrame(Core::Renderer::VkRenderData& re
 
 void Core::Renderer::VkRenderer::cleanup(VkRenderData& renderData)
 {
-    Core::Renderer::SyncObjects::cleanup(renderData);
+    SyncObjects::cleanup(renderData);
 
-    Core::Renderer::CommandBuffer::cleanup(renderData, Core::Engine::getInstance().getRenderData().rdCommandBuffer);
-    Core::Renderer::CommandPool::cleanup(renderData);
+    CommandBuffer::cleanup(renderData, Engine::getInstance().getRenderData().rdCommandBuffer);
+    CommandPool::cleanup(renderData);
 
-    Core::Renderer::Framebuffer::cleanup(renderData);
+    Framebuffer::cleanup(renderData);
 
-    Core::Renderer::Pipeline::cleanup(renderData, renderData.rdMeshPipeline);
-    Core::Renderer::DebugSkeletonPipeline::cleanup(renderData, renderData.rdDebugSkeletonPipeline);
-    Core::Renderer::Pipeline::cleanup(renderData, renderData.rdGridPipeline);
-    Core::Renderer::Pipeline::cleanup(renderData, renderData.rdSkyboxPipeline);
-    Core::Renderer::Pipeline::cleanup(renderData, renderData.rdHDRToCubemapPipeline);
-    Core::Renderer::Pipeline::cleanup(renderData, renderData.rdIrradiancePipeline);
-    Core::Renderer::Pipeline::cleanup(renderData, renderData.rdPrefilterPipeline);
-    Core::Renderer::Pipeline::cleanup(renderData, renderData.rdBRDFLUTPipeline);
+    Pipeline::cleanup(renderData, renderData.rdMeshPipeline);
+    DebugSkeletonPipeline::cleanup(renderData, renderData.rdDebugSkeletonPipeline);
+    Pipeline::cleanup(renderData, renderData.rdGridPipeline);
+    Pipeline::cleanup(renderData, renderData.rdSkyboxPipeline);
+    Pipeline::cleanup(renderData, renderData.rdHDRToCubemapPipeline);
+    Pipeline::cleanup(renderData, renderData.rdIrradiancePipeline);
+    Pipeline::cleanup(renderData, renderData.rdPrefilterPipeline);
+    Pipeline::cleanup(renderData, renderData.rdBRDFLUTPipeline);
 
-    Core::Renderer::PipelineLayout::cleanup(renderData, renderData.rdPipelineLayout);
-    Core::Renderer::MeshPipelineLayout::cleanup(renderData, renderData.rdMeshPipelineLayout);
-    Core::Renderer::DebugSkeletonPipelineLayout::cleanup(renderData, renderData.rdDebugSkeletonPipelineLayout);
-    Core::Renderer::PipelineLayout::cleanup(renderData, renderData.rdSkyboxPipelineLayout);
-    Core::Renderer::PipelineLayout::cleanup(renderData, renderData.rdHDRToCubemapPipelineLayout);
-    Core::Renderer::PipelineLayout::cleanup(renderData, renderData.rdIrradiancePipelineLayout);
-    Core::Renderer::PipelineLayout::cleanup(renderData, renderData.rdPrefilterPipelineLayout);
-    Core::Renderer::PipelineLayout::cleanup(renderData, renderData.rdBRDFLUTPipelineLayout);
+    PipelineLayout::cleanup(renderData, renderData.rdPipelineLayout);
+    MeshPipelineLayout::cleanup(renderData, renderData.rdMeshPipelineLayout);
+    DebugSkeletonPipelineLayout::cleanup(renderData, renderData.rdDebugSkeletonPipelineLayout);
+    PipelineLayout::cleanup(renderData, renderData.rdSkyboxPipelineLayout);
+    PipelineLayout::cleanup(renderData, renderData.rdHDRToCubemapPipelineLayout);
+    PipelineLayout::cleanup(renderData, renderData.rdIrradiancePipelineLayout);
+    PipelineLayout::cleanup(renderData, renderData.rdPrefilterPipelineLayout);
+    PipelineLayout::cleanup(renderData, renderData.rdBRDFLUTPipelineLayout);
 
-    Core::Renderer::ViewportRenderpass::cleanup(renderData);
-    Core::Renderer::Renderpass::cleanup(renderData);
-    Core::Renderer::HDRToCubemapRenderpass::cleanup(renderData, renderData.rdIBLRenderpass);
-    Core::Renderer::HDRToCubemapRenderpass::cleanup(renderData, renderData.rdHDRToCubemapRenderpass);
+    ViewportRenderpass::cleanup(renderData);
+    Renderpass::cleanup(renderData);
+    HDRToCubemapRenderpass::cleanup(renderData, renderData.rdIBLRenderpass);
+    HDRToCubemapRenderpass::cleanup(renderData, renderData.rdHDRToCubemapRenderpass);
 
-    Core::Renderer::UniformBuffer::cleanup(renderData, renderData.rdPerspectiveViewMatrixUBO);
-    Core::Renderer::UniformBuffer::cleanup(renderData, renderData.rdCaptureUBO);
-    Core::Renderer::VertexBuffer::cleanup(renderData, renderData.rdVertexBufferData);
+    UniformBuffer::cleanup(renderData, renderData.rdPerspectiveViewMatrixUBO);
+    UniformBuffer::cleanup(renderData, renderData.rdCaptureUBO);
+    VertexBuffer::cleanup(renderData, renderData.rdVertexBufferData);
 
-    Core::Renderer::Texture::cleanup(renderData, renderData.rdPlaceholderTexture);
-    Core::Renderer::Texture::cleanup(renderData, renderData.rdBRDFLUT);
-    Core::Renderer::Texture::cleanup(renderData, renderData.rdHDRTexture);
+    Texture::cleanup(renderData, renderData.rdPlaceholderTexture);
+    Texture::cleanup(renderData, renderData.rdBRDFLUT);
+    Texture::cleanup(renderData, renderData.rdHDRTexture);
 
-    Core::Renderer::UniformBuffer::cleanup(renderData, renderData.rdDummyBonesUBO);
+    UniformBuffer::cleanup(renderData, renderData.rdDummyBonesUBO);
 
-    Core::Renderer::Cubemap::cleanup(renderData, renderData.rdPrefilterMap);
-    Core::Renderer::Cubemap::cleanup(renderData, renderData.rdIrradianceMap);
-    Core::Renderer::Cubemap::cleanup(renderData, renderData.rdSkyboxData);
+    Cubemap::cleanup(renderData, renderData.rdPrefilterMap);
+    Cubemap::cleanup(renderData, renderData.rdIrradianceMap);
+    Cubemap::cleanup(renderData, renderData.rdSkyboxData);
 
     if (mViewportTarget)
     {
-        mViewportTarget->cleanup(Core::Engine::getInstance().getRenderData());
+        mViewportTarget->cleanup(Engine::getInstance().getRenderData());
     }
 
     vkDestroyImageView(renderData.rdVkbDevice.device, renderData.rdDepthImageView, nullptr);
     vmaDestroyImage(renderData.rdAllocator, renderData.rdDepthImage,
-                    Core::Engine::getInstance().getRenderData().rdDepthImageAlloc);
+                    Engine::getInstance().getRenderData().rdDepthImageAlloc);
 
     vmaDestroyAllocator(renderData.rdAllocator);
 
@@ -474,11 +474,11 @@ bool Core::Renderer::VkRenderer::deviceInit()
         Logger::log(1, "%s error: could not build vkb instance\n", __FUNCTION__);
         return false;
     }
-    Core::Engine::getInstance().getRenderData().rdVkbInstance = instRet.value();
+    Engine::getInstance().getRenderData().rdVkbInstance = instRet.value();
 
     VkResult result = VK_ERROR_UNKNOWN;
-    result = glfwCreateWindowSurface(Core::Engine::getInstance().getRenderData().rdVkbInstance,
-                                     Core::Engine::getInstance().getRenderData().rdWindow, nullptr, &mSurface);
+    result = glfwCreateWindowSurface(Engine::getInstance().getRenderData().rdVkbInstance,
+                                     Engine::getInstance().getRenderData().rdWindow, nullptr, &mSurface);
     if (result != VK_SUCCESS)
     {
         Logger::log(1, "%s error: Could not create Vulkan surface\n", __FUNCTION__);
@@ -486,7 +486,7 @@ bool Core::Renderer::VkRenderer::deviceInit()
     }
 
     /* just get the first available device */
-    vkb::PhysicalDeviceSelector physicalDevSel{Core::Engine::getInstance().getRenderData().rdVkbInstance};
+    vkb::PhysicalDeviceSelector physicalDevSel{Engine::getInstance().getRenderData().rdVkbInstance};
     auto firstPhysicalDevSelRet = physicalDevSel.set_surface(mSurface).select();
     if (!firstPhysicalDevSelRet)
     {
@@ -505,63 +505,63 @@ bool Core::Renderer::VkRenderer::deviceInit()
         return false;
     }
 
-    Core::Engine::getInstance().getRenderData().rdVkbPhysicalDevice = secondPhysicalDevSelRet.value();
+    Engine::getInstance().getRenderData().rdVkbPhysicalDevice = secondPhysicalDevSelRet.value();
 
     Logger::log(1, "%s: found physical device '%s'\n", __FUNCTION__,
-                Core::Engine::getInstance().getRenderData().rdVkbPhysicalDevice.name.c_str());
+                Engine::getInstance().getRenderData().rdVkbPhysicalDevice.name.c_str());
 
-    mMinUniformBufferOffsetAlignment = Core::Engine::getInstance()
+    mMinUniformBufferOffsetAlignment = Engine::getInstance()
                                            .getRenderData()
                                            .rdVkbPhysicalDevice.properties.limits.minUniformBufferOffsetAlignment;
     Logger::log(1, "%s: the physical device as a minimal uniform buffer offset of %i bytes\n", __FUNCTION__,
                 mMinUniformBufferOffsetAlignment);
 
-    vkb::DeviceBuilder devBuilder{Core::Engine::getInstance().getRenderData().rdVkbPhysicalDevice};
+    vkb::DeviceBuilder devBuilder{Engine::getInstance().getRenderData().rdVkbPhysicalDevice};
     auto devBuilderRet = devBuilder.build();
     if (!devBuilderRet)
     {
         Logger::log(1, "%s error: could not get devices\n", __FUNCTION__);
         return false;
     }
-    Core::Engine::getInstance().getRenderData().rdVkbDevice = devBuilderRet.value();
+    Engine::getInstance().getRenderData().rdVkbDevice = devBuilderRet.value();
 
     return true;
 }
 
 bool Core::Renderer::VkRenderer::getQueue()
 {
-    auto graphQueueRet = Core::Engine::getInstance().getRenderData().rdVkbDevice.get_queue(vkb::QueueType::graphics);
+    auto graphQueueRet = Engine::getInstance().getRenderData().rdVkbDevice.get_queue(vkb::QueueType::graphics);
     if (!graphQueueRet.has_value())
     {
         Logger::log(1, "%s error: could not get graphics queue\n", __FUNCTION__);
         return false;
     }
-    Core::Engine::getInstance().getRenderData().rdGraphicsQueue = graphQueueRet.value();
+    Engine::getInstance().getRenderData().rdGraphicsQueue = graphQueueRet.value();
 
-    auto presentQueueRet = Core::Engine::getInstance().getRenderData().rdVkbDevice.get_queue(vkb::QueueType::present);
+    auto presentQueueRet = Engine::getInstance().getRenderData().rdVkbDevice.get_queue(vkb::QueueType::present);
     if (!presentQueueRet.has_value())
     {
         Logger::log(1, "%s error: could not get present queue\n", __FUNCTION__);
         return false;
     }
-    Core::Engine::getInstance().getRenderData().rdPresentQueue = presentQueueRet.value();
+    Engine::getInstance().getRenderData().rdPresentQueue = presentQueueRet.value();
 
     return true;
 }
 
 bool Core::Renderer::VkRenderer::createSwapchain()
 {
-    vkb::SwapchainBuilder swapChainBuild{Core::Engine::getInstance().getRenderData().rdVkbDevice};
+    vkb::SwapchainBuilder swapChainBuild{Engine::getInstance().getRenderData().rdVkbDevice};
 
-    glfwGetFramebufferSize(Core::Engine::getInstance().getRenderData().rdWindow,
-                           &Core::Engine::getInstance().getRenderData().rdWidth,
-                           &Core::Engine::getInstance().getRenderData().rdHeight);
+    glfwGetFramebufferSize(Engine::getInstance().getRenderData().rdWindow,
+                           &Engine::getInstance().getRenderData().rdWidth,
+                           &Engine::getInstance().getRenderData().rdHeight);
 
     auto swapChainBuildRet =
-        swapChainBuild.set_old_swapchain(Core::Engine::getInstance().getRenderData().rdVkbSwapchain)
+        swapChainBuild.set_old_swapchain(Engine::getInstance().getRenderData().rdVkbSwapchain)
             .set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR)
-            .set_desired_extent(Core::Engine::getInstance().getRenderData().rdWidth,
-                                Core::Engine::getInstance().getRenderData().rdHeight)
+            .set_desired_extent(Engine::getInstance().getRenderData().rdWidth,
+                                Engine::getInstance().getRenderData().rdHeight)
             .build();
     if (!swapChainBuildRet)
     {
@@ -569,23 +569,23 @@ bool Core::Renderer::VkRenderer::createSwapchain()
         return false;
     }
 
-    vkb::destroy_swapchain(Core::Engine::getInstance().getRenderData().rdVkbSwapchain);
-    Core::Engine::getInstance().getRenderData().rdVkbSwapchain = swapChainBuildRet.value();
+    vkb::destroy_swapchain(Engine::getInstance().getRenderData().rdVkbSwapchain);
+    Engine::getInstance().getRenderData().rdVkbSwapchain = swapChainBuildRet.value();
 
     return true;
 }
 
 bool Core::Renderer::VkRenderer::createDepthBuffer()
 {
-    const VkExtent3D depthImageExtent = {Core::Engine::getInstance().getRenderData().rdVkbSwapchain.extent.width,
-                                         Core::Engine::getInstance().getRenderData().rdVkbSwapchain.extent.height, 1};
+    const VkExtent3D depthImageExtent = {Engine::getInstance().getRenderData().rdVkbSwapchain.extent.width,
+                                         Engine::getInstance().getRenderData().rdVkbSwapchain.extent.height, 1};
 
-    Core::Engine::getInstance().getRenderData().rdDepthFormat = VK_FORMAT_D32_SFLOAT;
+    Engine::getInstance().getRenderData().rdDepthFormat = VK_FORMAT_D32_SFLOAT;
 
     VkImageCreateInfo depthImageInfo{};
     depthImageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     depthImageInfo.imageType = VK_IMAGE_TYPE_2D;
-    depthImageInfo.format = Core::Engine::getInstance().getRenderData().rdDepthFormat;
+    depthImageInfo.format = Engine::getInstance().getRenderData().rdDepthFormat;
     depthImageInfo.extent = depthImageExtent;
     depthImageInfo.mipLevels = 1;
     depthImageInfo.arrayLayers = 1;
@@ -597,9 +597,9 @@ bool Core::Renderer::VkRenderer::createDepthBuffer()
     depthAllocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
     depthAllocInfo.requiredFlags = static_cast<VkMemoryPropertyFlags>(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-    if (vmaCreateImage(Core::Engine::getInstance().getRenderData().rdAllocator, &depthImageInfo, &depthAllocInfo,
-                       &Core::Engine::getInstance().getRenderData().rdDepthImage,
-                       &Core::Engine::getInstance().getRenderData().rdDepthImageAlloc, nullptr) != VK_SUCCESS)
+    if (vmaCreateImage(Engine::getInstance().getRenderData().rdAllocator, &depthImageInfo, &depthAllocInfo,
+                       &Engine::getInstance().getRenderData().rdDepthImage,
+                       &Engine::getInstance().getRenderData().rdDepthImageAlloc, nullptr) != VK_SUCCESS)
     {
         Logger::log(1, "%s error: could not allocate depth buffer memory\n", __FUNCTION__);
         return false;
@@ -608,16 +608,16 @@ bool Core::Renderer::VkRenderer::createDepthBuffer()
     VkImageViewCreateInfo depthImageViewInfo{};
     depthImageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     depthImageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    depthImageViewInfo.image = Core::Engine::getInstance().getRenderData().rdDepthImage;
-    depthImageViewInfo.format = Core::Engine::getInstance().getRenderData().rdDepthFormat;
+    depthImageViewInfo.image = Engine::getInstance().getRenderData().rdDepthImage;
+    depthImageViewInfo.format = Engine::getInstance().getRenderData().rdDepthFormat;
     depthImageViewInfo.subresourceRange.baseMipLevel = 0;
     depthImageViewInfo.subresourceRange.levelCount = 1;
     depthImageViewInfo.subresourceRange.baseArrayLayer = 0;
     depthImageViewInfo.subresourceRange.layerCount = 1;
     depthImageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
 
-    if (vkCreateImageView(Core::Engine::getInstance().getRenderData().rdVkbDevice.device, &depthImageViewInfo, nullptr,
-                          &Core::Engine::getInstance().getRenderData().rdDepthImageView) != VK_SUCCESS)
+    if (vkCreateImageView(Engine::getInstance().getRenderData().rdVkbDevice.device, &depthImageViewInfo, nullptr,
+                          &Engine::getInstance().getRenderData().rdDepthImageView) != VK_SUCCESS)
     {
         Logger::log(1, "%s error: could not create depth buffer image view\n", __FUNCTION__);
         return false;
@@ -627,7 +627,7 @@ bool Core::Renderer::VkRenderer::createDepthBuffer()
 
 bool Core::Renderer::VkRenderer::recreateSwapchain()
 {
-    auto& renderData = Core::Engine::getInstance().getRenderData();
+    auto& renderData = Engine::getInstance().getRenderData();
 
     while (renderData.rdWidth == 0 || renderData.rdHeight == 0)
     {
@@ -637,7 +637,7 @@ bool Core::Renderer::VkRenderer::recreateSwapchain()
 
     vkDeviceWaitIdle(renderData.rdVkbDevice.device);
 
-    Core::Renderer::Framebuffer::cleanup(renderData);
+    Framebuffer::cleanup(renderData);
     vkDestroyImageView(renderData.rdVkbDevice.device, renderData.rdDepthImageView, nullptr);
     vmaDestroyImage(renderData.rdAllocator, renderData.rdDepthImage, renderData.rdDepthImageAlloc);
 
@@ -680,8 +680,8 @@ bool Core::Renderer::VkRenderer::createUBO()
 {
     size_t matrixSize = mPerspectiveViewMatrices.size() * sizeof(glm::mat4);
 
-    if (!Core::Renderer::UniformBuffer::init(Core::Engine::getInstance().getRenderData(),
-                                             Core::Engine::getInstance().getRenderData().rdPerspectiveViewMatrixUBO,
+    if (!UniformBuffer::init(Engine::getInstance().getRenderData(),
+                                             Engine::getInstance().getRenderData().rdPerspectiveViewMatrixUBO,
                                              matrixSize, "PerspectiveViewMatrixUBO"))
     {
         Logger::log(1, "%s error: could not create uniform buffers\n", __FUNCTION__);
@@ -692,8 +692,8 @@ bool Core::Renderer::VkRenderer::createUBO()
 
 bool Core::Renderer::VkRenderer::createVBO()
 {
-    if (!Core::Renderer::VertexBuffer::init(Core::Engine::getInstance().getRenderData(),
-                                            Core::Engine::getInstance().getRenderData().rdVertexBufferData,
+    if (!VertexBuffer::init(Engine::getInstance().getRenderData(),
+                                            Engine::getInstance().getRenderData().rdVertexBufferData,
                                             VertexBufferSize, "MainVBO"))
     {
         Logger::log(1, "%s error: could not create VBO\n", __FUNCTION__);
@@ -704,7 +704,7 @@ bool Core::Renderer::VkRenderer::createVBO()
 
 bool Core::Renderer::VkRenderer::createRenderPass()
 {
-    if (!Core::Renderer::Renderpass::init(Core::Engine::getInstance().getRenderData()))
+    if (!Renderpass::init(Engine::getInstance().getRenderData()))
     {
         Logger::log(1, "%s error: could not init renderpass\n", __FUNCTION__);
         return false;
@@ -714,7 +714,7 @@ bool Core::Renderer::VkRenderer::createRenderPass()
 
 bool Core::Renderer::VkRenderer::createViewportRenderpass()
 {
-    if (!Core::Renderer::ViewportRenderpass::init(Core::Engine::getInstance().getRenderData()))
+    if (!ViewportRenderpass::init(Engine::getInstance().getRenderData()))
     {
         Logger::log(1, "%s error: could not init viewport renderpass\n", __FUNCTION__);
         return false;
@@ -724,9 +724,9 @@ bool Core::Renderer::VkRenderer::createViewportRenderpass()
 
 bool Core::Renderer::VkRenderer::createPipelineLayout()
 {
-    if (!Core::Renderer::PipelineLayout::init(Core::Engine::getInstance().getRenderData(),
-                                              Core::Engine::getInstance().getRenderData().rdPlaceholderTexture,
-                                              Core::Engine::getInstance().getRenderData().rdPipelineLayout))
+    if (!PipelineLayout::init(Engine::getInstance().getRenderData(),
+                                              Engine::getInstance().getRenderData().rdPlaceholderTexture,
+                                              Engine::getInstance().getRenderData().rdPipelineLayout))
     {
         Logger::log(1, "%s error: could not init pipeline layout\n", __FUNCTION__);
         return false;
@@ -744,7 +744,7 @@ bool Core::Renderer::VkRenderer::createGridPipeline()
     pipelineConfig.srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
     pipelineConfig.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
 
-    auto& renderData = Core::Engine::getInstance().getRenderData();
+    auto& renderData = Engine::getInstance().getRenderData();
 
     if (!Pipeline::init(renderData, renderData.rdPipelineLayout, renderData.rdGridPipeline,
                         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile, pipelineConfig))
@@ -757,7 +757,7 @@ bool Core::Renderer::VkRenderer::createGridPipeline()
 
 void Core::Renderer::VkRenderer::drawGrid() const
 {
-    auto& renderData = Core::Engine::getInstance().getRenderData();
+    auto& renderData = Engine::getInstance().getRenderData();
 
     vkCmdBindPipeline(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdGridPipeline);
 
@@ -773,7 +773,7 @@ void Core::Renderer::VkRenderer::drawGrid() const
 
 bool Core::Renderer::VkRenderer::createFramebuffer()
 {
-    if (!Core::Renderer::Framebuffer::init(Core::Engine::getInstance().getRenderData()))
+    if (!Framebuffer::init(Engine::getInstance().getRenderData()))
     {
         Logger::log(1, "%s error: could not init framebuffer\n", __FUNCTION__);
         return false;
@@ -783,7 +783,7 @@ bool Core::Renderer::VkRenderer::createFramebuffer()
 
 void Core::Renderer::VkRenderer::resizeViewportTarget(glm::int2 size)
 {
-    auto& renderData = Core::Engine::getInstance().getRenderData();
+    auto& renderData = Engine::getInstance().getRenderData();
 
     VkDevice device = renderData.rdVkbDevice.device;
 
@@ -803,7 +803,7 @@ void Core::Renderer::VkRenderer::resizeViewportTarget(glm::int2 size)
 
 bool Core::Renderer::VkRenderer::createCommandPool()
 {
-    if (!Core::Renderer::CommandPool::init(Core::Engine::getInstance().getRenderData()))
+    if (!CommandPool::init(Engine::getInstance().getRenderData()))
     {
         Logger::log(1, "%s error: could not create command pool\n", __FUNCTION__);
         return false;
@@ -813,8 +813,8 @@ bool Core::Renderer::VkRenderer::createCommandPool()
 
 bool Core::Renderer::VkRenderer::createCommandBuffer()
 {
-    if (!Core::Renderer::CommandBuffer::init(Core::Engine::getInstance().getRenderData(),
-                                             Core::Engine::getInstance().getRenderData().rdCommandBuffer))
+    if (!CommandBuffer::init(Engine::getInstance().getRenderData(),
+                                             Engine::getInstance().getRenderData().rdCommandBuffer))
     {
         Logger::log(1, "%s error: could not create command buffers\n", __FUNCTION__);
         return false;
@@ -824,7 +824,7 @@ bool Core::Renderer::VkRenderer::createCommandBuffer()
 
 bool Core::Renderer::VkRenderer::createSyncObjects()
 {
-    if (!Core::Renderer::SyncObjects::init(Core::Engine::getInstance().getRenderData()))
+    if (!SyncObjects::init(Engine::getInstance().getRenderData()))
     {
         Logger::log(1, "%s error: could not create sync objects\n", __FUNCTION__);
         return false;
@@ -836,8 +836,8 @@ bool Core::Renderer::VkRenderer::createSyncObjects()
 bool Core::Renderer::VkRenderer::loadPlaceholderTexture()
 {
     const std::string textureFileName = "placeholder_sampler.png";
-    std::future<bool> textureLoadFuture = Core::Renderer::Texture::loadTexture(
-        Core::Engine::getInstance().getRenderData(), Core::Engine::getInstance().getRenderData().rdPlaceholderTexture,
+    std::future<bool> textureLoadFuture = Texture::loadTexture(
+        Engine::getInstance().getRenderData(), Engine::getInstance().getRenderData().rdPlaceholderTexture,
         textureFileName);
     if (!textureLoadFuture.get())
     {
@@ -850,7 +850,7 @@ bool Core::Renderer::VkRenderer::loadPlaceholderTexture()
 
 bool Core::Renderer::VkRenderer::createDummyBonesTransformUBO()
 {
-    auto& renderData = Core::Engine::getInstance().getRenderData();
+    auto& renderData = Engine::getInstance().getRenderData();
 
     std::vector<glm::mat4> identityMatrix = {glm::mat4(1.0f)};
 
@@ -868,10 +868,10 @@ bool Core::Renderer::VkRenderer::createDummyBonesTransformUBO()
 bool Core::Renderer::VkRenderer::initVma()
 {
     VmaAllocatorCreateInfo allocatorInfo{};
-    allocatorInfo.physicalDevice = Core::Engine::getInstance().getRenderData().rdVkbPhysicalDevice.physical_device;
-    allocatorInfo.device = Core::Engine::getInstance().getRenderData().rdVkbDevice.device;
-    allocatorInfo.instance = Core::Engine::getInstance().getRenderData().rdVkbInstance.instance;
-    if (vmaCreateAllocator(&allocatorInfo, &Core::Engine::getInstance().getRenderData().rdAllocator) != VK_SUCCESS)
+    allocatorInfo.physicalDevice = Engine::getInstance().getRenderData().rdVkbPhysicalDevice.physical_device;
+    allocatorInfo.device = Engine::getInstance().getRenderData().rdVkbDevice.device;
+    allocatorInfo.instance = Engine::getInstance().getRenderData().rdVkbInstance.instance;
+    if (vmaCreateAllocator(&allocatorInfo, &Engine::getInstance().getRenderData().rdAllocator) != VK_SUCCESS)
     {
         Logger::log(1, "%s error: could not init VMA\n", __FUNCTION__);
         return false;
@@ -882,11 +882,11 @@ bool Core::Renderer::VkRenderer::initVma()
 
 bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
 {
-    auto& renderData = Core::Engine::getInstance().getRenderData();
+    auto& renderData = Engine::getInstance().getRenderData();
 
     std::string vertexShaderFile = "shaders/primitive.vert.spv";
     std::string fragmentShaderFile = "shaders/primitive.frag.spv";
-    if (!Core::Renderer::MeshPipelineLayout::init(renderData, renderData.rdMeshPipelineLayout))
+    if (!MeshPipelineLayout::init(renderData, renderData.rdMeshPipelineLayout))
     {
         Logger::log(1, "%s error: could not init mesh pipeline layout\n", __FUNCTION__);
         return false;
@@ -924,7 +924,7 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
 
     const std::string modelFileName = "assets/damaged_helmet/DamagedHelmet.gltf";
 
-    Core::Utils::MeshData primitiveMeshData = Core::Utils::loadMeshFromFile(modelFileName, renderData);
+    Utils::MeshData primitiveMeshData = Utils::loadMeshFromFile(modelFileName, renderData);
 
     createDebugSkeletonPipelineLayout();
     createDebugSkeletonPipeline();
@@ -935,7 +935,7 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
     testMesh->getTransform().position = {1, 0, 1};
     testMesh->setMeshFilePath(modelFileName);
 
-    Core::Engine::getInstance().getSystem<Scene::Scene>()->addObject(testMesh);
+    Engine::getInstance().getSystem<Scene::Scene>()->addObject(testMesh);
 
     for (auto& primitive : primitiveMeshData.primitives)
     {
@@ -948,9 +948,9 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
 
 bool Core::Renderer::VkRenderer::createDebugSkeletonPipelineLayout()
 {
-    if (!Core::Renderer::DebugSkeletonPipelineLayout::init(
-            Core::Engine::getInstance().getRenderData(),
-            Core::Engine::getInstance().getRenderData().rdDebugSkeletonPipelineLayout))
+    if (!DebugSkeletonPipelineLayout::init(
+            Engine::getInstance().getRenderData(),
+            Engine::getInstance().getRenderData().rdDebugSkeletonPipelineLayout))
     {
         Logger::log(1, "%s error: could not init debug skeleton pipeline layout\n", __FUNCTION__);
         return false;
@@ -963,9 +963,9 @@ bool Core::Renderer::VkRenderer::createDebugSkeletonPipeline()
 {
     const std::string vertexShaderFile = "shaders/debug_line.vert.spv";
     const std::string fragmentShaderFile = "shaders/debug_line.frag.spv";
-    if (!DebugSkeletonPipeline::init(Core::Engine::getInstance().getRenderData(),
-                                     Core::Engine::getInstance().getRenderData().rdDebugSkeletonPipelineLayout,
-                                     Core::Engine::getInstance().getRenderData().rdDebugSkeletonPipeline,
+    if (!DebugSkeletonPipeline::init(Engine::getInstance().getRenderData(),
+                                     Engine::getInstance().getRenderData().rdDebugSkeletonPipelineLayout,
+                                     Engine::getInstance().getRenderData().rdDebugSkeletonPipeline,
                                      VK_PRIMITIVE_TOPOLOGY_LINE_LIST, vertexShaderFile, fragmentShaderFile))
     {
         Logger::log(1, "%s error: could not init debug skeleton shader pipeline\n", __FUNCTION__);
@@ -977,7 +977,7 @@ bool Core::Renderer::VkRenderer::createDebugSkeletonPipeline()
 
 bool Core::Renderer::VkRenderer::createHDRToCubemapPipelineLayout()
 {
-    auto& renderData = Core::Engine::getInstance().getRenderData();
+    auto& renderData = Engine::getInstance().getRenderData();
 
     std::vector<VkDescriptorSetLayout> layouts = {
         renderData.rdCaptureUBO.rdUBODescriptorLayout,
@@ -1013,7 +1013,7 @@ bool Core::Renderer::VkRenderer::createHDRToCubemapPipeline()
     const std::string vertexShaderFile = "shaders/equirectangular_to_cubemap.vert.spv";
     const std::string fragmentShaderFile = "shaders/equirectangular_to_cubemap.frag.spv";
 
-    auto& renderData = Core::Engine::getInstance().getRenderData();
+    auto& renderData = Engine::getInstance().getRenderData();
 
     PipelineConfig hdrToCubemapConfig{};
     hdrToCubemapConfig.useVertexInput = VK_FALSE;
@@ -1037,7 +1037,7 @@ bool Core::Renderer::VkRenderer::createHDRToCubemapPipeline()
 
 bool Core::Renderer::VkRenderer::createSkyboxPipelineLayout()
 {
-    auto& renderData = Core::Engine::getInstance().getRenderData();
+    auto& renderData = Engine::getInstance().getRenderData();
 
     std::vector<VkDescriptorSetLayout> layouts = {renderData.rdPerspectiveViewMatrixUBO.rdUBODescriptorLayout};
 
@@ -1066,7 +1066,7 @@ bool Core::Renderer::VkRenderer::createSkyboxPipeline()
     const std::string vertexShaderFile = "shaders/skybox.vert.spv";
     const std::string fragmentShaderFile = "shaders/skybox.frag.spv";
 
-    auto& renderData = Core::Engine::getInstance().getRenderData();
+    auto& renderData = Engine::getInstance().getRenderData();
 
     if (!Pipeline::init(renderData, renderData.rdSkyboxPipelineLayout, renderData.rdSkyboxPipeline,
                         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile))
@@ -1080,11 +1080,11 @@ bool Core::Renderer::VkRenderer::createSkyboxPipeline()
 
 bool Core::Renderer::VkRenderer::createIrradiancePipelineLayout()
 {
-    auto& renderData = Core::Engine::getInstance().getRenderData();
+    auto& renderData = Engine::getInstance().getRenderData();
 
     std::vector layouts = {
         renderData.rdCaptureUBO.rdUBODescriptorLayout,
-        renderData.rdSkyboxData.descriptorSetLayout 
+        renderData.rdSkyboxData.descriptorSetLayout
     };
 
     VkPushConstantRange pushConstantRange{};
@@ -1116,7 +1116,7 @@ bool Core::Renderer::VkRenderer::createIrradiancePipeline()
     const std::string vertexShaderFile = "shaders/equirectangular_to_cubemap.vert.spv";
     const std::string fragmentShaderFile = "shaders/irradiance_convolution.frag.spv";
 
-    auto& renderData = Core::Engine::getInstance().getRenderData();
+    auto& renderData = Engine::getInstance().getRenderData();
 
     PipelineConfig irradiancePipelineConfig{};
     irradiancePipelineConfig.useVertexInput = VK_FALSE;
@@ -1140,7 +1140,7 @@ bool Core::Renderer::VkRenderer::createIrradiancePipeline()
 
 bool Core::Renderer::VkRenderer::createPrefilterPipelineLayout()
 {
-    auto& renderData = Core::Engine::getInstance().getRenderData();
+    auto& renderData = Engine::getInstance().getRenderData();
 
     std::vector layouts = {
         renderData.rdCaptureUBO.rdUBODescriptorLayout,
@@ -1176,7 +1176,7 @@ bool Core::Renderer::VkRenderer::createPrefilterPipeline()
     const std::string vertexShaderFile = "shaders/prefilter.vert.spv";
     const std::string fragmentShaderFile = "shaders/prefilter.frag.spv";
 
-    auto& renderData = Core::Engine::getInstance().getRenderData();
+    auto& renderData = Engine::getInstance().getRenderData();
 
     PipelineConfig prefilterPipelineConfig{};
     prefilterPipelineConfig.useVertexInput = VK_FALSE;
@@ -1200,7 +1200,7 @@ bool Core::Renderer::VkRenderer::createPrefilterPipeline()
 
 bool Core::Renderer::VkRenderer::createBRDFLUTPipelineLayout()
 {
-    auto& renderData = Core::Engine::getInstance().getRenderData();
+    auto& renderData = Engine::getInstance().getRenderData();
 
     // TODO
     // replace with PipelineLayout::init and PipelineLayoutConfig
@@ -1222,7 +1222,7 @@ bool Core::Renderer::VkRenderer::createBRDFLUTPipeline()
     const std::string vertexShaderFile = "shaders/brdf_lut.vert.spv";
     const std::string fragmentShaderFile = "shaders/brdf_lut.frag.spv";
 
-    auto& renderData = Core::Engine::getInstance().getRenderData();
+    auto& renderData = Engine::getInstance().getRenderData();
 
     PipelineConfig brdflutPipelineConfig{};
     brdflutPipelineConfig.useVertexInput = VK_FALSE;
@@ -1268,7 +1268,7 @@ bool Core::Renderer::VkRenderer::loadSkybox()
     UniformBuffer::init(renderData, renderData.rdCaptureUBO, sizeof(CaptureInfo), "CaptureInfo");
     UniformBuffer::uploadData(renderData, renderData.rdCaptureUBO, captureInfo);
 
-    if (!HDRToCubemapRenderpass::init(Core::Engine::getInstance().getRenderData(), renderData.rdHDRToCubemapRenderpass))
+    if (!HDRToCubemapRenderpass::init(Engine::getInstance().getRenderData(), renderData.rdHDRToCubemapRenderpass))
     {
         Logger::log(1, "%s error: could not init HDR to Cubemap renderpass\n", __FUNCTION__);
         return false;
@@ -1361,7 +1361,7 @@ bool Core::Renderer::VkRenderer::loadSkybox()
         return false;
     }
 
-    if (!HDRToCubemapRenderpass::init(Core::Engine::getInstance().getRenderData(), renderData.rdIBLRenderpass))
+    if (!HDRToCubemapRenderpass::init(Engine::getInstance().getRenderData(), renderData.rdIBLRenderpass))
     {
         Logger::log(1, "%s error: could not init irradiance renderpass\n", __FUNCTION__);
         return false;
@@ -1427,7 +1427,7 @@ bool Core::Renderer::VkRenderer::loadSkybox()
 
 void Core::Renderer::VkRenderer::drawSkybox() const
 {
-    auto& renderData = Core::Engine::getInstance().getRenderData();
+    auto& renderData = Engine::getInstance().getRenderData();
 
     if (renderData.rdSkyboxPipeline == VK_NULL_HANDLE || renderData.rdSkyboxData.descriptorSet == VK_NULL_HANDLE)
     {
@@ -1504,7 +1504,7 @@ void Core::Renderer::VkRenderer::handleCameraMovementKeys()
         return;
     }
 
-    VkRenderData& renderData = Core::Engine::getInstance().getRenderData();
+    VkRenderData& renderData = Engine::getInstance().getRenderData();
     if (!renderData.freeCameraMovement)
     {
         renderData.rdMoveForward = 0.f;

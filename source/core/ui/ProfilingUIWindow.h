@@ -18,7 +18,7 @@ public:
             return false;
         }
 
-        Renderer::VkRenderData& renderData = Core::Engine::getInstance().getRenderData();
+        Renderer::VkRenderData& renderData = Engine::getInstance().getRenderData();
         static float newFps = 0.0f;
         if (renderData.rdFrameTime > 0.0)
         {

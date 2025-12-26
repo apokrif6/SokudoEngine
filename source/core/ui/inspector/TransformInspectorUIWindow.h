@@ -9,7 +9,7 @@ class TransformInspectorUIWindow : public UIWindow<TransformInspectorUIWindow>
 public:
     static bool getBody()
     {
-        auto& objectSelection = Core::Engine::getInstance().getSystem<Scene::Scene>()->getSceneObjectSelection();
+        auto& objectSelection = Engine::getInstance().getSystem<Scene::Scene>()->getSceneObjectSelection();
         auto selectedObject = objectSelection.selectedObject.lock();
 
         auto& transform = selectedObject->getTransform();

@@ -1,15 +1,15 @@
 #include "Skeleton.h"
 
-void Core::Animations::Skeleton::initDebug(Core::Renderer::VkRenderData& renderData)
+void Core::Animations::Skeleton::initDebug(Renderer::VkRenderData& renderData)
 {
     if (!debugDraw)
     {
-        debugDraw = std::make_unique<Core::Renderer::Debug::Skeleton>();
+        debugDraw = std::make_unique<Renderer::Debug::Skeleton>();
         debugDraw->init(renderData);
     }
 }
 
-void Core::Animations::Skeleton::updateDebug(Core::Renderer::VkRenderData& renderData,
+void Core::Animations::Skeleton::updateDebug(Renderer::VkRenderData& renderData,
                                              const std::vector<Renderer::Debug::DebugBone>& bones) const
 {
     if (debugDraw)
@@ -18,7 +18,7 @@ void Core::Animations::Skeleton::updateDebug(Core::Renderer::VkRenderData& rende
     }
 }
 
-void Core::Animations::Skeleton::drawDebug(Core::Renderer::VkRenderData& renderData) const
+void Core::Animations::Skeleton::drawDebug(Renderer::VkRenderData& renderData) const
 {
     if (debugDraw)
     {
@@ -26,7 +26,7 @@ void Core::Animations::Skeleton::drawDebug(Core::Renderer::VkRenderData& renderD
     }
 }
 
-void Core::Animations::Skeleton::cleanup(Core::Renderer::VkRenderData& renderData)
+void Core::Animations::Skeleton::cleanup(Renderer::VkRenderData& renderData)
 {
     if (debugDraw)
     {

@@ -1,7 +1,7 @@
 #include "CommandPool.h"
 #include "core/tools/Logger.h"
 
-bool Core::Renderer::CommandPool::init(Core::Renderer::VkRenderData& renderData)
+bool Core::Renderer::CommandPool::init(VkRenderData& renderData)
 {
     VkCommandPoolCreateInfo poolCreateInfo{};
     poolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -18,7 +18,7 @@ bool Core::Renderer::CommandPool::init(Core::Renderer::VkRenderData& renderData)
     return true;
 }
 
-void Core::Renderer::CommandPool::cleanup(const Core::Renderer::VkRenderData& renderData)
+void Core::Renderer::CommandPool::cleanup(const VkRenderData& renderData)
 {
     vkDestroyCommandPool(renderData.rdVkbDevice.device, renderData.rdCommandPool, nullptr);
 }

@@ -15,13 +15,13 @@ class Scene : public System::ISystem, public System::IUpdatable, public System::
 public:
     void addObject(std::shared_ptr<SceneObject> object);
 
-    virtual void update(Core::Renderer::VkRenderData& renderData, float deltaTime) override;
+    virtual void update(Renderer::VkRenderData& renderData, float deltaTime) override;
 
     virtual System::DrawLayer getDrawLayer() const override { return System::DrawLayer::World; }
 
-    virtual void draw(Core::Renderer::VkRenderData& renderData) override;
+    virtual void draw(Renderer::VkRenderData& renderData) override;
 
-    void cleanup(Core::Renderer::VkRenderData& renderData);
+    void cleanup(Renderer::VkRenderData& renderData);
 
     [[nodiscard]] std::vector<std::shared_ptr<SceneObject>> getObjects() const { return mObjects; }
 

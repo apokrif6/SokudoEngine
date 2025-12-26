@@ -10,7 +10,7 @@ void Core::Scene::Scene::addObject(std::shared_ptr<SceneObject> object)
     }
 }
 
-void Core::Scene::Scene::update(Core::Renderer::VkRenderData& renderData, float deltaTime)
+void Core::Scene::Scene::update(Renderer::VkRenderData& renderData, float deltaTime)
 {
     mUpdateSceneProfilingTimer.start();
     for (auto& object : mObjects)
@@ -20,14 +20,14 @@ void Core::Scene::Scene::update(Core::Renderer::VkRenderData& renderData, float 
     renderData.rdUpdateSceneProfilingTime = mUpdateSceneProfilingTimer.stop();
 }
 
-void Core::Scene::Scene::draw(Core::Renderer::VkRenderData& renderData)
+void Core::Scene::Scene::draw(Renderer::VkRenderData& renderData)
 {
     for (auto& object : mObjects)
     {
         object->draw(renderData);
     }
 }
-void Core::Scene::Scene::cleanup(Core::Renderer::VkRenderData& renderData)
+void Core::Scene::Scene::cleanup(Renderer::VkRenderData& renderData)
 {
     for (auto& object : mObjects)
     {

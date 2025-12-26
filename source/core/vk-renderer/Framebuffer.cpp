@@ -1,7 +1,7 @@
 #include "Framebuffer.h"
 #include "core/tools/Logger.h"
 
-bool Core::Renderer::Framebuffer::init(Core::Renderer::VkRenderData& renderData)
+bool Core::Renderer::Framebuffer::init(VkRenderData& renderData)
 {
     renderData.rdSwapchainImages = renderData.rdVkbSwapchain.get_images().value();
     renderData.rdSwapchainImageViews = renderData.rdVkbSwapchain.get_image_views().value();
@@ -31,7 +31,7 @@ bool Core::Renderer::Framebuffer::init(Core::Renderer::VkRenderData& renderData)
     return true;
 }
 
-void Core::Renderer::Framebuffer::cleanup(Core::Renderer::VkRenderData& renderData)
+void Core::Renderer::Framebuffer::cleanup(VkRenderData& renderData)
 {
     for (auto& fb : renderData.rdFramebuffers)
     {

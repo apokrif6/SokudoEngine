@@ -20,7 +20,7 @@ public:
     explicit SceneObject(std::string name) : mName(std::move(name)) {}
     virtual ~SceneObject() = default;
 
-    [[nodiscard]] virtual Scene::ObjectType getType() const { return ObjectType::Empty; }
+    [[nodiscard]] virtual ObjectType getType() const { return ObjectType::Empty; }
 
     virtual void onAddedToScene() {}
 

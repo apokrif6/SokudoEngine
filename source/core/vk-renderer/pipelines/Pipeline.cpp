@@ -3,15 +3,15 @@
 #include "core/tools/Logger.h"
 #include "core/vk-renderer/Shader.h"
 
-bool Core::Renderer::Pipeline::init(Core::Renderer::VkRenderData& renderData, VkPipelineLayout& pipelineLayout,
+bool Core::Renderer::Pipeline::init(VkRenderData& renderData, VkPipelineLayout& pipelineLayout,
                                     VkPipeline& pipeline, VkPrimitiveTopology topology,
                                     const std::string& vertexShaderFilename, const std::string& fragmentShaderFilename,
                                     const PipelineConfig& config, VkRenderPass renderPass)
 {
     VkShaderModule vertexModule =
-        Core::Renderer::Shader::loadShader(renderData.rdVkbDevice.device, vertexShaderFilename);
+        Shader::loadShader(renderData.rdVkbDevice.device, vertexShaderFilename);
     VkShaderModule fragmentModule =
-        Core::Renderer::Shader::loadShader(renderData.rdVkbDevice.device, fragmentShaderFilename);
+        Shader::loadShader(renderData.rdVkbDevice.device, fragmentShaderFilename);
 
     if (vertexModule == VK_NULL_HANDLE || fragmentModule == VK_NULL_HANDLE)
     {
@@ -34,7 +34,7 @@ bool Core::Renderer::Pipeline::init(Core::Renderer::VkRenderData& renderData, Vk
     VkPipelineShaderStageCreateInfo shaderStagesInfo[] = {vertexStageInfo, fragmentStageInfo};
 
     auto bindingDescription = NewVertex::getBindingDescription();
-    auto attributeDescriptions = Core::Renderer::Shader::getAttributeDescriptionsBySpvReflect(vertexShaderFilename);
+    auto attributeDescriptions = Shader::getAttributeDescriptionsBySpvReflect(vertexShaderFilename);
 
     VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -157,7 +157,7 @@ bool Core::Renderer::Pipeline::init(Core::Renderer::VkRenderData& renderData, Vk
     return true;
 }
 
-void Core::Renderer::Pipeline::cleanup(Core::Renderer::VkRenderData& renderData, VkPipeline& pipeline)
+void Core::Renderer::Pipeline::cleanup(VkRenderData& renderData, VkPipeline& pipeline)
 {
     vkDestroyPipeline(renderData.rdVkbDevice.device, pipeline, nullptr);
 }
