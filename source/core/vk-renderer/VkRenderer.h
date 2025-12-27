@@ -3,14 +3,9 @@
 #include <vulkan/vulkan.h>
 #include <GLFW/glfw3.h>
 #include "VkRenderData.h"
-#include "core/ui/UserInterface.h"
 #include "core/tools/Timer.h"
 #include "core/tools/Camera.h"
-#include "core/model/CoordinateArrowModel.h"
 #include "core/events/EventListener.h"
-#include "core/model/ArrowModel.h"
-#include "core/events/EventDispatcher.h"
-#include "core/model/GridModel.h"
 #include "Primitive.h"
 #include "core/scene/objects/Mesh.h"
 #include "core/scene/Scene.h"
@@ -69,6 +64,8 @@ public:
     // TODO
     // move to Sandbox
     bool loadMeshWithAssimp();
+
+    void initCaptureResources();
 
 private:
     Timer mUploadToVBOTimer{};
@@ -133,25 +130,9 @@ private:
 #pragma endregion Renderer
 
 #pragma region Skybox
-    bool createHDRToCubemapPipelineLayout();
-
-    bool createHDRToCubemapPipeline();
-
     bool createSkyboxPipelineLayout();
 
     bool createSkyboxPipeline();
-    
-    bool createIrradiancePipelineLayout();
-    
-    bool createIrradiancePipeline();
-
-    bool createPrefilterPipelineLayout();
-
-    bool createPrefilterPipeline();
-
-    bool createBRDFLUTPipelineLayout();
-
-    bool createBRDFLUTPipeline();
 
     bool loadSkybox();
 

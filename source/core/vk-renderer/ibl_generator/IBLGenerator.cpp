@@ -1,9 +1,189 @@
-#include "Cubemap.h"
+#include "IBLGenerator.h"
+
+#include "core/engine/Engine.h"
 #include "core/tools/Logger.h"
 #include "core/vk-renderer/buffers/CommandBuffer.h"
+#include "core/vk-renderer/cubemap_generator/HDRToCubemapRenderpass.h"
+#include "core/vk-renderer/pipelines/Pipeline.h"
 
-bool Core::Renderer::Cubemap::convertHDRToCubemap(VkRenderData& renderData, VkTextureData& texture,
-    VkCubemapData& cubemapData)
+bool Core::Renderer::IBLGenerator::init(VkRenderData& renderData)
+{
+    if (!HDRToCubemapRenderpass::init(renderData, renderData.rdHDRToCubemapRenderpass))
+    {
+        Logger::log(1, "%s error: could not init HDR to Cubemap renderpass\n", __FUNCTION__);
+        return false;
+    }
+
+    if (!HDRToCubemapRenderpass::init(renderData, renderData.rdIBLRenderpass))
+    {
+        Logger::log(1, "%s error: could not init IBL renderpass\n", __FUNCTION__);
+        return false;
+    }
+
+    if (!createDescriptorForHDR(renderData))
+    {
+        return false;
+    }
+
+    if (!createStaticCubemapLayout(renderData, renderData.rdSkyboxData.descriptorSetLayout))
+    {
+        return false;
+    }
+
+    if (!createStaticCubemapLayout(renderData, renderData.rdIrradianceMap.descriptorSetLayout))
+    {
+        return false;
+    }
+
+    if (!createHDRToCubemapPipeline(renderData))
+    {
+        return false;
+    }
+
+    if (!createIrradiancePipeline(renderData))
+    {
+        return false;
+    }
+
+    if (!createPrefilterPipeline(renderData))
+    {
+        return false;
+    }
+
+    if (!createBRDFLUTPipeline(renderData))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+bool Core::Renderer::IBLGenerator::generateIBL(VkRenderData& renderData)
+{
+    if (!convertHDRToCubemap(renderData, renderData.rdHDRTexture, renderData.rdSkyboxData))
+    {
+        Logger::log(1, "IBL Error: Failed to convert HDR to Cubemap");
+        return false;
+    }
+
+    if (!convertCubemapToIrradiance(renderData, renderData.rdSkyboxData, renderData.rdIrradianceMap))
+    {
+        Logger::log(1, "IBL Error: Failed to generate Irradiance map");
+        return false;
+    }
+
+    if (!convertCubemapToPrefilteredMap(renderData, renderData.rdSkyboxData, renderData.rdPrefilterMap))
+    {
+        Logger::log(1, "IBL Error: Failed to generate Prefiltered map");
+        return false;
+    }
+
+    if (!generateBRDFLUT(renderData, renderData.rdBRDFLUT))
+    {
+        Logger::log(1, "IBL Error: Failed to generate BRDF LUT");
+        return false;
+    }
+
+    Logger::log(1, "IBL Generation completed successfully");
+
+    return true;
+}
+
+bool Core::Renderer::IBLGenerator::createDescriptorForHDR(VkRenderData& renderData)
+{
+    VkDescriptorSetLayoutBinding samplerBinding{};
+    samplerBinding.binding = 0;
+    samplerBinding.descriptorCount = 1;
+    samplerBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    samplerBinding.pImmutableSamplers = nullptr;
+    samplerBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    VkDescriptorSetLayoutCreateInfo layoutInfo{};
+    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    layoutInfo.bindingCount = 1;
+    layoutInfo.pBindings = &samplerBinding;
+
+    if (vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &layoutInfo, nullptr,
+                                &renderData.rdHDRTexture.descriptorSetLayout) != VK_SUCCESS)
+    {
+        Logger::log(1, "%s error: failed to create descriptor set layout\n", __FUNCTION__);
+        return false;
+    }
+
+    VkDescriptorPoolSize poolSize{};
+    poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    poolSize.descriptorCount = 1;
+
+    VkDescriptorPoolCreateInfo poolInfo{};
+    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    poolInfo.poolSizeCount = 1;
+    poolInfo.pPoolSizes = &poolSize;
+    poolInfo.maxSets = 1;
+
+    if (vkCreateDescriptorPool(renderData.rdVkbDevice.device, &poolInfo, nullptr,
+                           &renderData.rdHDRTexture.descriptorPool) != VK_SUCCESS)
+    {
+        Logger::log(1, "%s error: failed to create descriptor pool", __FUNCTION__);
+        return false;
+    }
+
+    VkDescriptorSetAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    allocInfo.descriptorPool = renderData.rdHDRTexture.descriptorPool;
+    allocInfo.descriptorSetCount = 1;
+    allocInfo.pSetLayouts = &renderData.rdHDRTexture.descriptorSetLayout;
+
+    if (vkAllocateDescriptorSets(renderData.rdVkbDevice.device, &allocInfo,
+                             &renderData.rdHDRTexture.descriptorSet) != VK_SUCCESS)
+    {
+        Logger::log(1, "%s error: failed to allocate descriptor set", __FUNCTION__);
+        return false;
+    }
+
+    VkDescriptorImageInfo imageInfo{};
+    imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    imageInfo.imageView = renderData.rdHDRTexture.imageView;
+    imageInfo.sampler = renderData.rdHDRTexture.sampler;
+
+    VkWriteDescriptorSet write{};
+    write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    write.dstSet = renderData.rdHDRTexture.descriptorSet;
+    write.dstBinding = 0;
+    write.descriptorCount = 1;
+    write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    write.pImageInfo = &imageInfo;
+
+    vkUpdateDescriptorSets(renderData.rdVkbDevice.device, 1, &write, 0,
+        nullptr);
+
+    return true;
+}
+
+bool Core::Renderer::IBLGenerator::createStaticCubemapLayout(VkRenderData& renderData, VkDescriptorSetLayout& layout)
+{
+    VkDescriptorSetLayoutBinding samplerBinding{};
+    samplerBinding.binding = 0;
+    samplerBinding.descriptorCount = 1;
+    samplerBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    samplerBinding.pImmutableSamplers = nullptr;
+    samplerBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    VkDescriptorSetLayoutCreateInfo layoutInfo{};
+    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    layoutInfo.bindingCount = 1;
+    layoutInfo.pBindings = &samplerBinding;
+
+    if (vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &layoutInfo, nullptr, &layout) != VK_SUCCESS)
+    {
+        Logger::log(1, "%s error: could not create cubemap descriptor set layout", __FUNCTION__);
+        return false;
+    }
+
+    return true;
+}
+
+bool Core::Renderer::IBLGenerator::convertHDRToCubemap(VkRenderData& renderData, VkTextureData& texture,
+                                                       VkCubemapData& cubemapData)
 {
     constexpr uint32_t cubemapSize = 512;
 
@@ -297,7 +477,7 @@ bool Core::Renderer::Cubemap::convertHDRToCubemap(VkRenderData& renderData, VkTe
     return true;
 }
 
-bool Core::Renderer::Cubemap::convertCubemapToIrradiance(VkRenderData& renderData, VkCubemapData& cubemapData,
+bool Core::Renderer::IBLGenerator::convertCubemapToIrradiance(VkRenderData& renderData, VkCubemapData& cubemapData,
     VkCubemapData& irradianceData)
 {
      constexpr uint32_t irradianceSize = 32;
@@ -577,7 +757,7 @@ bool Core::Renderer::Cubemap::convertCubemapToIrradiance(VkRenderData& renderDat
     return true;
 }
 
-bool Core::Renderer::Cubemap::convertCubemapToPrefilteredMap(VkRenderData& renderData, VkCubemapData& cubemapData,
+bool Core::Renderer::IBLGenerator::convertCubemapToPrefilteredMap(VkRenderData& renderData, VkCubemapData& cubemapData,
     VkCubemapData& prefilteredMapData)
 {
     constexpr uint32_t prefilteredMapSize = 512;
@@ -879,7 +1059,7 @@ bool Core::Renderer::Cubemap::convertCubemapToPrefilteredMap(VkRenderData& rende
     return true;
 }
 
-bool Core::Renderer::Cubemap::generateBRDFLUT(VkRenderData& renderData, VkTextureData& brdfLutData)
+bool Core::Renderer::IBLGenerator::generateBRDFLUT(VkRenderData& renderData, VkTextureData& brdfLutData)
 {
     constexpr uint32_t lutSize = 512;
 
@@ -1053,11 +1233,193 @@ bool Core::Renderer::Cubemap::generateBRDFLUT(VkRenderData& renderData, VkTextur
     return true;
 }
 
-void Core::Renderer::Cubemap::cleanup(VkRenderData& renderData, VkCubemapData& cubemapData)
+void Core::Renderer::IBLGenerator::cleanup(VkRenderData& renderData, VkCubemapData& cubemapData)
 {
     vkDestroySampler(renderData.rdVkbDevice.device, cubemapData.sampler, nullptr);
     vkDestroyImageView(renderData.rdVkbDevice.device, cubemapData.imageView, nullptr);
     vmaDestroyImage(renderData.rdAllocator, cubemapData.image, cubemapData.imageAlloc);
     vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, cubemapData.descriptorSetLayout, nullptr);
     vkDestroyDescriptorPool(renderData.rdVkbDevice.device, cubemapData.descriptorPool, nullptr);
+}
+
+bool Core::Renderer::IBLGenerator::createHDRToCubemapPipeline(VkRenderData& renderData)
+{
+    std::vector layouts = {
+        renderData.rdCaptureUBO.rdUBODescriptorLayout,
+        renderData.rdHDRTexture.descriptorSetLayout
+    };
+
+    VkPushConstantRange pushConstantRange{};
+    pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    pushConstantRange.offset = 0;
+    pushConstantRange.size = sizeof(int);
+
+    VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(layouts.size());
+    pipelineLayoutInfo.pSetLayouts = layouts.data();
+    pipelineLayoutInfo.pushConstantRangeCount = 1;
+    pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+
+    if (vkCreatePipelineLayout(renderData.rdVkbDevice.device, &pipelineLayoutInfo, nullptr,
+                               &renderData.rdHDRToCubemapPipelineLayout) != VK_SUCCESS)
+    {
+        Logger::log(1, "%s error: could not create HDR to Cubemap pipeline layout", __FUNCTION__);
+        return false;
+    }
+
+    constexpr std::string_view vertexShaderFile = "shaders/equirectangular_to_cubemap.vert.spv";
+    constexpr std::string_view fragmentShaderFile = "shaders/equirectangular_to_cubemap.frag.spv";
+
+    PipelineConfig pipelineConfig{};
+    pipelineConfig.useVertexInput = VK_FALSE;
+    pipelineConfig.enableDepthTest = VK_FALSE;
+    pipelineConfig.enableDepthWrite = VK_FALSE;
+    pipelineConfig.enableBlending = VK_FALSE;
+    pipelineConfig.cullMode = VK_CULL_MODE_NONE;
+    pipelineConfig.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+    pipelineConfig.depthCompareOp = VK_COMPARE_OP_ALWAYS;
+
+    if (!Pipeline::init(renderData, renderData.rdHDRToCubemapPipelineLayout, renderData.rdHDRToCubemapPipeline,
+                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile.data(),
+                        fragmentShaderFile.data(), pipelineConfig, renderData.rdHDRToCubemapRenderpass))
+    {
+        Logger::log(1, "%s error: could not init HDR to Cubemap pipeline\n", __FUNCTION__);
+        return false;
+    }
+
+    return true;
+}
+
+bool Core::Renderer::IBLGenerator::createIrradiancePipeline(VkRenderData& renderData)
+{
+    std::vector layouts = {
+        renderData.rdCaptureUBO.rdUBODescriptorLayout,
+        renderData.rdSkyboxData.descriptorSetLayout
+    };
+    
+    VkPushConstantRange pushConstantRange{};
+    pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    pushConstantRange.offset = 0;
+    pushConstantRange.size = sizeof(int);
+    
+    VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(layouts.size());
+    pipelineLayoutInfo.pSetLayouts = layouts.data();
+    pipelineLayoutInfo.pushConstantRangeCount = 1;
+    pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+
+    if (vkCreatePipelineLayout(renderData.rdVkbDevice.device, &pipelineLayoutInfo, nullptr,
+                               &renderData.rdIrradiancePipelineLayout) != VK_SUCCESS)
+    {
+        Logger::log(1, "%s error: could not create irradiance pipeline layout", __FUNCTION__);
+        return false;
+    }
+
+    constexpr std::string_view vertexShaderFile = "shaders/equirectangular_to_cubemap.vert.spv";
+    constexpr std::string_view fragmentShaderFile = "shaders/irradiance_convolution.frag.spv";
+
+    PipelineConfig pipelineConfig{};
+    pipelineConfig.useVertexInput = VK_FALSE;
+    pipelineConfig.enableDepthTest = VK_FALSE;
+    pipelineConfig.enableDepthWrite = VK_FALSE;
+    pipelineConfig.enableBlending = VK_FALSE;
+    pipelineConfig.cullMode = VK_CULL_MODE_NONE;
+    pipelineConfig.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+    pipelineConfig.depthCompareOp = VK_COMPARE_OP_ALWAYS;
+
+    if (!Pipeline::init(renderData, renderData.rdIrradiancePipelineLayout, renderData.rdIrradiancePipeline,
+                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile.data(),
+                        fragmentShaderFile.data(), pipelineConfig, renderData.rdIBLRenderpass))
+    {
+        Logger::log(1, "%s error: could not init irradiance pipeline\n", __FUNCTION__);
+        return false;
+    }
+
+    return true;
+}
+
+bool Core::Renderer::IBLGenerator::createPrefilterPipeline(VkRenderData& renderData)
+{
+    std::vector layouts = {
+        renderData.rdCaptureUBO.rdUBODescriptorLayout,
+        renderData.rdSkyboxData.descriptorSetLayout
+    };
+
+    VkPushConstantRange pushConstantRange{};
+    pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+    pushConstantRange.offset = 0;
+    pushConstantRange.size = sizeof(uint32_t) + sizeof(float);
+
+    VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(layouts.size());
+    pipelineLayoutInfo.pSetLayouts = layouts.data();
+    pipelineLayoutInfo.pushConstantRangeCount = 1;
+    pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+
+    if (vkCreatePipelineLayout(renderData.rdVkbDevice.device, &pipelineLayoutInfo, nullptr,
+                               &renderData.rdPrefilterPipelineLayout) != VK_SUCCESS)
+    {
+        Logger::log(1, "%s error: could not create prefilter pipeline layout", __FUNCTION__);
+        return false;
+    }
+
+    constexpr std::string_view vertexShaderFile = "shaders/prefilter.vert.spv";
+    constexpr std::string_view fragmentShaderFile = "shaders/prefilter.frag.spv";
+
+    PipelineConfig pipelineConfig{};
+    pipelineConfig.useVertexInput = VK_FALSE;
+    pipelineConfig.enableDepthTest = VK_FALSE;
+    pipelineConfig.enableDepthWrite = VK_FALSE;
+    pipelineConfig.enableBlending = VK_FALSE;
+    pipelineConfig.cullMode = VK_CULL_MODE_NONE;
+    pipelineConfig.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+    pipelineConfig.depthCompareOp = VK_COMPARE_OP_ALWAYS;
+
+    if (!Pipeline::init(renderData, renderData.rdPrefilterPipelineLayout, renderData.rdPrefilterPipeline,
+                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile.data(),
+                        fragmentShaderFile.data(), pipelineConfig, renderData.rdIBLRenderpass))
+    {
+        Logger::log(1, "%s error: could not init irradiance pipeline\n", __FUNCTION__);
+        return false;
+    }
+
+    return true;
+}
+
+bool Core::Renderer::IBLGenerator::createBRDFLUTPipeline(VkRenderData& renderData)
+{
+    VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+
+    if (vkCreatePipelineLayout(renderData.rdVkbDevice.device, &pipelineLayoutInfo, nullptr,
+                               &renderData.rdBRDFLUTPipelineLayout) != VK_SUCCESS)
+    {
+        Logger::log(1, "%s error: could not create BRDF LUT pipeline layout", __FUNCTION__);
+        return false;
+    }
+
+    constexpr std::string_view vertexShaderFile = "shaders/brdf_lut.vert.spv";
+    constexpr std::string_view fragmentShaderFile = "shaders/brdf_lut.frag.spv";
+
+    PipelineConfig pipelineConfig{};
+    pipelineConfig.useVertexInput = VK_FALSE;
+    pipelineConfig.enableDepthTest = VK_FALSE;
+    pipelineConfig.enableDepthWrite = VK_FALSE;
+    pipelineConfig.enableBlending = VK_FALSE;
+    pipelineConfig.cullMode = VK_CULL_MODE_NONE;
+    pipelineConfig.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+    pipelineConfig.depthCompareOp = VK_COMPARE_OP_ALWAYS;
+
+    if (!Pipeline::init(renderData, renderData.rdBRDFLUTPipelineLayout, renderData.rdBRDFLUTPipeline,
+                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile.data(),
+                        fragmentShaderFile.data(), pipelineConfig, renderData.rdIBLRenderpass))
+    {
+        Logger::log(1, "%s error: could not init BRDF LUT pipeline\n", __FUNCTION__);
+        return false;
+    }
+
+    return true;
 }

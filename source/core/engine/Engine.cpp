@@ -1,4 +1,6 @@
 #include "Engine.h"
+
+#include "core/ui/UserInterface.h"
 #include "core/window/Window.h"
 
 void Core::Engine::init()

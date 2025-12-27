@@ -1,6 +1,6 @@
-#include <vector>
 #include "Window.h"
 #include "core/tools/Logger.h"
+#include "core/ui/UserInterface.h"
 
 bool Core::Application::Window::init(int width, int height, const std::string& title)
 {
