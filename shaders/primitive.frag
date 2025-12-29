@@ -122,7 +122,7 @@ void main() {
     if (useMetallicRoughnessMap != 0)
     {
         vec4 mr = texture(metallicRoughnessMap, textCoord);
-        metallic = metallicFactor * mr.r;
+        metallic = metallicFactor * mr.b;
         roughness = roughnessFactor * mr.g;
     }
 
