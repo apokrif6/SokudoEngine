@@ -33,7 +33,7 @@ std::future<bool> Core::Renderer::Texture::loadTexture(VkRenderData& renderData,
                 return false;
             }
 
-            VkDeviceSize imageSize = texWidth * texHeight * 4;
+            VkDeviceSize imageSize = texWidth * texHeight * STBI_rgb_alpha;
 
             VkImageCreateInfo imageInfo{};
             imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
