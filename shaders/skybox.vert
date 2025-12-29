@@ -4,10 +4,15 @@
 
 layout (location = 0) out vec3 texCoord;
 
-layout (set = 0, binding = 0) uniform Matrices {
+layout (set = 0, binding = 0) uniform GlobalScene
+{
     mat4 view;
     mat4 projection;
-};
+    vec4 camPos;
+    vec4 lightPositions[4];
+    vec4 lightColors[4];
+    ivec4 lightCount;
+} scene;
 
 const vec3 positions[8] = vec3[8](
     vec3(-1.0, -1.0, -1.0),
@@ -39,9 +44,9 @@ void main() {
     int idx = indices[gl_VertexIndex];
     vec3 position = positions[idx];
 
-    mat4 viewWithoutTranslation = mat4(mat3(view));
+    mat4 viewWithoutTranslation = mat4(mat3(scene.view));
 
-    gl_Position = projection * viewWithoutTranslation * vec4(position, 1.0);
+    gl_Position = scene.projection * viewWithoutTranslation * vec4(position, 1.0);
 
     texCoord = position;
 }

@@ -31,6 +31,23 @@ struct NewVertex
     }
 };
 
+struct GlobalSceneData
+    {
+    glm::mat4 view;
+    glm::mat4 projection;
+    glm::vec4 camPos;
+    glm::vec4 lightPositions[4];
+    glm::vec4 lightColors[4];
+    glm::ivec4 lightCount;
+};
+
+constexpr size_t maxNumberOfBones = 4;
+struct PrimitiveData
+{
+    glm::mat4 model;
+    glm::mat4 bones[maxNumberOfBones];
+};
+
 constexpr int MAX_MATERIALS = 128;
 struct MaterialInfo
 {
@@ -137,6 +154,7 @@ struct VkUniformBufferData
     VkDescriptorSetLayout rdUBODescriptorLayout = VK_NULL_HANDLE;
     VkDescriptorSet rdUBODescriptorSet = VK_NULL_HANDLE;
     std::string rdName;
+    bool ownsLayout = true;
 };
 
 struct VkShaderStorageBufferData
@@ -283,19 +301,12 @@ struct VkRenderData
     VkFormat rdDepthFormat;
     VmaAllocation rdDepthImageAlloc = VK_NULL_HANDLE;
 
-    // TODO
-    // hm....
-    // probably should be moved elsewhere
-    VkDescriptorSetLayout rdMeshTextureDescriptorLayout = VK_NULL_HANDLE;
-    VkDescriptorSetLayout rdMeshViewMatrixDescriptorLayout = VK_NULL_HANDLE;
-    VkDescriptorSetLayout rdMeshMaterialDescriptorLayout = VK_NULL_HANDLE;
-    VkDescriptorSetLayout rdMeshBonesTransformDescriptorLayout = VK_NULL_HANDLE;
-    VkDescriptorSetLayout rdMeshModelDescriptorLayout = VK_NULL_HANDLE;
-    VkDescriptorSetLayout rdMeshCameraDescriptorLayout = VK_NULL_HANDLE;
-    VkDescriptorSetLayout rdMeshLightsDescriptorLayout = VK_NULL_HANDLE;
-    VkDescriptorSetLayout rdMeshEnvironmentMapDescriptorLayout = VK_NULL_HANDLE;
-    VkDescriptorSetLayout rdMeshPrefilteredMapDescriptorLayout = VK_NULL_HANDLE;
-    VkDescriptorSetLayout rdMeshBRDFLUTDescriptorLayout = VK_NULL_HANDLE;
+#pragma region DescriptorLayouts
+    VkDescriptorSetLayout rdGlobalSceneDescriptorLayout = VK_NULL_HANDLE;
+    VkDescriptorSetLayout rdPrimitiveDataDescriptorLayout = VK_NULL_HANDLE;
+    VkDescriptorSetLayout rdPrimitiveTextureDescriptorLayout = VK_NULL_HANDLE;
+    VkDescriptorSetLayout rdPrimitiveMaterialDescriptorLayout = VK_NULL_HANDLE;
+#pragma endregion
 
     VkRenderPass rdRenderpass = VK_NULL_HANDLE;
     VkPipelineLayout rdPipelineLayout = VK_NULL_HANDLE;
@@ -332,7 +343,8 @@ struct VkRenderData
 
     VkVertexBufferData rdVertexBufferData{};
 
-    VkUniformBufferData rdPerspectiveViewMatrixUBO{};
+    // stores only GlobalScene data
+    VkUniformBufferData rdGlobalSceneUBO{};
 
     VkUniformBufferData rdCaptureUBO{};
 

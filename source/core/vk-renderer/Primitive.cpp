@@ -29,10 +29,7 @@ Core::Renderer::Primitive::Primitive(const std::vector<NewVertex>& vertexBufferD
     createVertexBuffer(renderData);
     createIndexBuffer(renderData);
     createMaterialBuffer(renderData);
-    createBonesTransformBuffer(renderData);
-    createModelMatrixBuffer(renderData);
-    createCameraBuffer(renderData);
-    createLightsBuffer(renderData);
+    createPrimitiveDataBuffer(renderData);
 
     primitiveFlagsPushConstants.hasSkinning = mBonesInfo.bones.empty() ? 0 : 1;
 }
@@ -56,38 +53,9 @@ void Core::Renderer::Primitive::createMaterialBuffer(VkRenderData& renderData)
     UniformBuffer::uploadData(renderData, mMaterialUBO, mMaterialInfo);
 }
 
-void Core::Renderer::Primitive::createBonesTransformBuffer(VkRenderData& renderData)
+void Core::Renderer::Primitive::createPrimitiveDataBuffer(VkRenderData& renderData)
 {
-    UniformBuffer::init(renderData, mBonesTransformUBO,
-                                        mBonesInfo.finalTransforms.size() * sizeof(glm::mat4), "BonesTransform");
-}
-
-void Core::Renderer::Primitive::createModelMatrixBuffer(VkRenderData& renderData)
-{
-    UniformBuffer::init(renderData, mModelUBO, sizeof(glm::mat4), "ModelMatrix");
-}
-
-void Core::Renderer::Primitive::createCameraBuffer(VkRenderData& renderData)
-{
-    UniformBuffer::init(renderData, mCameraUBO, sizeof(CameraInfo), "Camera");
-}
-
-void Core::Renderer::Primitive::createLightsBuffer(VkRenderData& renderData)
-{
-    UniformBuffer::init(renderData, mLightsUBO, sizeof(LightsInfo), "Lights");
-
-    // dummy lights
-    lightsData.positions[0] = glm::vec4(0.f, 10.f, 10.f, 1.f);
-    lightsData.colors[0] = glm::vec4(1.f, 1.f, 1.f, 1.f);
-    lightsData.count = glm::ivec4(1, 0, 0, 0);
-
-    for (int i = 1; i < MAX_LIGHTS; ++i)
-    {
-        lightsData.positions[i] = glm::vec4(0.f);
-        lightsData.colors[i] = glm::vec4(0.f);
-    }
-
-    UniformBuffer::uploadData(renderData, mLightsUBO, lightsData);
+    UniformBuffer::init(renderData, mPrimitiveDataUBO, sizeof(PrimitiveData), "Primitive Data");
 }
 
 void Core::Renderer::Primitive::uploadVertexBuffer(VkRenderData& renderData)
@@ -101,58 +69,37 @@ void Core::Renderer::Primitive::uploadIndexBuffer(VkRenderData& renderData)
     IndexBuffer::uploadData(renderData, primitiveRenderData.rdModelIndexBufferData, mIndexBufferData);
 }
 
-void Core::Renderer::Primitive::uploadUniformBuffer(VkRenderData& renderData,
-                                                    const glm::mat4& modelMatrix)
+void Core::Renderer::Primitive::uploadUniformBuffer(VkRenderData& renderData, const glm::mat4& modelMatrix)
 {
-    UniformBuffer::uploadData(renderData, mBonesTransformUBO, mBonesInfo.finalTransforms);
+    PrimitiveData data{};
+    data.model = modelMatrix;
 
-    UniformBuffer::uploadData(renderData, mModelUBO, modelMatrix);
+    if (!mBonesInfo.finalTransforms.empty())
+    {
+        std::ranges::copy(mBonesInfo.finalTransforms,  std::begin(data.bones));
+    }
 
-    CameraInfo cameraInfo{};
-    cameraInfo.position = glm::vec4(renderData.rdCameraWorldPosition, 1.f);
-    UniformBuffer::uploadData(renderData, mCameraUBO, cameraInfo);
+    UniformBuffer::uploadData(renderData, mPrimitiveDataUBO, data);
 }
 
 void Core::Renderer::Primitive::draw(const VkRenderData& renderData)
 {
     vkCmdBindPipeline(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdMeshPipeline);
 
-    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            renderData.rdMeshPipelineLayout, 0, 1, &mMaterialDescriptorSet, 0, nullptr);
+    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdMeshPipelineLayout,
+        0, 1, &renderData.rdGlobalSceneUBO.rdUBODescriptorSet, 0, nullptr);
 
-    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            renderData.rdMeshPipelineLayout, 1, 1,
-                            &renderData.rdPerspectiveViewMatrixUBO.rdUBODescriptorSet, 0, nullptr);
+    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdMeshPipelineLayout,
+        1, 1, &mPrimitiveDataUBO.rdUBODescriptorSet, 0, nullptr);
 
-    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            renderData.rdMeshPipelineLayout, 2, 1, &mMaterialUBO.rdUBODescriptorSet, 0, nullptr);
+    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdMeshPipelineLayout,
+        2, 1, &mMaterialDescriptorSet, 0, nullptr);
 
-    const VkDescriptorSet& bonesSet = mBonesInfo.bones.empty() ? renderData.rdDummyBonesUBO.rdUBODescriptorSet
-                                                               : mBonesTransformUBO.rdUBODescriptorSet;
+    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdMeshPipelineLayout,
+        3, 1, &mMaterialUBO.rdUBODescriptorSet, 0, nullptr);
 
-    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            renderData.rdMeshPipelineLayout, 3, 1, &bonesSet, 0, nullptr);
-
-    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            renderData.rdMeshPipelineLayout, 4, 1, &mModelUBO.rdUBODescriptorSet, 0, nullptr);
-
-    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            renderData.rdMeshPipelineLayout, 5, 1, &mCameraUBO.rdUBODescriptorSet, 0, nullptr);
-
-    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            renderData.rdMeshPipelineLayout, 6, 1, &mLightsUBO.rdUBODescriptorSet, 0, nullptr);
-
-    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                        renderData.rdMeshPipelineLayout, 7, 1, &renderData.rdIrradianceMap.descriptorSet, 0, nullptr);
-
-    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                        renderData.rdMeshPipelineLayout, 8, 1, &renderData.rdPrefilterMap.descriptorSet, 0, nullptr);
-
-    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                        renderData.rdMeshPipelineLayout, 9, 1, &renderData.rdBRDFLUT.descriptorSet, 0, nullptr);
-
-    vkCmdPushConstants(renderData.rdCommandBuffer, renderData.rdMeshPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0,
-                       sizeof(PrimitiveFlagsPushConstants), &primitiveFlagsPushConstants);
+    vkCmdPushConstants(renderData.rdCommandBuffer, renderData.rdMeshPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+        0, sizeof(PrimitiveFlagsPushConstants), &primitiveFlagsPushConstants);
 
     VkDeviceSize offset = 0;
     vkCmdBindVertexBuffers(renderData.rdCommandBuffer, 0, 1,
@@ -175,9 +122,6 @@ void Core::Renderer::Primitive::cleanup(VkRenderData& renderData)
         Texture::cleanup(renderData, texture.second);
     }
 
-    UniformBuffer::cleanup(renderData, mModelUBO);
-    UniformBuffer::cleanup(renderData, mBonesTransformUBO);
     UniformBuffer::cleanup(renderData, mMaterialUBO);
-    UniformBuffer::cleanup(renderData, mCameraUBO);
-    UniformBuffer::cleanup(renderData, mLightsUBO);
+    UniformBuffer::cleanup(renderData, mPrimitiveDataUBO);
 }

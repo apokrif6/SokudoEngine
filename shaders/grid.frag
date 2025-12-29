@@ -5,10 +5,15 @@ layout (location = 1) in vec3 farPoint;
 
 layout (location = 0) out vec4 outColor;
 
-layout (set = 0, binding = 0) uniform Matrices {
+layout (set = 0, binding = 0) uniform GlobalScene
+{
     mat4 view;
     mat4 projection;
-};
+    vec4 camPos;
+    vec4 lightPositions[4];
+    vec4 lightColors[4];
+    ivec4 lightCount;
+} scene;
 
 float near = 0.1;
 float far  = 100.0;
@@ -32,12 +37,12 @@ vec4 grid(vec3 fragPos3D, float scale) {
 }
 
 float computeDepth(vec3 pos) {
-    vec4 clip_space_pos = projection * view * vec4(pos.xyz, 1.0);
+    vec4 clip_space_pos = scene.projection * scene.view * vec4(pos.xyz, 1.0);
     return clip_space_pos.z / clip_space_pos.w;
 }
 
 float computeLinearDepth(vec3 pos) {
-    vec4 clip_space_pos = projection * view * vec4(pos.xyz, 1.0);
+    vec4 clip_space_pos = scene.projection * scene.view * vec4(pos.xyz, 1.0);
     float clip_space_depth = (clip_space_pos.z / clip_space_pos.w) * 2.0 - 1.0;
     float linearDepth = (2.0 * near * far) / (far + near - clip_space_depth * (far - near));
     return linearDepth / far;

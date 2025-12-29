@@ -92,11 +92,6 @@ bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned i
         return false;
     }
 
-    if (!createUBO())
-    {
-        return false;
-    }
-
     if (!createVBO())
     {
         return false;
@@ -108,6 +103,11 @@ bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned i
     }
 
     if (!createViewportRenderpass())
+    {
+        return false;
+    }
+
+    if (!createPrimitivePipeline())
     {
         return false;
     }
@@ -225,22 +225,7 @@ void Core::Renderer::VkRenderer::update(VkRenderData& renderData, float deltaTim
 {
     handleCameraMovementKeys();
 
-    mMatrixGenerateTimer.start();
-
-    mPerspectiveViewMatrices.at(0) = mCamera.getViewMatrix(renderData);
-    mPerspectiveViewMatrices.at(1) = glm::perspective(glm::radians(static_cast<float>(renderData.rdFieldOfView)),
-                                                      static_cast<float>(renderData.rdVkbSwapchain.extent.width) /
-                                                          static_cast<float>(renderData.rdVkbSwapchain.extent.height),
-                                                      0.01f, 50.0f);
-
-    renderData.rdMatrixGenerateTime = mMatrixGenerateTimer.stop();
-
-    mUploadToVBOTimer.start();
-    renderData.rdUploadToVBOTime = mUploadToVBOTimer.stop();
-
-    mUploadToUBOTimer.start();
-    UniformBuffer::uploadData(renderData, renderData.rdPerspectiveViewMatrixUBO, mPerspectiveViewMatrices);
-    renderData.rdUploadToUBOTime = mUploadToUBOTimer.stop();
+    updateGlobalSceneData();
 }
 
 void Core::Renderer::VkRenderer::endUploadFrame(VkRenderData& renderData)
@@ -408,8 +393,8 @@ void Core::Renderer::VkRenderer::cleanup(VkRenderData& renderData)
     Pipeline::cleanup(renderData, renderData.rdPrefilterPipeline);
     Pipeline::cleanup(renderData, renderData.rdBRDFLUTPipeline);
 
-    PipelineLayout::cleanup(renderData, renderData.rdPipelineLayout);
     MeshPipelineLayout::cleanup(renderData, renderData.rdMeshPipelineLayout);
+    PipelineLayout::cleanup(renderData, renderData.rdPipelineLayout);
     DebugSkeletonPipelineLayout::cleanup(renderData, renderData.rdDebugSkeletonPipelineLayout);
     PipelineLayout::cleanup(renderData, renderData.rdSkyboxPipelineLayout);
     PipelineLayout::cleanup(renderData, renderData.rdHDRToCubemapPipelineLayout);
@@ -422,7 +407,7 @@ void Core::Renderer::VkRenderer::cleanup(VkRenderData& renderData)
     HDRToCubemapRenderpass::cleanup(renderData, renderData.rdIBLRenderpass);
     HDRToCubemapRenderpass::cleanup(renderData, renderData.rdHDRToCubemapRenderpass);
 
-    UniformBuffer::cleanup(renderData, renderData.rdPerspectiveViewMatrixUBO);
+    UniformBuffer::cleanup(renderData, renderData.rdGlobalSceneUBO);
     UniformBuffer::cleanup(renderData, renderData.rdCaptureUBO);
     VertexBuffer::cleanup(renderData, renderData.rdVertexBufferData);
 
@@ -675,20 +660,6 @@ bool Core::Renderer::VkRenderer::recreateSwapchain()
     return true;
 }
 
-bool Core::Renderer::VkRenderer::createUBO()
-{
-    size_t matrixSize = mPerspectiveViewMatrices.size() * sizeof(glm::mat4);
-
-    if (!UniformBuffer::init(Engine::getInstance().getRenderData(),
-                                             Engine::getInstance().getRenderData().rdPerspectiveViewMatrixUBO,
-                                             matrixSize, "PerspectiveViewMatrixUBO"))
-    {
-        Logger::log(1, "%s error: could not create uniform buffers\n", __FUNCTION__);
-        return false;
-    }
-    return true;
-}
-
 bool Core::Renderer::VkRenderer::createVBO()
 {
     if (!VertexBuffer::init(Engine::getInstance().getRenderData(),
@@ -761,7 +732,7 @@ void Core::Renderer::VkRenderer::drawGrid() const
     vkCmdBindPipeline(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdGridPipeline);
 
     vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdPipelineLayout, 0,
-                            1, &renderData.rdPerspectiveViewMatrixUBO.rdUBODescriptorSet, 0, nullptr);
+                            1, &renderData.rdGlobalSceneUBO.rdUBODescriptorSet, 0, nullptr);
 
     VkDeviceSize offset = 0;
     vkCmdBindVertexBuffers(renderData.rdCommandBuffer, 0, 1, &renderData.rdVertexBufferData.rdVertexBuffer, &offset);
@@ -883,14 +854,6 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
 {
     auto& renderData = Engine::getInstance().getRenderData();
 
-    std::string vertexShaderFile = "shaders/primitive.vert.spv";
-    std::string fragmentShaderFile = "shaders/primitive.frag.spv";
-    if (!MeshPipelineLayout::init(renderData, renderData.rdMeshPipelineLayout))
-    {
-        Logger::log(1, "%s error: could not init mesh pipeline layout\n", __FUNCTION__);
-        return false;
-    }
-
     VkDescriptorPoolSize poolSize{};
     poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     poolSize.descriptorCount = MAX_MATERIALS * 5;
@@ -905,19 +868,6 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
                                &renderData.rdMaterialDescriptorPool) != VK_SUCCESS)
     {
         Logger::log(1, "failed to create material descriptor pool!\n");
-        return false;
-    }
-
-    PipelineConfig pipelineConfig{};
-    pipelineConfig.enableBlending = VK_TRUE;
-    pipelineConfig.enableDepthTest = VK_TRUE;
-    pipelineConfig.enableDepthWrite = VK_TRUE;
-    pipelineConfig.depthCompareOp = VK_COMPARE_OP_LESS;
-
-    if (!Pipeline::init(renderData, renderData.rdMeshPipelineLayout, renderData.rdMeshPipeline,
-                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile, fragmentShaderFile, pipelineConfig))
-    {
-        Logger::log(1, "%s error: could not init mesh pipeline\n", __FUNCTION__);
         return false;
     }
 
@@ -942,6 +892,8 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
                                primitive.material, primitive.bones, primitive.materialDescriptorSet);
     }
 
+    initPrimitiveGlobalSceneDescriptorSet();
+
     return true;
 }
 
@@ -960,6 +912,74 @@ void Core::Renderer::VkRenderer::initCaptureResources()
 
     UniformBuffer::init(renderData, renderData.rdCaptureUBO, sizeof(CaptureInfo), "CaptureInfo");
     UniformBuffer::uploadData(renderData, renderData.rdCaptureUBO, captureInfo);
+}
+
+void Core::Renderer::VkRenderer::initPrimitiveGlobalSceneDescriptorSet()
+{
+    auto& renderData = Engine::getInstance().getRenderData();
+
+    std::vector<VkDescriptorPoolSize> extraSizes = {
+        {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 3}
+    };
+
+    UniformBuffer::init(renderData, renderData.rdGlobalSceneUBO, sizeof(GlobalSceneData),
+        "GlobalScene with IBL", renderData.rdGlobalSceneDescriptorLayout, extraSizes);
+
+    updateGlobalSceneDescriptorWrite();
+}
+
+void Core::Renderer::VkRenderer::updateGlobalSceneDescriptorWrite()
+{
+    auto& renderData = Engine::getInstance().getRenderData();
+
+    VkDescriptorSet targetSet = renderData.rdGlobalSceneUBO.rdUBODescriptorSet;
+
+    VkDescriptorImageInfo irradianceInfo{};
+    irradianceInfo.sampler = renderData.rdIrradianceMap.sampler;
+    irradianceInfo.imageView = renderData.rdIrradianceMap.imageView;
+    irradianceInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+    VkDescriptorImageInfo prefilterInfo{};
+    prefilterInfo.sampler = renderData.rdPrefilterMap.sampler;
+    prefilterInfo.imageView = renderData.rdPrefilterMap.imageView;
+    prefilterInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+    VkDescriptorImageInfo brdfInfo{};
+    brdfInfo.sampler = renderData.rdBRDFLUT.sampler;
+    brdfInfo.imageView = renderData.rdBRDFLUT.imageView;
+    brdfInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+    std::vector<VkWriteDescriptorSet> descriptorWrites;
+
+    VkWriteDescriptorSet irradianceWrite{};
+    irradianceWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    irradianceWrite.dstSet = targetSet;
+    irradianceWrite.dstBinding = 1;
+    irradianceWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    irradianceWrite.descriptorCount = 1;
+    irradianceWrite.pImageInfo = &irradianceInfo;
+    descriptorWrites.push_back(irradianceWrite);
+
+    VkWriteDescriptorSet prefilterWrite{};
+    prefilterWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    prefilterWrite.dstSet = targetSet;
+    prefilterWrite.dstBinding = 2;
+    prefilterWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    prefilterWrite.descriptorCount = 1;
+    prefilterWrite.pImageInfo = &prefilterInfo;
+    descriptorWrites.push_back(prefilterWrite);
+
+    VkWriteDescriptorSet brdfWrite{};
+    brdfWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    brdfWrite.dstSet = targetSet;
+    brdfWrite.dstBinding = 3;
+    brdfWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    brdfWrite.descriptorCount = 1;
+    brdfWrite.pImageInfo = &brdfInfo;
+    descriptorWrites.push_back(brdfWrite);
+
+    vkUpdateDescriptorSets(renderData.rdVkbDevice.device, static_cast<uint32_t>(descriptorWrites.size()),
+                           descriptorWrites.data(), 0, nullptr);
 
 }
 
@@ -970,6 +990,35 @@ bool Core::Renderer::VkRenderer::createDebugSkeletonPipelineLayout()
             Engine::getInstance().getRenderData().rdDebugSkeletonPipelineLayout))
     {
         Logger::log(1, "%s error: could not init debug skeleton pipeline layout\n", __FUNCTION__);
+        return false;
+    }
+
+    return true;
+}
+
+bool Core::Renderer::VkRenderer::createPrimitivePipeline()
+{
+    auto& renderData = Engine::getInstance().getRenderData();
+
+    constexpr std::string_view vertexShaderFile = "shaders/primitive.vert.spv";
+    constexpr std::string_view fragmentShaderFile = "shaders/primitive.frag.spv";
+    if (!MeshPipelineLayout::init(renderData, renderData.rdMeshPipelineLayout))
+    {
+        Logger::log(1, "%s error: could not init mesh pipeline layout\n", __FUNCTION__);
+        return false;
+    }
+
+    PipelineConfig pipelineConfig{};
+    pipelineConfig.enableBlending = VK_TRUE;
+    pipelineConfig.enableDepthTest = VK_TRUE;
+    pipelineConfig.enableDepthWrite = VK_TRUE;
+    pipelineConfig.depthCompareOp = VK_COMPARE_OP_LESS;
+
+    if (!Pipeline::init(renderData, renderData.rdMeshPipelineLayout, renderData.rdMeshPipeline,
+                       VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile.data(),
+                       fragmentShaderFile.data(), pipelineConfig))
+    {
+        Logger::log(1, "%s error: could not init mesh pipeline\n", __FUNCTION__);
         return false;
     }
 
@@ -996,7 +1045,7 @@ bool Core::Renderer::VkRenderer::createSkyboxPipelineLayout()
 {
     auto& renderData = Engine::getInstance().getRenderData();
 
-    std::vector layouts = {renderData.rdPerspectiveViewMatrixUBO.rdUBODescriptorLayout};
+    std::vector layouts = {renderData.rdGlobalSceneDescriptorLayout};
 
     if (renderData.rdSkyboxData.descriptorSetLayout != VK_NULL_HANDLE)
     {
@@ -1087,8 +1136,7 @@ void Core::Renderer::VkRenderer::drawSkybox() const
 
     vkCmdBindPipeline(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdSkyboxPipeline);
 
-    std::vector descriptorSets = {renderData.rdPerspectiveViewMatrixUBO.rdUBODescriptorSet,
-                                                   renderData.rdSkyboxData.descriptorSet};
+    std::vector descriptorSets = {renderData.rdGlobalSceneUBO.rdUBODescriptorSet, renderData.rdSkyboxData.descriptorSet};
 
     vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                             renderData.rdSkyboxPipelineLayout, 0, static_cast<uint32_t>(descriptorSets.size()),
@@ -1145,6 +1193,30 @@ void Core::Renderer::VkRenderer::handleMouseEnterLeaveEvents(int enter)
     {
         Logger::log(1, "%s: Mouse left window\n", __FUNCTION__);
     }
+}
+
+void Core::Renderer::VkRenderer::updateGlobalSceneData()
+{
+    auto& renderData = Engine::getInstance().getRenderData();
+
+    // TODO
+    // do I even need this now, after creating GlobalSceneData?
+    mPerspectiveViewMatrices.at(0) = mCamera.getViewMatrix(renderData);
+    mPerspectiveViewMatrices.at(1) = glm::perspective(glm::radians(static_cast<float>(renderData.rdFieldOfView)),
+                                                      static_cast<float>(renderData.rdVkbSwapchain.extent.width) /
+                                                          static_cast<float>(renderData.rdVkbSwapchain.extent.height),
+                                                      0.01f, 50.0f);
+
+    GlobalSceneData sceneData{};
+    sceneData.view = mPerspectiveViewMatrices.at(0);
+    sceneData.projection = mPerspectiveViewMatrices.at(1);
+    sceneData.camPos = glm::vec4(renderData.rdCameraWorldPosition, 1.0f);
+
+    sceneData.lightCount = glm::ivec4(1, 0, 0, 0);
+    sceneData.lightPositions[0] = glm::vec4(0.f, 10.f, 10.f, 1.f);
+    sceneData.lightColors[0] = glm::vec4(1.f, 1.f, 1.f, 1.f);
+
+    UniformBuffer::uploadData(renderData, renderData.rdGlobalSceneUBO, sceneData);
 }
 
 void Core::Renderer::VkRenderer::handleCameraMovementKeys()

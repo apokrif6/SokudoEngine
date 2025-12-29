@@ -34,13 +34,7 @@ private:
 
     void createMaterialBuffer(VkRenderData& renderData);
 
-    void createBonesTransformBuffer(VkRenderData& renderData);
-
-    void createModelMatrixBuffer(VkRenderData& renderData);
-
-    void createCameraBuffer(VkRenderData& renderData);
-
-    void createLightsBuffer(VkRenderData& renderData);
+    void createPrimitiveDataBuffer(VkRenderData& renderData);
 
     VkPrimitiveRenderData primitiveRenderData;
 
@@ -54,16 +48,10 @@ private:
     MaterialInfo mMaterialInfo{};
     VkDescriptorSet mMaterialDescriptorSet{};
 
-    VkUniformBufferData mBonesTransformUBO{};
     Animations::BonesInfo mBonesInfo{};
 
-    VkUniformBufferData mModelUBO{};
+    VkUniformBufferData mPrimitiveDataUBO{};
 
-    VkUniformBufferData mCameraUBO{};
-
-    VkUniformBufferData mLightsUBO{};
-    LightsInfo lightsData{};
-
-    PrimitiveFlagsPushConstants primitiveFlagsPushConstants;
+    PrimitiveFlagsPushConstants primitiveFlagsPushConstants{};
 };
 } // namespace Core::Renderer

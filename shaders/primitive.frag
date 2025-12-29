@@ -8,18 +8,35 @@ layout (location = 4) in vec4 vertColor;
 
 layout (location = 0) out vec4 FragColor;
 
-layout (set = 0, binding = 0) uniform sampler2D albedoMap;
-layout (set = 0, binding = 1) uniform sampler2D normalMap;
-layout (set = 0, binding = 2) uniform sampler2D metallicRoughnessMap;
-layout (set = 0, binding = 3) uniform sampler2D aoMap;
-layout (set = 0, binding = 4) uniform sampler2D emissiveMap;
-
-layout (set = 1, binding = 0) uniform Matrices {
+layout (set = 0, binding = 0) uniform GlobalScene
+{
     mat4 view;
     mat4 projection;
-};
+    vec4 camPos;
+    vec4 lightPositions[4];
+    vec4 lightColors[4];
+    ivec4 lightCount;
+} scene;
 
-layout (set = 2, binding = 0) uniform Material {
+layout (set = 0, binding = 1) uniform samplerCube irradianceMap;
+layout (set = 0, binding = 2) uniform samplerCube prefilterMap;
+layout (set = 0, binding = 3) uniform sampler2D brdfLUT;
+
+const int MAX_BONES = 200;
+layout (set = 1, binding = 0) uniform PrimitiveData
+{
+    mat4 model;
+    mat4 bones[MAX_BONES];
+} primitiveData;
+
+layout (set = 2, binding = 0) uniform sampler2D albedoMap;
+layout (set = 2, binding = 1) uniform sampler2D normalMap;
+layout (set = 2, binding = 2) uniform sampler2D metallicRoughnessMap;
+layout (set = 2, binding = 3) uniform sampler2D aoMap;
+layout (set = 2, binding = 4) uniform sampler2D emissiveMap;
+
+layout (set = 3, binding = 0) uniform Material
+{
     vec4 baseColorFactor;
     vec4 emissiveFactor;
     float metallicFactor;
@@ -29,29 +46,14 @@ layout (set = 2, binding = 0) uniform Material {
     int useMetallicRoughnessMap;
     int useAOMap;
     int useEmissiveMap;
-};
-
-layout (set = 5, binding = 0) uniform Camera {
-    vec4 camPos;
-};
-
-const int MAX_LIGHTS = 4;
-layout (set = 6, binding = 0) uniform Lights {
-    vec4 lightPositions[MAX_LIGHTS];
-    vec4 lightColors[MAX_LIGHTS];
-    ivec4 lightCount;
-};
-
-layout (set = 7, binding = 0) uniform samplerCube irradianceMap;
-layout (set = 8, binding = 0) uniform samplerCube prefilterMap;
-layout (set = 9, binding = 0) uniform sampler2D brdfLUT;
+} material;
 
 const float PI = 3.14159265359;
 
 float DistributionGGX(vec3 N, vec3 H, float roughness)
 {
     float a = roughness * roughness;
-    float a2 = a*a;
+    float a2 = a * a;
     float NdotH = max(dot(N, H), 0.0);
     float NdotH2 = NdotH*NdotH;
 
@@ -65,7 +67,7 @@ float DistributionGGX(vec3 N, vec3 H, float roughness)
 float GeometrySchlickGGX(float NdotV, float roughness)
 {
     float r = (roughness + 1.0);
-    float k = (r*r) / 8.0;
+    float k = (r * r) / 8.0;
 
     float nom   = NdotV;
     float denom = NdotV * (1.0 - k) + k;
@@ -102,40 +104,40 @@ mat3 calculateTBN(vec3 N, vec3 T, float handedness)
 
 void main() {
     vec3 N = normalize(normal);
-    if (useNormalMap != 0)
+    if (material.useNormalMap != 0)
     {
         mat3 TBN = calculateTBN(N, tangent.xyz, tangent.w);
         vec3 normalFromMap = texture(normalMap, textCoord).rgb * 2.0 - 1.0;
         N = normalize(TBN * normalFromMap);
     }
 
-    vec3 V = normalize(camPos.xyz - worldPos);
+    vec3 V = normalize(scene.camPos.xyz - worldPos);
 
-    vec3 albedo = baseColorFactor.rgb;
-    if (useAlbedoMap != 0)
+    vec3 albedo = material.baseColorFactor.rgb;
+    if (material.useAlbedoMap != 0)
     {
         albedo *= texture(albedoMap, textCoord).rgb;
     }
 
     float metallic = 0.0;
     float roughness = 0.5;
-    if (useMetallicRoughnessMap != 0)
+    if (material.useMetallicRoughnessMap != 0)
     {
         vec4 mr = texture(metallicRoughnessMap, textCoord);
-        metallic = metallicFactor * mr.b;
-        roughness = roughnessFactor * mr.g;
+        metallic = material.metallicFactor * mr.b;
+        roughness = material.roughnessFactor * mr.g;
     }
 
     float ao = 1.0;
-    if (useAOMap != 0)
+    if (material.useAOMap != 0)
     {
         ao = texture(aoMap, textCoord).r;
     }
 
     vec3 emissive = vec3(0.0);
-    if (useEmissiveMap != 0)
+    if (material.useEmissiveMap != 0)
     {
-        emissive = emissiveFactor.rgb * texture(emissiveMap, textCoord).rgb;
+        emissive = material.emissiveFactor.rgb * texture(emissiveMap, textCoord).rgb;
     }
 
     vec3 Lo = vec3(0.0);
@@ -144,12 +146,12 @@ void main() {
     int count = 0; // lol
     for (int i = 0 ; i < count; i++)
     {
-        vec3 L = normalize(lightPositions[i].xyz - worldPos);
+        vec3 L = normalize(scene.lightPositions[i].xyz - worldPos);
         vec3 H = normalize(V + L);
 
-        float distance = length(lightPositions[i].xyz - worldPos);
+        float distance = length(scene.lightPositions[i].xyz - worldPos);
         float attenuation = 1.0 / (distance*distance);
-        vec3 radiance = lightColors[i].rgb * attenuation;
+        vec3 radiance = scene.lightColors[i].rgb * attenuation;
 
         float NDF = DistributionGGX(N, H, roughness);
         float G = GeometrySmith(N, V, L, roughness);

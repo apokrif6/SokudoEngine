@@ -14,22 +14,25 @@ layout (location = 2) out vec2 textCoord;
 layout (location = 3) out vec4 tangent;
 layout (location = 4) out vec4 vertColor;
 
-const int MAX_BONES = 200;
-
-layout (set = 1, binding = 0) uniform Matrices {
+layout (set = 0, binding = 0) uniform GlobalScene
+{
     mat4 view;
     mat4 projection;
-};
+    vec4 camPos;
+    vec4 lightPositions[4];
+    vec4 lightColors[4];
+    ivec4 lightCount;
+} scene;
 
-layout (set = 3, binding = 0) uniform Bones {
-    mat4 bones[MAX_BONES];
-};
-
-layout (set = 4, binding = 0) uniform Model {
+const int MAX_BONES = 200;
+layout (set = 1, binding = 0) uniform PrimitiveData
+{
     mat4 model;
-};
+    mat4 bones[MAX_BONES];
+} primitiveData;
 
-layout (push_constant) uniform PrimitiveFlagsPushConstants {
+layout (push_constant) uniform PrimitiveFlagsPushConstants
+{
     int useSkinning;
 } pushConstants;
 
@@ -39,18 +42,18 @@ void main()
 
     if (pushConstants.useSkinning == 1)
     {
-        boneTransform  = bones[aBoneIDs[0]] * aWeights[0];
-        boneTransform += bones[aBoneIDs[1]] * aWeights[1];
-        boneTransform += bones[aBoneIDs[2]] * aWeights[2];
-        boneTransform += bones[aBoneIDs[3]] * aWeights[3];
+        boneTransform  = primitiveData.bones[aBoneIDs[0]] * aWeights[0];
+        boneTransform += primitiveData.bones[aBoneIDs[1]] * aWeights[1];
+        boneTransform += primitiveData.bones[aBoneIDs[2]] * aWeights[2];
+        boneTransform += primitiveData.bones[aBoneIDs[3]] * aWeights[3];
     }
 
     vec4 animPos = boneTransform * vec4(aPos, 1.0);
 
-    vec4 worldPosition = model * animPos;
+    vec4 worldPosition = primitiveData.model * animPos;
     worldPos = worldPosition.xyz;
 
-    normal = normalize(mat3(model) * mat3(boneTransform) * aNormal);
+    normal = normalize(mat3(primitiveData.model) * mat3(boneTransform) * aNormal);
 
     tangent.xyz = normalize(normal * aTangent.xyz);
     tangent.w = aTangent.w;
@@ -58,5 +61,5 @@ void main()
     textCoord = aUV;
     vertColor = aColor;
 
-    gl_Position = projection * view * worldPosition;
+    gl_Position = scene.projection * scene.view * worldPosition;
 }

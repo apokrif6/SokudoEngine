@@ -8,7 +8,7 @@ bool Core::Renderer::PipelineLayout::init(VkRenderData& renderData, VkTextureDat
 {
     // TODO
     // replace it with data from pipelineLayoutConfig
-    VkDescriptorSetLayout layouts[] = {renderData.rdPerspectiveViewMatrixUBO.rdUBODescriptorLayout};
+    VkDescriptorSetLayout layouts[] = {renderData.rdGlobalSceneDescriptorLayout};
 
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;

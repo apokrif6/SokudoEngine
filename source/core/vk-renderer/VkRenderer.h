@@ -65,8 +65,6 @@ public:
     // move to Sandbox
     bool loadMeshWithAssimp();
 
-    void initCaptureResources();
-
 private:
     Timer mUploadToVBOTimer{};
     Timer mUploadToUBOTimer{};
@@ -77,6 +75,14 @@ private:
     VkDeviceSize mMinUniformBufferOffsetAlignment = 0;
 
     std::vector<glm::mat4> mPerspectiveViewMatrices{};
+
+    void updateGlobalSceneData();
+
+    void initCaptureResources();
+
+    void initPrimitiveGlobalSceneDescriptorSet();
+
+    void updateGlobalSceneDescriptorWrite();
 
     unsigned int VertexBufferSize = 2000;
 
@@ -100,8 +106,6 @@ private:
 
     bool recreateSwapchain();
 
-    bool createUBO();
-
     bool createVBO();
 
     bool createRenderPass();
@@ -123,6 +127,8 @@ private:
     bool createDummyBonesTransformUBO();
 
     bool initVma();
+
+    bool createPrimitivePipeline();
 
     bool createDebugSkeletonPipelineLayout();
 

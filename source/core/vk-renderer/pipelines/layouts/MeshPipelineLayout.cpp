@@ -4,14 +4,50 @@
 bool Core::Renderer::MeshPipelineLayout::init(VkRenderData& renderData,
                                               VkPipelineLayout& pipelineLayout)
 {
-    std::array<VkDescriptorSetLayoutBinding, 5> textureBindings{};
+    std::vector<VkDescriptorSetLayoutBinding> sceneBindings = {
+        {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT},
+        {1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT},
+        {2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT},
+        {3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT}
+    };
 
-    for (uint32_t i = 0; i < textureBindings.size(); i++)
+    VkDescriptorSetLayoutCreateInfo sceneLayoutInfo{};
+    sceneLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    sceneLayoutInfo.bindingCount = static_cast<uint32_t>(sceneBindings.size());
+    sceneLayoutInfo.pBindings = sceneBindings.data();
+
+    if (vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &sceneLayoutInfo, nullptr,
+                                        &renderData.rdGlobalSceneDescriptorLayout) != VK_SUCCESS)
+    {
+        Logger::log(1, "%s error: failed to create scene descriptor layout\n", __FUNCTION__);
+        return false;
+    }
+
+    VkDescriptorSetLayoutBinding primitiveDataBinding{};
+    primitiveDataBinding.binding = 0;
+    primitiveDataBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    primitiveDataBinding.descriptorCount = 1;
+    primitiveDataBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    VkDescriptorSetLayoutCreateInfo primitiveDataLayoutInfo{};
+    primitiveDataLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    primitiveDataLayoutInfo.bindingCount = 1;
+    primitiveDataLayoutInfo.pBindings = &primitiveDataBinding;
+
+    if (vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &primitiveDataLayoutInfo, nullptr,
+                                     &renderData.rdPrimitiveDataDescriptorLayout) != VK_SUCCESS)
+    {
+        Logger::log(1, "%s error: failed to create primitive data descriptor layout\n", __FUNCTION__);
+        return false;
+    }
+
+    std::vector<VkDescriptorSetLayoutBinding> textureBindings(5);
+    for (size_t i = 0; i < textureBindings.size(); ++i)
     {
         textureBindings[i].binding = i;
         textureBindings[i].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         textureBindings[i].descriptorCount = 1;
-        textureBindings[i].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        textureBindings[i].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
     }
 
     VkDescriptorSetLayoutCreateInfo textureLayoutInfo{};
@@ -20,27 +56,9 @@ bool Core::Renderer::MeshPipelineLayout::init(VkRenderData& renderData,
     textureLayoutInfo.pBindings = textureBindings.data();
 
     if (vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &textureLayoutInfo, nullptr,
-                                    &renderData.rdMeshTextureDescriptorLayout) != VK_SUCCESS)
+                                    &renderData.rdPrimitiveTextureDescriptorLayout) != VK_SUCCESS)
     {
         Logger::log(1, "%s error: failed to create texture descriptor layout\n", __FUNCTION__);
-        return false;
-    }
-
-    VkDescriptorSetLayoutBinding viewBinding{};
-    viewBinding.binding = 0;
-    viewBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    viewBinding.descriptorCount = 1;
-    viewBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-
-    VkDescriptorSetLayoutCreateInfo viewLayoutInfo{};
-    viewLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    viewLayoutInfo.bindingCount = 1;
-    viewLayoutInfo.pBindings = &viewBinding;
-
-    if (vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &viewLayoutInfo, nullptr,
-                                    &renderData.rdMeshViewMatrixDescriptorLayout) != VK_SUCCESS)
-    {
-        Logger::log(1, "%s error: failed to create view matrix descriptor layout\n", __FUNCTION__);
         return false;
     }
 
@@ -56,147 +74,21 @@ bool Core::Renderer::MeshPipelineLayout::init(VkRenderData& renderData,
     materialLayoutInfo.pBindings = &materialBinding;
 
     if (vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &materialLayoutInfo, nullptr,
-                                    &renderData.rdMeshMaterialDescriptorLayout) != VK_SUCCESS)
+                                    &renderData.rdPrimitiveMaterialDescriptorLayout) != VK_SUCCESS)
     {
         Logger::log(1, "%s error: failed to create material descriptor layout\n", __FUNCTION__);
         return false;
     }
 
-    VkDescriptorSetLayoutBinding bonesBinding{};
-    bonesBinding.binding = 0;
-    bonesBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    bonesBinding.descriptorCount = 1;
-    bonesBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-
-    VkDescriptorSetLayoutCreateInfo bonesLayoutInfo{};
-    bonesLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    bonesLayoutInfo.bindingCount = 1;
-    bonesLayoutInfo.pBindings = &bonesBinding;
-
-    if (vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &bonesLayoutInfo, nullptr,
-                                    &renderData.rdMeshBonesTransformDescriptorLayout) != VK_SUCCESS)
-    {
-        Logger::log(1, "%s error: failed to create bones descriptor layout\n", __FUNCTION__);
-        return false;
-    }
-
-    VkDescriptorSetLayoutBinding modelBinding{};
-    modelBinding.binding = 0;
-    modelBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    modelBinding.descriptorCount = 1;
-    modelBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-
-    VkDescriptorSetLayoutCreateInfo modelLayoutInfo{};
-    modelLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    modelLayoutInfo.bindingCount = 1;
-    modelLayoutInfo.pBindings = &modelBinding;
-
-    if (vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &modelLayoutInfo, nullptr,
-                                    &renderData.rdMeshModelDescriptorLayout) != VK_SUCCESS)
-    {
-        Logger::log(1, "%s error: failed to create model descriptor layout\n", __FUNCTION__);
-        return false;
-    }
-
-    VkDescriptorSetLayoutBinding cameraBinding{};
-    cameraBinding.binding = 0;
-    cameraBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    cameraBinding.descriptorCount = 1;
-    cameraBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-
-    VkDescriptorSetLayoutCreateInfo cameraLayoutInfo{};
-    cameraLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    cameraLayoutInfo.bindingCount = 1;
-    cameraLayoutInfo.pBindings = &cameraBinding;
-
-    if (vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &cameraLayoutInfo, nullptr,
-                                    &renderData.rdMeshCameraDescriptorLayout) != VK_SUCCESS)
-    {
-        Logger::log(1, "%s error: failed to create camera descriptor layout\n", __FUNCTION__);
-        return false;
-    }
-
-    VkDescriptorSetLayoutBinding lightsBinding{};
-    lightsBinding.binding = 0;
-    lightsBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    lightsBinding.descriptorCount = 1;
-    lightsBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-
-    VkDescriptorSetLayoutCreateInfo lightsLayoutInfo{};
-    lightsLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    lightsLayoutInfo.bindingCount = 1;
-    lightsLayoutInfo.pBindings = &lightsBinding;
-
-    if (vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &lightsLayoutInfo, nullptr,
-                                    &renderData.rdMeshLightsDescriptorLayout) != VK_SUCCESS)
-    {
-        Logger::log(1, "%s error: failed to create lights descriptor layout\n", __FUNCTION__);
-        return false;
-    }
-    
-    VkDescriptorSetLayoutBinding environmentMapBinding{};
-    environmentMapBinding.binding = 0;
-    environmentMapBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    environmentMapBinding.descriptorCount = 1;
-    environmentMapBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-    VkDescriptorSetLayoutCreateInfo environmentMapLayoutInfo{};
-    environmentMapLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    environmentMapLayoutInfo.bindingCount = 1;
-    environmentMapLayoutInfo.pBindings = &environmentMapBinding;
-
-    if (vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &environmentMapLayoutInfo, nullptr,
-                                    &renderData.rdMeshEnvironmentMapDescriptorLayout) != VK_SUCCESS)
-    {
-        Logger::log(1, "%s error: failed to create environment map descriptor layout\n", __FUNCTION__);
-        return false;
-    }
-
-    VkDescriptorSetLayoutBinding prefilterMapBinding{};
-    prefilterMapBinding.binding = 0;
-    prefilterMapBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    prefilterMapBinding.descriptorCount = 1;
-    prefilterMapBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-    VkDescriptorSetLayoutCreateInfo prefilterMapLayoutInfo{};
-    prefilterMapLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    prefilterMapLayoutInfo.bindingCount = 1;
-    prefilterMapLayoutInfo.pBindings = &prefilterMapBinding;
-
-    if (vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &prefilterMapLayoutInfo, nullptr,
-                                   &renderData.rdMeshPrefilteredMapDescriptorLayout) != VK_SUCCESS)
-    {
-        Logger::log(1, "%s error: failed to create environment map descriptor layout\n", __FUNCTION__);
-        return false;
-    }
-
-    VkDescriptorSetLayoutBinding brdfLutBinding{};
-    brdfLutBinding.binding = 0;
-    brdfLutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    brdfLutBinding.descriptorCount = 1;
-    brdfLutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-    VkDescriptorSetLayoutCreateInfo brdfLutLayoutInfo{};
-    brdfLutLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    brdfLutLayoutInfo.bindingCount = 1;
-    brdfLutLayoutInfo.pBindings = &brdfLutBinding;
-
-    if (vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &brdfLutLayoutInfo, nullptr,
-                                    &renderData.rdMeshBRDFLUTDescriptorLayout) != VK_SUCCESS)
-    {
-        Logger::log(1, "%s error: failed to create BRDF LUT descriptor layout\n", __FUNCTION__);
-        return false;
-    }
-
-    VkDescriptorSetLayout layouts[] = {
-        renderData.rdMeshTextureDescriptorLayout, renderData.rdMeshViewMatrixDescriptorLayout,
-        renderData.rdMeshMaterialDescriptorLayout, renderData.rdMeshBonesTransformDescriptorLayout,
-        renderData.rdMeshModelDescriptorLayout, renderData.rdMeshCameraDescriptorLayout,
-        renderData.rdMeshLightsDescriptorLayout, renderData.rdMeshEnvironmentMapDescriptorLayout,
-        renderData.rdMeshPrefilteredMapDescriptorLayout, renderData.rdMeshBRDFLUTDescriptorLayout};
+    const VkDescriptorSetLayout layouts[] = {
+        renderData.rdGlobalSceneDescriptorLayout,
+        renderData.rdPrimitiveDataDescriptorLayout,
+        renderData.rdPrimitiveTextureDescriptorLayout,
+        renderData.rdPrimitiveMaterialDescriptorLayout
+    };
 
     VkPushConstantRange pushConstantRange{};
-    pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
     pushConstantRange.offset = 0;
     pushConstantRange.size = sizeof(PrimitiveFlagsPushConstants);
 
@@ -217,19 +109,11 @@ bool Core::Renderer::MeshPipelineLayout::init(VkRenderData& renderData,
     return true;
 }
 
-void Core::Renderer::MeshPipelineLayout::cleanup(VkRenderData& renderData,
-                                                 VkPipelineLayout& pipelineLayout)
+void Core::Renderer::MeshPipelineLayout::cleanup(VkRenderData& renderData, VkPipelineLayout& pipelineLayout)
 {
-    vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdMeshTextureDescriptorLayout, nullptr);
-    vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdMeshViewMatrixDescriptorLayout, nullptr);
-    vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdMeshMaterialDescriptorLayout, nullptr);
-    vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdMeshBonesTransformDescriptorLayout,
-                                 nullptr);
-    vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdMeshModelDescriptorLayout, nullptr);
-    vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdMeshCameraDescriptorLayout, nullptr);
-    vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdMeshLightsDescriptorLayout, nullptr);
-    vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdMeshEnvironmentMapDescriptorLayout, nullptr);
-    vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdMeshPrefilteredMapDescriptorLayout, nullptr);
-    vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdMeshBRDFLUTDescriptorLayout, nullptr);
+    vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdGlobalSceneDescriptorLayout, nullptr);
+    vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdPrimitiveDataDescriptorLayout, nullptr);
+    vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdPrimitiveTextureDescriptorLayout, nullptr);
+    vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdPrimitiveMaterialDescriptorLayout,nullptr);
     vkDestroyPipelineLayout(renderData.rdVkbDevice.device, pipelineLayout, nullptr);
 }

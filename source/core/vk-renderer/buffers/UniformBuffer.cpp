@@ -5,7 +5,8 @@
 #include "core/vk-renderer/debug/DebugUtils.h"
 
 bool Core::Renderer::UniformBuffer::init(VkRenderData& renderData, VkUniformBufferData& UBOData,
-                                         size_t bufferSize, const std::string& name)
+                                         size_t bufferSize, const std::string& name, VkDescriptorSetLayout customLayout,
+                                         std::vector<VkDescriptorPoolSize> extraPoolSizes)
 {
     VkBufferCreateInfo bufferInfo{};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -30,33 +31,51 @@ bool Core::Renderer::UniformBuffer::init(VkRenderData& renderData, VkUniformBuff
     Debug::setObjectName(renderData.rdVkbDevice.device, (uint64_t)UBOData.rdUniformBuffer,
                                          VK_OBJECT_TYPE_BUFFER, UBOData.rdName);
 
-    VkDescriptorSetLayoutBinding uboBind{};
-    uboBind.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    uboBind.binding = 0;
-    uboBind.descriptorCount = 1;
-    uboBind.pImmutableSamplers = nullptr;
-    uboBind.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+    UBOData.ownsLayout = true;
 
-    VkDescriptorSetLayoutCreateInfo uboCreateInfo{};
-    uboCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    uboCreateInfo.bindingCount = 1;
-    uboCreateInfo.pBindings = &uboBind;
-
-    if (vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &uboCreateInfo, nullptr,
-                                    &UBOData.rdUBODescriptorLayout) != VK_SUCCESS)
+    if (customLayout != VK_NULL_HANDLE)
     {
-        Logger::log(1, "%s error: could not create UBO descriptor set layout\n", __FUNCTION__);
-        return false;
+        // create complex layout e.g. (Binding 0: UBO, Binding 1: UBO, Binding 3: UBO)
+        // e.g. used to render primitive. GlobalScene plus IBL textures as one descriptor set
+        UBOData.rdUBODescriptorLayout = customLayout;
+        UBOData.ownsLayout = false;
+    }
+    else
+    {
+        // create standard layout with (Binding 0: UBO)
+        VkDescriptorSetLayoutBinding uboBind{};
+        uboBind.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uboBind.binding = 0;
+        uboBind.descriptorCount = 1;
+        uboBind.pImmutableSamplers = nullptr;
+        uboBind.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        VkDescriptorSetLayoutCreateInfo uboCreateInfo{};
+        uboCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        uboCreateInfo.bindingCount = 1;
+        uboCreateInfo.pBindings = &uboBind;
+
+        if (vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &uboCreateInfo, nullptr,
+                                        &UBOData.rdUBODescriptorLayout) != VK_SUCCESS)
+        {
+            Logger::log(1, "%s error: could not create UBO descriptor set layout\n", __FUNCTION__);
+            return false;
+        }
     }
 
-    VkDescriptorPoolSize poolSize{};
-    poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    poolSize.descriptorCount = 1;
+    std::vector<VkDescriptorPoolSize> poolSizes = {
+        {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}
+    };
+
+    if (!extraPoolSizes.empty())
+    {
+        poolSizes.insert(poolSizes.end(), extraPoolSizes.begin(), extraPoolSizes.end());
+    }
 
     VkDescriptorPoolCreateInfo descriptorPool{};
     descriptorPool.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    descriptorPool.poolSizeCount = 1;
-    descriptorPool.pPoolSizes = &poolSize;
+    descriptorPool.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+    descriptorPool.pPoolSizes = poolSizes.data();
     descriptorPool.maxSets = 1;
 
     if (vkCreateDescriptorPool(renderData.rdVkbDevice.device, &descriptorPool, nullptr, &UBOData.rdUBODescriptorPool) !=
@@ -96,7 +115,7 @@ bool Core::Renderer::UniformBuffer::init(VkRenderData& renderData, VkUniformBuff
 
     UBOData.rdUniformBufferSize = bufferSize;
 
-    Logger::log(1, "%s: created uniform buffer of size %i\n", __FUNCTION__, uboInfo.range);
+    Logger::log(1, "%s: created uniform buffer %s of size %i\n", __FUNCTION__, name.c_str(), uboInfo.range);
 
     return true;
 }
@@ -120,6 +139,15 @@ void Core::Renderer::UniformBuffer::uploadData(VkRenderData& renderData, VkUnifo
 }
 
 void Core::Renderer::UniformBuffer::uploadData(VkRenderData& renderData, VkUniformBufferData& UBOData,
+    const GlobalSceneData& globalSceneData)
+{
+    void* data;
+    vmaMapMemory(renderData.rdAllocator, UBOData.rdUniformBufferAlloc, &data);
+    std::memcpy(data, &globalSceneData, sizeof(GlobalSceneData));
+    vmaUnmapMemory(renderData.rdAllocator, UBOData.rdUniformBufferAlloc);
+}
+
+void Core::Renderer::UniformBuffer::uploadData(VkRenderData& renderData, VkUniformBufferData& UBOData,
                                                std::vector<glm::mat4> matrices)
 {
     if (matrices.empty())
@@ -133,8 +161,7 @@ void Core::Renderer::UniformBuffer::uploadData(VkRenderData& renderData, VkUnifo
     vmaUnmapMemory(renderData.rdAllocator, UBOData.rdUniformBufferAlloc);
 }
 
-void Core::Renderer::UniformBuffer::uploadData(VkRenderData& renderData,
-                                               VkUniformBufferData& UBOData,
+void Core::Renderer::UniformBuffer::uploadData(VkRenderData& renderData, VkUniformBufferData& UBOData,
                                                const MaterialInfo& materialInfo)
 {
     void* data;
@@ -143,29 +170,17 @@ void Core::Renderer::UniformBuffer::uploadData(VkRenderData& renderData,
     vmaUnmapMemory(renderData.rdAllocator, UBOData.rdUniformBufferAlloc);
 }
 
-void Core::Renderer::UniformBuffer::uploadData(VkRenderData& renderData,
-                                               VkUniformBufferData& UBOData,
-                                               const CameraInfo& cameraInfo)
+void Core::Renderer::UniformBuffer::uploadData(VkRenderData& renderData, VkUniformBufferData& UBOData,
+                                                const PrimitiveData &primitiveData)
 {
     void* data;
     vmaMapMemory(renderData.rdAllocator, UBOData.rdUniformBufferAlloc, &data);
-    std::memcpy(data, &cameraInfo, sizeof(CameraInfo));
+    std::memcpy(data, &primitiveData, sizeof(PrimitiveData));
     vmaUnmapMemory(renderData.rdAllocator, UBOData.rdUniformBufferAlloc);
 }
 
-void Core::Renderer::UniformBuffer::uploadData(VkRenderData& renderData,
-                                               VkUniformBufferData& UBOData,
-                                               const LightsInfo& lightsInfo)
-{
-    void* data;
-    vmaMapMemory(renderData.rdAllocator, UBOData.rdUniformBufferAlloc, &data);
-    std::memcpy(data, &lightsInfo, sizeof(LightsInfo));
-    vmaUnmapMemory(renderData.rdAllocator, UBOData.rdUniformBufferAlloc);
-}
-
-void Core::Renderer::UniformBuffer::uploadData(VkRenderData& renderData,
-                                               VkUniformBufferData& UBOData,
-                                               const CaptureInfo& captureInfo)
+void Core::Renderer::UniformBuffer::uploadData(VkRenderData& renderData, VkUniformBufferData& UBOData,
+                                                const CaptureInfo &captureInfo)
 {
     void* data;
     vmaMapMemory(renderData.rdAllocator, UBOData.rdUniformBufferAlloc, &data);
@@ -173,10 +188,12 @@ void Core::Renderer::UniformBuffer::uploadData(VkRenderData& renderData,
     vmaUnmapMemory(renderData.rdAllocator, UBOData.rdUniformBufferAlloc);
 }
 
-
 void Core::Renderer::UniformBuffer::cleanup(VkRenderData& renderData, VkUniformBufferData& UBOData)
 {
     vkDestroyDescriptorPool(renderData.rdVkbDevice.device, UBOData.rdUBODescriptorPool, nullptr);
-    vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, UBOData.rdUBODescriptorLayout, nullptr);
+    if (UBOData.ownsLayout)
+    {
+        vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, UBOData.rdUBODescriptorLayout, nullptr);
+    }
     vmaDestroyBuffer(renderData.rdAllocator, UBOData.rdUniformBuffer, UBOData.rdUniformBufferAlloc);
 }
