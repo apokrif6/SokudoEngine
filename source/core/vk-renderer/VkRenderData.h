@@ -41,14 +41,14 @@ struct GlobalSceneData
     glm::ivec4 lightCount;
 };
 
-constexpr size_t maxNumberOfBones = 4;
+constexpr size_t maxNumberOfBones = 200;
 struct PrimitiveData
 {
     glm::mat4 model;
     glm::mat4 bones[maxNumberOfBones];
 };
 
-constexpr int MAX_MATERIALS = 128;
+constexpr size_t maxNumberOfMaterials = 128;
 struct MaterialInfo
 {
     glm::vec4 baseColorFactor = glm::vec4(1.f);
@@ -70,11 +70,11 @@ struct CameraInfo
     glm::vec4 position;
 };
 
-constexpr int MAX_LIGHTS = 4;
+constexpr size_t maxNumberOfLights = 4;
 struct LightsInfo
 {
-    glm::vec4 positions[MAX_LIGHTS];
-    glm::vec4 colors[MAX_LIGHTS];
+    glm::vec4 positions[maxNumberOfLights];
+    glm::vec4 colors[maxNumberOfLights];
     glm::ivec4 count;
 };
 

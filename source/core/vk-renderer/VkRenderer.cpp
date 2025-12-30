@@ -855,13 +855,13 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
 
     VkDescriptorPoolSize poolSize{};
     poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    poolSize.descriptorCount = MAX_MATERIALS * 5;
+    poolSize.descriptorCount = maxNumberOfMaterials * 5;
 
     VkDescriptorPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     poolInfo.poolSizeCount = 1;
     poolInfo.pPoolSizes = &poolSize;
-    poolInfo.maxSets = MAX_MATERIALS;
+    poolInfo.maxSets = maxNumberOfMaterials;
 
     if (vkCreateDescriptorPool(renderData.rdVkbDevice.device, &poolInfo, nullptr,
                                &renderData.rdMaterialDescriptorPool) != VK_SUCCESS)
