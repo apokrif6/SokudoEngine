@@ -4,8 +4,6 @@
 #include <memory>
 #include "UIWindow.h"
 #include "string"
-#include "imgui.h"
-#include "ImGuizmo.h"
 #include "core/scene/SceneEditor.h"
 
 namespace Core::UI
