@@ -3,8 +3,8 @@
 
 #include "VkBootstrap.h"
 
-bool Core::Renderer::PipelineLayout::init(VkRenderData& renderData, VkTextureData& textureData,
-                                          VkPipelineLayout& pipelineLayout, const PipelineLayoutConfig& pipelineLayoutConfig)
+bool Core::Renderer::PipelineLayout::init(VkRenderData& renderData, VkPipelineLayout& pipelineLayout,
+                                          const PipelineLayoutConfig& pipelineLayoutConfig)
 {
     // TODO
     // replace it with data from pipelineLayoutConfig

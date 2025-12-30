@@ -29,7 +29,6 @@
 #include <algorithm>
 #include <glm/gtc/matrix_transform.hpp>
 #include "core/vk-renderer/pipelines/DebugSkeletonPipeline.h"
-#include "core/vk-renderer/pipelines/layouts/DebugSkeletonPipelineLayout.h"
 #include "core/engine/Engine.h"
 #include "core/vk-renderer/viewport/ViewportRenderpass.h"
 #include "core/vk-renderer/viewport/ViewportTarget.h"
@@ -395,7 +394,7 @@ void Core::Renderer::VkRenderer::cleanup(VkRenderData& renderData)
 
     MeshPipelineLayout::cleanup(renderData, renderData.rdMeshPipelineLayout);
     PipelineLayout::cleanup(renderData, renderData.rdPipelineLayout);
-    DebugSkeletonPipelineLayout::cleanup(renderData, renderData.rdDebugSkeletonPipelineLayout);
+    PipelineLayout::cleanup(renderData, renderData.rdDebugSkeletonPipelineLayout);
     PipelineLayout::cleanup(renderData, renderData.rdSkyboxPipelineLayout);
     PipelineLayout::cleanup(renderData, renderData.rdHDRToCubemapPipelineLayout);
     PipelineLayout::cleanup(renderData, renderData.rdIrradiancePipelineLayout);
@@ -694,9 +693,9 @@ bool Core::Renderer::VkRenderer::createViewportRenderpass()
 
 bool Core::Renderer::VkRenderer::createPipelineLayout()
 {
-    if (!PipelineLayout::init(Engine::getInstance().getRenderData(),
-                                              Engine::getInstance().getRenderData().rdPlaceholderTexture,
-                                              Engine::getInstance().getRenderData().rdPipelineLayout))
+    auto& renderData = Engine::getInstance().getRenderData();
+
+    if (!PipelineLayout::init(renderData, renderData.rdPipelineLayout))
     {
         Logger::log(1, "%s error: could not init pipeline layout\n", __FUNCTION__);
         return false;
@@ -985,9 +984,9 @@ void Core::Renderer::VkRenderer::updateGlobalSceneDescriptorWrite()
 
 bool Core::Renderer::VkRenderer::createDebugSkeletonPipelineLayout()
 {
-    if (!DebugSkeletonPipelineLayout::init(
-            Engine::getInstance().getRenderData(),
-            Engine::getInstance().getRenderData().rdDebugSkeletonPipelineLayout))
+    auto& renderData = Engine::getInstance().getRenderData();
+
+    if (!PipelineLayout::init(renderData, renderData.rdDebugSkeletonPipelineLayout))
     {
         Logger::log(1, "%s error: could not init debug skeleton pipeline layout\n", __FUNCTION__);
         return false;

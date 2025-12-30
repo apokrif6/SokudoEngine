@@ -7,8 +7,8 @@ namespace Core::Renderer
 class PipelineLayout
 {
 public:
-    static bool init(VkRenderData& renderData, VkTextureData& textureData,
-                     VkPipelineLayout& pipelineLayout, const PipelineLayoutConfig& pipelineLayoutConfig = {});
+    static bool init(VkRenderData& renderData, VkPipelineLayout& pipelineLayout,
+                     const PipelineLayoutConfig& pipelineLayoutConfig = {});
 
     static void cleanup(VkRenderData& renderData, VkPipelineLayout& pipelineLayout);
 };
