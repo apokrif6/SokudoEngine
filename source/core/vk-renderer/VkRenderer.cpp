@@ -695,7 +695,10 @@ bool Core::Renderer::VkRenderer::createPipelineLayout()
 {
     auto& renderData = Engine::getInstance().getRenderData();
 
-    if (!PipelineLayout::init(renderData, renderData.rdPipelineLayout))
+    auto pipelineLayoutConfig = PipelineLayoutConfig{};
+    pipelineLayoutConfig.setLayouts = {renderData.rdGlobalSceneDescriptorLayout};
+
+    if (!PipelineLayout::init(renderData, renderData.rdPipelineLayout, pipelineLayoutConfig))
     {
         Logger::log(1, "%s error: could not init pipeline layout\n", __FUNCTION__);
         return false;
@@ -986,7 +989,10 @@ bool Core::Renderer::VkRenderer::createDebugSkeletonPipelineLayout()
 {
     auto& renderData = Engine::getInstance().getRenderData();
 
-    if (!PipelineLayout::init(renderData, renderData.rdDebugSkeletonPipelineLayout))
+    auto pipelineLayoutConfig = PipelineLayoutConfig{};
+    pipelineLayoutConfig.setLayouts = {renderData.rdGlobalSceneDescriptorLayout};
+
+    if (!PipelineLayout::init(renderData, renderData.rdDebugSkeletonPipelineLayout, pipelineLayoutConfig))
     {
         Logger::log(1, "%s error: could not init debug skeleton pipeline layout\n", __FUNCTION__);
         return false;
@@ -1044,22 +1050,12 @@ bool Core::Renderer::VkRenderer::createSkyboxPipelineLayout()
 {
     auto& renderData = Engine::getInstance().getRenderData();
 
-    std::vector layouts = {renderData.rdGlobalSceneDescriptorLayout};
+    auto pipelineLayoutConfig = PipelineLayoutConfig{};
+    pipelineLayoutConfig.setLayouts = {renderData.rdGlobalSceneDescriptorLayout, renderData.rdSkyboxData.descriptorSetLayout};
 
-    if (renderData.rdSkyboxData.descriptorSetLayout != VK_NULL_HANDLE)
+    if (!PipelineLayout::init(renderData, renderData.rdSkyboxPipelineLayout, pipelineLayoutConfig))
     {
-        layouts.push_back(renderData.rdSkyboxData.descriptorSetLayout);
-    }
-
-    VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
-    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(layouts.size());
-    pipelineLayoutInfo.pSetLayouts = layouts.data();
-
-    if (vkCreatePipelineLayout(renderData.rdVkbDevice.device, &pipelineLayoutInfo, nullptr,
-                               &renderData.rdSkyboxPipelineLayout) != VK_SUCCESS)
-    {
-        Logger::log(1, "%s error: could not create cubemap pipeline layout", __FUNCTION__);
+        Logger::log(1, "%s error: could not init skybox pipeline layout\n", __FUNCTION__);
         return false;
     }
 

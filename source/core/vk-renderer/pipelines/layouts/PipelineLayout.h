@@ -8,7 +8,7 @@ class PipelineLayout
 {
 public:
     static bool init(VkRenderData& renderData, VkPipelineLayout& pipelineLayout,
-                     const PipelineLayoutConfig& pipelineLayoutConfig = {});
+                     const PipelineLayoutConfig& pipelineLayoutConfig);
 
     static void cleanup(VkRenderData& renderData, VkPipelineLayout& pipelineLayout);
 };
