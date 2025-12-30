@@ -37,18 +37,6 @@ public:
         ImGui::SameLine();
         ImGui::Text("ms");
 
-        ImGui::Text("Matrix Generation Time:");
-        ImGui::SameLine();
-        ImGui::Text("%s", std::to_string(renderData.rdMatrixGenerateTime).c_str());
-        ImGui::SameLine();
-        ImGui::Text("ms");
-
-        ImGui::Text("Matrix Upload Time:");
-        ImGui::SameLine();
-        ImGui::Text("%s", std::to_string(renderData.rdUploadToUBOTime).c_str());
-        ImGui::SameLine();
-        ImGui::Text("ms");
-
         mScenePlot.push(renderData.rdUpdateSceneProfilingTime);
         mScenePlot.draw("Scene Update Time");
 

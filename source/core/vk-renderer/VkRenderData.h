@@ -253,9 +253,6 @@ struct VkRenderData
 
 #pragma region Profiling
     float rdFrameTime = 0.f;
-    float rdMatrixGenerateTime = 0.f;
-    float rdUploadToVBOTime = 0.f;
-    float rdUploadToUBOTime = 0.f;
     float rdAnimationBonesTransformCalculationTime = 0.f;
     float rdUpdateSceneProfilingTime = 0.f;
 #pragma endregion
