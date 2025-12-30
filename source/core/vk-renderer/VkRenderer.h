@@ -57,7 +57,7 @@ public:
 
     void cleanup(VkRenderData& renderData);
 
-    const std::vector<glm::mat4>& getPerspectiveViewMatrices() { return mPerspectiveViewMatrices; }
+    const GlobalSceneData& getGlobalSceneData() { return mGlobalSceneData; }
 
     void resizeViewportTarget(glm::int2 size);
 
@@ -74,7 +74,7 @@ private:
 
     VkDeviceSize mMinUniformBufferOffsetAlignment = 0;
 
-    std::vector<glm::mat4> mPerspectiveViewMatrices{};
+    GlobalSceneData mGlobalSceneData{};
 
     void updateGlobalSceneData();
 

@@ -39,10 +39,11 @@ public:
 
         if (auto selectedObject = sceneObjectSelection.selectedObject.lock())
         {
-            auto perspectiveViewMatrices =
-                Engine::getInstance().getSystem<Renderer::VkRenderer>()->getPerspectiveViewMatrices();
-            glm::mat4 view = perspectiveViewMatrices[0];
-            glm::mat4 projection = perspectiveViewMatrices[1];
+            auto globalSceneData =
+                Engine::getInstance().getSystem<Renderer::VkRenderer>()->getGlobalSceneData();
+
+            glm::mat4 view = globalSceneData.view;
+            glm::mat4 projection = globalSceneData.projection;
 
             ImGuizmo::BeginFrame();
 
