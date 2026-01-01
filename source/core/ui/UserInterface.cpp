@@ -199,7 +199,6 @@ void Core::Renderer::UserInterface::draw(VkRenderData& renderData)
 
 void Core::Renderer::UserInterface::cleanup(VkRenderData& renderData)
 {
-    vkDestroyDescriptorPool(renderData.rdVkbDevice.device, renderData.rdImguiDescriptorPool, nullptr);
     ImGui_ImplVulkan_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
