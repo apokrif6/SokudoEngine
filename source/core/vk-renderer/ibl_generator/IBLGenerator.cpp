@@ -785,7 +785,7 @@ bool Core::Renderer::IBLGenerator::convertCubemapToPrefilteredMap(VkRenderData& 
     VkCubemapData& prefilteredMapData)
 {
     constexpr uint32_t prefilteredMapSize = 512;
-    constexpr uint32_t maxMipLevels = 5;
+    constexpr uint32_t maxMipLevels = 10;
 
     VkImageCreateInfo imageInfo{};
     imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;

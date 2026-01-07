@@ -182,7 +182,7 @@ void main() {
     vec3 diffuseIBL = irradiance * albedo;
 
     vec3 R = reflect(-V, N);
-    const float MAX_REFLECTION_LOD = 4.0; //maxMipLevels is 5 right now
+    const float MAX_REFLECTION_LOD = 9.0; //maxMipLevels is 10 right now
 
     vec3 prefilteredColor = textureLod(prefilterMap, R, roughness * MAX_REFLECTION_LOD).rgb;
 
