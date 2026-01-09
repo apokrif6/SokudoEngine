@@ -1,5 +1,5 @@
 #include "Serialization.h"
-#include "core/scene/objects/Mesh.h"
+#include "../components/MeshComponent.h"
 #include <fstream>
 
 YAML::Node Core::Scene::Serialization::serialize(const Scene& scene)

@@ -30,7 +30,7 @@ public:
                 TransformInspectorUIWindow::getBody();
             }
 
-            if (auto* meshComponent = selectedObject->getComponent<Renderer::Mesh>())
+            if (auto* meshComponent = selectedObject->getComponent<Component::MeshComponent>())
             {
                 if (ImGui::BeginTabBar("SceneSubTabs"))
                 {

@@ -15,7 +15,7 @@ public:
         auto& objectSelection = Engine::getInstance().getSystem<Scene::Scene>()->getSceneObjectSelection();
         auto selectedObject = objectSelection.selectedObject.lock();
 
-        auto* meshComponent = selectedObject->getComponent<Renderer::Mesh>();
+        auto* meshComponent = selectedObject->getComponent<Component::MeshComponent>();
         if (!meshComponent)
         {
             return true;

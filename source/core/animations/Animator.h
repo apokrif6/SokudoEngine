@@ -2,7 +2,7 @@
 
 #include "assimp/scene.h"
 #include "core/vk-renderer/VkRenderData.h"
-#include "core/scene/objects/Mesh.h"
+#include "../components/MeshComponent.h"
 #include "core/system/System.h"
 #include "core/system/Updatable.h"
 #include <core/tools/Timer.h>
@@ -12,11 +12,11 @@ namespace Core::Animations
 class Animator : public System::ISystem, public System::IUpdatable
 {
 public:
-    virtual void update(Renderer::VkRenderData& renderData, float deltaTime) override;
+    void update(Renderer::VkRenderData& renderData, float deltaTime) override;
 
-    void addMesh(Renderer::Mesh* mesh) { mMeshes.push_back(mesh); }
+    void addMesh(Component::MeshComponent* mesh) { mMeshes.push_back(mesh); }
 
-    void removeMesh(Renderer::Mesh* mesh)
+    void removeMesh(Component::MeshComponent* mesh)
     {
         if (auto it = std::find(mMeshes.begin(), mMeshes.end(), mesh); it != mMeshes.end())
         {
@@ -25,9 +25,9 @@ public:
     }
 
 private:
-    std::vector<Renderer::Mesh*> mMeshes;
+    std::vector<Component::MeshComponent*> mMeshes;
 
-    void updateBonesTransform(Renderer::Mesh* mesh, uint16_t animationToPlayIndex);
+    void updateBonesTransform(Component::MeshComponent* mesh, uint16_t animationToPlayIndex);
 
     glm::vec3 interpolatePositionClip(const std::vector<KeyframeVec3>& keyframes, float animationTime);
 

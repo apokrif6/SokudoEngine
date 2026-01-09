@@ -885,7 +885,7 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
     auto transformComponent = testObject->addComponent<Component::TransformComponent>();
     transformComponent->transform.position = {1, 0, 1};
 
-    auto meshComponent = testObject->addComponent<Mesh>(primitiveMeshData.skeleton);
+    auto meshComponent = testObject->addComponent<Component::MeshComponent>(primitiveMeshData.skeleton);
     for (auto& primitive : primitiveMeshData.primitives)
     {
         meshComponent->addPrimitive(primitive.vertices, primitive.indices, primitive.textures, renderData,

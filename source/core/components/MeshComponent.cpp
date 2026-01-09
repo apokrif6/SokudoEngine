@@ -1,4 +1,4 @@
-#include "Mesh.h"
+#include "MeshComponent.h"
 #include "core/vk-renderer/buffers/UniformBuffer.h"
 #include "core/engine/Engine.h"
 #include "core/animations/AnimationsUtils.h"
@@ -34,38 +34,38 @@ void buildDebugSkeletonLines(const Core::Animations::Skeleton& skeleton, const C
     }
 }
 
-Core::Renderer::Mesh::Mesh(Animations::Skeleton skeleton)
+Core::Component::MeshComponent::MeshComponent(Core::Animations::Skeleton skeleton)
     : mSkeleton(std::move(skeleton))
 {
 }
 
-Core::Renderer::Mesh::~Mesh() { Logger::log(1, "%s: Destroyed mesh for owner %s", __FUNCTION__, getOwner()->getName().c_str()); }
+Core::Component::MeshComponent::~MeshComponent() { Logger::log(1, "%s: Destroyed mesh for owner %s", __FUNCTION__, getOwner()->getName().c_str()); }
 
-void Core::Renderer::Mesh::onAddedToScene()
+void Core::Component::MeshComponent::onAddedToScene()
 {
     Logger::log(1, "%s: Mesh %s added to scene for owner", __FUNCTION__, getOwner()->getName().c_str());
 
     Engine::getInstance().getSystem<Animations::Animator>()->addMesh(this);
 }
 
-void Core::Renderer::Mesh::onRemovedFromScene()
+void Core::Component::MeshComponent::onRemovedFromScene()
 {
     Logger::log(1, "%s: Mesh %s removed from scene for owner", __FUNCTION__, getOwner()->getName().c_str());
 
     Engine::getInstance().getSystem<Animations::Animator>()->removeMesh(this);
 }
 
-void Core::Renderer::Mesh::addPrimitive(const std::vector<NewVertex>& vertexBufferData,
+void Core::Component::MeshComponent::addPrimitive(const std::vector<Renderer::NewVertex>& vertexBufferData,
                                         const std::vector<uint32_t>& indexBufferData,
-                                        const std::unordered_map<aiTextureType, VkTextureData>& textures,
-                                        VkRenderData& renderData, const MaterialInfo& materialInfo,
+                                        const std::unordered_map<aiTextureType, Renderer::VkTextureData>& textures,
+                                        Renderer::VkRenderData& renderData, const Renderer::MaterialInfo& materialInfo,
                                         const Animations::BonesInfo& bonesInfo, VkDescriptorSet materialDescriptorSet)
 {
     mPrimitives.emplace_back(vertexBufferData, indexBufferData, textures, materialInfo, bonesInfo, renderData,
                              materialDescriptorSet);
 }
 
-void Core::Renderer::Mesh::update(VkRenderData& renderData)
+void Core::Component::MeshComponent::update(Renderer::VkRenderData& renderData)
 {
     // TODO
     // should be replaced with local transform, like SceneComponent
@@ -87,7 +87,7 @@ void Core::Renderer::Mesh::update(VkRenderData& renderData)
 
         if (shouldDrawDebugSkeleton())
         {
-            std::vector<Debug::DebugBone> debugBones;
+            std::vector<Renderer::Debug::DebugBone> debugBones;
             buildDebugSkeletonLines(mSkeleton, primitive.getBonesInfo(), debugBones, mSkeleton.getRootNode(),
                                     transformComponent->transform.getMatrix(), transformComponent->transform.getMatrix());
             mSkeleton.updateDebug(renderData, debugBones);
@@ -95,7 +95,7 @@ void Core::Renderer::Mesh::update(VkRenderData& renderData)
     }
 }
 
-void Core::Renderer::Mesh::draw(VkRenderData& renderData)
+void Core::Component::MeshComponent::draw(Renderer::VkRenderData& renderData)
 {
     for (auto& primitive : mPrimitives)
     {
@@ -108,7 +108,7 @@ void Core::Renderer::Mesh::draw(VkRenderData& renderData)
     }
 }
 
-void Core::Renderer::Mesh::cleanup(VkRenderData& renderData)
+void Core::Component::MeshComponent::cleanup(Renderer::VkRenderData& renderData)
 {
     for (auto& primitive : mPrimitives)
     {
@@ -118,7 +118,7 @@ void Core::Renderer::Mesh::cleanup(VkRenderData& renderData)
     mSkeleton.cleanup(renderData);
 }
 
-YAML::Node Core::Renderer::Mesh::serialize() const
+YAML::Node Core::Component::MeshComponent::serialize() const
 {
     YAML::Node node = getOwner()->serialize();
     node["meshFile"] = mMeshFilePath;
@@ -131,7 +131,7 @@ YAML::Node Core::Renderer::Mesh::serialize() const
     return node;
 }
 
-void Core::Renderer::Mesh::deserialize(const YAML::Node& node)
+void Core::Component::MeshComponent::deserialize(const YAML::Node& node)
 {
     getOwner()->deserialize(node);
     mMeshFilePath = node["meshFile"].as<std::string>();

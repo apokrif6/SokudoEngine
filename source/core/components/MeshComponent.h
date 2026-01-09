@@ -6,16 +6,16 @@
 #include "core/vk-renderer/Primitive.h"
 
 // should be moved to Component folder, and renamed to MeshComponent
-namespace Core::Renderer
+namespace Core::Component
 {
 // right now every mesh is a skeletal mesh
 // in future animation-related code should be moved to a separate SkeletalMesh class
-class Mesh : public Component::Component
+class MeshComponent : public Component
 {
 public:
-    explicit Mesh(Animations::Skeleton skeleton);
+    explicit MeshComponent(Animations::Skeleton skeleton);
 
-    ~Mesh() override;
+    ~MeshComponent() override;
 
     std::string_view getTypeName() const override { return "MeshComponent"; }
 
@@ -23,19 +23,19 @@ public:
 
     void onRemovedFromScene() override;
 
-    void addPrimitive(const std::vector<NewVertex>& vertexBufferData,
+    void addPrimitive(const std::vector<Renderer::NewVertex>& vertexBufferData,
                       const std::vector<uint32_t>& indexBufferData,
-                      const std::unordered_map<aiTextureType, VkTextureData>& textures,
-                      VkRenderData& renderData, const MaterialInfo& materialInfo,
+                      const std::unordered_map<aiTextureType, Renderer::VkTextureData>& textures,
+                      Renderer::VkRenderData& renderData, const Renderer::MaterialInfo& materialInfo,
                       const Animations::BonesInfo& bonesInfo, VkDescriptorSet materialDescriptorSet);
 
-    void update(VkRenderData& renderData) override;
+    void update(Renderer::VkRenderData& renderData) override;
 
-    void draw(VkRenderData& renderData) override;
+    void draw(Renderer::VkRenderData& renderData) override;
 
-    void cleanup(VkRenderData& renderData) override;
+    void cleanup(Renderer::VkRenderData& renderData) override;
 
-    [[nodiscard]] std::vector<Primitive>& getPrimitives() { return mPrimitives; }
+    [[nodiscard]] std::vector<Renderer::Primitive>& getPrimitives() { return mPrimitives; }
 
     [[nodiscard]] Animations::Skeleton& getSkeleton() { return mSkeleton; }
 
@@ -68,7 +68,7 @@ public:
 
     [[nodiscard]] Animations::AnimationClip& getCurrentAnimation() { return mAnimations[mCurrentAnimationIndex]; }
 
-    void initDebugSkeleton(VkRenderData& renderData) { mSkeleton.initDebug(renderData); }
+    void initDebugSkeleton(Renderer::VkRenderData& renderData) { mSkeleton.initDebug(renderData); }
 
     void setMeshFilePath(std::string path) { mMeshFilePath = std::move(path); }
 
@@ -79,7 +79,7 @@ public:
     void deserialize(const YAML::Node& node) override;
 
 private:
-    std::vector<Primitive> mPrimitives;
+    std::vector<Renderer::Primitive> mPrimitives;
     Animations::Skeleton mSkeleton;
     std::vector<Animations::AnimationClip> mAnimations;
     bool mShouldPlayAnimation = false;

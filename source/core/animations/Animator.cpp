@@ -4,7 +4,7 @@
 void Core::Animations::Animator::update(Renderer::VkRenderData& renderData, float deltaTime)
 {
     mAnimationBonesTransformCalculationTimer.start();
-    for (Renderer::Mesh* mesh : mMeshes)
+    for (Component::MeshComponent* mesh : mMeshes)
     {
         if (!mesh->shouldPlayAnimation())
         {
@@ -17,7 +17,7 @@ void Core::Animations::Animator::update(Renderer::VkRenderData& renderData, floa
     mAnimationTime += deltaTime;
 }
 
-void Core::Animations::Animator::updateBonesTransform(Renderer::Mesh* mesh, uint16_t animationToPlayIndex)
+void Core::Animations::Animator::updateBonesTransform(Component::MeshComponent* mesh, uint16_t animationToPlayIndex)
 {
     for (Renderer::Primitive& primitive : mesh->getPrimitives())
     {

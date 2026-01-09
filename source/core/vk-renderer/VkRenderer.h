@@ -7,7 +7,7 @@
 #include "core/tools/Camera.h"
 #include "core/events/EventListener.h"
 #include "Primitive.h"
-#include "core/scene/objects/Mesh.h"
+#include "../components/MeshComponent.h"
 #include "core/scene/Scene.h"
 #include "core/vk-renderer/viewport/ViewportTarget.h"
 #include "core/system/System.h"
