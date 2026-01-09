@@ -120,7 +120,8 @@ void Core::Component::MeshComponent::cleanup(Renderer::VkRenderData& renderData)
 
 YAML::Node Core::Component::MeshComponent::serialize() const
 {
-    YAML::Node node = getOwner()->serialize();
+    YAML::Node node;
+
     node["meshFile"] = mMeshFilePath;
     for (auto& animPath : mAnimationFiles)
     {
@@ -128,6 +129,7 @@ YAML::Node Core::Component::MeshComponent::serialize() const
     }
     node["shouldPlayAnimation"] = mShouldPlayAnimation;
     node["currentAnimationIndex"] = mCurrentAnimationIndex;
+
     return node;
 }
 
