@@ -1,32 +1,69 @@
 #include "SceneObject.h"
 #include "yaml-cpp/node/node.h"
-
 #include <algorithm>
+
+#include "core/components/ComponentFactory.h"
+#include "core/components/TransformComponent.h"
+
+void Core::Scene::SceneObject::onAddedToScene()
+{
+    for (auto& component : mComponents)
+    {
+        component->onAddedToScene();
+    }
+}
+
+void Core::Scene::SceneObject::onRemovedFromScene()
+{
+    for (auto& component : mComponents)
+    {
+        component->onRemovedFromScene();
+    }
+}
+
+void Core::Scene::SceneObject::update(Renderer::VkRenderData& renderData)
+{
+    for (auto& component : mComponents)
+    {
+        component->update(renderData);
+    }
+}
+
+void Core::Scene::SceneObject::draw(Renderer::VkRenderData& renderData)
+{
+    for (auto& component : mComponents)
+    {
+        component->draw(renderData);
+    }
+}
+
+void Core::Scene::SceneObject::cleanup(Renderer::VkRenderData& renderData)
+{
+    for (auto& component : mComponents)
+    {
+        component->cleanup(renderData);
+    }
+}
 
 YAML::Node Core::Scene::SceneObject::serialize() const
 {
     YAML::Node node;
-    node["type"] = static_cast<int>(getType());
     node["name"] = mName;
 
-    YAML::Node position;
-    position.push_back(mTransform.position.x);
-    position.push_back(mTransform.position.y);
-    position.push_back(mTransform.position.z);
-    node["transform"]["position"] = position;
+    YAML::Node componentsNode;
 
-    YAML::Node rotation;
-    rotation.push_back(mTransform.rotation.w);
-    rotation.push_back(mTransform.rotation.x);
-    rotation.push_back(mTransform.rotation.y);
-    rotation.push_back(mTransform.rotation.z);
-    node["transform"]["rotation"] = rotation;
+    for (const auto& component : mComponents)
+    {
+        if (auto serializable = dynamic_cast<ISerializable*>(component.get()))
+        {
+            YAML::Node compNode;
+            compNode["type"] = component->getTypeName().data();
+            compNode["data"] = serializable->serialize();
+            componentsNode.push_back(compNode);
+        }
+    }
 
-    YAML::Node scale;
-    scale.push_back(mTransform.scale.x);
-    scale.push_back(mTransform.scale.y);
-    scale.push_back(mTransform.scale.z);
-    node["transform"]["scale"] = scale;
+    node["components"] = componentsNode;
 
     return node;
 }
@@ -35,16 +72,23 @@ void Core::Scene::SceneObject::deserialize(const YAML::Node& node)
 {
     mName = node["name"].as<std::string>();
 
-    auto transformNode = node["transform"];
-    mTransform.position = glm::vec3(transformNode["position"][0].as<float>(), transformNode["position"][1].as<float>(),
-                                    transformNode["position"][2].as<float>());
+    const auto componentsNode = node["components"];
+    if (!componentsNode)
+    {
+        return;
+    }
 
-    mTransform.rotation = glm::quat(transformNode["rotation"][0].as<float>(), transformNode["rotation"][1].as<float>(),
-                                    transformNode["rotation"][2].as<float>(), transformNode["rotation"][3].as<float>());
+    for (const auto& componentNode : componentsNode)
+    {
+        const std::string type = componentNode["type"].as<std::string>();
 
-    mTransform.scale = glm::vec3(transformNode["scale"][0].as<float>(), transformNode["scale"][1].as<float>(),
-                                 transformNode["scale"][2].as<float>());
-};
+        auto component = Component::ComponentFactory::create(type);
+        component->setOwner(this);
+        component->deserialize(componentNode);
+
+        mComponents.push_back(std::move(component));
+    }
+}
 
 void Core::Scene::SceneObject::addChild(const std::shared_ptr<SceneObject>& child)
 {

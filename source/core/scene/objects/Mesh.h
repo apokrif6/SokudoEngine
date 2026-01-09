@@ -3,32 +3,31 @@
 #include "core/scene/objects/SceneObject.h"
 #include <utility>
 #include <vector>
-#include <memory>
 #include "core/vk-renderer/Primitive.h"
-#include "core/vk-renderer/debug/Skeleton.h"
 
+// should be moved to Component folder, and renamed to MeshComponent
 namespace Core::Renderer
 {
 // right now every mesh is a skeletal mesh
 // in future animation-related code should be moved to a separate SkeletalMesh class
-class Mesh : public Scene::SceneObject
+class Mesh : public Component::Component
 {
 public:
-    explicit Mesh(std::string name, Animations::Skeleton skeleton);
+    explicit Mesh(Animations::Skeleton skeleton);
 
     ~Mesh() override;
 
-    virtual void onAddedToScene() override;
+    std::string_view getTypeName() const override { return "MeshComponent"; }
 
-    virtual void onRemovedFromScene() override;
+    void onAddedToScene() override;
+
+    void onRemovedFromScene() override;
 
     void addPrimitive(const std::vector<NewVertex>& vertexBufferData,
                       const std::vector<uint32_t>& indexBufferData,
                       const std::unordered_map<aiTextureType, VkTextureData>& textures,
                       VkRenderData& renderData, const MaterialInfo& materialInfo,
                       const Animations::BonesInfo& bonesInfo, VkDescriptorSet materialDescriptorSet);
-
-    [[nodiscard]] Scene::ObjectType getType() const override { return Scene::ObjectType::Mesh; }
 
     void update(VkRenderData& renderData) override;
 

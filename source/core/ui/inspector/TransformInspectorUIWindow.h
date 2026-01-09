@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/components/TransformComponent.h"
 #include"core/ui/UIWindow.h"
 
 namespace Core::UI
@@ -12,7 +13,14 @@ public:
         auto& objectSelection = Engine::getInstance().getSystem<Scene::Scene>()->getSceneObjectSelection();
         auto selectedObject = objectSelection.selectedObject.lock();
 
-        auto& transform = selectedObject->getTransform();
+        auto* transformComponent = selectedObject->getComponent<Component::TransformComponent>();
+        if (!transformComponent)
+        {
+            ImGui::End();
+            return true;
+        }
+
+        auto& transform = transformComponent->transform;
 
         ImGui::Text("Selected: %s", selectedObject->getName().c_str());
         ImGui::Separator();

@@ -55,7 +55,13 @@ public:
                 ImGuizmo::SetRect(windowPos.x, windowPos.y, static_cast<float>(renderData.rdViewportTarget.size.x),
                                   static_cast<float>(renderData.rdViewportTarget.size.y));
 
-                Scene::Transform& sceneObjectTransform = selectedObject->getTransform();
+                auto* transformComponent = selectedObject->getComponent<Component::TransformComponent>();
+                if (!transformComponent)
+                {
+                    ImGui::End();
+                    return true;
+                }
+                Scene::Transform& sceneObjectTransform = transformComponent->transform;
 
                 glm::mat4 objectMatrix = sceneObjectTransform.getMatrix();
 

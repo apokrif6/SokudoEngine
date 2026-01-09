@@ -1,8 +1,8 @@
-#include <functional>
 #include "Mesh.h"
 #include "core/vk-renderer/buffers/UniformBuffer.h"
 #include "core/engine/Engine.h"
 #include "core/animations/AnimationsUtils.h"
+#include "core/components/TransformComponent.h"
 
 void buildDebugSkeletonLines(const Core::Animations::Skeleton& skeleton, const Core::Animations::BonesInfo& bonesInfo,
                              std::vector<Core::Renderer::Debug::DebugBone>& debugBones,
@@ -34,24 +34,23 @@ void buildDebugSkeletonLines(const Core::Animations::Skeleton& skeleton, const C
     }
 }
 
-Core::Renderer::Mesh::Mesh(std::string name, Animations::Skeleton skeleton)
-    : SceneObject(std::move(name)), mSkeleton(std::move(skeleton))
+Core::Renderer::Mesh::Mesh(Animations::Skeleton skeleton)
+    : mSkeleton(std::move(skeleton))
 {
-    Logger::log(1, "%s: Created mesh %s", __FUNCTION__, getName().c_str());
 }
 
-Core::Renderer::Mesh::~Mesh() { Logger::log(1, "%s: Destroyed mesh %s", __FUNCTION__, getName().c_str()); }
+Core::Renderer::Mesh::~Mesh() { Logger::log(1, "%s: Destroyed mesh for owner %s", __FUNCTION__, getOwner()->getName().c_str()); }
 
 void Core::Renderer::Mesh::onAddedToScene()
 {
-    Logger::log(1, "%s: Mesh %s added to scene", __FUNCTION__, getName().c_str());
+    Logger::log(1, "%s: Mesh %s added to scene for owner", __FUNCTION__, getOwner()->getName().c_str());
 
     Engine::getInstance().getSystem<Animations::Animator>()->addMesh(this);
 }
 
 void Core::Renderer::Mesh::onRemovedFromScene()
 {
-    Logger::log(1, "%s: Mesh %s removed to scene", __FUNCTION__, getName().c_str());
+    Logger::log(1, "%s: Mesh %s removed from scene for owner", __FUNCTION__, getOwner()->getName().c_str());
 
     Engine::getInstance().getSystem<Animations::Animator>()->removeMesh(this);
 }
@@ -68,17 +67,29 @@ void Core::Renderer::Mesh::addPrimitive(const std::vector<NewVertex>& vertexBuff
 
 void Core::Renderer::Mesh::update(VkRenderData& renderData)
 {
+    // TODO
+    // should be replaced with local transform, like SceneComponent
+    const auto* transformComponent =
+        getOwner()->getComponent<Core::Component::TransformComponent>();
+
+    if (!transformComponent)
+    {
+        Logger::log(3, "%s: Warning! Mesh %s has no TransformComponent!", __FUNCTION__, getOwner()->getName().c_str());
+        return;
+
+    }
+
     for (auto& primitive : mPrimitives)
     {
         primitive.uploadVertexBuffer(renderData);
         primitive.uploadIndexBuffer(renderData);
-        primitive.uploadUniformBuffer(renderData, getTransform().getMatrix());
+        primitive.uploadUniformBuffer(renderData, transformComponent->transform.getMatrix());
 
         if (shouldDrawDebugSkeleton())
         {
             std::vector<Debug::DebugBone> debugBones;
             buildDebugSkeletonLines(mSkeleton, primitive.getBonesInfo(), debugBones, mSkeleton.getRootNode(),
-                                    mTransform.getMatrix(), mTransform.getMatrix());
+                                    transformComponent->transform.getMatrix(), transformComponent->transform.getMatrix());
             mSkeleton.updateDebug(renderData, debugBones);
         }
     }
@@ -109,7 +120,7 @@ void Core::Renderer::Mesh::cleanup(VkRenderData& renderData)
 
 YAML::Node Core::Renderer::Mesh::serialize() const
 {
-    YAML::Node node = SceneObject::serialize();
+    YAML::Node node = getOwner()->serialize();
     node["meshFile"] = mMeshFilePath;
     for (auto& animPath : mAnimationFiles)
     {
@@ -122,7 +133,7 @@ YAML::Node Core::Renderer::Mesh::serialize() const
 
 void Core::Renderer::Mesh::deserialize(const YAML::Node& node)
 {
-    SceneObject::deserialize(node);
+    getOwner()->deserialize(node);
     mMeshFilePath = node["meshFile"].as<std::string>();
     mAnimationFiles.clear();
     if (node["animations"])

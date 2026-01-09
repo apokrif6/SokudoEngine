@@ -1,6 +1,8 @@
 #pragma once
 
 #include <string>
+
+#include "core/components/Component.h"
 #include "core/scene/Transform.h"
 #include "core/vk-renderer/VkRenderData.h"
 #include "yaml-cpp/node/node.h"
@@ -8,31 +10,49 @@
 
 namespace Core::Scene
 {
-enum class ObjectType
-{
-    Empty,
-    Mesh
-};
-
-class SceneObject : public Serialization::ISerializable
+class SceneObject final : public Serialization::ISerializable
 {
 public:
     explicit SceneObject(std::string name) : mName(std::move(name)) {}
     virtual ~SceneObject() = default;
 
-    [[nodiscard]] virtual ObjectType getType() const { return ObjectType::Empty; }
+    template<typename T, typename... Args>
+        T* addComponent(Args&&... args)
+    {
+        static_assert(std::is_base_of_v<Component::Component, T>);
 
-    virtual void onAddedToScene() {}
+        auto component = std::make_unique<T>(std::forward<Args>(args)...);
+        T* ptr = component.get();
 
-    virtual void onRemovedFromScene() {}
+        ptr->setOwner(this);
+        ptr->onAdded();
 
-    virtual void update(Renderer::VkRenderData& renderData) {};
+        mComponents.emplace_back(std::move(component));
+        return ptr;
+    }
 
-    virtual void draw(Renderer::VkRenderData& renderData) {};
+    template<typename T>
+    T* getComponent() const
+    {
+        for (auto& component : mComponents)
+        {
+            if (auto castedComponent = dynamic_cast<T*>(component.get()))
+            {
+                return castedComponent;
+            }
+        }
+        return nullptr;
+    }
 
-    virtual void cleanup(Renderer::VkRenderData& renderData) {};
+    void onAddedToScene();
 
-    Transform& getTransform() { return mTransform; }
+    void onRemovedFromScene();
+
+    void update(Renderer::VkRenderData& renderData);
+
+    void draw(Renderer::VkRenderData& renderData);
+
+    void cleanup(Renderer::VkRenderData& renderData);
 
     [[nodiscard]] SceneObject* getParent() const { return mParent; }
 
@@ -50,8 +70,8 @@ public:
 
 protected:
     std::string mName;
-    Transform mTransform;
     SceneObject* mParent = nullptr;
     std::vector<std::shared_ptr<SceneObject>> mChildren;
+    std::vector<std::unique_ptr<Component::Component>> mComponents;
 };
 } // namespace Core::Scene

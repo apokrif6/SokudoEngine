@@ -30,11 +30,11 @@ public:
                 TransformInspectorUIWindow::getBody();
             }
 
-            if (auto meshObject = static_pointer_cast<Renderer::Mesh>(selectedObject))
+            if (auto* meshComponent = selectedObject->getComponent<Renderer::Mesh>())
             {
                 if (ImGui::BeginTabBar("SceneSubTabs"))
                 {
-                    if (meshObject->hasAnimations())
+                    if (meshComponent->hasAnimations())
                     {
                         if (ImGui::CollapsingHeader("Animation", ImGuiTreeNodeFlags_DefaultOpen))
                         {

@@ -15,26 +15,25 @@ public:
         auto& objectSelection = Engine::getInstance().getSystem<Scene::Scene>()->getSceneObjectSelection();
         auto selectedObject = objectSelection.selectedObject.lock();
 
-        std::shared_ptr<Renderer::Mesh> meshObject =
-            std::static_pointer_cast<Renderer::Mesh>(selectedObject);
-        if (!meshObject)
+        auto* meshComponent = selectedObject->getComponent<Renderer::Mesh>();
+        if (!meshComponent)
         {
             return true;
         }
 
-        bool shouldPlayAnimation = meshObject->shouldPlayAnimation();
+        bool shouldPlayAnimation = meshComponent->shouldPlayAnimation();
         if (ImGui::Checkbox("Should play animation", &shouldPlayAnimation))
         {
-            meshObject->setShouldPlayAnimation(shouldPlayAnimation);
+            meshComponent->setShouldPlayAnimation(shouldPlayAnimation);
         }
 
-        bool shouldDrawDebugSkeleton = meshObject->shouldDrawDebugSkeleton();
+        bool shouldDrawDebugSkeleton = meshComponent->shouldDrawDebugSkeleton();
         if (ImGui::Checkbox("Should draw debug skeleton", &shouldDrawDebugSkeleton))
         {
-            meshObject->setShouldDrawDebugSkeleton(shouldDrawDebugSkeleton);
+            meshComponent->setShouldDrawDebugSkeleton(shouldDrawDebugSkeleton);
         }
 
-        const std::vector<Animations::AnimationClip>& loadedAnimations = meshObject->getAnimations();
+        const std::vector<Animations::AnimationClip>& loadedAnimations = meshComponent->getAnimations();
         if (ImGui::BeginCombo("##Loaded animations", loadedAnimations[selectedAnimationIndex].name.c_str(),
                               ImGuiComboFlags_WidthFitPreview))
         {
@@ -45,7 +44,7 @@ public:
                 {
                     selectedAnimationIndex = i;
 
-                    meshObject->setCurrentAnimationIndex(selectedAnimationIndex);
+                    meshComponent->setCurrentAnimationIndex(selectedAnimationIndex);
                 }
 
                 if (isAnimationToPlaySelected)

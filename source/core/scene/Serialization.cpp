@@ -15,23 +15,9 @@ YAML::Node Core::Scene::Serialization::serialize(const Scene& scene)
 Core::Scene::Scene Core::Scene::Serialization::deserializeScene(const YAML::Node& node)
 {
     Scene scene;
-    auto objectsNode = node["objects"];
-    for (const auto& objectNode : objectsNode)
+    for (const auto& objectNode : node["objects"])
     {
-        auto type = static_cast<ObjectType>(objectNode["type"].as<int>());
         std::shared_ptr<SceneObject> object;
-
-        switch (type)
-        {
-        case ObjectType::Mesh:
-            object = std::make_shared<Renderer::Mesh>("", Animations::Skeleton{});
-            break;
-        case ObjectType::Empty:
-        default:
-            object = std::make_shared<SceneObject>("");
-            break;
-        }
-
         object->deserialize(objectNode);
         scene.addObject(object);
     }

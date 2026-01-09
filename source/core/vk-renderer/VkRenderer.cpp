@@ -28,6 +28,8 @@
 #include <core/events/input-events/MouseLockEvent.h>
 #include <algorithm>
 #include <glm/gtc/matrix_transform.hpp>
+
+#include "core/components/TransformComponent.h"
 #include "core/vk-renderer/pipelines/DebugSkeletonPipeline.h"
 #include "core/engine/Engine.h"
 #include "core/vk-renderer/viewport/ViewportRenderpass.h"
@@ -878,19 +880,22 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
     createDebugSkeletonPipelineLayout();
     createDebugSkeletonPipeline();
 
-    auto testMesh = std::make_shared<Mesh>("TestMesh", primitiveMeshData.skeleton);
-    testMesh->setupAnimations(primitiveMeshData.animations);
-    testMesh->initDebugSkeleton(renderData);
-    testMesh->getTransform().position = {1, 0, 1};
-    testMesh->setMeshFilePath(modelFileName);
+    auto testObject = std::make_shared<Scene::SceneObject>("TestObject");
 
-    Engine::getInstance().getSystem<Scene::Scene>()->addObject(testMesh);
+    auto transformComponent = testObject->addComponent<Component::TransformComponent>();
+    transformComponent->transform.position = {1, 0, 1};
 
+    auto meshComponent = testObject->addComponent<Mesh>(primitiveMeshData.skeleton);
     for (auto& primitive : primitiveMeshData.primitives)
     {
-        testMesh->addPrimitive(primitive.vertices, primitive.indices, primitive.textures, renderData,
+        meshComponent->addPrimitive(primitive.vertices, primitive.indices, primitive.textures, renderData,
                                primitive.material, primitive.bones, primitive.materialDescriptorSet);
     }
+    meshComponent->setupAnimations(primitiveMeshData.animations);
+    meshComponent->initDebugSkeleton(renderData);
+    meshComponent->setMeshFilePath(modelFileName);
+
+    Engine::getInstance().getSystem<Scene::Scene>()->addObject(testObject);
 
     initPrimitiveGlobalSceneDescriptorSet();
 
