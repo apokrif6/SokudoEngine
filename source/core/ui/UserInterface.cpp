@@ -170,10 +170,10 @@ void Core::Renderer::UserInterface::update(VkRenderData& renderData, float delta
         ImGui::DockBuilderSplitNode(dockTop, ImGuiDir_Right, 0.25f, &dockRightMisc, &dockCenterViewport);
 
         ImGui::DockBuilderDockWindow("Scene", dockLeftTop);
-        ImGui::DockBuilderDockWindow("Inspector", dockLeftBottom);
+        ImGui::DockBuilderDockWindow("Inspector", dockRightMisc);
         ImGui::DockBuilderDockWindow("Profiling", dockBottom);
         ImGui::DockBuilderDockWindow("Viewport", dockCenterViewport);
-        ImGui::DockBuilderDockWindow("Misc", dockRightMisc);
+        ImGui::DockBuilderDockWindow("Misc", dockLeftBottom);
 
         ImGui::DockBuilderFinish(dockspaceID);
     }
