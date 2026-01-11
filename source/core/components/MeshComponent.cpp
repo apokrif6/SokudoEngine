@@ -135,7 +135,6 @@ YAML::Node Core::Component::MeshComponent::serialize() const
 
 void Core::Component::MeshComponent::deserialize(const YAML::Node& node)
 {
-    getOwner()->deserialize(node);
     mMeshFilePath = node["meshFile"].as<std::string>();
     mAnimationFiles.clear();
     if (node["animations"])
