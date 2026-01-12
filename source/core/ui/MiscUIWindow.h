@@ -8,7 +8,8 @@ namespace Core::UI
 {
 class MiscUIWindow : public UIWindow<MiscUIWindow>
 {
-public:
+    friend class UIWindow;
+
     static bool getBody()
     {
         if (!ImGui::Begin("Misc"))

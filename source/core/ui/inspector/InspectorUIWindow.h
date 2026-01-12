@@ -1,11 +1,9 @@
 #pragma once
 
-#include "AnimationInspectorUIWindow.h"
 #include "core/ui/UIWindow.h"
 #include "imgui.h"
 #include "MeshComponentInspectorUIWindow.h"
 #include "RotatingComponentInspectorUIWIndow.h"
-#include "string"
 #include "TransformInspectorUIWindow.h"
 #include "core/engine/Engine.h"
 
@@ -13,7 +11,8 @@ namespace Core::UI
 {
 class InspectorUIWindow : public UIWindow<InspectorUIWindow>
 {
-public:
+    friend class UIWindow;
+
     static bool getBody()
     {
         ImGui::Begin("Inspector");
@@ -30,7 +29,7 @@ public:
             {
                 if (ImGui::CollapsingHeader("Transform Component", ImGuiTreeNodeFlags_DefaultOpen))
                 {
-                    TransformInspectorUIWindow::getBody();
+                    TransformInspectorUIWindow::renderBody();
                 }
             }
 
@@ -38,7 +37,7 @@ public:
             {
                 if (ImGui::CollapsingHeader("Rotating Component", ImGuiTreeNodeFlags_DefaultOpen))
                 {
-                    RotatingComponentInspectorUIWindow::getBody();
+                    RotatingComponentInspectorUIWindow::renderBody();
                 }
             }
 
@@ -46,7 +45,7 @@ public:
             {
                 if (ImGui::CollapsingHeader("Mesh Component", ImGuiTreeNodeFlags_DefaultOpen))
                 {
-                    MeshComponentInspectorUIWindow::getBody();
+                    MeshComponentInspectorUIWindow::renderBody();
                 }
             }
         }

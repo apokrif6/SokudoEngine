@@ -8,7 +8,8 @@ namespace Core::UI
 {
 class TransformInspectorUIWindow : public UIWindow<TransformInspectorUIWindow>
 {
-public:
+    friend class UIWindow;
+
     static bool getBody()
     {
         auto& objectSelection = Engine::getInstance().getSystem<Scene::Scene>()->getSceneObjectSelection();

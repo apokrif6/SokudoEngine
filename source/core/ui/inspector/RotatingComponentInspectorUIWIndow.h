@@ -8,7 +8,8 @@ namespace Core::UI
 {
 class RotatingComponentInspectorUIWindow : public UIWindow<RotatingComponentInspectorUIWindow>
 {
-public:
+    friend class UIWindow;
+
     static bool getBody()
     {
         auto& objectSelection = Engine::getInstance().getSystem<Scene::Scene>()->getSceneObjectSelection();

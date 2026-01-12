@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AnimationInspectorUIWindow.h"
 #include "imgui.h"
 #include "core/components/MeshComponent.h"
 #include "core/ui/UIWindow.h"
@@ -9,7 +10,8 @@ namespace Core::UI
 {
 class MeshComponentInspectorUIWindow : public UIWindow<MeshComponentInspectorUIWindow>
 {
-public:
+    friend class UIWindow;
+
     static bool getBody()
     {
         auto& objectSelection = Engine::getInstance().getSystem<Scene::Scene>()->getSceneObjectSelection();
@@ -25,7 +27,7 @@ public:
 
         if (meshComponent->hasAnimations())
         {
-            AnimationInspectorUIWindow::getBody(meshComponent);
+            AnimationInspectorUIWindow::renderBody(meshComponent);
         }
 
         return true;

@@ -10,10 +10,10 @@ namespace Core::UI
 {
 class SceneUIWindow : public UIWindow<SceneUIWindow>
 {
-public:
+    friend class UIWindow;
+
     static bool getBody();
 
-private:
     static inline int selectedSceneObjectIndex = 0;
 
     static inline bool showSaveDialog = false;

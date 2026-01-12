@@ -10,7 +10,8 @@ namespace Core::UI
 {
 class ProfilingUIWindow : public UIWindow<ProfilingUIWindow>
 {
-public:
+    friend class UIWindow;
+
     static bool getBody()
     {
         if (!ImGui::Begin("Profiling"))

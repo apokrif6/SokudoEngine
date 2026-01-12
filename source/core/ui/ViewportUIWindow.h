@@ -1,7 +1,6 @@
 #pragma once
 
 #include <ImGuizmo.h>
-
 #include "UIWindow.h"
 #include "imgui.h"
 #include "core/engine/Engine.h"
@@ -12,7 +11,8 @@ namespace Core::UI
 {
 class ViewportUIWindow : public UIWindow<ViewportUIWindow>
 {
-public:
+    friend class UIWindow;
+
     static bool getBody()
     {
         if (!ImGui::Begin("Viewport"))
@@ -97,6 +97,7 @@ public:
         return true;
     }
 
+public:
     static void setSceneObjectManipulationOperation(ImGuizmo::OPERATION manipulateOperation)
     {
         currentManipulateOperation = manipulateOperation;

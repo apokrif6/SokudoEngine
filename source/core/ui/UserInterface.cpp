@@ -182,11 +182,11 @@ void Core::Renderer::UserInterface::update(VkRenderData& renderData, float delta
 
     setupImGuiStyle();
 
-    UI::SceneUIWindow::getBody();
-    UI::InspectorUIWindow::getBody();
-    UI::ProfilingUIWindow::getBody();
-    UI::MiscUIWindow::getBody();
-    UI::ViewportUIWindow::getBody();
+    UI::SceneUIWindow::renderBody();
+    UI::InspectorUIWindow::renderBody();
+    UI::ProfilingUIWindow::renderBody();
+    UI::MiscUIWindow::renderBody();
+    UI::ViewportUIWindow::renderBody();
 
     ImGui::EndFrame();
 }

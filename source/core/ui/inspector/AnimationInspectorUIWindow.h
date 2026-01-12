@@ -8,7 +8,8 @@ namespace Core::UI
 {
 class AnimationInspectorUIWindow : public UIWindow<AnimationInspectorUIWindow>
 {
-public:
+    friend class UIWindow;
+
     static bool getBody(Component::MeshComponent* meshComponent)
     {
         bool shouldPlayAnimation = meshComponent->shouldPlayAnimation();
