@@ -3,6 +3,7 @@
 #include "AnimationInspectorUIWindow.h"
 #include "core/ui/UIWindow.h"
 #include "imgui.h"
+#include "MeshComponentInspectorUIWindow.h"
 #include "RotatingComponentInspectorUIWIndow.h"
 #include "string"
 #include "TransformInspectorUIWindow.h"
@@ -45,10 +46,7 @@ public:
             {
                 if (ImGui::CollapsingHeader("Mesh Component", ImGuiTreeNodeFlags_DefaultOpen))
                 {
-                    if (meshComponent->hasAnimations())
-                    {
-                        AnimationInspectorUIWindow::getBody();
-                    }
+                    MeshComponentInspectorUIWindow::getBody();
                 }
             }
         }

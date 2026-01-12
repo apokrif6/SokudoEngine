@@ -7,15 +7,21 @@ namespace Core::UI
 template <typename Derived> class UIWindow
 {
 public:
-    static bool renderBody() { return Derived::getBody(); }
+    template <typename... Args>
+    static bool renderBody(Args&&... args)
+    {
+        static_assert(std::is_invocable_v<decltype(&Derived::getBody), Args...>,
+                      "Derived class must implement 'static bool getBody(...)' with matching arguments!");
+
+        return Derived::getBody(std::forward<Args>(args)...);
+    }
 
 protected:
     struct ValidateInterface
     {
         ValidateInterface()
         {
-            static_assert(std::is_same_v<decltype(&Derived::getBody), bool (*)()>,
-                          "Derived class must implement static bool getBody()");
+            (void)&Derived::getBody;
         }
     };
 

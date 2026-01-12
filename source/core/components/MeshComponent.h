@@ -72,6 +72,8 @@ public:
 
     void setMeshFilePath(std::string path) { mMeshFilePath = std::move(path); }
 
+    std::string_view getMeshFilePath() const { return mMeshFilePath; }
+
     void setAnimationFiles(std::vector<std::string> files) { mAnimationFiles = std::move(files); }
 
     YAML::Node serialize() const override;

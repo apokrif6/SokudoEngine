@@ -1,7 +1,8 @@
 #pragma once
 
 #include "core/components/RotatingComponent.h"
-#include"core/ui/UIWindow.h"
+#include "core/ui/UIWindow.h"
+#include "core/engine/Engine.h"
 
 namespace Core::UI
 {
@@ -16,7 +17,6 @@ public:
         auto* rotatingComponent = selectedObject->getComponent<Component::RotatingComponent>();
         if (!rotatingComponent)
         {
-            ImGui::End();
             return true;
         }
 

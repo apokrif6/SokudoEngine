@@ -1,7 +1,8 @@
 #pragma once
 
 #include "core/components/TransformComponent.h"
-#include"core/ui/UIWindow.h"
+#include "core/ui/UIWindow.h"
+#include "core/engine/Engine.h"
 
 namespace Core::UI
 {
@@ -16,7 +17,6 @@ public:
         auto* transformComponent = selectedObject->getComponent<Component::TransformComponent>();
         if (!transformComponent)
         {
-            ImGui::End();
             return true;
         }
 
