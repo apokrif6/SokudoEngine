@@ -25,9 +25,21 @@ public:
         ImGui::Text("Selected: %s", selectedObject->getName().c_str());
         ImGui::Separator();
 
-        ImGui::DragFloat3("Position", &transform.position.x, 0.1f);
-        ImGui::DragFloat4("Rotation", &transform.rotation.x, 0.1f);
-        ImGui::DragFloat3("Scale", &transform.scale.x, 0.1f);
+        glm::vec3 position = transform.getPosition();
+        if (ImGui::DragFloat3("Position", &position.x, 0.1f))
+        {
+            transform.setPosition(position);
+        }
+        glm::vec3 rotation = transform.getRotation();
+        if (ImGui::DragFloat3("Rotation", &rotation.x, 0.1f))
+        {
+            transform.setRotation(rotation);
+        }
+        glm::vec3 scale = transform.getScale();
+        if (ImGui::DragFloat3("Scale", &scale.x, 0.1f))
+        {
+            transform.setScale(scale);
+        }
 
         return true;
     }

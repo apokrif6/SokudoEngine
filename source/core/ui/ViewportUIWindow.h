@@ -70,15 +70,24 @@ public:
 
                 if (ImGuizmo::IsUsing())
                 {
-                    glm::vec3 translation, scale, skew;
+                    glm::vec3 position, scale, skew;
                     glm::vec4 perspective;
                     glm::quat rotation;
 
-                    glm::decompose(objectMatrix, scale, rotation, translation, skew, perspective);
+                    glm::decompose(objectMatrix, scale, rotation, position, skew, perspective);
 
-                    sceneObjectTransform.position = translation;
-                    sceneObjectTransform.rotation = rotation;
-                    sceneObjectTransform.scale = scale;
+                    if (currentManipulateOperation == ImGuizmo::TRANSLATE)
+                    {
+                        sceneObjectTransform.setPosition(position);
+                    }
+                    else if (currentManipulateOperation == ImGuizmo::ROTATE)
+                    {
+                        sceneObjectTransform.setRotation(rotation);
+                    }
+                    else if (currentManipulateOperation == ImGuizmo::SCALE)
+                    {
+                        sceneObjectTransform.setScale(scale);
+                    }
                 }
             }
         }
