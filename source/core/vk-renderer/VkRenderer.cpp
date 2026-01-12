@@ -883,7 +883,7 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
     auto testObject = std::make_shared<Scene::SceneObject>("TestObject");
 
     auto transformComponent = testObject->addComponent<Component::TransformComponent>();
-    transformComponent->transform.setPosition({1, 0, 1});
+    transformComponent->transform.setPosition({0, 0, 0});
 
     auto meshComponent = testObject->addComponent<Component::MeshComponent>(primitiveMeshData.skeleton);
     for (auto& primitive : primitiveMeshData.primitives)
