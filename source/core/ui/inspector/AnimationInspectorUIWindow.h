@@ -34,7 +34,7 @@ class AnimationInspectorUIWindow : public UIWindow<AnimationInspectorUIWindow>
                 const bool isAnimationToPlaySelected = currentAnimationIndex == i;
                 if (ImGui::Selectable(loadedAnimations[i].name.c_str(), isAnimationToPlaySelected))
                 {
-                    meshComponent->setCurrentAnimationIndex(currentAnimationIndex);
+                    meshComponent->setCurrentAnimationIndex(i);
                 }
 
                 if (isAnimationToPlaySelected)
