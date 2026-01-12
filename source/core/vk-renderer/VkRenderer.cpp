@@ -29,6 +29,7 @@
 #include <algorithm>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "core/components/RotatingComponent.h"
 #include "core/components/TransformComponent.h"
 #include "core/vk-renderer/pipelines/DebugSkeletonPipeline.h"
 #include "core/engine/Engine.h"
@@ -884,6 +885,9 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
 
     auto transformComponent = testObject->addComponent<Component::TransformComponent>();
     transformComponent->transform.setPosition({0, 0, 0});
+
+    auto rotatingComponent = testObject->addComponent<Component::RotatingComponent>();
+    rotatingComponent->setRotationSpeed({0, 5, 0});
 
     auto meshComponent = testObject->addComponent<Component::MeshComponent>(primitiveMeshData.skeleton);
     for (auto& primitive : primitiveMeshData.primitives)

@@ -17,7 +17,7 @@ public:
 
     ~MeshComponent() override;
 
-    std::string_view getTypeName() const override { return "MeshComponent"; }
+    [[nodiscard]] std::string_view getTypeName() const override { return "MeshComponent"; }
 
     void onAddedToScene() override;
 

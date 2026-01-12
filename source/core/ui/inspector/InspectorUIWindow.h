@@ -3,6 +3,7 @@
 #include "AnimationInspectorUIWindow.h"
 #include "core/ui/UIWindow.h"
 #include "imgui.h"
+#include "RotatingComponentInspectorUIWIndow.h"
 #include "string"
 #include "TransformInspectorUIWindow.h"
 #include "core/engine/Engine.h"
@@ -22,27 +23,32 @@ public:
         auto objects = scene->getObjects();
         auto& selection = scene->getSceneObjectSelection();
 
-        auto selectedObject = selection.selectedObject.lock();
-        if (selectedObject)
+        if (auto selectedObject = selection.selectedObject.lock())
         {
-            if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
+            if (auto* transformComponent = selectedObject->getComponent<Component::TransformComponent>())
             {
-                TransformInspectorUIWindow::getBody();
+                if (ImGui::CollapsingHeader("Transform Component", ImGuiTreeNodeFlags_DefaultOpen))
+                {
+                    TransformInspectorUIWindow::getBody();
+                }
+            }
+
+            if (auto* rotatingComponent = selectedObject->getComponent<Component::RotatingComponent>())
+            {
+                if (ImGui::CollapsingHeader("Rotating Component", ImGuiTreeNodeFlags_DefaultOpen))
+                {
+                    RotatingComponentInspectorUIWindow::getBody();
+                }
             }
 
             if (auto* meshComponent = selectedObject->getComponent<Component::MeshComponent>())
             {
-                if (ImGui::BeginTabBar("SceneSubTabs"))
+                if (ImGui::CollapsingHeader("Mesh Component", ImGuiTreeNodeFlags_DefaultOpen))
                 {
                     if (meshComponent->hasAnimations())
                     {
-                        if (ImGui::CollapsingHeader("Animation", ImGuiTreeNodeFlags_DefaultOpen))
-                        {
-                            AnimationInspectorUIWindow::getBody();
-                        }
+                        AnimationInspectorUIWindow::getBody();
                     }
-
-                    ImGui::EndTabBar();
                 }
             }
         }
