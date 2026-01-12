@@ -27,6 +27,7 @@ class MeshComponentInspectorUIWindow : public UIWindow<MeshComponentInspectorUIW
 
         if (meshComponent->hasAnimations())
         {
+            ImGui::Separator();
             AnimationInspectorUIWindow::renderBody(meshComponent);
         }
 
