@@ -5,7 +5,7 @@ layout (location = 0) out vec4 FragColor;
 
 layout (set = 1, binding = 0) uniform samplerCube environmentMap;
 
-layout (push_constant) uniform Push
+layout (push_constant) uniform PushConstants
 {
     uint face;
     float roughness;

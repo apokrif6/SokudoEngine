@@ -8,7 +8,7 @@ layout (set = 0, binding = 0) uniform CaptureInfo
     mat4 projection;
 };
 
-layout (push_constant) uniform Push
+layout (push_constant) uniform PushConstants
 {
     uint face;
     float roughness;

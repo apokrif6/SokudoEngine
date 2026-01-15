@@ -4,7 +4,7 @@
 
 layout (location = 0) out vec3 fragDir;
 
-layout (set = 0, binding = 0) uniform Capture
+layout (set = 0, binding = 0) uniform CaptureInfo
 {
     mat4 views[6];
     mat4 projection;
