@@ -4,8 +4,8 @@ layout (location = 0) out vec3 localPos;
 
 layout (set = 0, binding = 0) uniform CaptureInfo
 {
-    mat4 projection;
     mat4 views[6];
+    mat4 projection;
 };
 
 layout (push_constant) uniform Push
