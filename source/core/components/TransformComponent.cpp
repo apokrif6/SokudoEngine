@@ -20,7 +20,7 @@ YAML::Node Core::Component::TransformComponent::serialize() const
     rotationNode.push_back(rotation.z);
     node["transform"]["rotation"] = rotationNode;
 
-    const glm::vec3& scale = transform.getRotation();
+    const glm::vec3& scale = transform.getScale();
     YAML::Node scaleNode;
     scaleNode.push_back(scale.x);
     scaleNode.push_back(scale.y);
