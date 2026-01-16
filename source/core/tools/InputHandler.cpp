@@ -45,18 +45,21 @@ void InputHandler::handleMouseButtonEvents(int button, int action, int mods)
         io.AddMouseButtonEvent(button, action == GLFW_PRESS);
     }
 
-    if (button == GLFW_MOUSE_BUTTON_RIGHT)
+    if (Core::Engine::getInstance().getRenderData().rdViewportHovered)
     {
-        if (action == GLFW_PRESS)
+        if (button == GLFW_MOUSE_BUTTON_RIGHT)
         {
-            mMouseLock = true;
-        }
-        else if (action == GLFW_RELEASE)
-        {
-            mMouseLock = false;
-        }
+            if (action == GLFW_PRESS)
+            {
+                mMouseLock = true;
+            }
+            else if (action == GLFW_RELEASE)
+            {
+                mMouseLock = false;
+            }
 
-        mEventDispatcher.dispatch(MouseLockEvent(mMouseLock));
+            mEventDispatcher.dispatch(MouseLockEvent(mMouseLock));
+        }
     }
 
     std::string actionName;
