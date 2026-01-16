@@ -1,5 +1,6 @@
 #include "Engine.h"
 
+#include "core/components/ComponentFactory.h"
 #include "core/ui/UserInterface.h"
 #include "core/window/Window.h"
 
@@ -24,6 +25,8 @@ void Core::Engine::init()
 
     createSystem<Scene::Scene>();
     createSystem<Animations::Animator>();
+
+    Component::ComponentFactory::registerAll();
 
     // Sandbox
     if (!renderer->loadMeshWithAssimp())

@@ -1,0 +1,113 @@
+objects:
+  - name: TestObject_1
+    components:
+      - type: TransformComponent
+        data:
+          transform:
+            position:
+              - 1
+              - 0
+              - 1
+            rotation:
+              - 0
+              - 0
+              - 0
+            scale:
+              - 1
+              - 1
+              - 1
+      - type: MeshComponent
+        data:
+          meshFile: assets/mixamo/models/FemaleModel.fbx
+          animations:
+            - assets/mixamo/animations/AngryAnimation.fbx
+            - assets/mixamo/animations/BoxingAnimation.fbx
+            - assets/mixamo/animations/HipHopDancingAnimation.fbx
+            - assets/mixamo/animations/StandingIdleAnimation.fbx
+            - assets/mixamo/animations/StandingReactDeathBackwardAnimation.fbx
+          shouldPlayAnimation: true
+          currentAnimationIndex: 4
+  - name: TestObject_2
+    components:
+      - type: TransformComponent
+        data:
+          transform:
+            position:
+              - -1
+              - 0
+              - 1
+            rotation:
+              - 0
+              - 0
+              - 0
+            scale:
+              - 1
+              - 1
+              - 1
+      - type: MeshComponent
+        data:
+          meshFile: assets/mixamo/models/FemaleModel.fbx
+          animations:
+            - assets/mixamo/animations/AngryAnimation.fbx
+            - assets/mixamo/animations/BoxingAnimation.fbx
+            - assets/mixamo/animations/HipHopDancingAnimation.fbx
+            - assets/mixamo/animations/StandingIdleAnimation.fbx
+            - assets/mixamo/animations/StandingReactDeathBackwardAnimation.fbx
+          shouldPlayAnimation: true
+          currentAnimationIndex: 1
+  - name: TestObject_3
+    components:
+      - type: TransformComponent
+        data:
+          transform:
+            position:
+              - 1
+              - 0
+              - -1
+            rotation:
+              - 0
+              - 0
+              - 0
+            scale:
+              - 1
+              - 1
+              - 1
+      - type: MeshComponent
+        data:
+          meshFile: assets/mixamo/models/FemaleModel.fbx
+          animations:
+            - assets/mixamo/animations/AngryAnimation.fbx
+            - assets/mixamo/animations/BoxingAnimation.fbx
+            - assets/mixamo/animations/HipHopDancingAnimation.fbx
+            - assets/mixamo/animations/StandingIdleAnimation.fbx
+            - assets/mixamo/animations/StandingReactDeathBackwardAnimation.fbx
+          shouldPlayAnimation: true
+          currentAnimationIndex: 2
+  - name: TestObject_4
+    components:
+      - type: TransformComponent
+        data:
+          transform:
+            position:
+              - -1
+              - 0
+              - -1
+            rotation:
+              - 0
+              - 0
+              - 0
+            scale:
+              - 1
+              - 1
+              - 1
+      - type: MeshComponent
+        data:
+          meshFile: assets/mixamo/models/FemaleModel.fbx
+          animations:
+            - assets/mixamo/animations/AngryAnimation.fbx
+            - assets/mixamo/animations/BoxingAnimation.fbx
+            - assets/mixamo/animations/HipHopDancingAnimation.fbx
+            - assets/mixamo/animations/StandingIdleAnimation.fbx
+            - assets/mixamo/animations/StandingReactDeathBackwardAnimation.fbx
+          shouldPlayAnimation: false
+          currentAnimationIndex: 0

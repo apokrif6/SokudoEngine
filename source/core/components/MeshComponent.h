@@ -13,6 +13,8 @@ namespace Core::Component
 class MeshComponent : public Component
 {
 public:
+    MeshComponent() = default;
+
     explicit MeshComponent(Animations::Skeleton skeleton);
 
     ~MeshComponent() override;
