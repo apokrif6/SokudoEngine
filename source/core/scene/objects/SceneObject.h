@@ -3,7 +3,6 @@
 #include <string>
 
 #include "core/components/Component.h"
-#include "core/scene/Transform.h"
 #include "core/vk-renderer/VkRenderData.h"
 #include "yaml-cpp/node/node.h"
 #include "core/serialization/Serializable.h"
