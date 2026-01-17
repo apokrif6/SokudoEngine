@@ -89,28 +89,6 @@ struct alignas(16) PrimitiveFlagsPushConstants
     int hasSkinning = 0;
 };
 
-struct VkVertex
-{
-    glm::vec3 position;
-    glm::vec3 color;
-    glm::vec2 uv;
-
-    static VkVertexInputBindingDescription getBindingDescription()
-    {
-        VkVertexInputBindingDescription bindingDescription{};
-        bindingDescription.binding = 0;
-        bindingDescription.stride = sizeof(VkVertex);
-        bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-        return bindingDescription;
-    }
-};
-
-struct VkMesh
-{
-    std::vector<VkVertex> vertices;
-};
-
 struct VkTextureData
 {
     std::string name;
