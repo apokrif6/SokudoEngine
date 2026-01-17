@@ -275,130 +275,132 @@ bool Core::Renderer::IBLGenerator::convertHDRToCubemap(VkRenderData& renderData,
     begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     vkBeginCommandBuffer(cmd, &begin);
-
-    VkImageMemoryBarrier barrier{};
-    barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    barrier.image = cubemapData.image;
-    barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-    barrier.srcAccessMask = 0;
-    barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-    barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    barrier.subresourceRange.baseMipLevel = 0;
-    barrier.subresourceRange.levelCount = 1;
-    barrier.subresourceRange.baseArrayLayer  = 0;
-    barrier.subresourceRange.layerCount = 6;
-
-    vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-        VK_PIPELINE_STAGE_TRANSFER_BIT | VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0,
-        0, nullptr, 0, nullptr, 1,
-        &barrier);
-
-    VkImageMemoryBarrier offscreenToColor{};
-    offscreenToColor.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    offscreenToColor.image = offscreenImage;
-    offscreenToColor.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    offscreenToColor.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-    offscreenToColor.srcAccessMask = 0;
-    offscreenToColor.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-    offscreenToColor.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    offscreenToColor.subresourceRange.baseMipLevel = 0;
-    offscreenToColor.subresourceRange.levelCount = 1;
-    offscreenToColor.subresourceRange.baseArrayLayer = 0;
-    offscreenToColor.subresourceRange.layerCount = 1;
-
-    vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-        0, 0, nullptr, 0, nullptr,
-        1, &offscreenToColor);
-
-    for (uint32_t face = 0; face < 6; ++face)
     {
-        vkCmdPushConstants(cmd, renderData.rdHDRToCubemapPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(int), &face);
+        Debug::Marker marker(renderData.rdVkbDevice.device, cmd, "Convert HDR To Cubemap", Debug::Colors::Orange);
 
-        VkClearValue clear{};
-        clear.color = {{0,0,0,1}};
+        VkImageMemoryBarrier barrier{};
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.image = cubemapData.image;
+        barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        barrier.srcAccessMask = 0;
+        barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        barrier.subresourceRange.baseMipLevel = 0;
+        barrier.subresourceRange.levelCount = 1;
+        barrier.subresourceRange.baseArrayLayer  = 0;
+        barrier.subresourceRange.layerCount = 6;
 
-        VkRenderPassBeginInfo renderPassBeginInfo{};
-        renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassBeginInfo.renderPass = renderData.rdHDRToCubemapRenderpass;
-        renderPassBeginInfo.framebuffer = framebuffer;
-        renderPassBeginInfo.renderArea.offset = {0,0};
-        renderPassBeginInfo.renderArea.extent = { cubemapSize, cubemapSize };
-        renderPassBeginInfo.clearValueCount = 1;
-        renderPassBeginInfo.pClearValues = &clear;
+        vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+            VK_PIPELINE_STAGE_TRANSFER_BIT | VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0,
+            0, nullptr, 0, nullptr, 1,
+            &barrier);
 
-        vkCmdBeginRenderPass(cmd, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+        VkImageMemoryBarrier offscreenToColor{};
+        offscreenToColor.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        offscreenToColor.image = offscreenImage;
+        offscreenToColor.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        offscreenToColor.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        offscreenToColor.srcAccessMask = 0;
+        offscreenToColor.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        offscreenToColor.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        offscreenToColor.subresourceRange.baseMipLevel = 0;
+        offscreenToColor.subresourceRange.levelCount = 1;
+        offscreenToColor.subresourceRange.baseArrayLayer = 0;
+        offscreenToColor.subresourceRange.layerCount = 1;
 
-        VkViewport viewport{};
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        viewport.width = static_cast<float>(cubemapSize);
-        viewport.height =  static_cast<float>(cubemapSize);
-        viewport.minDepth = 0.f;
-        viewport.maxDepth = 1.f;
-
-        VkRect2D scissor{};
-        scissor.offset = {0, 0};
-        scissor.extent = {cubemapSize, cubemapSize};
-
-        vkCmdSetViewport(cmd, 0, 1, &viewport);
-        vkCmdSetScissor(cmd, 0, 1, &scissor);
-
-        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdHDRToCubemapPipeline);
-
-        std::vector descriptorSets = {renderData.rdCaptureUBO.rdUBODescriptorSet, texture.descriptorSet};
-
-        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdHDRToCubemapPipelineLayout,
-           0, static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(),
-           0, nullptr);
-
-        vkCmdDraw(cmd, 36, 1, 0, 0);
-        vkCmdEndRenderPass(cmd);
-
-        VkImageMemoryBarrier toSrcImageMemoryBarrier{};
-        toSrcImageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        toSrcImageMemoryBarrier.image = offscreenImage;
-        toSrcImageMemoryBarrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        toSrcImageMemoryBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-        toSrcImageMemoryBarrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        toSrcImageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-        toSrcImageMemoryBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        toSrcImageMemoryBarrier.subresourceRange.baseMipLevel = 0;
-        toSrcImageMemoryBarrier.subresourceRange.levelCount = 1;
-        toSrcImageMemoryBarrier.subresourceRange.baseArrayLayer = 0;
-        toSrcImageMemoryBarrier.subresourceRange.layerCount = 1;
-
-        vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+        vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
             0, 0, nullptr, 0, nullptr,
-            1, &toSrcImageMemoryBarrier);
+            1, &offscreenToColor);
 
-        VkImageCopy copy{};
-        copy.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        copy.srcSubresource.layerCount = 1;
-        copy.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        copy.dstSubresource.baseArrayLayer = face;
-        copy.dstSubresource.layerCount = 1;
-        copy.extent = { cubemapSize, cubemapSize, 1 };
+        for (uint32_t face = 0; face < 6; ++face)
+        {
+            vkCmdPushConstants(cmd, renderData.rdHDRToCubemapPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(int), &face);
 
-        vkCmdCopyImage(cmd, offscreenImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-            cubemapData.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy);
+            VkClearValue clear{};
+            clear.color = {{0,0,0,1}};
+
+            VkRenderPassBeginInfo renderPassBeginInfo{};
+            renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+            renderPassBeginInfo.renderPass = renderData.rdHDRToCubemapRenderpass;
+            renderPassBeginInfo.framebuffer = framebuffer;
+            renderPassBeginInfo.renderArea.offset = {0,0};
+            renderPassBeginInfo.renderArea.extent = { cubemapSize, cubemapSize };
+            renderPassBeginInfo.clearValueCount = 1;
+            renderPassBeginInfo.pClearValues = &clear;
+
+            vkCmdBeginRenderPass(cmd, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+            VkViewport viewport{};
+            viewport.x = 0.0f;
+            viewport.y = 0.0f;
+            viewport.width = static_cast<float>(cubemapSize);
+            viewport.height =  static_cast<float>(cubemapSize);
+            viewport.minDepth = 0.f;
+            viewport.maxDepth = 1.f;
+
+            VkRect2D scissor{};
+            scissor.offset = {0, 0};
+            scissor.extent = {cubemapSize, cubemapSize};
+
+            vkCmdSetViewport(cmd, 0, 1, &viewport);
+            vkCmdSetScissor(cmd, 0, 1, &scissor);
+
+            vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdHDRToCubemapPipeline);
+
+            std::vector descriptorSets = {renderData.rdCaptureUBO.rdUBODescriptorSet, texture.descriptorSet};
+
+            vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdHDRToCubemapPipelineLayout,
+               0, static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(),
+               0, nullptr);
+
+            vkCmdDraw(cmd, 36, 1, 0, 0);
+            vkCmdEndRenderPass(cmd);
+
+            VkImageMemoryBarrier toSrcImageMemoryBarrier{};
+            toSrcImageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+            toSrcImageMemoryBarrier.image = offscreenImage;
+            toSrcImageMemoryBarrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            toSrcImageMemoryBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+            toSrcImageMemoryBarrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+            toSrcImageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            toSrcImageMemoryBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            toSrcImageMemoryBarrier.subresourceRange.baseMipLevel = 0;
+            toSrcImageMemoryBarrier.subresourceRange.levelCount = 1;
+            toSrcImageMemoryBarrier.subresourceRange.baseArrayLayer = 0;
+            toSrcImageMemoryBarrier.subresourceRange.layerCount = 1;
+
+            vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                0, 0, nullptr, 0, nullptr,
+                1, &toSrcImageMemoryBarrier);
+
+            VkImageCopy copy{};
+            copy.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            copy.srcSubresource.layerCount = 1;
+            copy.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            copy.dstSubresource.baseArrayLayer = face;
+            copy.dstSubresource.layerCount = 1;
+            copy.extent = { cubemapSize, cubemapSize, 1 };
+
+            vkCmdCopyImage(cmd, offscreenImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                cubemapData.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy);
+        }
+
+        VkImageMemoryBarrier cubeToSampleImageMemoryBarrier{};
+        cubeToSampleImageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        cubeToSampleImageMemoryBarrier.image = cubemapData.image;
+        cubeToSampleImageMemoryBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        cubeToSampleImageMemoryBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        cubeToSampleImageMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        cubeToSampleImageMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        cubeToSampleImageMemoryBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        cubeToSampleImageMemoryBarrier.subresourceRange.levelCount = 1;
+        cubeToSampleImageMemoryBarrier.subresourceRange.layerCount = 6;
+
+        vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+            0, 0, nullptr, 0, nullptr,
+            1, &cubeToSampleImageMemoryBarrier);
     }
-
-    VkImageMemoryBarrier cubeToSampleImageMemoryBarrier{};
-    cubeToSampleImageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    cubeToSampleImageMemoryBarrier.image = cubemapData.image;
-    cubeToSampleImageMemoryBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-    cubeToSampleImageMemoryBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    cubeToSampleImageMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-    cubeToSampleImageMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-    cubeToSampleImageMemoryBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    cubeToSampleImageMemoryBarrier.subresourceRange.levelCount = 1;
-    cubeToSampleImageMemoryBarrier.subresourceRange.layerCount = 6;
-
-    vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-        0, 0, nullptr, 0, nullptr,
-        1, &cubeToSampleImageMemoryBarrier);
-
     vkEndCommandBuffer(cmd);
 
     VkSubmitInfo submit{};
@@ -574,120 +576,122 @@ bool Core::Renderer::IBLGenerator::convertCubemapToIrradiance(VkRenderData& rend
     begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     vkBeginCommandBuffer(cmd, &begin);
-
-    VkImageMemoryBarrier barrier{};
-    barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    barrier.image = irradianceData.image;
-    barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-    barrier.srcAccessMask = 0;
-    barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-    barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    barrier.subresourceRange.levelCount = 1;
-    barrier.subresourceRange.layerCount = 6;
-
-    vkCmdPipelineBarrier(cmd,
-        VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-        VK_PIPELINE_STAGE_TRANSFER_BIT,
-        0, 0, nullptr, 0, nullptr, 1, &barrier);
-
-    for (uint32_t face = 0; face < 6; ++face)
     {
-        vkCmdPushConstants(
-            cmd,
-            renderData.rdIrradiancePipelineLayout,
-            VK_SHADER_STAGE_VERTEX_BIT,
-            0, sizeof(uint32_t),
-            &face
-        );
+        Debug::Marker marker(renderData.rdVkbDevice.device, cmd, "Convert Cubemap To Irradiance", Debug::Colors::Cyan);
 
-        VkRenderPassBeginInfo rp{};
-        rp.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        rp.renderPass = renderData.rdIBLRenderpass;
-        rp.framebuffer = framebuffer;
-        rp.renderArea.extent = { irradianceSize, irradianceSize };
+        VkImageMemoryBarrier barrier{};
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.image = irradianceData.image;
+        barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        barrier.srcAccessMask = 0;
+        barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        barrier.subresourceRange.levelCount = 1;
+        barrier.subresourceRange.layerCount = 6;
 
-        VkClearValue clear{};
-        clear.color = {{0,0,0,1}};
-        rp.clearValueCount = 1;
-        rp.pClearValues = &clear;
+        vkCmdPipelineBarrier(cmd,
+            VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+            VK_PIPELINE_STAGE_TRANSFER_BIT,
+            0, 0, nullptr, 0, nullptr, 1, &barrier);
 
-        vkCmdBeginRenderPass(cmd, &rp, VK_SUBPASS_CONTENTS_INLINE);
+        for (uint32_t face = 0; face < 6; ++face)
+        {
+            vkCmdPushConstants(
+                cmd,
+                renderData.rdIrradiancePipelineLayout,
+                VK_SHADER_STAGE_VERTEX_BIT,
+                0, sizeof(uint32_t),
+                &face
+            );
 
-        VkViewport viewport{};
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        viewport.width = static_cast<float>(irradianceSize);
-        viewport.height =  static_cast<float>(irradianceSize);
-        viewport.minDepth = 0.f;
-        viewport.maxDepth = 1.f;
+            VkRenderPassBeginInfo rp{};
+            rp.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+            rp.renderPass = renderData.rdIBLRenderpass;
+            rp.framebuffer = framebuffer;
+            rp.renderArea.extent = { irradianceSize, irradianceSize };
 
-        VkRect2D scissor{};
-        scissor.offset = {0, 0};
-        scissor.extent = {irradianceSize, irradianceSize};
+            VkClearValue clear{};
+            clear.color = {{0,0,0,1}};
+            rp.clearValueCount = 1;
+            rp.pClearValues = &clear;
 
-        vkCmdSetViewport(cmd, 0, 1, &viewport);
-        vkCmdSetScissor(cmd, 0, 1, &scissor);
+            vkCmdBeginRenderPass(cmd, &rp, VK_SUBPASS_CONTENTS_INLINE);
 
-        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdIrradiancePipeline);
+            VkViewport viewport{};
+            viewport.x = 0.0f;
+            viewport.y = 0.0f;
+            viewport.width = static_cast<float>(irradianceSize);
+            viewport.height =  static_cast<float>(irradianceSize);
+            viewport.minDepth = 0.f;
+            viewport.maxDepth = 1.f;
 
-        VkDescriptorSet sets[] = {
-            renderData.rdCaptureUBO.rdUBODescriptorSet,
-            cubemapData.descriptorSet
-        };
+            VkRect2D scissor{};
+            scissor.offset = {0, 0};
+            scissor.extent = {irradianceSize, irradianceSize};
 
-        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdIrradiancePipelineLayout,
-            0, 2, sets, 0, nullptr);
+            vkCmdSetViewport(cmd, 0, 1, &viewport);
+            vkCmdSetScissor(cmd, 0, 1, &scissor);
 
-        vkCmdDraw(cmd, 36, 1, 0, 0);
-        vkCmdEndRenderPass(cmd);
+            vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdIrradiancePipeline);
 
-        VkImageMemoryBarrier toSrcImageMemoryBarrier{};
-        toSrcImageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        toSrcImageMemoryBarrier.image = offscreenImage;
-        toSrcImageMemoryBarrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        toSrcImageMemoryBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-        toSrcImageMemoryBarrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        toSrcImageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-        toSrcImageMemoryBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        toSrcImageMemoryBarrier.subresourceRange.baseMipLevel = 0;
-        toSrcImageMemoryBarrier.subresourceRange.levelCount = 1;
-        toSrcImageMemoryBarrier.subresourceRange.baseArrayLayer = 0;
-        toSrcImageMemoryBarrier.subresourceRange.layerCount = 1;
+            VkDescriptorSet sets[] = {
+                renderData.rdCaptureUBO.rdUBODescriptorSet,
+                cubemapData.descriptorSet
+            };
 
-        vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+            vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdIrradiancePipelineLayout,
+                0, 2, sets, 0, nullptr);
+
+            vkCmdDraw(cmd, 36, 1, 0, 0);
+            vkCmdEndRenderPass(cmd);
+
+            VkImageMemoryBarrier toSrcImageMemoryBarrier{};
+            toSrcImageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+            toSrcImageMemoryBarrier.image = offscreenImage;
+            toSrcImageMemoryBarrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            toSrcImageMemoryBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+            toSrcImageMemoryBarrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+            toSrcImageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            toSrcImageMemoryBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            toSrcImageMemoryBarrier.subresourceRange.baseMipLevel = 0;
+            toSrcImageMemoryBarrier.subresourceRange.levelCount = 1;
+            toSrcImageMemoryBarrier.subresourceRange.baseArrayLayer = 0;
+            toSrcImageMemoryBarrier.subresourceRange.layerCount = 1;
+
+            vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                0, 0, nullptr, 0, nullptr,
+                1, &toSrcImageMemoryBarrier);
+
+            VkImageCopy copy{};
+            copy.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            copy.srcSubresource.layerCount = 1;
+            copy.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            copy.dstSubresource.baseArrayLayer = face;
+            copy.dstSubresource.layerCount = 1;
+            copy.extent = { irradianceSize, irradianceSize, 1 };
+
+            vkCmdCopyImage(cmd, offscreenImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                irradianceData.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy);
+        }
+
+        VkImageMemoryBarrier irradianceToSample{};
+        irradianceToSample.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        irradianceToSample.image = irradianceData.image;
+        irradianceToSample.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        irradianceToSample.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        irradianceToSample.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        irradianceToSample.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        irradianceToSample.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        irradianceToSample.subresourceRange.baseMipLevel = 0;
+        irradianceToSample.subresourceRange.levelCount = 1;
+        irradianceToSample.subresourceRange.baseArrayLayer = 0;
+        irradianceToSample.subresourceRange.layerCount = 6;
+
+        vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
             0, 0, nullptr, 0, nullptr,
-            1, &toSrcImageMemoryBarrier);
-
-        VkImageCopy copy{};
-        copy.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        copy.srcSubresource.layerCount = 1;
-        copy.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        copy.dstSubresource.baseArrayLayer = face;
-        copy.dstSubresource.layerCount = 1;
-        copy.extent = { irradianceSize, irradianceSize, 1 };
-
-        vkCmdCopyImage(cmd, offscreenImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-            irradianceData.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy);
+            1, &irradianceToSample);
     }
-
-    VkImageMemoryBarrier irradianceToSample{};
-    irradianceToSample.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    irradianceToSample.image = irradianceData.image;
-    irradianceToSample.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-    irradianceToSample.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    irradianceToSample.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-    irradianceToSample.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-    irradianceToSample.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    irradianceToSample.subresourceRange.baseMipLevel = 0;
-    irradianceToSample.subresourceRange.levelCount = 1;
-    irradianceToSample.subresourceRange.baseArrayLayer = 0;
-    irradianceToSample.subresourceRange.layerCount = 6;
-
-    vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-        0, 0, nullptr, 0, nullptr,
-        1, &irradianceToSample);
-
     vkEndCommandBuffer(cmd);
 
     VkSubmitInfo submit{};
@@ -864,141 +868,143 @@ bool Core::Renderer::IBLGenerator::convertCubemapToPrefilteredMap(VkRenderData& 
     begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     vkBeginCommandBuffer(cmd, &begin);
-
-    VkImageMemoryBarrier barrier{};
-    barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    barrier.image = prefilteredMapData.image;
-    barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-    barrier.srcAccessMask = 0;
-    barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-    barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    barrier.subresourceRange.baseMipLevel = 0;
-    barrier.subresourceRange.levelCount = maxMipLevels;
-    barrier.subresourceRange.baseArrayLayer = 0;
-    barrier.subresourceRange.layerCount = 6;
-
-    vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,VK_PIPELINE_STAGE_TRANSFER_BIT,
-        0, 0, nullptr, 0, nullptr,
-        1, &barrier);
-
-    for (uint32_t mip = 0; mip < maxMipLevels; ++mip)
     {
-        uint32_t mipSize = prefilteredMapSize >> mip;
-        float roughness = static_cast<float>(mip) / static_cast<float>(maxMipLevels - 1);
+        Debug::Marker marker(renderData.rdVkbDevice.device, cmd, "Convert Cubemap To PrefilteredMap", Debug::Colors::Green);
 
-        for (uint32_t face = 0; face < 6; ++face)
+        VkImageMemoryBarrier barrier{};
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.image = prefilteredMapData.image;
+        barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        barrier.srcAccessMask = 0;
+        barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        barrier.subresourceRange.baseMipLevel = 0;
+        barrier.subresourceRange.levelCount = maxMipLevels;
+        barrier.subresourceRange.baseArrayLayer = 0;
+        barrier.subresourceRange.layerCount = 6;
+
+        vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,VK_PIPELINE_STAGE_TRANSFER_BIT,
+            0, 0, nullptr, 0, nullptr,
+            1, &barrier);
+
+        for (uint32_t mip = 0; mip < maxMipLevels; ++mip)
         {
-            struct { uint32_t face; float roughness; } pushData = { face, roughness };
-            vkCmdPushConstants(cmd, renderData.rdPrefilterPipelineLayout,
-                            VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushData), &pushData);
+            uint32_t mipSize = prefilteredMapSize >> mip;
+            float roughness = static_cast<float>(mip) / static_cast<float>(maxMipLevels - 1);
 
-            VkRenderPassBeginInfo rp{};
-            rp.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-            rp.renderPass = renderData.rdIBLRenderpass;
-            rp.framebuffer = framebuffer;
-            rp.renderArea.extent = { mipSize, mipSize };
+            for (uint32_t face = 0; face < 6; ++face)
+            {
+                struct { uint32_t face; float roughness; } pushData = { face, roughness };
+                vkCmdPushConstants(cmd, renderData.rdPrefilterPipelineLayout,
+                                VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushData), &pushData);
 
-            VkClearValue clear{};
-            clear.color = {{0,0,0,1}};
-            rp.clearValueCount = 1;
-            rp.pClearValues = &clear;
+                VkRenderPassBeginInfo rp{};
+                rp.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+                rp.renderPass = renderData.rdIBLRenderpass;
+                rp.framebuffer = framebuffer;
+                rp.renderArea.extent = { mipSize, mipSize };
 
-            vkCmdBeginRenderPass(cmd, &rp, VK_SUBPASS_CONTENTS_INLINE);
+                VkClearValue clear{};
+                clear.color = {{0,0,0,1}};
+                rp.clearValueCount = 1;
+                rp.pClearValues = &clear;
 
-            VkViewport viewport{};
-            viewport.x = 0.0f;
-            viewport.y = 0.0f;
-            viewport.width = static_cast<float>(mipSize);
-            viewport.height =  static_cast<float>(mipSize);
-            viewport.minDepth = 0.f;
-            viewport.maxDepth = 1.f;
+                vkCmdBeginRenderPass(cmd, &rp, VK_SUBPASS_CONTENTS_INLINE);
 
-            VkRect2D scissor{};
-            scissor.offset = {0, 0};
-            scissor.extent = {mipSize, mipSize};
+                VkViewport viewport{};
+                viewport.x = 0.0f;
+                viewport.y = 0.0f;
+                viewport.width = static_cast<float>(mipSize);
+                viewport.height =  static_cast<float>(mipSize);
+                viewport.minDepth = 0.f;
+                viewport.maxDepth = 1.f;
 
-            vkCmdSetViewport(cmd, 0, 1, &viewport);
-            vkCmdSetScissor(cmd, 0, 1, &scissor);
+                VkRect2D scissor{};
+                scissor.offset = {0, 0};
+                scissor.extent = {mipSize, mipSize};
 
-            vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdPrefilterPipeline);
+                vkCmdSetViewport(cmd, 0, 1, &viewport);
+                vkCmdSetScissor(cmd, 0, 1, &scissor);
 
-            VkDescriptorSet sets[] = {
-                renderData.rdCaptureUBO.rdUBODescriptorSet,
-                cubemapData.descriptorSet
-            };
+                vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdPrefilterPipeline);
 
-            vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdPrefilterPipelineLayout,
-                0, 2, sets, 0, nullptr);
+                VkDescriptorSet sets[] = {
+                    renderData.rdCaptureUBO.rdUBODescriptorSet,
+                    cubemapData.descriptorSet
+                };
 
-            vkCmdDraw(cmd, 36, 1, 0, 0);
-            vkCmdEndRenderPass(cmd);
+                vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdPrefilterPipelineLayout,
+                    0, 2, sets, 0, nullptr);
 
-            VkImageMemoryBarrier toSrcImageMemoryBarrier{};
-            toSrcImageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-            toSrcImageMemoryBarrier.image = offscreenImage;
-            toSrcImageMemoryBarrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-            toSrcImageMemoryBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-            toSrcImageMemoryBarrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-            toSrcImageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-            toSrcImageMemoryBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            toSrcImageMemoryBarrier.subresourceRange.baseMipLevel = 0;
-            toSrcImageMemoryBarrier.subresourceRange.levelCount = 1;
-            toSrcImageMemoryBarrier.subresourceRange.baseArrayLayer = 0;
-            toSrcImageMemoryBarrier.subresourceRange.layerCount = 1;
+                vkCmdDraw(cmd, 36, 1, 0, 0);
+                vkCmdEndRenderPass(cmd);
 
-            vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-                0, 0, nullptr, 0, nullptr,
-                1, &toSrcImageMemoryBarrier);
+                VkImageMemoryBarrier toSrcImageMemoryBarrier{};
+                toSrcImageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+                toSrcImageMemoryBarrier.image = offscreenImage;
+                toSrcImageMemoryBarrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+                toSrcImageMemoryBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+                toSrcImageMemoryBarrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+                toSrcImageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+                toSrcImageMemoryBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+                toSrcImageMemoryBarrier.subresourceRange.baseMipLevel = 0;
+                toSrcImageMemoryBarrier.subresourceRange.levelCount = 1;
+                toSrcImageMemoryBarrier.subresourceRange.baseArrayLayer = 0;
+                toSrcImageMemoryBarrier.subresourceRange.layerCount = 1;
 
-            VkImageCopy copy{};
-            copy.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            copy.srcSubresource.mipLevel = 0;
-            copy.srcSubresource.baseArrayLayer = 0;
-            copy.srcSubresource.layerCount = 1;
-            copy.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            copy.dstSubresource.mipLevel = mip;
-            copy.dstSubresource.baseArrayLayer = face;
-            copy.dstSubresource.layerCount = 1;
-            copy.extent = { mipSize, mipSize, 1 };
+                vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                    0, 0, nullptr, 0, nullptr,
+                    1, &toSrcImageMemoryBarrier);
 
-            vkCmdCopyImage(cmd, offscreenImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-                prefilteredMapData.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy);
+                VkImageCopy copy{};
+                copy.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+                copy.srcSubresource.mipLevel = 0;
+                copy.srcSubresource.baseArrayLayer = 0;
+                copy.srcSubresource.layerCount = 1;
+                copy.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+                copy.dstSubresource.mipLevel = mip;
+                copy.dstSubresource.baseArrayLayer = face;
+                copy.dstSubresource.layerCount = 1;
+                copy.extent = { mipSize, mipSize, 1 };
 
-            VkImageMemoryBarrier backToColorBarrier{};
-            backToColorBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-            backToColorBarrier.image = offscreenImage;
-            backToColorBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-            backToColorBarrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-            backToColorBarrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-            backToColorBarrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-            backToColorBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            backToColorBarrier.subresourceRange.levelCount = 1;
-            backToColorBarrier.subresourceRange.layerCount = 1;
+                vkCmdCopyImage(cmd, offscreenImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                    prefilteredMapData.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy);
 
-            vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT,
-                VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0, 0, nullptr,
-                0, nullptr, 1, &backToColorBarrier);
+                VkImageMemoryBarrier backToColorBarrier{};
+                backToColorBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+                backToColorBarrier.image = offscreenImage;
+                backToColorBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+                backToColorBarrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+                backToColorBarrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+                backToColorBarrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+                backToColorBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+                backToColorBarrier.subresourceRange.levelCount = 1;
+                backToColorBarrier.subresourceRange.layerCount = 1;
+
+                vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                    VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0, 0, nullptr,
+                    0, nullptr, 1, &backToColorBarrier);
+            }
         }
+
+        VkImageMemoryBarrier prefilteredToSample{};
+        prefilteredToSample.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        prefilteredToSample.image = prefilteredMapData.image;
+        prefilteredToSample.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        prefilteredToSample.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        prefilteredToSample.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        prefilteredToSample.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        prefilteredToSample.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        prefilteredToSample.subresourceRange.baseMipLevel = 0;
+        prefilteredToSample.subresourceRange.levelCount = maxMipLevels;
+        prefilteredToSample.subresourceRange.baseArrayLayer = 0;
+        prefilteredToSample.subresourceRange.layerCount = 6;
+
+        vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+            0, 0, nullptr, 0, nullptr,
+            1, &prefilteredToSample);
     }
-
-    VkImageMemoryBarrier prefilteredToSample{};
-    prefilteredToSample.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    prefilteredToSample.image = prefilteredMapData.image;
-    prefilteredToSample.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-    prefilteredToSample.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    prefilteredToSample.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-    prefilteredToSample.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-    prefilteredToSample.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    prefilteredToSample.subresourceRange.baseMipLevel = 0;
-    prefilteredToSample.subresourceRange.levelCount = maxMipLevels;
-    prefilteredToSample.subresourceRange.baseArrayLayer = 0;
-    prefilteredToSample.subresourceRange.layerCount = 6;
-
-    vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-        0, 0, nullptr, 0, nullptr,
-        1, &prefilteredToSample);
-
     vkEndCommandBuffer(cmd);
 
     VkSubmitInfo submit{};
@@ -1143,51 +1149,53 @@ bool Core::Renderer::IBLGenerator::generateBRDFLUT(VkRenderData& renderData, VkT
     begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     vkBeginCommandBuffer(cmd, &begin);
+    {
+        Debug::Marker marker(renderData.rdVkbDevice.device, cmd, "Generate BRDF LUT", Debug::Colors::Blue);
 
-    VkImageMemoryBarrier barrier{};
-    barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    barrier.image = brdfLutData.image;
-    barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    barrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-    barrier.srcAccessMask = 0;
-    barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-    barrier.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+        VkImageMemoryBarrier barrier{};
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.image = brdfLutData.image;
+        barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        barrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        barrier.srcAccessMask = 0;
+        barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        barrier.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
 
-    vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                         0, 0, nullptr, 0,
-                         nullptr, 1, &barrier);
+        vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                             0, 0, nullptr, 0,
+                             nullptr, 1, &barrier);
 
-    VkRenderPassBeginInfo rp{};
-    rp.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    rp.renderPass = renderData.rdIBLRenderpass;
-    rp.framebuffer = framebuffer;
-    rp.renderArea.extent = { lutSize, lutSize };
-    VkClearValue clear = {{{0,0,0,1}}};
-    rp.clearValueCount = 1;
-    rp.pClearValues = &clear;
+        VkRenderPassBeginInfo rp{};
+        rp.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        rp.renderPass = renderData.rdIBLRenderpass;
+        rp.framebuffer = framebuffer;
+        rp.renderArea.extent = { lutSize, lutSize };
+        VkClearValue clear = {{{0,0,0,1}}};
+        rp.clearValueCount = 1;
+        rp.pClearValues = &clear;
 
-    vkCmdBeginRenderPass(cmd, &rp, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdBeginRenderPass(cmd, &rp, VK_SUBPASS_CONTENTS_INLINE);
 
-    VkViewport viewport{0.0f, 0.0f, static_cast<float>(lutSize), static_cast<float>(lutSize), 0.0f, 1.0f};
-    VkRect2D scissor{{0, 0}, {lutSize, lutSize}};
-    vkCmdSetViewport(cmd, 0, 1, &viewport);
-    vkCmdSetScissor(cmd, 0, 1, &scissor);
+        VkViewport viewport{0.0f, 0.0f, static_cast<float>(lutSize), static_cast<float>(lutSize), 0.0f, 1.0f};
+        VkRect2D scissor{{0, 0}, {lutSize, lutSize}};
+        vkCmdSetViewport(cmd, 0, 1, &viewport);
+        vkCmdSetScissor(cmd, 0, 1, &scissor);
 
-    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdBRDFLUTPipeline);
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdBRDFLUTPipeline);
 
-    vkCmdDraw(cmd, 3, 1, 0, 0);
+        vkCmdDraw(cmd, 3, 1, 0, 0);
 
-    vkCmdEndRenderPass(cmd);
+        vkCmdEndRenderPass(cmd);
 
-    barrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-    barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-    barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        barrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-    vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-                         0, 0, nullptr, 0,
-                         nullptr, 1, &barrier);
-
+        vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                             0, 0, nullptr, 0,
+                             nullptr, 1, &barrier);
+    }
     vkEndCommandBuffer(cmd);
 
     VkSubmitInfo submit{};
