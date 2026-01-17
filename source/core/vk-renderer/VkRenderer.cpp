@@ -36,6 +36,7 @@
 #include "core/vk-renderer/viewport/ViewportRenderpass.h"
 #include "core/vk-renderer/viewport/ViewportTarget.h"
 #include "cubemap_generator/HDRToCubemapRenderpass.h"
+#include "debug/DebugUtils.h"
 #include "ibl_generator/IBLGenerator.h"
 
 bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned int height)
@@ -278,10 +279,14 @@ void Core::Renderer::VkRenderer::beginRenderFrame(VkRenderData& renderData)
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
     vkBeginCommandBuffer(renderData.rdCommandBuffer, &beginInfo);
+
+    Debug::Marker::begin(renderData.rdVkbDevice.device, renderData.rdCommandBuffer, "Frame", Debug::Colors::Magenta);
 }
 
 void Core::Renderer::VkRenderer::beginOffscreenRenderPass(VkRenderData& renderData)
 {
+    Debug::Marker::begin(renderData.rdVkbDevice.device, renderData.rdCommandBuffer, "Offscreen Render Pass", Debug::Colors::Green);
+
     VkClearValue clearValues[2] = {{{{0.f, 0.f, 0.f, 1.0f}}}, {1.0f, 0}};
     VkRenderPassBeginInfo offscreenRenderPassInfo{VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
     offscreenRenderPassInfo.renderPass = renderData.rdViewportTarget.renderpass;
@@ -310,10 +315,14 @@ void Core::Renderer::VkRenderer::beginOffscreenRenderPass(VkRenderData& renderDa
 void Core::Renderer::VkRenderer::endOffscreenRenderPass(VkRenderData& renderData)
 {
     vkCmdEndRenderPass(renderData.rdCommandBuffer);
+
+    Debug::Marker::end(renderData.rdVkbDevice.device, renderData.rdCommandBuffer);
 }
 
 void Core::Renderer::VkRenderer::beginFinalRenderPass(VkRenderData& renderData)
 {
+    Debug::Marker::begin(renderData.rdVkbDevice.device, renderData.rdCommandBuffer, "Final Render Pass", Debug::Colors::Cyan);
+
     VkClearValue clearValues[2] = {{{{0.f, 0.f, 0.f, 1.0f}}}, {1.0f, 0}};
     VkRenderPassBeginInfo renderPassBeginInfo{VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
     renderPassBeginInfo.renderPass = renderData.rdRenderpass;
@@ -339,10 +348,14 @@ void Core::Renderer::VkRenderer::beginFinalRenderPass(VkRenderData& renderData)
 void Core::Renderer::VkRenderer::endFinalRenderPass(VkRenderData& renderData)
 {
     vkCmdEndRenderPass(renderData.rdCommandBuffer);
+
+    Debug::Marker::end(renderData.rdVkbDevice.device, renderData.rdCommandBuffer);
 }
 
 void Core::Renderer::VkRenderer::endRenderFrame(VkRenderData& renderData)
 {
+    Debug::Marker::end(renderData.rdVkbDevice.device, renderData.rdCommandBuffer);
+
     if (vkEndCommandBuffer(renderData.rdCommandBuffer) != VK_SUCCESS)
     {
         Logger::log(1, "VkRenderer::endRenderFrame - vkEndCommandBuffer failed");

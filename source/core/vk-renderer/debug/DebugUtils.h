@@ -25,23 +25,32 @@ public:
     Marker(VkDevice device, VkCommandBuffer cmd, const std::string& name, const float color[4])
         : mDevice(device), mCmd(cmd)
     {
+        begin(mDevice, mCmd, name, color);
+    }
 
+    ~Marker()
+    {
+        end(mDevice, mCmd);
+    }
+
+    static void begin(VkDevice device, VkCommandBuffer cmd, const std::string& name, const float color[4])
+    {
         VkDebugUtilsLabelEXT labelInfo{};
         labelInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
         labelInfo.pLabelName = name.c_str();
         memcpy(labelInfo.color, color, sizeof(float) * 4);
 
-        if (auto function = reinterpret_cast<PFN_vkCmdBeginDebugUtilsLabelEXT>(vkGetDeviceProcAddr(mDevice, "vkCmdBeginDebugUtilsLabelEXT")))
+        if (auto function = reinterpret_cast<PFN_vkCmdBeginDebugUtilsLabelEXT>(vkGetDeviceProcAddr(device, "vkCmdBeginDebugUtilsLabelEXT")))
         {
-            function(mCmd, &labelInfo);
+            function(cmd, &labelInfo);
         }
     }
 
-    ~Marker()
+    static void end(VkDevice device, VkCommandBuffer cmd)
     {
-        if (auto function = reinterpret_cast<PFN_vkCmdEndDebugUtilsLabelEXT>(vkGetDeviceProcAddr(mDevice, "vkCmdEndDebugUtilsLabelEXT")))
+        if (auto function = reinterpret_cast<PFN_vkCmdEndDebugUtilsLabelEXT>(vkGetDeviceProcAddr(device, "vkCmdEndDebugUtilsLabelEXT")))
         {
-            function(mCmd);
+            function(cmd);
         }
     }
 
