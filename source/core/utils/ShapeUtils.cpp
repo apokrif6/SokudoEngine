@@ -29,7 +29,7 @@ int getBoneID(Core::Utils::PrimitiveData& primitiveData, const aiBone* bone)
     return boneID;
 }
 
-void setVertexBoneData(Core::Renderer::NewVertex& vertex, int id, float weight)
+void setVertexBoneData(Core::Renderer::Vertex& vertex, int id, float weight)
 {
     for (size_t i = 0; i < maxNumberOfBonesPerVertex; i++)
     {
@@ -256,7 +256,7 @@ void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiSc
 
     for (size_t i = 0; i < mesh->mNumVertices; ++i)
     {
-        Core::Renderer::NewVertex vertex{};
+        Core::Renderer::Vertex vertex{};
         if (mesh->HasPositions())
         {
             aiVector3D& position = mesh->mVertices[i];

@@ -10,7 +10,7 @@
 
 namespace Core::Renderer
 {
-struct NewVertex
+struct Vertex
 {
     glm::vec3 position{};
     glm::vec3 normal{};
@@ -24,7 +24,7 @@ struct NewVertex
     {
         VkVertexInputBindingDescription bindingDescription{};
         bindingDescription.binding = 0;
-        bindingDescription.stride = sizeof(NewVertex);
+        bindingDescription.stride = sizeof(Vertex);
         bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
         return bindingDescription;

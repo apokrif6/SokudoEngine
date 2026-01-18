@@ -14,7 +14,7 @@ namespace Core::Utils
 {
 struct PrimitiveData
 {
-    std::vector<Renderer::NewVertex> vertices;
+    std::vector<Renderer::Vertex> vertices;
     std::vector<uint32_t> indices;
     std::unordered_map<aiTextureType, Renderer::VkTextureData> textures;
     Renderer::MaterialInfo material;

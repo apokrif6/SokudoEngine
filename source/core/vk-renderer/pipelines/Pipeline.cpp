@@ -33,7 +33,7 @@ bool Core::Renderer::Pipeline::init(VkRenderData& renderData, VkPipelineLayout& 
 
     VkPipelineShaderStageCreateInfo shaderStagesInfo[] = {vertexStageInfo, fragmentStageInfo};
 
-    auto bindingDescription = NewVertex::getBindingDescription();
+    auto bindingDescription = Vertex::getBindingDescription();
     auto attributeDescriptions = Shader::getAttributeDescriptionsBySpvReflect(vertexShaderFilename);
 
     VkPipelineVertexInputStateCreateInfo vertexInputInfo{};

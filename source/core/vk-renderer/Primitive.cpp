@@ -3,7 +3,7 @@
 #include "Texture.h"
 #include "../components/MeshComponent.h"
 
-Core::Renderer::Primitive::Primitive(const std::vector<NewVertex>& vertexBufferData,
+Core::Renderer::Primitive::Primitive(const std::vector<Vertex>& vertexBufferData,
                                      const std::vector<uint32_t>& indexBufferData,
                                      const std::unordered_map<aiTextureType, VkTextureData>& textures,
                                      const MaterialInfo& materialInfo,
@@ -37,7 +37,7 @@ Core::Renderer::Primitive::Primitive(const std::vector<NewVertex>& vertexBufferD
 void Core::Renderer::Primitive::createVertexBuffer(VkRenderData& renderData)
 {
     VertexBuffer::init(renderData, primitiveRenderData.rdModelVertexBufferData,
-                                       mVertexBufferData.size() * sizeof(NewVertex), "Primitive");
+                                       mVertexBufferData.size() * sizeof(Vertex), "Primitive");
 }
 
 void Core::Renderer::Primitive::createIndexBuffer(VkRenderData& renderData)
