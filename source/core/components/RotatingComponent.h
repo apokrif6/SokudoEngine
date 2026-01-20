@@ -9,7 +9,7 @@ namespace Core::Component
 class RotatingComponent : public Component
 {
 public:
-    [[nodiscard]] std::string_view getTypeName() const override { return "RotatorComponent"; }
+    [[nodiscard]] std::string_view getTypeName() const override { return "RotatingComponent"; }
 
     void setRotationSpeed(const glm::vec3& speed) { mRotationSpeed = speed; }
     [[nodiscard]] const glm::vec3& getRotationSpeed() const { return mRotationSpeed; }

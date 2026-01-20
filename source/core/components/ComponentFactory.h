@@ -2,9 +2,9 @@
 
 #include <functional>
 #include <memory>
-#include "MeshComponent.h"
 #include "TransformComponent.h"
-#include "core/components/Component.h"
+#include "MeshComponent.h"
+#include "RotatingComponent.h"
 
 namespace Core::Component
 {
@@ -17,6 +17,7 @@ public:
     {
         registerComponent("TransformComponent", []{ return std::make_unique<TransformComponent>(); });
         registerComponent("MeshComponent", [] { return std::make_unique<MeshComponent>(); });
+        registerComponent("RotatingComponent", [] { return std::make_unique<RotatingComponent>(); });
     }
 
     static void registerComponent(const std::string& name, Creator creator)
