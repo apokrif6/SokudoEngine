@@ -11,10 +11,21 @@ Game Engine written in C++ and Vulkan. I am writing this in my free time to lear
 
 ## 🌟 Features
 
-### ⚡ Vulkan renderer
-- PBR rendering (WIP)
-- SPIR-V shader compilation and attribute reflection
-- Support for skyboxes with cubemap textures
+### 💎 Physically Based Rendering
+- HDR environment maps
+- Image Based Lighting
+- Directional Lighting support
+
+![PBR 1](https://github.com/apokrif6/apokrif6.github.io/blob/main/assets/images/portfolio/sokudoengine/SokudoEngine_PBR1.gif)
+![PBR 2](https://github.com/apokrif6/apokrif6.github.io/blob/main/assets/images/portfolio/sokudoengine/SokudoEngine_PBR2.gif)
+
+
+### 🧱 Component System
+- Unreal style component system
+- Easy to extend and create new components
+- Supports serialization and deserialization of components
+
+![Component System](https://github.com/apokrif6/apokrif6.github.io/blob/main/assets/images/portfolio/sokudoengine/SokudoEngine_ComponentSystem.gif)
 
 ### 🕺 Animation system
 - Skeletal animation with skinning
