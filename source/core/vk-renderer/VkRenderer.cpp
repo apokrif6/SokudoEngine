@@ -838,7 +838,7 @@ bool Core::Renderer::VkRenderer::createDummyBonesTransformUBO()
 {
     auto& renderData = Engine::getInstance().getRenderData();
 
-    std::vector<glm::mat4> identityMatrix = {glm::mat4(1.0f)};
+    constexpr auto identityMatrix = glm::mat4(1.0f);
 
     if (!UniformBuffer::init(renderData, renderData.rdDummyBonesUBO, sizeof(glm::mat4), "DummyBonesUBO"))
     {
