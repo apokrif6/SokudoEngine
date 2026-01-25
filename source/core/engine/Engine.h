@@ -74,8 +74,6 @@ private:
     std::vector<System::IUpdatable*> mUpdatables;
     std::vector<System::IDrawable*> mDrawables;
 
-    // TODO
-    // replace it with EngineState enum
     EngineState mState = EngineState::Running;
 };
 } // namespace Core
