@@ -5,8 +5,6 @@
 #include "Component.h"
 #include "core/scene/Transform.h"
 
-// TODO
-// add serialization
 namespace Core::Component
 {
 class TransformComponent : public Component
