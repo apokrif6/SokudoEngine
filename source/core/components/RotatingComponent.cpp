@@ -2,7 +2,7 @@
 
 #include "core/tools/Logger.h"
 
-void Core::Component::RotatingComponent::onAddedToScene()
+void Core::Component::RotatingComponent::onAdded()
 {
     if (mOwner)
     {

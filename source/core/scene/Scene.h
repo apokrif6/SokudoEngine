@@ -15,6 +15,8 @@ class Scene : public System::ISystem, public System::IUpdatable, public System::
 public:
     void addObject(std::shared_ptr<SceneObject> object);
 
+    std::shared_ptr<SceneObject> createObject(const std::string& name);
+
     virtual void update(Renderer::VkRenderData& renderData, float deltaTime) override;
 
     virtual System::DrawLayer getDrawLayer() const override { return System::DrawLayer::World; }

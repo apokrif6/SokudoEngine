@@ -43,10 +43,6 @@ public:
         return nullptr;
     }
 
-    void onAddedToScene();
-
-    void onRemovedFromScene();
-
     void update(Renderer::VkRenderData& renderData);
 
     void draw(Renderer::VkRenderData& renderData);

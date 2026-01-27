@@ -14,7 +14,7 @@ public:
     void setRotationSpeed(const glm::vec3& speed) { mRotationSpeed = speed; }
     [[nodiscard]] const glm::vec3& getRotationSpeed() const { return mRotationSpeed; }
 
-    void onAddedToScene() override;
+    void onAdded() override;
 
     void update(Renderer::VkRenderData& renderData) override;
 

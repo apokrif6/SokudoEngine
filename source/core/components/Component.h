@@ -22,9 +22,6 @@ public:
     virtual void onAdded() {}
     virtual void onRemoved() {}
 
-    virtual void onAddedToScene() {}
-    virtual void onRemovedFromScene() {}
-
     virtual void update(Renderer::VkRenderData& renderData) {}
     virtual void draw(Renderer::VkRenderData& renderData) {}
     virtual void cleanup(Renderer::VkRenderData& renderData) {}

@@ -21,9 +21,9 @@ public:
 
     [[nodiscard]] std::string_view getTypeName() const override { return "MeshComponent"; }
 
-    void onAddedToScene() override;
+    void onAdded() override;
 
-    void onRemovedFromScene() override;
+    void onRemoved() override;
 
     void addPrimitive(const std::vector<Renderer::Vertex>& vertexBufferData,
                       const std::vector<uint32_t>& indexBufferData,

@@ -41,16 +41,16 @@ Core::Component::MeshComponent::MeshComponent(Core::Animations::Skeleton skeleto
 
 Core::Component::MeshComponent::~MeshComponent() { Logger::log(1, "%s: Destroyed mesh for owner %s", __FUNCTION__, getOwner()->getName().c_str()); }
 
-void Core::Component::MeshComponent::onAddedToScene()
+void Core::Component::MeshComponent::onAdded()
 {
-    Logger::log(1, "%s: Mesh %s added to scene for owner", __FUNCTION__, getOwner()->getName().c_str());
+    Logger::log(1, "%s: Mesh %s added for owner", __FUNCTION__, getOwner()->getName().c_str());
 
     Engine::getInstance().getSystem<Animations::Animator>()->addMesh(this);
 }
 
-void Core::Component::MeshComponent::onRemovedFromScene()
+void Core::Component::MeshComponent::onRemoved()
 {
-    Logger::log(1, "%s: Mesh %s removed from scene for owner", __FUNCTION__, getOwner()->getName().c_str());
+    Logger::log(1, "%s: Mesh %s removed from owner", __FUNCTION__, getOwner()->getName().c_str());
 
     Engine::getInstance().getSystem<Animations::Animator>()->removeMesh(this);
 }
@@ -69,9 +69,7 @@ void Core::Component::MeshComponent::update(Renderer::VkRenderData& renderData)
 {
     // TODO
     // should be replaced with local transform, like SceneComponent
-    const auto* transformComponent =
-        getOwner()->getComponent<Core::Component::TransformComponent>();
-
+    const auto* transformComponent = getOwner()->getComponent<TransformComponent>();
     if (!transformComponent)
     {
         Logger::log(3, "%s: Warning! Mesh %s has no TransformComponent!", __FUNCTION__, getOwner()->getName().c_str());

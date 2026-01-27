@@ -133,6 +133,17 @@ bool Core::UI::SceneUIWindow::getBody()
         }
     }
 
+    if (ImGui::BeginPopupContextWindow("InspectorContextMenu", ImGuiPopupFlags_MouseButtonRight))
+    {
+        if (ImGui::MenuItem("Create Empty Object"))
+        {
+            auto* scene = Engine::getInstance().getSystem<Scene::Scene>();
+            scene->createObject("New Scene Object");
+        }
+
+        ImGui::EndPopup();
+    }
+
     ImGui::End();
 
     return true;

@@ -1,25 +1,8 @@
 #include "SceneObject.h"
 #include "yaml-cpp/node/node.h"
 #include <algorithm>
-
 #include "core/components/ComponentFactory.h"
 #include "core/components/TransformComponent.h"
-
-void Core::Scene::SceneObject::onAddedToScene()
-{
-    for (auto& component : mComponents)
-    {
-        component->onAddedToScene();
-    }
-}
-
-void Core::Scene::SceneObject::onRemovedFromScene()
-{
-    for (auto& component : mComponents)
-    {
-        component->onRemovedFromScene();
-    }
-}
 
 void Core::Scene::SceneObject::update(Renderer::VkRenderData& renderData)
 {
@@ -41,6 +24,7 @@ void Core::Scene::SceneObject::cleanup(Renderer::VkRenderData& renderData)
 {
     for (auto& component : mComponents)
     {
+        component->onRemoved();
         component->cleanup(renderData);
     }
 }

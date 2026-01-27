@@ -48,6 +48,27 @@ class InspectorUIWindow : public UIWindow<InspectorUIWindow>
                     MeshComponentInspectorUIWindow::renderBody();
                 }
             }
+
+            if (ImGui::BeginPopupContextWindow("AddComponentContext", ImGuiPopupFlags_MouseButtonRight))
+            {
+                if (ImGui::MenuItem("Rotating Component"))
+                {
+                    if (!selectedObject->getComponent<Component::RotatingComponent>())
+                    {
+                        selectedObject->addComponent<Component::RotatingComponent>();
+                    }
+                }
+
+                if (ImGui::MenuItem("Mesh Component"))
+                {
+                    if (!selectedObject->getComponent<Component::MeshComponent>())
+                    {
+                        selectedObject->addComponent<Component::MeshComponent>();
+                    }
+                }
+
+                ImGui::EndPopup();
+            }
         }
         else
         {
