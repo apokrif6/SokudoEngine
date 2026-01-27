@@ -49,6 +49,11 @@ Game Engine written in C++ and Vulkan. I am writing this in my free time to lear
 
 ![Serialization Example](https://github.com/apokrif6/apokrif6.github.io/blob/main/assets/images/portfolio/sokudoengine/SokudoEngine_SceneSerialization.gif)
 
+## 🔗 Dependencies
+
+To build and run `SokudoEngine`, you will need:
+- [Vulkan SDK](https://vulkan.lunarg.com)
+- [vcpkg](https://vcpkg.io)
 
 ## 💜 Special Thanks
 
