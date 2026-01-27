@@ -220,6 +220,17 @@ struct PipelineLayoutConfig
     std::vector<VkPushConstantRange> pushConstantRanges;
 };
 
+struct IBLData
+{
+    VkRenderPass rdIBLRenderpass = VK_NULL_HANDLE;
+
+    VkCubemapData rdIrradianceMap{};
+
+    VkCubemapData rdPrefilterMap{};
+
+    VkTextureData rdBRDFLUT{};
+};
+
 struct VkRenderData
 {
     GLFWwindow* rdWindow = nullptr;
@@ -304,11 +315,7 @@ struct VkRenderData
     VkCommandPool rdCommandPool = VK_NULL_HANDLE;
     VkCommandBuffer rdCommandBuffer = VK_NULL_HANDLE;
 
-    // TODO
-    // probably should be stored in HDRToCubemapRenderpass object itself, or be returned by reference from init method
     VkRenderPass rdHDRToCubemapRenderpass = VK_NULL_HANDLE;
-
-    VkRenderPass rdIBLRenderpass = VK_NULL_HANDLE;
 
     VkSemaphore rdPresentSemaphore = VK_NULL_HANDLE;
     VkSemaphore rdRenderSemaphore = VK_NULL_HANDLE;
@@ -327,13 +334,7 @@ struct VkRenderData
 
     VkCubemapData rdSkyboxData{};
 
-    // TODO
-    // move it to IBL struct/class
-    VkCubemapData rdIrradianceMap{};
-
-    VkCubemapData rdPrefilterMap{};
-
-    VkTextureData rdBRDFLUT{};
+    IBLData rdIBLData{};
 
     VkDescriptorPool rdImguiDescriptorPool;
 

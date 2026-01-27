@@ -35,7 +35,7 @@
 #include "core/engine/Engine.h"
 #include "core/vk-renderer/viewport/ViewportRenderpass.h"
 #include "core/vk-renderer/viewport/ViewportTarget.h"
-#include "cubemap_generator/HDRToCubemapRenderpass.h"
+#include "ibl_generator/HDRToCubemapRenderpass.h"
 #include "debug/DebugUtils.h"
 #include "ibl_generator/IBLGenerator.h"
 
@@ -417,7 +417,7 @@ void Core::Renderer::VkRenderer::cleanup(VkRenderData& renderData)
 
     ViewportRenderpass::cleanup(renderData);
     Renderpass::cleanup(renderData);
-    HDRToCubemapRenderpass::cleanup(renderData, renderData.rdIBLRenderpass);
+    HDRToCubemapRenderpass::cleanup(renderData, renderData.rdIBLData.rdIBLRenderpass);
     HDRToCubemapRenderpass::cleanup(renderData, renderData.rdHDRToCubemapRenderpass);
 
     UniformBuffer::cleanup(renderData, renderData.rdGlobalSceneUBO);
@@ -425,13 +425,13 @@ void Core::Renderer::VkRenderer::cleanup(VkRenderData& renderData)
     VertexBuffer::cleanup(renderData, renderData.rdVertexBufferData);
 
     Texture::cleanup(renderData, renderData.rdPlaceholderTexture);
-    Texture::cleanup(renderData, renderData.rdBRDFLUT);
+    Texture::cleanup(renderData, renderData.rdIBLData.rdBRDFLUT);
     Texture::cleanup(renderData, renderData.rdHDRTexture);
 
     UniformBuffer::cleanup(renderData, renderData.rdDummyBonesUBO);
 
-    IBLGenerator::cleanup(renderData, renderData.rdPrefilterMap);
-    IBLGenerator::cleanup(renderData, renderData.rdIrradianceMap);
+    IBLGenerator::cleanup(renderData, renderData.rdIBLData.rdPrefilterMap);
+    IBLGenerator::cleanup(renderData, renderData.rdIBLData.rdIrradianceMap);
     IBLGenerator::cleanup(renderData, renderData.rdSkyboxData);
 
     if (mViewportTarget)
@@ -957,18 +957,18 @@ void Core::Renderer::VkRenderer::updateGlobalSceneDescriptorWrite()
     VkDescriptorSet targetSet = renderData.rdGlobalSceneUBO.rdUBODescriptorSet;
 
     VkDescriptorImageInfo irradianceInfo{};
-    irradianceInfo.sampler = renderData.rdIrradianceMap.sampler;
-    irradianceInfo.imageView = renderData.rdIrradianceMap.imageView;
+    irradianceInfo.sampler = renderData.rdIBLData.rdIrradianceMap.sampler;
+    irradianceInfo.imageView = renderData.rdIBLData.rdIrradianceMap.imageView;
     irradianceInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
     VkDescriptorImageInfo prefilterInfo{};
-    prefilterInfo.sampler = renderData.rdPrefilterMap.sampler;
-    prefilterInfo.imageView = renderData.rdPrefilterMap.imageView;
+    prefilterInfo.sampler = renderData.rdIBLData.rdPrefilterMap.sampler;
+    prefilterInfo.imageView = renderData.rdIBLData.rdPrefilterMap.imageView;
     prefilterInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
     VkDescriptorImageInfo brdfInfo{};
-    brdfInfo.sampler = renderData.rdBRDFLUT.sampler;
-    brdfInfo.imageView = renderData.rdBRDFLUT.imageView;
+    brdfInfo.sampler = renderData.rdIBLData.rdBRDFLUT.sampler;
+    brdfInfo.imageView = renderData.rdIBLData.rdBRDFLUT.imageView;
     brdfInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
     std::vector<VkWriteDescriptorSet> descriptorWrites;

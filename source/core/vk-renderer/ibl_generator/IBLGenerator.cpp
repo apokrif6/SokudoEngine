@@ -3,7 +3,7 @@
 #include "core/engine/Engine.h"
 #include "core/tools/Logger.h"
 #include "core/vk-renderer/buffers/CommandBuffer.h"
-#include "core/vk-renderer/cubemap_generator/HDRToCubemapRenderpass.h"
+#include "HDRToCubemapRenderpass.h"
 #include "core/vk-renderer/debug/DebugUtils.h"
 #include "core/vk-renderer/pipelines/Pipeline.h"
 
@@ -15,7 +15,7 @@ bool Core::Renderer::IBLGenerator::init(VkRenderData& renderData)
         return false;
     }
 
-    if (!HDRToCubemapRenderpass::init(renderData, renderData.rdIBLRenderpass))
+    if (!HDRToCubemapRenderpass::init(renderData, renderData.rdIBLData.rdIBLRenderpass))
     {
         Logger::log(1, "%s error: could not init IBL renderpass\n", __FUNCTION__);
         return false;
@@ -31,7 +31,7 @@ bool Core::Renderer::IBLGenerator::init(VkRenderData& renderData)
         return false;
     }
 
-    if (!createStaticCubemapLayout(renderData, renderData.rdIrradianceMap.descriptorSetLayout))
+    if (!createStaticCubemapLayout(renderData, renderData.rdIBLData.rdIrradianceMap.descriptorSetLayout))
     {
         return false;
     }
@@ -67,19 +67,19 @@ bool Core::Renderer::IBLGenerator::generateIBL(VkRenderData& renderData)
         return false;
     }
 
-    if (!convertCubemapToIrradiance(renderData, renderData.rdSkyboxData, renderData.rdIrradianceMap))
+    if (!convertCubemapToIrradiance(renderData, renderData.rdSkyboxData, renderData.rdIBLData.rdIrradianceMap))
     {
         Logger::log(1, "IBL Error: Failed to generate Irradiance map");
         return false;
     }
 
-    if (!convertCubemapToPrefilteredMap(renderData, renderData.rdSkyboxData, renderData.rdPrefilterMap))
+    if (!convertCubemapToPrefilteredMap(renderData, renderData.rdSkyboxData, renderData.rdIBLData.rdPrefilterMap))
     {
         Logger::log(1, "IBL Error: Failed to generate Prefiltered map");
         return false;
     }
 
-    if (!generateBRDFLUT(renderData, renderData.rdBRDFLUT))
+    if (!generateBRDFLUT(renderData, renderData.rdIBLData.rdBRDFLUT))
     {
         Logger::log(1, "IBL Error: Failed to generate BRDF LUT");
         return false;
@@ -560,7 +560,7 @@ bool Core::Renderer::IBLGenerator::convertCubemapToIrradiance(VkRenderData& rend
     VkFramebuffer framebuffer;
     VkFramebufferCreateInfo fb{};
     fb.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-    fb.renderPass = renderData.rdIBLRenderpass;
+    fb.renderPass = renderData.rdIBLData.rdIBLRenderpass;
     fb.attachmentCount = 1;
     fb.pAttachments = &offscreenImageView;
     fb.width = irradianceSize;
@@ -607,7 +607,7 @@ bool Core::Renderer::IBLGenerator::convertCubemapToIrradiance(VkRenderData& rend
 
             VkRenderPassBeginInfo rp{};
             rp.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-            rp.renderPass = renderData.rdIBLRenderpass;
+            rp.renderPass = renderData.rdIBLData.rdIBLRenderpass;
             rp.framebuffer = framebuffer;
             rp.renderArea.extent = { irradianceSize, irradianceSize };
 
@@ -852,7 +852,7 @@ bool Core::Renderer::IBLGenerator::convertCubemapToPrefilteredMap(VkRenderData& 
     VkFramebuffer framebuffer;
     VkFramebufferCreateInfo fb{};
     fb.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-    fb.renderPass = renderData.rdIBLRenderpass;
+    fb.renderPass = renderData.rdIBLData.rdIBLRenderpass;
     fb.attachmentCount = 1;
     fb.pAttachments = &offscreenImageView;
     fb.width = prefilteredMapSize;
@@ -901,7 +901,7 @@ bool Core::Renderer::IBLGenerator::convertCubemapToPrefilteredMap(VkRenderData& 
 
                 VkRenderPassBeginInfo rp{};
                 rp.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-                rp.renderPass = renderData.rdIBLRenderpass;
+                rp.renderPass = renderData.rdIBLData.rdIBLRenderpass;
                 rp.framebuffer = framebuffer;
                 rp.renderArea.extent = { mipSize, mipSize };
 
@@ -1133,7 +1133,7 @@ bool Core::Renderer::IBLGenerator::generateBRDFLUT(VkRenderData& renderData, VkT
     VkFramebuffer framebuffer;
     VkFramebufferCreateInfo fb{};
     fb.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-    fb.renderPass = renderData.rdIBLRenderpass;
+    fb.renderPass = renderData.rdIBLData.rdIBLRenderpass;
     fb.attachmentCount = 1;
     fb.pAttachments = &brdfLutData.imageView;
     fb.width = lutSize;
@@ -1167,7 +1167,7 @@ bool Core::Renderer::IBLGenerator::generateBRDFLUT(VkRenderData& renderData, VkT
 
         VkRenderPassBeginInfo rp{};
         rp.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        rp.renderPass = renderData.rdIBLRenderpass;
+        rp.renderPass = renderData.rdIBLData.rdIBLRenderpass;
         rp.framebuffer = framebuffer;
         rp.renderArea.extent = { lutSize, lutSize };
         VkClearValue clear = {{{0,0,0,1}}};
@@ -1381,7 +1381,7 @@ bool Core::Renderer::IBLGenerator::createIrradiancePipeline(VkRenderData& render
 
     if (!Pipeline::init(renderData, renderData.rdIrradiancePipelineLayout, renderData.rdIrradiancePipeline,
                         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile.data(),
-                        fragmentShaderFile.data(), pipelineConfig, renderData.rdIBLRenderpass))
+                        fragmentShaderFile.data(), pipelineConfig, renderData.rdIBLData.rdIBLRenderpass))
     {
         Logger::log(1, "%s error: could not init irradiance pipeline\n", __FUNCTION__);
         return false;
@@ -1430,7 +1430,7 @@ bool Core::Renderer::IBLGenerator::createPrefilterPipeline(VkRenderData& renderD
 
     if (!Pipeline::init(renderData, renderData.rdPrefilterPipelineLayout, renderData.rdPrefilterPipeline,
                         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile.data(),
-                        fragmentShaderFile.data(), pipelineConfig, renderData.rdIBLRenderpass))
+                        fragmentShaderFile.data(), pipelineConfig, renderData.rdIBLData.rdIBLRenderpass))
     {
         Logger::log(1, "%s error: could not init irradiance pipeline\n", __FUNCTION__);
         return false;
@@ -1465,7 +1465,7 @@ bool Core::Renderer::IBLGenerator::createBRDFLUTPipeline(VkRenderData& renderDat
 
     if (!Pipeline::init(renderData, renderData.rdBRDFLUTPipelineLayout, renderData.rdBRDFLUTPipeline,
                         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile.data(),
-                        fragmentShaderFile.data(), pipelineConfig, renderData.rdIBLRenderpass))
+                        fragmentShaderFile.data(), pipelineConfig, renderData.rdIBLData.rdIBLRenderpass))
     {
         Logger::log(1, "%s error: could not init BRDF LUT pipeline\n", __FUNCTION__);
         return false;
