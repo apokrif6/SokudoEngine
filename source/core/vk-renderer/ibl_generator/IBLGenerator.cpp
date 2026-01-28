@@ -26,12 +26,12 @@ bool Core::Renderer::IBLGenerator::init(VkRenderData& renderData)
         return false;
     }
 
-    if (!createStaticCubemapLayout(renderData, renderData.rdSkyboxData.descriptorSetLayout))
+    if (!createStaticCubemapLayout(renderData, renderData.rdSkyboxData.descriptorSetLayout, "Skybox"))
     {
         return false;
     }
 
-    if (!createStaticCubemapLayout(renderData, renderData.rdIBLData.rdIrradianceMap.descriptorSetLayout))
+    if (!createStaticCubemapLayout(renderData, renderData.rdIBLData.rdIrradianceMap.descriptorSetLayout, "Irradiance Map"))
     {
         return false;
     }
@@ -111,6 +111,11 @@ bool Core::Renderer::IBLGenerator::createDescriptorForHDR(VkRenderData& renderDa
         return false;
     }
 
+    constexpr std::string_view descriptorSetLayoutObjectName = "Descriptor Set Layout IBL HDR";
+    vmaSetAllocationName(renderData.rdAllocator, renderData.rdHDRTexture.imageAlloc, descriptorSetLayoutObjectName.data());
+    Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(renderData.rdHDRTexture.descriptorSetLayout),
+               VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, descriptorSetLayoutObjectName.data());
+
     VkDescriptorPoolSize poolSize{};
     poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     poolSize.descriptorCount = 1;
@@ -165,7 +170,7 @@ bool Core::Renderer::IBLGenerator::createDescriptorForHDR(VkRenderData& renderDa
     return true;
 }
 
-bool Core::Renderer::IBLGenerator::createStaticCubemapLayout(VkRenderData& renderData, VkDescriptorSetLayout& layout)
+bool Core::Renderer::IBLGenerator::createStaticCubemapLayout(VkRenderData& renderData, VkDescriptorSetLayout& layout, const std::string_view& name)
 {
     VkDescriptorSetLayoutBinding samplerBinding{};
     samplerBinding.binding = 0;
@@ -184,6 +189,10 @@ bool Core::Renderer::IBLGenerator::createStaticCubemapLayout(VkRenderData& rende
         Logger::log(1, "%s error: could not create cubemap descriptor set layout", __FUNCTION__);
         return false;
     }
+
+    const std::string descriptorSetLayoutObjectName = "Descriptor Set Layout IBL Static Cubemap " + std::string(name);
+    Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(layout),
+               VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, descriptorSetLayoutObjectName);
 
     return true;
 }
@@ -444,6 +453,11 @@ bool Core::Renderer::IBLGenerator::convertHDRToCubemap(VkRenderData& renderData,
     layoutInfo.pBindings = &binding;
 
     vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &layoutInfo, nullptr, &cubemapData.descriptorSetLayout);
+
+    constexpr std::string_view descriptorSetLayoutObjectName = "Descriptor Set Layout IBL Cubemap Data";
+    vmaSetAllocationName(renderData.rdAllocator, cubemapData.imageAlloc, descriptorSetLayoutObjectName.data());
+    Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(cubemapData.descriptorSetLayout),
+               VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, descriptorSetLayoutObjectName.data());
 
     VkDescriptorPoolSize poolSize{};
     poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -735,6 +749,11 @@ bool Core::Renderer::IBLGenerator::convertCubemapToIrradiance(VkRenderData& rend
     layoutInfo.pBindings = &binding;
 
     vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &layoutInfo, nullptr, &irradianceData.descriptorSetLayout);
+
+    constexpr std::string_view descriptorSetLayoutObjectName = "Descriptor Set Layout IBL Irradiance";
+    vmaSetAllocationName(renderData.rdAllocator, irradianceData.imageAlloc, descriptorSetLayoutObjectName.data());
+    Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(irradianceData.descriptorSetLayout),
+               VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, descriptorSetLayoutObjectName.data());
 
     VkDescriptorPoolSize poolSize{};
     poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -1049,6 +1068,11 @@ bool Core::Renderer::IBLGenerator::convertCubemapToPrefilteredMap(VkRenderData& 
 
     vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &layoutInfo, nullptr, &prefilteredMapData.descriptorSetLayout);
 
+    constexpr std::string_view descriptorSetLayoutObjectName = "Descriptor Set Layout IBL PrefilteredMap Data";
+    vmaSetAllocationName(renderData.rdAllocator, prefilteredMapData.imageAlloc, descriptorSetLayoutObjectName.data());
+    Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(prefilteredMapData.descriptorSetLayout),
+               VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, descriptorSetLayoutObjectName.data());
+
     VkDescriptorPoolSize poolSize{};
     poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     poolSize.descriptorCount = 1;
@@ -1233,6 +1257,11 @@ bool Core::Renderer::IBLGenerator::generateBRDFLUT(VkRenderData& renderData, VkT
     layoutInfo.pBindings = &binding;
 
     vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &layoutInfo, nullptr, &brdfLutData.descriptorSetLayout);
+
+    constexpr std::string_view descriptorSetLayoutObjectName = "Descriptor Set Layout IBL BRDF LUT Data";
+    vmaSetAllocationName(renderData.rdAllocator, brdfLutData.imageAlloc, descriptorSetLayoutObjectName.data());
+    Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(brdfLutData.descriptorSetLayout),
+               VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, descriptorSetLayoutObjectName.data());
 
     VkDescriptorPoolSize poolSize{};
     poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;

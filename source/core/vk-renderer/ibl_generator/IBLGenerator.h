@@ -16,7 +16,7 @@ public:
 private:
     static bool createDescriptorForHDR(VkRenderData& renderData);
 
-    static bool createStaticCubemapLayout(VkRenderData& renderData, VkDescriptorSetLayout& layout);
+    static bool createStaticCubemapLayout(VkRenderData& renderData, VkDescriptorSetLayout& layout, const std::string_view& name);
 
     static bool convertHDRToCubemap(VkRenderData& renderData, VkTextureData& texture, VkCubemapData& cubemapData);
 
