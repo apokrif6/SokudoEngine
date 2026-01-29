@@ -11,12 +11,12 @@ public:
 
     static bool generateIBL(VkRenderData& renderData);
 
-    static void cleanup(VkRenderData& renderData, VkCubemapData& cubemapData);
+    static void cleanup(VkRenderData& renderData, IBLData& iblData);
 
 private:
     static bool createDescriptorForHDR(VkRenderData& renderData);
 
-    static bool createStaticCubemapLayout(VkRenderData& renderData, VkDescriptorSetLayout& layout, const std::string_view& name);
+    static bool createStaticCubemapLayout(VkRenderData& renderData, VkDescriptorSetLayout& layout);
 
     static bool convertHDRToCubemap(VkRenderData& renderData, VkTextureData& texture, VkCubemapData& cubemapData);
 
@@ -33,5 +33,7 @@ private:
     static bool createPrefilterPipeline(VkRenderData& renderData);
 
     static bool createBRDFLUTPipeline(VkRenderData& renderData);
+
+    static void cleanupCubemapResources(VkRenderData& renderData, VkCubemapData& cubemapData);
 };
 } // namespace Core::Renderer

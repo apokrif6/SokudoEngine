@@ -417,7 +417,6 @@ void Core::Renderer::VkRenderer::cleanup(VkRenderData& renderData)
 
     ViewportRenderpass::cleanup(renderData);
     Renderpass::cleanup(renderData);
-    HDRToCubemapRenderpass::cleanup(renderData, renderData.rdIBLData.rdIBLRenderpass);
     HDRToCubemapRenderpass::cleanup(renderData, renderData.rdHDRToCubemapRenderpass);
 
     UniformBuffer::cleanup(renderData, renderData.rdGlobalSceneUBO);
@@ -425,14 +424,10 @@ void Core::Renderer::VkRenderer::cleanup(VkRenderData& renderData)
     VertexBuffer::cleanup(renderData, renderData.rdVertexBufferData);
 
     Texture::cleanup(renderData, renderData.rdPlaceholderTexture);
-    Texture::cleanup(renderData, renderData.rdIBLData.rdBRDFLUT);
-    Texture::cleanup(renderData, renderData.rdHDRTexture);
 
     UniformBuffer::cleanup(renderData, renderData.rdDummyBonesUBO);
 
-    IBLGenerator::cleanup(renderData, renderData.rdIBLData.rdPrefilterMap);
-    IBLGenerator::cleanup(renderData, renderData.rdIBLData.rdIrradianceMap);
-    IBLGenerator::cleanup(renderData, renderData.rdSkyboxData);
+    IBLGenerator::cleanup(renderData, renderData.rdIBLData);
 
     if (mViewportTarget)
     {

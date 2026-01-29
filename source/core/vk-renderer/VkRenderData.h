@@ -222,6 +222,8 @@ struct PipelineLayoutConfig
 
 struct IBLData
 {
+    VkDescriptorSetLayout rdSingleCubemapDescriptorLayout = VK_NULL_HANDLE;
+
     VkRenderPass rdIBLRenderpass = VK_NULL_HANDLE;
 
     VkCubemapData rdIrradianceMap{};

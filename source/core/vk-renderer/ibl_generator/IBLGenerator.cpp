@@ -4,6 +4,7 @@
 #include "core/tools/Logger.h"
 #include "core/vk-renderer/buffers/CommandBuffer.h"
 #include "HDRToCubemapRenderpass.h"
+#include "core/vk-renderer/Texture.h"
 #include "core/vk-renderer/debug/DebugUtils.h"
 #include "core/vk-renderer/pipelines/Pipeline.h"
 
@@ -26,32 +27,15 @@ bool Core::Renderer::IBLGenerator::init(VkRenderData& renderData)
         return false;
     }
 
-    if (!createStaticCubemapLayout(renderData, renderData.rdSkyboxData.descriptorSetLayout, "Skybox"))
+    if (!createStaticCubemapLayout(renderData, renderData.rdIBLData.rdSingleCubemapDescriptorLayout))
     {
         return false;
     }
 
-    if (!createStaticCubemapLayout(renderData, renderData.rdIBLData.rdIrradianceMap.descriptorSetLayout, "Irradiance Map"))
-    {
-        return false;
-    }
-
-    if (!createHDRToCubemapPipeline(renderData))
-    {
-        return false;
-    }
-
-    if (!createIrradiancePipeline(renderData))
-    {
-        return false;
-    }
-
-    if (!createPrefilterPipeline(renderData))
-    {
-        return false;
-    }
-
-    if (!createBRDFLUTPipeline(renderData))
+    if (!createHDRToCubemapPipeline(renderData) ||
+        !createIrradiancePipeline(renderData) ||
+        !createPrefilterPipeline(renderData) ||
+        !createBRDFLUTPipeline(renderData))
     {
         return false;
     }
@@ -170,7 +154,7 @@ bool Core::Renderer::IBLGenerator::createDescriptorForHDR(VkRenderData& renderDa
     return true;
 }
 
-bool Core::Renderer::IBLGenerator::createStaticCubemapLayout(VkRenderData& renderData, VkDescriptorSetLayout& layout, const std::string_view& name)
+bool Core::Renderer::IBLGenerator::createStaticCubemapLayout(VkRenderData& renderData, VkDescriptorSetLayout& layout)
 {
     VkDescriptorSetLayoutBinding samplerBinding{};
     samplerBinding.binding = 0;
@@ -190,9 +174,9 @@ bool Core::Renderer::IBLGenerator::createStaticCubemapLayout(VkRenderData& rende
         return false;
     }
 
-    const std::string descriptorSetLayoutObjectName = "Descriptor Set Layout IBL Static Cubemap " + std::string(name);
+    constexpr std::string_view descriptorSetLayoutObjectName = "Descriptor Set Layout IBL Static Cubemap";
     Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(layout),
-               VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, descriptorSetLayoutObjectName);
+               VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, descriptorSetLayoutObjectName.data());
 
     return true;
 }
@@ -1312,7 +1296,21 @@ bool Core::Renderer::IBLGenerator::generateBRDFLUT(VkRenderData& renderData, VkT
     return true;
 }
 
-void Core::Renderer::IBLGenerator::cleanup(VkRenderData& renderData, VkCubemapData& cubemapData)
+void Core::Renderer::IBLGenerator::cleanup(VkRenderData& renderData, IBLData& iblData)
+{
+    HDRToCubemapRenderpass::cleanup(renderData, renderData.rdIBLData.rdIBLRenderpass);
+
+    Texture::cleanup(renderData, renderData.rdHDRTexture);
+    Texture::cleanup(renderData, renderData.rdIBLData.rdBRDFLUT);
+
+    vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, iblData.rdSingleCubemapDescriptorLayout, nullptr);
+
+    cleanupCubemapResources(renderData, iblData.rdPrefilterMap);
+    cleanupCubemapResources(renderData, iblData.rdIrradianceMap);
+    cleanupCubemapResources(renderData, renderData.rdSkyboxData);
+}
+
+void Core::Renderer::IBLGenerator::cleanupCubemapResources(VkRenderData& renderData, VkCubemapData& cubemapData)
 {
     vkDestroySampler(renderData.rdVkbDevice.device, cubemapData.sampler, nullptr);
     vkDestroyImageView(renderData.rdVkbDevice.device, cubemapData.imageView, nullptr);
@@ -1374,14 +1372,14 @@ bool Core::Renderer::IBLGenerator::createIrradiancePipeline(VkRenderData& render
 {
     std::vector layouts = {
         renderData.rdCaptureUBO.rdUBODescriptorLayout,
-        renderData.rdSkyboxData.descriptorSetLayout
+        renderData.rdIBLData.rdSingleCubemapDescriptorLayout
     };
-    
+
     VkPushConstantRange pushConstantRange{};
     pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
     pushConstantRange.offset = 0;
     pushConstantRange.size = sizeof(int);
-    
+
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(layouts.size());
@@ -1423,7 +1421,7 @@ bool Core::Renderer::IBLGenerator::createPrefilterPipeline(VkRenderData& renderD
 {
     std::vector layouts = {
         renderData.rdCaptureUBO.rdUBODescriptorLayout,
-        renderData.rdSkyboxData.descriptorSetLayout
+        renderData.rdIBLData.rdSingleCubemapDescriptorLayout
     };
 
     VkPushConstantRange pushConstantRange{};
