@@ -7,13 +7,21 @@ bool Core::Renderer::ViewportTarget::init(VkRenderData& renderData, glm::int2 si
     renderData.rdViewportTarget.size = size;
 
     if (!createImage(renderData))
+    {
         return false;
+    }
     if (!createImageView(renderData))
+    {
         return false;
+    }
     if (!createFramebuffer(renderData))
+    {
         return false;
+    }
     if (!createDescriptor(renderData))
+    {
         return false;
+    }
     return true;
 }
 

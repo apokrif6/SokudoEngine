@@ -4,8 +4,8 @@
 #include "VkBootstrap.h"
 #include "core/vk-renderer/debug/DebugUtils.h"
 
-bool Core::Renderer::UniformBuffer::init(VkRenderData& renderData, VkUniformBufferData& UBOData,
-                                         size_t bufferSize, const std::string& name, VkDescriptorSetLayout customLayout,
+bool Core::Renderer::UniformBuffer::init(VkRenderData& renderData, VkUniformBufferData& UBOData, size_t bufferSize,
+                                         const std::string& name, VkDescriptorSetLayout customLayout,
                                          std::vector<VkDescriptorPoolSize> extraPoolSizes)
 {
     VkBufferCreateInfo bufferInfo{};
@@ -28,8 +28,8 @@ bool Core::Renderer::UniformBuffer::init(VkRenderData& renderData, VkUniformBuff
     UBOData.rdName = "Uniform Buffer " + name;
     vmaSetAllocationName(renderData.rdAllocator, UBOData.rdUniformBufferAlloc, UBOData.rdName.c_str());
 
-    Debug::setObjectName(renderData.rdVkbDevice.device, (uint64_t)UBOData.rdUniformBuffer,
-                                         VK_OBJECT_TYPE_BUFFER, UBOData.rdName);
+    Debug::setObjectName(renderData.rdVkbDevice.device, (uint64_t)UBOData.rdUniformBuffer, VK_OBJECT_TYPE_BUFFER,
+                         UBOData.rdName);
 
     UBOData.ownsLayout = true;
 
@@ -63,9 +63,7 @@ bool Core::Renderer::UniformBuffer::init(VkRenderData& renderData, VkUniformBuff
         }
     }
 
-    std::vector<VkDescriptorPoolSize> poolSizes = {
-        {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}
-    };
+    std::vector<VkDescriptorPoolSize> poolSizes = {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}};
 
     if (!extraPoolSizes.empty())
     {

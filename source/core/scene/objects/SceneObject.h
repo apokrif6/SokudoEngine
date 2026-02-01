@@ -15,8 +15,7 @@ public:
     explicit SceneObject(std::string name) : mName(std::move(name)) {}
     virtual ~SceneObject() = default;
 
-    template<typename T, typename... Args>
-        T* addComponent(Args&&... args)
+    template <typename T, typename... Args> T* addComponent(Args&&... args)
     {
         static_assert(std::is_base_of_v<Component::Component, T>);
 
@@ -30,8 +29,7 @@ public:
         return ptr;
     }
 
-    template<typename T>
-    T* getComponent() const
+    template <typename T> T* getComponent() const
     {
         for (auto& component : mComponents)
         {

@@ -18,8 +18,7 @@ bool Core::Renderer::CommandBuffer::init(const VkRenderData& renderData, VkComma
     return true;
 }
 
-void Core::Renderer::CommandBuffer::cleanup(const VkRenderData& renderData,
-                                            VkCommandBuffer& commandBuffer)
+void Core::Renderer::CommandBuffer::cleanup(const VkRenderData& renderData, VkCommandBuffer& commandBuffer)
 {
     vkFreeCommandBuffers(renderData.rdVkbDevice.device, renderData.rdCommandPool, 1, &commandBuffer);
 }

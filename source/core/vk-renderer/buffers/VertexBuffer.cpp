@@ -27,7 +27,7 @@ bool Core::Renderer::VertexBuffer::init(VkRenderData& renderData, VkVertexBuffer
     vmaSetAllocationName(renderData.rdAllocator, vertexBufferData.rdVertexBufferAlloc, vertexBufferData.rdName.c_str());
 
     Debug::setObjectName(renderData.rdVkbDevice.device, (uint64_t)vertexBufferData.rdVertexBuffer,
-                                         VK_OBJECT_TYPE_BUFFER, vertexBufferData.rdName);
+                         VK_OBJECT_TYPE_BUFFER, vertexBufferData.rdName);
 
     VkBufferCreateInfo stagingBufferInfo{};
     stagingBufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -56,8 +56,7 @@ bool Core::Renderer::VertexBuffer::init(VkRenderData& renderData, VkVertexBuffer
     return true;
 }
 
-void Core::Renderer::VertexBuffer::cleanup(VkRenderData& renderData,
-                                           VkVertexBufferData& vertexBufferData)
+void Core::Renderer::VertexBuffer::cleanup(VkRenderData& renderData, VkVertexBufferData& vertexBufferData)
 {
     vmaDestroyBuffer(renderData.rdAllocator, vertexBufferData.rdStagingBuffer, vertexBufferData.rdStagingBufferAlloc);
     vmaDestroyBuffer(renderData.rdAllocator, vertexBufferData.rdVertexBuffer, vertexBufferData.rdVertexBufferAlloc);

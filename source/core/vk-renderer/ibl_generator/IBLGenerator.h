@@ -20,9 +20,11 @@ private:
 
     static bool convertHDRToCubemap(VkRenderData& renderData, VkTextureData& texture, VkCubemapData& cubemapData);
 
-    static bool convertCubemapToIrradiance(VkRenderData& renderData, VkCubemapData& cubemapData, VkCubemapData& irradianceData);
+    static bool convertCubemapToIrradiance(VkRenderData& renderData, VkCubemapData& cubemapData,
+                                           VkCubemapData& irradianceData);
 
-    static bool convertCubemapToPrefilteredMap(VkRenderData& renderData, VkCubemapData& cubemapData, VkCubemapData& prefilteredMapData);
+    static bool convertCubemapToPrefilteredMap(VkRenderData& renderData, VkCubemapData& cubemapData,
+                                               VkCubemapData& prefilteredMapData);
 
     static bool generateBRDFLUT(VkRenderData& renderData, VkTextureData& brdfLutData);
 

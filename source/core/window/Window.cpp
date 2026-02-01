@@ -71,38 +71,23 @@ void Core::Application::Window::bindInputs()
     glfwSetWindowUserPointer(mWindow, this);
 
     glfwSetWindowPosCallback(
-        mWindow,
-        [](GLFWwindow* window, int xPosition, int yPosition)
-        {
-            Engine::getInstance().getSystem<Renderer::VkRenderer>()->handleWindowMoveEvents(xPosition,
-                                                                                                        yPosition);
-        });
+        mWindow, [](GLFWwindow* window, int xPosition, int yPosition)
+        { Engine::getInstance().getSystem<Renderer::VkRenderer>()->handleWindowMoveEvents(xPosition, yPosition); });
 
     glfwSetWindowIconifyCallback(
-        mWindow,
-        [](GLFWwindow* window, int minimized)
-        {
-            Engine::getInstance().getSystem<Renderer::VkRenderer>()->handleWindowMinimizedEvents(minimized);
-        });
+        mWindow, [](GLFWwindow* window, int minimized)
+        { Engine::getInstance().getSystem<Renderer::VkRenderer>()->handleWindowMinimizedEvents(minimized); });
 
     glfwSetWindowMaximizeCallback(
-        mWindow,
-        [](GLFWwindow* window, int maximized)
-        {
-            Engine::getInstance().getSystem<Renderer::VkRenderer>()->handleWindowMaximizedEvents(maximized);
-        });
+        mWindow, [](GLFWwindow* window, int maximized)
+        { Engine::getInstance().getSystem<Renderer::VkRenderer>()->handleWindowMaximizedEvents(maximized); });
 
     glfwSetFramebufferSizeCallback(
-        mWindow,
-        [](GLFWwindow* window, int width, int height)
-        {
-            Engine::getInstance().getSystem<Renderer::VkRenderer>()->handleWindowResizeEvents(width,
-                                                                                                          height);
-        });
+        mWindow, [](GLFWwindow* window, int width, int height)
+        { Engine::getInstance().getSystem<Renderer::VkRenderer>()->handleWindowResizeEvents(width, height); });
 
-    glfwSetWindowCloseCallback(
-        mWindow, [](GLFWwindow* window)
-        { Engine::getInstance().getSystem<Renderer::VkRenderer>()->handleWindowCloseEvents(); });
+    glfwSetWindowCloseCallback(mWindow, [](GLFWwindow* window)
+                               { Engine::getInstance().getSystem<Renderer::VkRenderer>()->handleWindowCloseEvents(); });
 
     glfwSetKeyCallback(mWindow,
                        [](GLFWwindow* window, int key, int scancode, int action, int mods)

@@ -15,7 +15,8 @@ public:
                                          const std::string& textureFilename, VkFormat format = VK_FORMAT_R8G8B8A8_SRGB);
 
     static std::future<bool> loadHDRTexture(VkRenderData& renderData, VkTextureData& textureData,
-        const std::string& textureFilename, VkFormat format = VK_FORMAT_R32G32B32A32_SFLOAT);
+                                            const std::string& textureFilename,
+                                            VkFormat format = VK_FORMAT_R32G32B32A32_SFLOAT);
 
     static void cleanup(VkRenderData& renderData, VkTextureData& textureData);
 };

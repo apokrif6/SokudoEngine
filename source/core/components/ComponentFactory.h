@@ -15,20 +15,14 @@ public:
 
     static void registerAll()
     {
-        registerComponent("TransformComponent", []{ return std::make_unique<TransformComponent>(); });
+        registerComponent("TransformComponent", [] { return std::make_unique<TransformComponent>(); });
         registerComponent("MeshComponent", [] { return std::make_unique<MeshComponent>(); });
         registerComponent("RotatingComponent", [] { return std::make_unique<RotatingComponent>(); });
     }
 
-    static void registerComponent(const std::string& name, Creator creator)
-    {
-        getMap()[name] = std::move(creator);
-    }
+    static void registerComponent(const std::string& name, Creator creator) { getMap()[name] = std::move(creator); }
 
-    static std::unique_ptr<Component> create(const std::string& name)
-    {
-        return getMap().at(name)();
-    }
+    static std::unique_ptr<Component> create(const std::string& name) { return getMap().at(name)(); }
 
 private:
     static std::unordered_map<std::string, Creator>& getMap()

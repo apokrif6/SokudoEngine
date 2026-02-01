@@ -27,7 +27,6 @@ class RotatingComponentInspectorUIWindow : public UIWindow<RotatingComponentInsp
             rotatingComponent->setRotationSpeed(rotationSpeed);
         }
 
-
         return true;
     }
 };

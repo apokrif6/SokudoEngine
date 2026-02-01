@@ -58,7 +58,7 @@ bool Core::UI::SceneUIWindow::getBody()
                         saveFilename += ".yaml";
                     }
                     Scene::Serialization::saveSceneToFile(*Engine::getInstance().getSystem<Scene::Scene>(),
-                                                                "assets/scenes/" + saveFilename);
+                                                          "assets/scenes/" + saveFilename);
                     showSaveDialog = false;
                 }
             }
@@ -96,7 +96,7 @@ bool Core::UI::SceneUIWindow::getBody()
 
                 const Scene::Scene loadedScene =
                     Scene::Serialization::loadSceneFromFile("assets/scenes/" + selectedSceneFile);
-                
+
                 Engine::getInstance().getSystem<Scene::Scene>()->cleanup(Engine::getInstance().getRenderData());
                 *Engine::getInstance().getSystem<Scene::Scene>() = loadedScene;
                 showLoadDialog = false;

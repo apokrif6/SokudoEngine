@@ -1,7 +1,7 @@
 #include "HDRToCubemapRenderpass.h"
 #include "core/tools/Logger.h"
 
-bool Core::Renderer::HDRToCubemapRenderpass::init(VkRenderData& renderData, VkRenderPass &outRenderPass)
+bool Core::Renderer::HDRToCubemapRenderpass::init(VkRenderData& renderData, VkRenderPass& outRenderPass)
 {
     VkAttachmentDescription color{};
     color.format = VK_FORMAT_R32G32B32A32_SFLOAT;
@@ -28,9 +28,7 @@ bool Core::Renderer::HDRToCubemapRenderpass::init(VkRenderData& renderData, VkRe
     dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
     dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
     dependency.srcAccessMask = 0;
-    dependency.dstAccessMask =
-        VK_ACCESS_COLOR_ATTACHMENT_READ_BIT |
-        VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
     VkRenderPassCreateInfo info{};
     info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -41,8 +39,7 @@ bool Core::Renderer::HDRToCubemapRenderpass::init(VkRenderData& renderData, VkRe
     info.dependencyCount = 1;
     info.pDependencies = &dependency;
 
-    if (vkCreateRenderPass(renderData.rdVkbDevice.device,
-                           &info, nullptr, &outRenderPass) != VK_SUCCESS)
+    if (vkCreateRenderPass(renderData.rdVkbDevice.device, &info, nullptr, &outRenderPass) != VK_SUCCESS)
     {
         Logger::log(1, "%s error: failed to create HDR cubemap render pass", __FUNCTION__);
         return false;

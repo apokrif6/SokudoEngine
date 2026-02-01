@@ -5,12 +5,10 @@ void Core::Renderer::Debug::Skeleton::init(VkRenderData& renderData) { createVer
 
 void Core::Renderer::Debug::Skeleton::createVertexBuffer(VkRenderData& renderData)
 {
-    VertexBuffer::init(renderData, mDebugLinesBuffer, sizeof(LineVertex) * MAX_DEBUG_BONES_LINES,
-                                       "DebugSkeleton");
+    VertexBuffer::init(renderData, mDebugLinesBuffer, sizeof(LineVertex) * MAX_DEBUG_BONES_LINES, "DebugSkeleton");
 }
 
-void Core::Renderer::Debug::Skeleton::update(VkRenderData& renderData,
-                                             const std::vector<DebugBone>& bones)
+void Core::Renderer::Debug::Skeleton::update(VkRenderData& renderData, const std::vector<DebugBone>& bones)
 {
     std::vector<LineVertex> lineVertices;
     for (const auto& bone : bones)

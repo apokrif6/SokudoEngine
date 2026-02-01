@@ -6,8 +6,7 @@
 Core::Renderer::Primitive::Primitive(const std::vector<Vertex>& vertexBufferData,
                                      const std::vector<uint32_t>& indexBufferData,
                                      const std::unordered_map<aiTextureType, VkTextureData>& textures,
-                                     const MaterialInfo& materialInfo,
-                                     const Animations::BonesInfo& bonesInfo,
+                                     const MaterialInfo& materialInfo, const Animations::BonesInfo& bonesInfo,
                                      VkRenderData& renderData, VkDescriptorSet materialDescriptorSet)
     : mVertexBufferData(vertexBufferData), mIndexBufferData(indexBufferData), mTextures(textures),
       mMaterialInfo(materialInfo), mBonesInfo(bonesInfo), mMaterialDescriptorSet(materialDescriptorSet)
@@ -37,13 +36,13 @@ Core::Renderer::Primitive::Primitive(const std::vector<Vertex>& vertexBufferData
 void Core::Renderer::Primitive::createVertexBuffer(VkRenderData& renderData)
 {
     VertexBuffer::init(renderData, primitiveRenderData.rdModelVertexBufferData,
-                                       mVertexBufferData.size() * sizeof(Vertex), "Primitive");
+                       mVertexBufferData.size() * sizeof(Vertex), "Primitive");
 }
 
 void Core::Renderer::Primitive::createIndexBuffer(VkRenderData& renderData)
 {
     IndexBuffer::init(renderData, primitiveRenderData.rdModelIndexBufferData,
-                                      static_cast<int64_t>(mIndexBufferData.size()), "Primitive");
+                      static_cast<int64_t>(mIndexBufferData.size()), "Primitive");
 }
 
 void Core::Renderer::Primitive::createMaterialBuffer(VkRenderData& renderData)
@@ -60,8 +59,7 @@ void Core::Renderer::Primitive::createPrimitiveDataBuffer(VkRenderData& renderDa
 
 void Core::Renderer::Primitive::uploadVertexBuffer(VkRenderData& renderData)
 {
-    VertexBuffer::uploadData(renderData, primitiveRenderData.rdModelVertexBufferData,
-                                             mVertexBufferData);
+    VertexBuffer::uploadData(renderData, primitiveRenderData.rdModelVertexBufferData, mVertexBufferData);
 }
 
 void Core::Renderer::Primitive::uploadIndexBuffer(VkRenderData& renderData)
@@ -76,7 +74,7 @@ void Core::Renderer::Primitive::uploadUniformBuffer(VkRenderData& renderData, co
 
     if (!mBonesInfo.finalTransforms.empty())
     {
-        std::ranges::copy(mBonesInfo.finalTransforms,  std::begin(data.bones));
+        std::ranges::copy(mBonesInfo.finalTransforms, std::begin(data.bones));
     }
 
     UniformBuffer::uploadData(renderData, mPrimitiveDataUBO, data);
@@ -86,20 +84,22 @@ void Core::Renderer::Primitive::draw(const VkRenderData& renderData)
 {
     vkCmdBindPipeline(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdMeshPipeline);
 
-    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdMeshPipelineLayout,
-        0, 1, &renderData.rdGlobalSceneUBO.rdUBODescriptorSet, 0, nullptr);
+    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                            renderData.rdMeshPipelineLayout, 0, 1, &renderData.rdGlobalSceneUBO.rdUBODescriptorSet, 0,
+                            nullptr);
 
-    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdMeshPipelineLayout,
-        1, 1, &mPrimitiveDataUBO.rdUBODescriptorSet, 0, nullptr);
+    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                            renderData.rdMeshPipelineLayout, 1, 1, &mPrimitiveDataUBO.rdUBODescriptorSet, 0, nullptr);
 
-    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdMeshPipelineLayout,
-        2, 1, &mMaterialDescriptorSet, 0, nullptr);
+    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                            renderData.rdMeshPipelineLayout, 2, 1, &mMaterialDescriptorSet, 0, nullptr);
 
-    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdMeshPipelineLayout,
-        3, 1, &mMaterialUBO.rdUBODescriptorSet, 0, nullptr);
+    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                            renderData.rdMeshPipelineLayout, 3, 1, &mMaterialUBO.rdUBODescriptorSet, 0, nullptr);
 
-    vkCmdPushConstants(renderData.rdCommandBuffer, renderData.rdMeshPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-        0, sizeof(PrimitiveFlagsPushConstants), &primitiveFlagsPushConstants);
+    vkCmdPushConstants(renderData.rdCommandBuffer, renderData.rdMeshPipelineLayout,
+                       VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
+                       sizeof(PrimitiveFlagsPushConstants), &primitiveFlagsPushConstants);
 
     VkDeviceSize offset = 0;
     vkCmdBindVertexBuffers(renderData.rdCommandBuffer, 0, 1,

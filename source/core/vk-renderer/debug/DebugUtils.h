@@ -13,7 +13,8 @@ inline void setObjectName(VkDevice device, uint64_t handle, VkObjectType type, c
     nameInfo.objectHandle = handle;
     nameInfo.pObjectName = name.c_str();
 
-    if (auto function = reinterpret_cast<PFN_vkSetDebugUtilsObjectNameEXT>(vkGetDeviceProcAddr(device, "vkSetDebugUtilsObjectNameEXT")))
+    if (auto function = reinterpret_cast<PFN_vkSetDebugUtilsObjectNameEXT>(
+            vkGetDeviceProcAddr(device, "vkSetDebugUtilsObjectNameEXT")))
     {
         function(device, &nameInfo);
     }
@@ -28,10 +29,7 @@ public:
         begin(mDevice, mCmd, name, color);
     }
 
-    ~Marker()
-    {
-        end(mDevice, mCmd);
-    }
+    ~Marker() { end(mDevice, mCmd); }
 
     static void begin(VkDevice device, VkCommandBuffer cmd, const std::string& name, const float color[4])
     {
@@ -40,7 +38,8 @@ public:
         labelInfo.pLabelName = name.c_str();
         memcpy(labelInfo.color, color, sizeof(float) * 4);
 
-        if (auto function = reinterpret_cast<PFN_vkCmdBeginDebugUtilsLabelEXT>(vkGetDeviceProcAddr(device, "vkCmdBeginDebugUtilsLabelEXT")))
+        if (auto function = reinterpret_cast<PFN_vkCmdBeginDebugUtilsLabelEXT>(
+                vkGetDeviceProcAddr(device, "vkCmdBeginDebugUtilsLabelEXT")))
         {
             function(cmd, &labelInfo);
         }
@@ -48,7 +47,8 @@ public:
 
     static void end(VkDevice device, VkCommandBuffer cmd)
     {
-        if (auto function = reinterpret_cast<PFN_vkCmdEndDebugUtilsLabelEXT>(vkGetDeviceProcAddr(device, "vkCmdEndDebugUtilsLabelEXT")))
+        if (auto function = reinterpret_cast<PFN_vkCmdEndDebugUtilsLabelEXT>(
+                vkGetDeviceProcAddr(device, "vkCmdEndDebugUtilsLabelEXT")))
         {
             function(cmd);
         }
@@ -60,10 +60,10 @@ private:
 };
 namespace Colors
 {
-    inline constexpr float Orange[] = {1.f, 0.5f, 0.f, 1.f};
-    inline constexpr float Cyan[] = {0.f, 0.8f, 0.8f, 1.f};
-    inline constexpr float Green[] = {0.4f, 0.9f, 0.4f, 1.f};
-    inline constexpr float Blue[] = {0.2f, 0.6f, 1.0f, 1.f};
-    inline constexpr float Magenta[] = {0.9f, 0.4f, 0.8f, 1.f};
-}
+inline constexpr float Orange[] = {1.f, 0.5f, 0.f, 1.f};
+inline constexpr float Cyan[] = {0.f, 0.8f, 0.8f, 1.f};
+inline constexpr float Green[] = {0.4f, 0.9f, 0.4f, 1.f};
+inline constexpr float Blue[] = {0.2f, 0.6f, 1.0f, 1.f};
+inline constexpr float Magenta[] = {0.9f, 0.4f, 0.8f, 1.f};
+} // namespace Colors
 } // namespace Core::Renderer::Debug

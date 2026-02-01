@@ -1,15 +1,13 @@
 #include "MeshPipelineLayout.h"
 #include "core/tools/Logger.h"
 
-bool Core::Renderer::MeshPipelineLayout::init(VkRenderData& renderData,
-                                              VkPipelineLayout& pipelineLayout)
+bool Core::Renderer::MeshPipelineLayout::init(VkRenderData& renderData, VkPipelineLayout& pipelineLayout)
 {
     std::vector<VkDescriptorSetLayoutBinding> sceneBindings = {
         {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT},
         {1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT},
         {2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT},
-        {3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT}
-    };
+        {3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT}};
 
     VkDescriptorSetLayoutCreateInfo sceneLayoutInfo{};
     sceneLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -17,7 +15,7 @@ bool Core::Renderer::MeshPipelineLayout::init(VkRenderData& renderData,
     sceneLayoutInfo.pBindings = sceneBindings.data();
 
     if (vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &sceneLayoutInfo, nullptr,
-                                        &renderData.rdGlobalSceneDescriptorLayout) != VK_SUCCESS)
+                                    &renderData.rdGlobalSceneDescriptorLayout) != VK_SUCCESS)
     {
         Logger::log(1, "%s error: failed to create scene descriptor layout\n", __FUNCTION__);
         return false;
@@ -35,7 +33,7 @@ bool Core::Renderer::MeshPipelineLayout::init(VkRenderData& renderData,
     primitiveDataLayoutInfo.pBindings = &primitiveDataBinding;
 
     if (vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &primitiveDataLayoutInfo, nullptr,
-                                     &renderData.rdPrimitiveDataDescriptorLayout) != VK_SUCCESS)
+                                    &renderData.rdPrimitiveDataDescriptorLayout) != VK_SUCCESS)
     {
         Logger::log(1, "%s error: failed to create primitive data descriptor layout\n", __FUNCTION__);
         return false;
@@ -81,11 +79,8 @@ bool Core::Renderer::MeshPipelineLayout::init(VkRenderData& renderData,
     }
 
     const VkDescriptorSetLayout layouts[] = {
-        renderData.rdGlobalSceneDescriptorLayout,
-        renderData.rdPrimitiveDataDescriptorLayout,
-        renderData.rdPrimitiveTextureDescriptorLayout,
-        renderData.rdPrimitiveMaterialDescriptorLayout
-    };
+        renderData.rdGlobalSceneDescriptorLayout, renderData.rdPrimitiveDataDescriptorLayout,
+        renderData.rdPrimitiveTextureDescriptorLayout, renderData.rdPrimitiveMaterialDescriptorLayout};
 
     VkPushConstantRange pushConstantRange{};
     pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -114,6 +109,7 @@ void Core::Renderer::MeshPipelineLayout::cleanup(VkRenderData& renderData, VkPip
     vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdGlobalSceneDescriptorLayout, nullptr);
     vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdPrimitiveDataDescriptorLayout, nullptr);
     vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdPrimitiveTextureDescriptorLayout, nullptr);
-    vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdPrimitiveMaterialDescriptorLayout,nullptr);
+    vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, renderData.rdPrimitiveMaterialDescriptorLayout,
+                                 nullptr);
     vkDestroyPipelineLayout(renderData.rdVkbDevice.device, pipelineLayout, nullptr);
 }

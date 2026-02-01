@@ -41,10 +41,7 @@ public:
 
     [[nodiscard]] Animations::Skeleton& getSkeleton() { return mSkeleton; }
 
-    void setupAnimations(const std::vector<Animations::AnimationClip>& animationClips)
-    {
-        mAnimations = animationClips;
-    }
+    void setupAnimations(const std::vector<Animations::AnimationClip>& animationClips) { mAnimations = animationClips; }
 
     [[nodiscard]] const std::vector<Animations::AnimationClip>& getAnimations() const { return mAnimations; }
 
@@ -95,4 +92,4 @@ private:
     std::string mMeshFilePath;
     std::vector<std::string> mAnimationFiles;
 };
-} // namespace Core::Renderer
+} // namespace Core::Component

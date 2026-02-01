@@ -32,20 +32,11 @@ struct Transform
         bIsDirty = true;
     }
 
-    [[nodiscard]] const glm::vec3& getPosition() const
-    {
-        return position;
-    }
+    [[nodiscard]] const glm::vec3& getPosition() const { return position; }
 
-    [[nodiscard]] const glm::vec3& getRotation() const
-    {
-        return rotation;
-    }
+    [[nodiscard]] const glm::vec3& getRotation() const { return rotation; }
 
-    [[nodiscard]] const glm::vec3& getScale() const
-    {
-        return scale;
-    }
+    [[nodiscard]] const glm::vec3& getScale() const { return scale; }
 
     [[nodiscard]] const glm::mat4& getMatrix() const
     {

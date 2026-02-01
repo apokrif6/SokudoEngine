@@ -4,15 +4,13 @@
 #include "core/vk-renderer/Shader.h"
 #include "core/vk-renderer/debug/DebugRenderer.h"
 
-bool Core::Renderer::DebugSkeletonPipeline::init(VkRenderData& renderData,
-                                                 VkPipelineLayout& pipelineLayout, VkPipeline& pipeline,
-                                                 VkPrimitiveTopology topology, const std::string& vertexShaderFilename,
+bool Core::Renderer::DebugSkeletonPipeline::init(VkRenderData& renderData, VkPipelineLayout& pipelineLayout,
+                                                 VkPipeline& pipeline, VkPrimitiveTopology topology,
+                                                 const std::string& vertexShaderFilename,
                                                  const std::string& fragmentShaderFilename)
 {
-    VkShaderModule vertexModule =
-        Shader::loadShader(renderData.rdVkbDevice.device, vertexShaderFilename);
-    VkShaderModule fragmentModule =
-        Shader::loadShader(renderData.rdVkbDevice.device, fragmentShaderFilename);
+    VkShaderModule vertexModule = Shader::loadShader(renderData.rdVkbDevice.device, vertexShaderFilename);
+    VkShaderModule fragmentModule = Shader::loadShader(renderData.rdVkbDevice.device, fragmentShaderFilename);
 
     if (vertexModule == VK_NULL_HANDLE || fragmentModule == VK_NULL_HANDLE)
     {

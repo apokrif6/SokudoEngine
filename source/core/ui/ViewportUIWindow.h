@@ -41,8 +41,7 @@ class ViewportUIWindow : public UIWindow<ViewportUIWindow>
         {
             if (!renderData.freeCameraMovement)
             {
-                auto globalSceneData =
-                                Engine::getInstance().getSystem<Renderer::VkRenderer>()->getGlobalSceneData();
+                auto globalSceneData = Engine::getInstance().getSystem<Renderer::VkRenderer>()->getGlobalSceneData();
 
                 glm::mat4 view = globalSceneData.view;
                 glm::mat4 projection = globalSceneData.projection;

@@ -7,9 +7,8 @@
 
 constexpr std::string_view textureFolderPath = "assets/textures/";
 
-std::future<bool> Core::Renderer::Texture::loadTexture(VkRenderData& renderData,
-                                                       VkTextureData& textureData, const std::string& textureFilename,
-                                                       VkFormat format)
+std::future<bool> Core::Renderer::Texture::loadTexture(VkRenderData& renderData, VkTextureData& textureData,
+                                                       const std::string& textureFilename, VkFormat format)
 {
     return std::async(
         std::launch::async,
@@ -227,8 +226,8 @@ std::future<bool> Core::Renderer::Texture::loadTexture(VkRenderData& renderData,
             texViewInfo.subresourceRange.baseArrayLayer = 0;
             texViewInfo.subresourceRange.layerCount = 1;
 
-            if (vkCreateImageView(renderData.rdVkbDevice.device, &texViewInfo, nullptr,
-                                  &textureData.imageView) != VK_SUCCESS)
+            if (vkCreateImageView(renderData.rdVkbDevice.device, &texViewInfo, nullptr, &textureData.imageView) !=
+                VK_SUCCESS)
             {
                 Logger::log(1, "Could not create image view for texture\n");
                 return false;
@@ -252,8 +251,8 @@ std::future<bool> Core::Renderer::Texture::loadTexture(VkRenderData& renderData,
             texSamplerInfo.anisotropyEnable = VK_FALSE;
             texSamplerInfo.maxAnisotropy = 1.0f;
 
-            if (vkCreateSampler(renderData.rdVkbDevice.device, &texSamplerInfo, nullptr,
-                                &textureData.sampler) != VK_SUCCESS)
+            if (vkCreateSampler(renderData.rdVkbDevice.device, &texSamplerInfo, nullptr, &textureData.sampler) !=
+                VK_SUCCESS)
             {
                 Logger::log(1, "Could not create sampler for texture\n");
                 return false;
@@ -268,7 +267,7 @@ std::future<bool> Core::Renderer::Texture::loadTexture(VkRenderData& renderData,
 }
 
 std::future<bool> Core::Renderer::Texture::loadHDRTexture(VkRenderData& renderData, VkTextureData& textureData,
-    const std::string& textureFilename, VkFormat format)
+                                                          const std::string& textureFilename, VkFormat format)
 {
     return std::async(
         std::launch::async,
@@ -300,8 +299,8 @@ std::future<bool> Core::Renderer::Texture::loadHDRTexture(VkRenderData& renderDa
             VmaAllocationCreateInfo allocInfo{};
             allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
 
-            if (vmaCreateBuffer(renderData.rdAllocator, &bufferInfo, &allocInfo,
-                                &stagingBuffer, &stagingAlloc, nullptr) != VK_SUCCESS)
+            if (vmaCreateBuffer(renderData.rdAllocator, &bufferInfo, &allocInfo, &stagingBuffer, &stagingAlloc,
+                                nullptr) != VK_SUCCESS)
             {
                 Logger::log(1, "%s error: failed to create HDR staging buffer", __FUNCTION__);
                 stbi_image_free(hdrData);
@@ -321,22 +320,20 @@ std::future<bool> Core::Renderer::Texture::loadHDRTexture(VkRenderData& renderDa
             imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
             imageInfo.imageType = VK_IMAGE_TYPE_2D;
             imageInfo.format = VK_FORMAT_R32G32B32A32_SFLOAT;
-            imageInfo.extent = { static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1 };
+            imageInfo.extent = {static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1};
             imageInfo.mipLevels = 1;
             imageInfo.arrayLayers = 1;
             imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
             imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-            imageInfo.usage =
-                VK_IMAGE_USAGE_TRANSFER_DST_BIT |
-                VK_IMAGE_USAGE_SAMPLED_BIT;
+            imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
             imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
             imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
             VmaAllocationCreateInfo imageAllocInfo{};
             imageAllocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
-            if (vmaCreateImage(renderData.rdAllocator, &imageInfo, &imageAllocInfo,
-                               &textureData.image, &textureData.imageAlloc, nullptr) != VK_SUCCESS)
+            if (vmaCreateImage(renderData.rdAllocator, &imageInfo, &imageAllocInfo, &textureData.image,
+                               &textureData.imageAlloc, nullptr) != VK_SUCCESS)
             {
                 Logger::log(1, "%s error: failed to create HDR image", __FUNCTION__);
                 vmaDestroyBuffer(renderData.rdAllocator, stagingBuffer, stagingAlloc);
@@ -345,8 +342,10 @@ std::future<bool> Core::Renderer::Texture::loadHDRTexture(VkRenderData& renderDa
 
             VkCommandBuffer stagingCommandBuffer;
             if (!CommandBuffer::init(renderData, stagingCommandBuffer))
+            {
 
                 return false;
+            }
 
             VkCommandBufferBeginInfo beginInfo{};
             beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -367,25 +366,24 @@ std::future<bool> Core::Renderer::Texture::loadHDRTexture(VkRenderData& renderDa
             barrier.subresourceRange.baseArrayLayer = 0;
             barrier.subresourceRange.layerCount = 1;
 
-            vkCmdPipelineBarrier(stagingCommandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-                0, 0, nullptr, 0, nullptr,
-                1, &barrier);
+            vkCmdPipelineBarrier(stagingCommandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                                 VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 
             VkBufferImageCopy copy{};
             copy.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             copy.imageSubresource.layerCount = 1;
-            copy.imageExtent = { static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1 };
+            copy.imageExtent = {static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1};
 
-            vkCmdCopyBufferToImage(stagingCommandBuffer, stagingBuffer, textureData.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy);
+            vkCmdCopyBufferToImage(stagingCommandBuffer, stagingBuffer, textureData.image,
+                                   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy);
 
             barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
             barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
             barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-            vkCmdPipelineBarrier(stagingCommandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-                0, 0, nullptr, 0, nullptr,
-                1, &barrier);
+            vkCmdPipelineBarrier(stagingCommandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                                 VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 
             vkEndCommandBuffer(stagingCommandBuffer);
 
@@ -411,7 +409,8 @@ std::future<bool> Core::Renderer::Texture::loadHDRTexture(VkRenderData& renderDa
             viewInfo.subresourceRange.baseArrayLayer = 0;
             viewInfo.subresourceRange.layerCount = 1;
 
-            if (vkCreateImageView(renderData.rdVkbDevice.device, &viewInfo, nullptr, &textureData.imageView) != VK_SUCCESS)
+            if (vkCreateImageView(renderData.rdVkbDevice.device, &viewInfo, nullptr, &textureData.imageView) !=
+                VK_SUCCESS)
             {
                 Logger::log(1, "%s error: failed to create HDR image view", __FUNCTION__);
                 return false;
@@ -428,7 +427,8 @@ std::future<bool> Core::Renderer::Texture::loadHDRTexture(VkRenderData& renderDa
             samplerInfo.minLod = 0.f;
             samplerInfo.maxLod = 1.f;
 
-            if (vkCreateSampler(renderData.rdVkbDevice.device, &samplerInfo, nullptr, &textureData.sampler) != VK_SUCCESS)
+            if (vkCreateSampler(renderData.rdVkbDevice.device, &samplerInfo, nullptr, &textureData.sampler) !=
+                VK_SUCCESS)
             {
                 Logger::log(1, "%s error: failed to create HDR sampler", __FUNCTION__);
                 return false;

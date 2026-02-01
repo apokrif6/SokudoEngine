@@ -8,12 +8,11 @@ namespace Core::Renderer
 class UniformBuffer
 {
 public:
-    static bool init(VkRenderData& renderData, VkUniformBufferData& UBOData, size_t bufferSize,
-                     const std::string& name, VkDescriptorSetLayout customLayout = VK_NULL_HANDLE,
+    static bool init(VkRenderData& renderData, VkUniformBufferData& UBOData, size_t bufferSize, const std::string& name,
+                     VkDescriptorSetLayout customLayout = VK_NULL_HANDLE,
                      std::vector<VkDescriptorPoolSize> extraPoolSizes = {});
 
-    template <typename T>
-    static void uploadData(VkRenderData& renderData, VkUniformBufferData& UBOData, const T& data)
+    template <typename T> static void uploadData(VkRenderData& renderData, VkUniformBufferData& UBOData, const T& data)
     {
         static_assert(std::is_standard_layout_v<T>, "Data type must be standard layout to be uploaded to GPU");
 

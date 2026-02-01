@@ -9,8 +9,8 @@ namespace Core::Renderer
 class VertexBuffer
 {
 public:
-    static bool init(VkRenderData& renderData, VkVertexBufferData& VkVertexBufferData,
-                     unsigned int bufferSize, const std::string& name);
+    static bool init(VkRenderData& renderData, VkVertexBufferData& VkVertexBufferData, unsigned int bufferSize,
+                     const std::string& name);
 
     template <typename T>
     static bool uploadData(VkRenderData& renderData, VkVertexBufferData& vertexBufferData,

@@ -34,12 +34,12 @@ void buildDebugSkeletonLines(const Core::Animations::Skeleton& skeleton, const C
     }
 }
 
-Core::Component::MeshComponent::MeshComponent(Core::Animations::Skeleton skeleton)
-    : mSkeleton(std::move(skeleton))
-{
-}
+Core::Component::MeshComponent::MeshComponent(Core::Animations::Skeleton skeleton) : mSkeleton(std::move(skeleton)) {}
 
-Core::Component::MeshComponent::~MeshComponent() { Logger::log(1, "%s: Destroyed mesh for owner %s", __FUNCTION__, getOwner()->getName().c_str()); }
+Core::Component::MeshComponent::~MeshComponent()
+{
+    Logger::log(1, "%s: Destroyed mesh for owner %s", __FUNCTION__, getOwner()->getName().c_str());
+}
 
 void Core::Component::MeshComponent::onAdded()
 {
@@ -55,11 +55,11 @@ void Core::Component::MeshComponent::onRemoved()
     Engine::getInstance().getSystem<Animations::Animator>()->removeMesh(this);
 }
 
-void Core::Component::MeshComponent::addPrimitive(const std::vector<Renderer::Vertex>& vertexBufferData,
-                                        const std::vector<uint32_t>& indexBufferData,
-                                        const std::unordered_map<aiTextureType, Renderer::VkTextureData>& textures,
-                                        Renderer::VkRenderData& renderData, const Renderer::MaterialInfo& materialInfo,
-                                        const Animations::BonesInfo& bonesInfo, VkDescriptorSet materialDescriptorSet)
+void Core::Component::MeshComponent::addPrimitive(
+    const std::vector<Renderer::Vertex>& vertexBufferData, const std::vector<uint32_t>& indexBufferData,
+    const std::unordered_map<aiTextureType, Renderer::VkTextureData>& textures, Renderer::VkRenderData& renderData,
+    const Renderer::MaterialInfo& materialInfo, const Animations::BonesInfo& bonesInfo,
+    VkDescriptorSet materialDescriptorSet)
 {
     mPrimitives.emplace_back(vertexBufferData, indexBufferData, textures, materialInfo, bonesInfo, renderData,
                              materialDescriptorSet);
@@ -74,7 +74,6 @@ void Core::Component::MeshComponent::update(Renderer::VkRenderData& renderData)
     {
         Logger::log(3, "%s: Warning! Mesh %s has no TransformComponent!", __FUNCTION__, getOwner()->getName().c_str());
         return;
-
     }
 
     for (auto& primitive : mPrimitives)
@@ -87,7 +86,8 @@ void Core::Component::MeshComponent::update(Renderer::VkRenderData& renderData)
         {
             std::vector<Renderer::Debug::DebugBone> debugBones;
             buildDebugSkeletonLines(mSkeleton, primitive.getBonesInfo(), debugBones, mSkeleton.getRootNode(),
-                                    transformComponent->transform.getMatrix(), transformComponent->transform.getMatrix());
+                                    transformComponent->transform.getMatrix(),
+                                    transformComponent->transform.getMatrix());
             mSkeleton.updateDebug(renderData, debugBones);
         }
     }

@@ -12,8 +12,8 @@ void Core::Component::RotatingComponent::onAdded()
         }
         else
         {
-            Logger::log(1, "%s: RotatingComponent added to SceneObject %s without TransformComponent!",
-                        __FUNCTION__, mOwner->getName().c_str());
+            Logger::log(1, "%s: RotatingComponent added to SceneObject %s without TransformComponent!", __FUNCTION__,
+                        mOwner->getName().c_str());
         }
     }
 }
@@ -47,6 +47,6 @@ void Core::Component::RotatingComponent::deserialize(const YAML::Node& node)
 {
     auto rotationSpeedNode = node["rotationSpeed"];
 
-    mRotationSpeed = glm::vec3(rotationSpeedNode[0].as<float>(), rotationSpeedNode[1].as<float>(),
-                               rotationSpeedNode[2].as<float>());
+    mRotationSpeed =
+        glm::vec3(rotationSpeedNode[0].as<float>(), rotationSpeedNode[1].as<float>(), rotationSpeedNode[2].as<float>());
 }

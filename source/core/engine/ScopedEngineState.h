@@ -19,7 +19,7 @@ public:
         Engine& engine = Engine::getInstance();
         engine.setState(mPreviousState);
     }
-    
+
 private:
     EngineState mPreviousState;
 };

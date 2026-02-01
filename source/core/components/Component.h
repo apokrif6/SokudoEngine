@@ -3,8 +3,9 @@
 #include "core/serialization/Serializable.h"
 #include "core/vk-renderer/VkRenderData.h"
 
-namespace Core::Scene {
-    class SceneObject;
+namespace Core::Scene
+{
+class SceneObject;
 }
 
 namespace Core::Component
@@ -29,4 +30,4 @@ public:
 protected:
     Scene::SceneObject* mOwner = nullptr;
 };
-}
+} // namespace Core::Component

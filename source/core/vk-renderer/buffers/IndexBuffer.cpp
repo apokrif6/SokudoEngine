@@ -29,8 +29,8 @@ bool Core::Renderer::IndexBuffer::init(VkRenderData& renderData, VkIndexBufferDa
     indexBufferData.rdName = "Index Buffer " + name;
     vmaSetAllocationName(renderData.rdAllocator, indexBufferData.rdIndexBufferAlloc, indexBufferData.rdName.c_str());
 
-    Debug::setObjectName(renderData.rdVkbDevice.device, (uint64_t)indexBufferData.rdIndexBuffer,
-                                         VK_OBJECT_TYPE_BUFFER, indexBufferData.rdName);
+    Debug::setObjectName(renderData.rdVkbDevice.device, (uint64_t)indexBufferData.rdIndexBuffer, VK_OBJECT_TYPE_BUFFER,
+                         indexBufferData.rdName);
 
     VkBufferCreateInfo stagingBufferInfo{};
     stagingBufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -57,8 +57,7 @@ bool Core::Renderer::IndexBuffer::init(VkRenderData& renderData, VkIndexBufferDa
     return true;
 }
 
-bool Core::Renderer::IndexBuffer::uploadData(VkRenderData& renderData,
-                                             VkIndexBufferData& indexBufferData,
+bool Core::Renderer::IndexBuffer::uploadData(VkRenderData& renderData, VkIndexBufferData& indexBufferData,
                                              const std::vector<uint32_t>& indexData)
 {
     const unsigned int bufferSize = indexData.size() * sizeof(uint32_t);

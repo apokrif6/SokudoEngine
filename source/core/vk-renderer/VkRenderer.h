@@ -86,8 +86,7 @@ private:
 
     unsigned int VertexBufferSize = 2000;
 
-    std::unique_ptr<ViewportTarget> mViewportTarget =
-        std::make_unique<ViewportTarget>();
+    std::unique_ptr<ViewportTarget> mViewportTarget = std::make_unique<ViewportTarget>();
 
 #pragma region Camera
     Camera mCamera{};

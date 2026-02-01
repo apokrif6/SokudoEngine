@@ -32,7 +32,7 @@ struct Vertex
 };
 
 struct GlobalSceneData
-    {
+{
     glm::mat4 view;
     glm::mat4 projection;
     glm::vec4 camPos;

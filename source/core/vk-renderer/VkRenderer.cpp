@@ -285,7 +285,8 @@ void Core::Renderer::VkRenderer::beginRenderFrame(VkRenderData& renderData)
 
 void Core::Renderer::VkRenderer::beginOffscreenRenderPass(VkRenderData& renderData)
 {
-    Debug::Marker::begin(renderData.rdVkbDevice.device, renderData.rdCommandBuffer, "Offscreen Render Pass", Debug::Colors::Green);
+    Debug::Marker::begin(renderData.rdVkbDevice.device, renderData.rdCommandBuffer, "Offscreen Render Pass",
+                         Debug::Colors::Green);
 
     VkClearValue clearValues[2] = {{{{0.f, 0.f, 0.f, 1.0f}}}, {1.0f, 0}};
     VkRenderPassBeginInfo offscreenRenderPassInfo{VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
@@ -321,7 +322,8 @@ void Core::Renderer::VkRenderer::endOffscreenRenderPass(VkRenderData& renderData
 
 void Core::Renderer::VkRenderer::beginFinalRenderPass(VkRenderData& renderData)
 {
-    Debug::Marker::begin(renderData.rdVkbDevice.device, renderData.rdCommandBuffer, "Final Render Pass", Debug::Colors::Cyan);
+    Debug::Marker::begin(renderData.rdVkbDevice.device, renderData.rdCommandBuffer, "Final Render Pass",
+                         Debug::Colors::Cyan);
 
     VkClearValue clearValues[2] = {{{{0.f, 0.f, 0.f, 1.0f}}}, {1.0f, 0}};
     VkRenderPassBeginInfo renderPassBeginInfo{VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
@@ -502,9 +504,8 @@ bool Core::Renderer::VkRenderer::deviceInit()
     Logger::log(1, "%s: found physical device '%s'\n", __FUNCTION__,
                 Engine::getInstance().getRenderData().rdVkbPhysicalDevice.name.c_str());
 
-    mMinUniformBufferOffsetAlignment = Engine::getInstance()
-                                           .getRenderData()
-                                           .rdVkbPhysicalDevice.properties.limits.minUniformBufferOffsetAlignment;
+    mMinUniformBufferOffsetAlignment =
+        Engine::getInstance().getRenderData().rdVkbPhysicalDevice.properties.limits.minUniformBufferOffsetAlignment;
     Logger::log(1, "%s: the physical device as a minimal uniform buffer offset of %i bytes\n", __FUNCTION__,
                 mMinUniformBufferOffsetAlignment);
 
@@ -549,12 +550,11 @@ bool Core::Renderer::VkRenderer::createSwapchain()
                            &Engine::getInstance().getRenderData().rdWidth,
                            &Engine::getInstance().getRenderData().rdHeight);
 
-    auto swapChainBuildRet =
-        swapChainBuild.set_old_swapchain(Engine::getInstance().getRenderData().rdVkbSwapchain)
-            .set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR)
-            .set_desired_extent(Engine::getInstance().getRenderData().rdWidth,
-                                Engine::getInstance().getRenderData().rdHeight)
-            .build();
+    auto swapChainBuildRet = swapChainBuild.set_old_swapchain(Engine::getInstance().getRenderData().rdVkbSwapchain)
+                                 .set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR)
+                                 .set_desired_extent(Engine::getInstance().getRenderData().rdWidth,
+                                                     Engine::getInstance().getRenderData().rdHeight)
+                                 .build();
     if (!swapChainBuildRet)
     {
         Logger::log(1, "%s error: could not init swapchain\n", __FUNCTION__);
@@ -671,8 +671,7 @@ bool Core::Renderer::VkRenderer::recreateSwapchain()
 bool Core::Renderer::VkRenderer::createVBO()
 {
     if (!VertexBuffer::init(Engine::getInstance().getRenderData(),
-                                            Engine::getInstance().getRenderData().rdVertexBufferData,
-                                            VertexBufferSize, "MainVBO"))
+                            Engine::getInstance().getRenderData().rdVertexBufferData, VertexBufferSize, "MainVBO"))
     {
         Logger::log(1, "%s error: could not create VBO\n", __FUNCTION__);
         return false;
@@ -795,7 +794,7 @@ bool Core::Renderer::VkRenderer::createCommandPool()
 bool Core::Renderer::VkRenderer::createCommandBuffer()
 {
     if (!CommandBuffer::init(Engine::getInstance().getRenderData(),
-                                             Engine::getInstance().getRenderData().rdCommandBuffer))
+                             Engine::getInstance().getRenderData().rdCommandBuffer))
     {
         Logger::log(1, "%s error: could not create command buffers\n", __FUNCTION__);
         return false;
@@ -817,9 +816,9 @@ bool Core::Renderer::VkRenderer::createSyncObjects()
 bool Core::Renderer::VkRenderer::loadPlaceholderTexture()
 {
     const std::string textureFileName = "placeholder_sampler.png";
-    std::future<bool> textureLoadFuture = Texture::loadTexture(
-        Engine::getInstance().getRenderData(), Engine::getInstance().getRenderData().rdPlaceholderTexture,
-        textureFileName);
+    std::future<bool> textureLoadFuture =
+        Texture::loadTexture(Engine::getInstance().getRenderData(),
+                             Engine::getInstance().getRenderData().rdPlaceholderTexture, textureFileName);
     if (!textureLoadFuture.get())
     {
         Logger::log(1, "%s error: could not load texture\n", __FUNCTION__);
@@ -901,7 +900,7 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
     for (auto& primitive : primitiveMeshData.primitives)
     {
         meshComponent->addPrimitive(primitive.vertices, primitive.indices, primitive.textures, renderData,
-                               primitive.material, primitive.bones, primitive.materialDescriptorSet);
+                                    primitive.material, primitive.bones, primitive.materialDescriptorSet);
     }
     meshComponent->setupAnimations(primitiveMeshData.animations);
     meshComponent->initDebugSkeleton(renderData);
@@ -920,12 +919,12 @@ void Core::Renderer::VkRenderer::initCaptureResources()
 
     CaptureInfo captureInfo{};
     captureInfo.projection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
-    captureInfo.views[0] = glm::lookAt(glm::vec3(0), glm::vec3(1,0,0), glm::vec3(0,-1,0));
-    captureInfo.views[1] = glm::lookAt(glm::vec3(0), glm::vec3(-1,0,0), glm::vec3(0,-1,0));
-    captureInfo.views[2] = glm::lookAt(glm::vec3(0), glm::vec3(0,1,0), glm::vec3(0,0,1));
-    captureInfo.views[3] = glm::lookAt(glm::vec3(0), glm::vec3(0,-1,0), glm::vec3(0,0,-1));
-    captureInfo.views[4] = glm::lookAt(glm::vec3(0), glm::vec3(0,0,1), glm::vec3(0,-1,0));
-    captureInfo.views[5] = glm::lookAt(glm::vec3(0), glm::vec3(0,0,-1), glm::vec3(0,-1,0));
+    captureInfo.views[0] = glm::lookAt(glm::vec3(0), glm::vec3(1, 0, 0), glm::vec3(0, -1, 0));
+    captureInfo.views[1] = glm::lookAt(glm::vec3(0), glm::vec3(-1, 0, 0), glm::vec3(0, -1, 0));
+    captureInfo.views[2] = glm::lookAt(glm::vec3(0), glm::vec3(0, 1, 0), glm::vec3(0, 0, 1));
+    captureInfo.views[3] = glm::lookAt(glm::vec3(0), glm::vec3(0, -1, 0), glm::vec3(0, 0, -1));
+    captureInfo.views[4] = glm::lookAt(glm::vec3(0), glm::vec3(0, 0, 1), glm::vec3(0, -1, 0));
+    captureInfo.views[5] = glm::lookAt(glm::vec3(0), glm::vec3(0, 0, -1), glm::vec3(0, -1, 0));
 
     UniformBuffer::init(renderData, renderData.rdCaptureUBO, sizeof(CaptureInfo), "CaptureInfo");
     UniformBuffer::uploadData(renderData, renderData.rdCaptureUBO, captureInfo);
@@ -935,12 +934,10 @@ void Core::Renderer::VkRenderer::initPrimitiveGlobalSceneDescriptorSet()
 {
     auto& renderData = Engine::getInstance().getRenderData();
 
-    std::vector<VkDescriptorPoolSize> extraSizes = {
-        {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 3}
-    };
+    std::vector<VkDescriptorPoolSize> extraSizes = {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 3}};
 
-    UniformBuffer::init(renderData, renderData.rdGlobalSceneUBO, sizeof(GlobalSceneData),
-        "GlobalScene with IBL", renderData.rdGlobalSceneDescriptorLayout, extraSizes);
+    UniformBuffer::init(renderData, renderData.rdGlobalSceneUBO, sizeof(GlobalSceneData), "GlobalScene with IBL",
+                        renderData.rdGlobalSceneDescriptorLayout, extraSizes);
 
     updateGlobalSceneDescriptorWrite();
 }
@@ -997,7 +994,6 @@ void Core::Renderer::VkRenderer::updateGlobalSceneDescriptorWrite()
 
     vkUpdateDescriptorSets(renderData.rdVkbDevice.device, static_cast<uint32_t>(descriptorWrites.size()),
                            descriptorWrites.data(), 0, nullptr);
-
 }
 
 bool Core::Renderer::VkRenderer::createDebugSkeletonPipelineLayout()
@@ -1035,8 +1031,8 @@ bool Core::Renderer::VkRenderer::createPrimitivePipeline()
     pipelineConfig.depthCompareOp = VK_COMPARE_OP_LESS;
 
     if (!Pipeline::init(renderData, renderData.rdMeshPipelineLayout, renderData.rdMeshPipeline,
-                       VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile.data(),
-                       fragmentShaderFile.data(), pipelineConfig))
+                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile.data(), fragmentShaderFile.data(),
+                        pipelineConfig))
     {
         Logger::log(1, "%s error: could not init mesh pipeline\n", __FUNCTION__);
         return false;
@@ -1066,7 +1062,8 @@ bool Core::Renderer::VkRenderer::createSkyboxPipelineLayout()
     auto& renderData = Engine::getInstance().getRenderData();
 
     auto pipelineLayoutConfig = PipelineLayoutConfig{};
-    pipelineLayoutConfig.setLayouts = {renderData.rdGlobalSceneDescriptorLayout, renderData.rdSkyboxData.descriptorSetLayout};
+    pipelineLayoutConfig.setLayouts = {renderData.rdGlobalSceneDescriptorLayout,
+                                       renderData.rdSkyboxData.descriptorSetLayout};
 
     if (!PipelineLayout::init(renderData, renderData.rdSkyboxPipelineLayout, pipelineLayoutConfig))
     {
@@ -1098,8 +1095,7 @@ bool Core::Renderer::VkRenderer::loadSkybox()
 {
     auto& renderData = Engine::getInstance().getRenderData();
 
-    std::future<bool> hdrTextureFuture = Texture::loadHDRTexture(renderData, renderData.rdHDRTexture,
-        "hdr/skybox.hdr");
+    std::future<bool> hdrTextureFuture = Texture::loadHDRTexture(renderData, renderData.rdHDRTexture, "hdr/skybox.hdr");
     if (!hdrTextureFuture.get())
     {
         Logger::log(1, "%s error: could not load HDR texture", __FUNCTION__);
@@ -1146,7 +1142,8 @@ void Core::Renderer::VkRenderer::drawSkybox() const
 
     vkCmdBindPipeline(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdSkyboxPipeline);
 
-    std::vector descriptorSets = {renderData.rdGlobalSceneUBO.rdUBODescriptorSet, renderData.rdSkyboxData.descriptorSet};
+    std::vector descriptorSets = {renderData.rdGlobalSceneUBO.rdUBODescriptorSet,
+                                  renderData.rdSkyboxData.descriptorSet};
 
     vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                             renderData.rdSkyboxPipelineLayout, 0, static_cast<uint32_t>(descriptorSets.size()),
@@ -1211,9 +1208,9 @@ void Core::Renderer::VkRenderer::updateGlobalSceneData()
 
     mGlobalSceneData.view = mCamera.getViewMatrix(renderData);
     mGlobalSceneData.projection = glm::perspective(glm::radians(static_cast<float>(renderData.rdFieldOfView)),
-                                                      static_cast<float>(renderData.rdVkbSwapchain.extent.width) /
-                                                          static_cast<float>(renderData.rdVkbSwapchain.extent.height),
-                                                      0.01f, 50.0f);
+                                                   static_cast<float>(renderData.rdVkbSwapchain.extent.width) /
+                                                       static_cast<float>(renderData.rdVkbSwapchain.extent.height),
+                                                   0.01f, 50.0f);
 
     mGlobalSceneData.camPos = glm::vec4(renderData.rdCameraWorldPosition, 1.0f);
 

@@ -14,8 +14,7 @@ public:
 
     void initDebug(Renderer::VkRenderData& renderData);
 
-    void updateDebug(Renderer::VkRenderData& renderData,
-                     const std::vector<Renderer::Debug::DebugBone>& bones) const;
+    void updateDebug(Renderer::VkRenderData& renderData, const std::vector<Renderer::Debug::DebugBone>& bones) const;
 
     void drawDebug(Renderer::VkRenderData& renderData) const;
 

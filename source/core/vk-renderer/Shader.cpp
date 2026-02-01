@@ -140,7 +140,9 @@ std::vector<char> Core::Renderer::Shader::readBinaryFile(const std::string& file
 {
     std::ifstream file(fileName, std::ios::ate | std::ios::binary);
     if (!file.is_open())
+    {
         throw std::runtime_error("failed to open file: " + fileName);
+    }
 
     size_t fileSize = static_cast<size_t>(file.tellg());
     std::vector<char> buffer(fileSize);

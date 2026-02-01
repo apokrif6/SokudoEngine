@@ -300,7 +300,7 @@ void Core::Renderer::UserInterface::setupImGuiStyle() const
 
     colors[ImGuiCol_Border] = ImVec4(0.3f, 0.1f, 0.5f, 0.5f);
     colors[ImGuiCol_BorderShadow] = ImVec4(0.f, 0.f, 0.f, 0.f);
-    
+
     colors[ImGuiCol_DockingPreview] = ImVec4(0.45f, 0.05f, 0.75f, 0.7f);
     colors[ImGuiCol_DockingEmptyBg] = voidBackground;
 
@@ -308,7 +308,7 @@ void Core::Renderer::UserInterface::setupImGuiStyle() const
     colors[ImGuiCol_PlotLinesHovered] = ImVec4(1.f, 0.43f, 0.35f, 1.f);
     colors[ImGuiCol_PlotHistogram] = ImVec4(0.9f, 0.7f, 0.f, 1.f);
     colors[ImGuiCol_PlotHistogramHovered] = ImVec4(1.f, 0.6f, 0.f, 1.f);
-    
+
     colors[ImGuiCol_TableHeaderBg] = ImVec4(0.19f, 0.19f, 0.2f, 1.f);
     colors[ImGuiCol_TableBorderStrong] = ImVec4(0.31f, 0.31f, 0.35f, 1.f);
     colors[ImGuiCol_TableBorderLight] = ImVec4(0.23f, 0.23f, 0.25f, 1.f);

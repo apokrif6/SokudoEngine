@@ -5,10 +5,7 @@
 #include "numeric"
 #include <format>
 
-Core::Profiling::PlotBuffer::PlotBuffer(const size_t maxSize) : offset(0)
-{
-    values.resize(maxSize, 0.0f);
-}
+Core::Profiling::PlotBuffer::PlotBuffer(const size_t maxSize) : offset(0) { values.resize(maxSize, 0.0f); }
 
 void Core::Profiling::PlotBuffer::push(const float value)
 {
@@ -45,9 +42,8 @@ void Core::Profiling::PlotBuffer::draw(const char* label)
 
     ImGui::Separator();
     ImGui::Text("%s", label);
-    ImGui::PlotLines("##PlotBufferLines", values.data(),
-        static_cast<int>(values.size()), static_cast<int>(offset), nullptr, 0.f,
-        stats.max * 1.1f, ImVec2(0, 60));
+    ImGui::PlotLines("##PlotBufferLines", values.data(), static_cast<int>(values.size()), static_cast<int>(offset),
+                     nullptr, 0.f, stats.max * 1.1f, ImVec2(0, 60));
 
     const ImRect infoRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
     ImDrawList* drawList = ImGui::GetWindowDrawList();
@@ -65,19 +61,13 @@ void Core::Profiling::PlotBuffer::draw(const char* label)
 
             const float py = ImLerp(infoRect.Max.y, infoRect.Min.y, yRatio);
 
-            drawList->AddLine(
-                ImVec2(infoRect.Min.x, py), 
-                ImVec2(infoRect.Max.x, py), 
-                IM_COL32(255, 255, 0, 50));
+            drawList->AddLine(ImVec2(infoRect.Min.x, py), ImVec2(infoRect.Max.x, py), IM_COL32(255, 255, 0, 50));
 
             char gridLabel[16];
             const int writtenCharactersNumber = snprintf(gridLabel, sizeof(gridLabel), "%.3f", valAtLine);
             if (writtenCharactersNumber > 0)
             {
-                drawList->AddText(
-                    ImVec2(infoRect.Min.x + 2, py - 12),
-                    IM_COL32(255, 255, 255, 150),
-                    gridLabel);
+                drawList->AddText(ImVec2(infoRect.Min.x + 2, py - 12), IM_COL32(255, 255, 255, 150), gridLabel);
             }
         }
     }

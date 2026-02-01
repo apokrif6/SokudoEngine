@@ -32,10 +32,8 @@ bool Core::Renderer::IBLGenerator::init(VkRenderData& renderData)
         return false;
     }
 
-    if (!createHDRToCubemapPipeline(renderData) ||
-        !createIrradiancePipeline(renderData) ||
-        !createPrefilterPipeline(renderData) ||
-        !createBRDFLUTPipeline(renderData))
+    if (!createHDRToCubemapPipeline(renderData) || !createIrradiancePipeline(renderData) ||
+        !createPrefilterPipeline(renderData) || !createBRDFLUTPipeline(renderData))
     {
         return false;
     }
@@ -89,16 +87,18 @@ bool Core::Renderer::IBLGenerator::createDescriptorForHDR(VkRenderData& renderDa
     layoutInfo.pBindings = &samplerBinding;
 
     if (vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &layoutInfo, nullptr,
-                                &renderData.rdHDRTexture.descriptorSetLayout) != VK_SUCCESS)
+                                    &renderData.rdHDRTexture.descriptorSetLayout) != VK_SUCCESS)
     {
         Logger::log(1, "%s error: failed to create descriptor set layout\n", __FUNCTION__);
         return false;
     }
 
     constexpr std::string_view descriptorSetLayoutObjectName = "Descriptor Set Layout IBL HDR";
-    vmaSetAllocationName(renderData.rdAllocator, renderData.rdHDRTexture.imageAlloc, descriptorSetLayoutObjectName.data());
-    Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(renderData.rdHDRTexture.descriptorSetLayout),
-               VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, descriptorSetLayoutObjectName.data());
+    vmaSetAllocationName(renderData.rdAllocator, renderData.rdHDRTexture.imageAlloc,
+                         descriptorSetLayoutObjectName.data());
+    Debug::setObjectName(renderData.rdVkbDevice.device,
+                         reinterpret_cast<uint64_t>(renderData.rdHDRTexture.descriptorSetLayout),
+                         VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, descriptorSetLayoutObjectName.data());
 
     VkDescriptorPoolSize poolSize{};
     poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -111,7 +111,7 @@ bool Core::Renderer::IBLGenerator::createDescriptorForHDR(VkRenderData& renderDa
     poolInfo.maxSets = 1;
 
     if (vkCreateDescriptorPool(renderData.rdVkbDevice.device, &poolInfo, nullptr,
-                           &renderData.rdHDRTexture.descriptorPool) != VK_SUCCESS)
+                               &renderData.rdHDRTexture.descriptorPool) != VK_SUCCESS)
     {
         Logger::log(1, "%s error: failed to create descriptor pool", __FUNCTION__);
         return false;
@@ -119,7 +119,8 @@ bool Core::Renderer::IBLGenerator::createDescriptorForHDR(VkRenderData& renderDa
 
     constexpr std::string_view descriptorPoolObjectName = "Descriptor Pool IBL HDR texture";
     vmaSetAllocationName(renderData.rdAllocator, renderData.rdHDRTexture.imageAlloc, descriptorPoolObjectName.data());
-    Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(renderData.rdHDRTexture.descriptorPool),
+    Debug::setObjectName(renderData.rdVkbDevice.device,
+                         reinterpret_cast<uint64_t>(renderData.rdHDRTexture.descriptorPool),
                          VK_OBJECT_TYPE_DESCRIPTOR_POOL, descriptorPoolObjectName.data());
 
     VkDescriptorSetAllocateInfo allocInfo{};
@@ -128,8 +129,8 @@ bool Core::Renderer::IBLGenerator::createDescriptorForHDR(VkRenderData& renderDa
     allocInfo.descriptorSetCount = 1;
     allocInfo.pSetLayouts = &renderData.rdHDRTexture.descriptorSetLayout;
 
-    if (vkAllocateDescriptorSets(renderData.rdVkbDevice.device, &allocInfo,
-                             &renderData.rdHDRTexture.descriptorSet) != VK_SUCCESS)
+    if (vkAllocateDescriptorSets(renderData.rdVkbDevice.device, &allocInfo, &renderData.rdHDRTexture.descriptorSet) !=
+        VK_SUCCESS)
     {
         Logger::log(1, "%s error: failed to allocate descriptor set", __FUNCTION__);
         return false;
@@ -148,8 +149,7 @@ bool Core::Renderer::IBLGenerator::createDescriptorForHDR(VkRenderData& renderDa
     write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     write.pImageInfo = &imageInfo;
 
-    vkUpdateDescriptorSets(renderData.rdVkbDevice.device, 1, &write, 0,
-        nullptr);
+    vkUpdateDescriptorSets(renderData.rdVkbDevice.device, 1, &write, 0, nullptr);
 
     return true;
 }
@@ -176,7 +176,7 @@ bool Core::Renderer::IBLGenerator::createStaticCubemapLayout(VkRenderData& rende
 
     constexpr std::string_view descriptorSetLayoutObjectName = "Descriptor Set Layout IBL Static Cubemap";
     Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(layout),
-               VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, descriptorSetLayoutObjectName.data());
+                         VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, descriptorSetLayoutObjectName.data());
 
     return true;
 }
@@ -190,23 +190,21 @@ bool Core::Renderer::IBLGenerator::convertHDRToCubemap(VkRenderData& renderData,
     cubemapImageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     cubemapImageInfo.imageType = VK_IMAGE_TYPE_2D;
     cubemapImageInfo.format = VK_FORMAT_R32G32B32A32_SFLOAT;
-    cubemapImageInfo.extent = { cubemapSize, cubemapSize, 1 };
+    cubemapImageInfo.extent = {cubemapSize, cubemapSize, 1};
     cubemapImageInfo.mipLevels = 1;
     cubemapImageInfo.arrayLayers = 6;
     cubemapImageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
     cubemapImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
     cubemapImageInfo.usage =
-        VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
-        VK_IMAGE_USAGE_TRANSFER_DST_BIT |
-        VK_IMAGE_USAGE_SAMPLED_BIT;
+        VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
     cubemapImageInfo.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
     cubemapImageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
     VmaAllocationCreateInfo allocInfo{};
     allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
-    if (vmaCreateImage(renderData.rdAllocator, &cubemapImageInfo, &allocInfo,
-        &cubemapData.image, &cubemapData.imageAlloc, nullptr) != VK_SUCCESS)
+    if (vmaCreateImage(renderData.rdAllocator, &cubemapImageInfo, &allocInfo, &cubemapData.image,
+                       &cubemapData.imageAlloc, nullptr) != VK_SUCCESS)
     {
         Logger::log(1, "%s error: failed to create cubemap image", __FUNCTION__);
         return false;
@@ -281,13 +279,12 @@ bool Core::Renderer::IBLGenerator::convertHDRToCubemap(VkRenderData& renderData,
         barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         barrier.subresourceRange.baseMipLevel = 0;
         barrier.subresourceRange.levelCount = 1;
-        barrier.subresourceRange.baseArrayLayer  = 0;
+        barrier.subresourceRange.baseArrayLayer = 0;
         barrier.subresourceRange.layerCount = 6;
 
         vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-            VK_PIPELINE_STAGE_TRANSFER_BIT | VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0,
-            0, nullptr, 0, nullptr, 1,
-            &barrier);
+                             VK_PIPELINE_STAGE_TRANSFER_BIT | VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0, 0,
+                             nullptr, 0, nullptr, 1, &barrier);
 
         VkImageMemoryBarrier offscreenToColor{};
         offscreenToColor.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -302,23 +299,23 @@ bool Core::Renderer::IBLGenerator::convertHDRToCubemap(VkRenderData& renderData,
         offscreenToColor.subresourceRange.baseArrayLayer = 0;
         offscreenToColor.subresourceRange.layerCount = 1;
 
-        vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-            0, 0, nullptr, 0, nullptr,
-            1, &offscreenToColor);
+        vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0,
+                             0, nullptr, 0, nullptr, 1, &offscreenToColor);
 
         for (uint32_t face = 0; face < 6; ++face)
         {
-            vkCmdPushConstants(cmd, renderData.rdHDRToCubemapPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(int), &face);
+            vkCmdPushConstants(cmd, renderData.rdHDRToCubemapPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(int),
+                               &face);
 
             VkClearValue clear{};
-            clear.color = {{0,0,0,1}};
+            clear.color = {{0, 0, 0, 1}};
 
             VkRenderPassBeginInfo renderPassBeginInfo{};
             renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
             renderPassBeginInfo.renderPass = renderData.rdHDRToCubemapRenderpass;
             renderPassBeginInfo.framebuffer = framebuffer;
-            renderPassBeginInfo.renderArea.offset = {0,0};
-            renderPassBeginInfo.renderArea.extent = { cubemapSize, cubemapSize };
+            renderPassBeginInfo.renderArea.offset = {0, 0};
+            renderPassBeginInfo.renderArea.extent = {cubemapSize, cubemapSize};
             renderPassBeginInfo.clearValueCount = 1;
             renderPassBeginInfo.pClearValues = &clear;
 
@@ -328,7 +325,7 @@ bool Core::Renderer::IBLGenerator::convertHDRToCubemap(VkRenderData& renderData,
             viewport.x = 0.0f;
             viewport.y = 0.0f;
             viewport.width = static_cast<float>(cubemapSize);
-            viewport.height =  static_cast<float>(cubemapSize);
+            viewport.height = static_cast<float>(cubemapSize);
             viewport.minDepth = 0.f;
             viewport.maxDepth = 1.f;
 
@@ -343,9 +340,8 @@ bool Core::Renderer::IBLGenerator::convertHDRToCubemap(VkRenderData& renderData,
 
             std::vector descriptorSets = {renderData.rdCaptureUBO.rdUBODescriptorSet, texture.descriptorSet};
 
-            vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdHDRToCubemapPipelineLayout,
-               0, static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(),
-               0, nullptr);
+            vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdHDRToCubemapPipelineLayout, 0,
+                                    static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data(), 0, nullptr);
 
             vkCmdDraw(cmd, 36, 1, 0, 0);
             vkCmdEndRenderPass(cmd);
@@ -363,9 +359,8 @@ bool Core::Renderer::IBLGenerator::convertHDRToCubemap(VkRenderData& renderData,
             toSrcImageMemoryBarrier.subresourceRange.baseArrayLayer = 0;
             toSrcImageMemoryBarrier.subresourceRange.layerCount = 1;
 
-            vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-                0, 0, nullptr, 0, nullptr,
-                1, &toSrcImageMemoryBarrier);
+            vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
+                                 0, nullptr, 0, nullptr, 1, &toSrcImageMemoryBarrier);
 
             VkImageCopy copy{};
             copy.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -373,10 +368,10 @@ bool Core::Renderer::IBLGenerator::convertHDRToCubemap(VkRenderData& renderData,
             copy.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             copy.dstSubresource.baseArrayLayer = face;
             copy.dstSubresource.layerCount = 1;
-            copy.extent = { cubemapSize, cubemapSize, 1 };
+            copy.extent = {cubemapSize, cubemapSize, 1};
 
-            vkCmdCopyImage(cmd, offscreenImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-                cubemapData.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy);
+            vkCmdCopyImage(cmd, offscreenImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, cubemapData.image,
+                           VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy);
         }
 
         VkImageMemoryBarrier cubeToSampleImageMemoryBarrier{};
@@ -390,9 +385,8 @@ bool Core::Renderer::IBLGenerator::convertHDRToCubemap(VkRenderData& renderData,
         cubeToSampleImageMemoryBarrier.subresourceRange.levelCount = 1;
         cubeToSampleImageMemoryBarrier.subresourceRange.layerCount = 6;
 
-        vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-            0, 0, nullptr, 0, nullptr,
-            1, &cubeToSampleImageMemoryBarrier);
+        vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr,
+                             0, nullptr, 1, &cubeToSampleImageMemoryBarrier);
     }
     vkEndCommandBuffer(cmd);
 
@@ -441,7 +435,7 @@ bool Core::Renderer::IBLGenerator::convertHDRToCubemap(VkRenderData& renderData,
     constexpr std::string_view descriptorSetLayoutObjectName = "Descriptor Set Layout IBL Cubemap Data";
     vmaSetAllocationName(renderData.rdAllocator, cubemapData.imageAlloc, descriptorSetLayoutObjectName.data());
     Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(cubemapData.descriptorSetLayout),
-               VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, descriptorSetLayoutObjectName.data());
+                         VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, descriptorSetLayoutObjectName.data());
 
     VkDescriptorPoolSize poolSize{};
     poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -453,7 +447,8 @@ bool Core::Renderer::IBLGenerator::convertHDRToCubemap(VkRenderData& renderData,
     poolInfo.pPoolSizes = &poolSize;
     poolInfo.maxSets = 1;
 
-    if (vkCreateDescriptorPool(renderData.rdVkbDevice.device, &poolInfo, nullptr, &cubemapData.descriptorPool) != VK_SUCCESS)
+    if (vkCreateDescriptorPool(renderData.rdVkbDevice.device, &poolInfo, nullptr, &cubemapData.descriptorPool) !=
+        VK_SUCCESS)
     {
         Logger::log(1, "%s error: failed to create descriptor pool", __FUNCTION__);
         return false;
@@ -462,7 +457,7 @@ bool Core::Renderer::IBLGenerator::convertHDRToCubemap(VkRenderData& renderData,
     constexpr std::string_view descriptorPoolObjectName = "Descriptor Pool IBL Cubemap Data";
     vmaSetAllocationName(renderData.rdAllocator, cubemapData.imageAlloc, descriptorPoolObjectName.data());
     Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(cubemapData.descriptorPool),
-                        VK_OBJECT_TYPE_DESCRIPTOR_POOL, descriptorPoolObjectName.data());
+                         VK_OBJECT_TYPE_DESCRIPTOR_POOL, descriptorPoolObjectName.data());
 
     VkDescriptorSetAllocateInfo allocInfoDS{};
     allocInfoDS.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -493,30 +488,28 @@ bool Core::Renderer::IBLGenerator::convertHDRToCubemap(VkRenderData& renderData,
 }
 
 bool Core::Renderer::IBLGenerator::convertCubemapToIrradiance(VkRenderData& renderData, VkCubemapData& cubemapData,
-    VkCubemapData& irradianceData)
+                                                              VkCubemapData& irradianceData)
 {
-     constexpr uint32_t irradianceSize = 32;
+    constexpr uint32_t irradianceSize = 32;
 
     VkImageCreateInfo imageInfo{};
     imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     imageInfo.imageType = VK_IMAGE_TYPE_2D;
     imageInfo.format = VK_FORMAT_R32G32B32A32_SFLOAT;
-    imageInfo.extent = { irradianceSize, irradianceSize, 1 };
+    imageInfo.extent = {irradianceSize, irradianceSize, 1};
     imageInfo.mipLevels = 1;
     imageInfo.arrayLayers = 6;
     imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
     imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
     imageInfo.usage =
-        VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
-        VK_IMAGE_USAGE_TRANSFER_DST_BIT |
-        VK_IMAGE_USAGE_SAMPLED_BIT;
+        VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
     imageInfo.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
 
     VmaAllocationCreateInfo allocInfo{};
     allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
-    vmaCreateImage(renderData.rdAllocator, &imageInfo, &allocInfo,
-                   &irradianceData.image, &irradianceData.imageAlloc, nullptr);
+    vmaCreateImage(renderData.rdAllocator, &imageInfo, &allocInfo, &irradianceData.image, &irradianceData.imageAlloc,
+                   nullptr);
 
     VkImageViewCreateInfo viewInfo{};
     viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -527,17 +520,14 @@ bool Core::Renderer::IBLGenerator::convertCubemapToIrradiance(VkRenderData& rend
     viewInfo.subresourceRange.levelCount = 1;
     viewInfo.subresourceRange.layerCount = 6;
 
-    vkCreateImageView(renderData.rdVkbDevice.device, &viewInfo, nullptr,
-                      &irradianceData.imageView);
+    vkCreateImageView(renderData.rdVkbDevice.device, &viewInfo, nullptr, &irradianceData.imageView);
 
     VkImage offscreenImage;
     VmaAllocation offscreenAlloc;
 
     imageInfo.arrayLayers = 1;
     imageInfo.flags = 0;
-    imageInfo.usage =
-        VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
-        VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+    imageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 
     vmaCreateImage(renderData.rdAllocator, &imageInfo, &allocInfo, &offscreenImage, &offscreenAlloc, nullptr);
 
@@ -588,29 +578,22 @@ bool Core::Renderer::IBLGenerator::convertCubemapToIrradiance(VkRenderData& rend
         barrier.subresourceRange.levelCount = 1;
         barrier.subresourceRange.layerCount = 6;
 
-        vkCmdPipelineBarrier(cmd,
-            VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-            VK_PIPELINE_STAGE_TRANSFER_BIT,
-            0, 0, nullptr, 0, nullptr, 1, &barrier);
+        vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0,
+                             nullptr, 1, &barrier);
 
         for (uint32_t face = 0; face < 6; ++face)
         {
-            vkCmdPushConstants(
-                cmd,
-                renderData.rdIrradiancePipelineLayout,
-                VK_SHADER_STAGE_VERTEX_BIT,
-                0, sizeof(uint32_t),
-                &face
-            );
+            vkCmdPushConstants(cmd, renderData.rdIrradiancePipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0,
+                               sizeof(uint32_t), &face);
 
             VkRenderPassBeginInfo rp{};
             rp.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
             rp.renderPass = renderData.rdIBLData.rdIBLRenderpass;
             rp.framebuffer = framebuffer;
-            rp.renderArea.extent = { irradianceSize, irradianceSize };
+            rp.renderArea.extent = {irradianceSize, irradianceSize};
 
             VkClearValue clear{};
-            clear.color = {{0,0,0,1}};
+            clear.color = {{0, 0, 0, 1}};
             rp.clearValueCount = 1;
             rp.pClearValues = &clear;
 
@@ -620,7 +603,7 @@ bool Core::Renderer::IBLGenerator::convertCubemapToIrradiance(VkRenderData& rend
             viewport.x = 0.0f;
             viewport.y = 0.0f;
             viewport.width = static_cast<float>(irradianceSize);
-            viewport.height =  static_cast<float>(irradianceSize);
+            viewport.height = static_cast<float>(irradianceSize);
             viewport.minDepth = 0.f;
             viewport.maxDepth = 1.f;
 
@@ -633,13 +616,10 @@ bool Core::Renderer::IBLGenerator::convertCubemapToIrradiance(VkRenderData& rend
 
             vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdIrradiancePipeline);
 
-            VkDescriptorSet sets[] = {
-                renderData.rdCaptureUBO.rdUBODescriptorSet,
-                cubemapData.descriptorSet
-            };
+            VkDescriptorSet sets[] = {renderData.rdCaptureUBO.rdUBODescriptorSet, cubemapData.descriptorSet};
 
-            vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdIrradiancePipelineLayout,
-                0, 2, sets, 0, nullptr);
+            vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdIrradiancePipelineLayout, 0, 2,
+                                    sets, 0, nullptr);
 
             vkCmdDraw(cmd, 36, 1, 0, 0);
             vkCmdEndRenderPass(cmd);
@@ -657,9 +637,8 @@ bool Core::Renderer::IBLGenerator::convertCubemapToIrradiance(VkRenderData& rend
             toSrcImageMemoryBarrier.subresourceRange.baseArrayLayer = 0;
             toSrcImageMemoryBarrier.subresourceRange.layerCount = 1;
 
-            vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-                0, 0, nullptr, 0, nullptr,
-                1, &toSrcImageMemoryBarrier);
+            vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
+                                 0, nullptr, 0, nullptr, 1, &toSrcImageMemoryBarrier);
 
             VkImageCopy copy{};
             copy.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -667,10 +646,10 @@ bool Core::Renderer::IBLGenerator::convertCubemapToIrradiance(VkRenderData& rend
             copy.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             copy.dstSubresource.baseArrayLayer = face;
             copy.dstSubresource.layerCount = 1;
-            copy.extent = { irradianceSize, irradianceSize, 1 };
+            copy.extent = {irradianceSize, irradianceSize, 1};
 
-            vkCmdCopyImage(cmd, offscreenImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-                irradianceData.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy);
+            vkCmdCopyImage(cmd, offscreenImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, irradianceData.image,
+                           VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy);
         }
 
         VkImageMemoryBarrier irradianceToSample{};
@@ -686,9 +665,8 @@ bool Core::Renderer::IBLGenerator::convertCubemapToIrradiance(VkRenderData& rend
         irradianceToSample.subresourceRange.baseArrayLayer = 0;
         irradianceToSample.subresourceRange.layerCount = 6;
 
-        vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-            0, 0, nullptr, 0, nullptr,
-            1, &irradianceToSample);
+        vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr,
+                             0, nullptr, 1, &irradianceToSample);
     }
     vkEndCommandBuffer(cmd);
 
@@ -732,12 +710,13 @@ bool Core::Renderer::IBLGenerator::convertCubemapToIrradiance(VkRenderData& rend
     layoutInfo.bindingCount = 1;
     layoutInfo.pBindings = &binding;
 
-    vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &layoutInfo, nullptr, &irradianceData.descriptorSetLayout);
+    vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &layoutInfo, nullptr,
+                                &irradianceData.descriptorSetLayout);
 
     constexpr std::string_view descriptorSetLayoutObjectName = "Descriptor Set Layout IBL Irradiance";
     vmaSetAllocationName(renderData.rdAllocator, irradianceData.imageAlloc, descriptorSetLayoutObjectName.data());
     Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(irradianceData.descriptorSetLayout),
-               VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, descriptorSetLayoutObjectName.data());
+                         VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, descriptorSetLayoutObjectName.data());
 
     VkDescriptorPoolSize poolSize{};
     poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -749,7 +728,8 @@ bool Core::Renderer::IBLGenerator::convertCubemapToIrradiance(VkRenderData& rend
     poolInfo.pPoolSizes = &poolSize;
     poolInfo.maxSets = 1;
 
-    if (vkCreateDescriptorPool(renderData.rdVkbDevice.device, &poolInfo, nullptr, &irradianceData.descriptorPool) != VK_SUCCESS)
+    if (vkCreateDescriptorPool(renderData.rdVkbDevice.device, &poolInfo, nullptr, &irradianceData.descriptorPool) !=
+        VK_SUCCESS)
     {
         Logger::log(1, "%s error: failed to create descriptor pool", __FUNCTION__);
         return false;
@@ -758,7 +738,7 @@ bool Core::Renderer::IBLGenerator::convertCubemapToIrradiance(VkRenderData& rend
     constexpr std::string_view descriptorPoolObjectName = "Descriptor Pool IBL Irradiance Data";
     vmaSetAllocationName(renderData.rdAllocator, irradianceData.imageAlloc, descriptorPoolObjectName.data());
     Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(irradianceData.descriptorPool),
-                       VK_OBJECT_TYPE_DESCRIPTOR_POOL, descriptorPoolObjectName.data());
+                         VK_OBJECT_TYPE_DESCRIPTOR_POOL, descriptorPoolObjectName.data());
 
     VkDescriptorSetAllocateInfo allocInfoDS{};
     allocInfoDS.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -789,7 +769,7 @@ bool Core::Renderer::IBLGenerator::convertCubemapToIrradiance(VkRenderData& rend
 }
 
 bool Core::Renderer::IBLGenerator::convertCubemapToPrefilteredMap(VkRenderData& renderData, VkCubemapData& cubemapData,
-    VkCubemapData& prefilteredMapData)
+                                                                  VkCubemapData& prefilteredMapData)
 {
     constexpr uint32_t prefilteredMapSize = 512;
     constexpr uint32_t maxMipLevels = 10;
@@ -798,22 +778,20 @@ bool Core::Renderer::IBLGenerator::convertCubemapToPrefilteredMap(VkRenderData& 
     imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     imageInfo.imageType = VK_IMAGE_TYPE_2D;
     imageInfo.format = VK_FORMAT_R32G32B32A32_SFLOAT;
-    imageInfo.extent = { prefilteredMapSize, prefilteredMapSize, 1 };
+    imageInfo.extent = {prefilteredMapSize, prefilteredMapSize, 1};
     imageInfo.mipLevels = maxMipLevels;
     imageInfo.arrayLayers = 6;
     imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
     imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
     imageInfo.usage =
-        VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
-        VK_IMAGE_USAGE_TRANSFER_DST_BIT |
-        VK_IMAGE_USAGE_SAMPLED_BIT;
+        VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
     imageInfo.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
 
     VmaAllocationCreateInfo allocInfo{};
     allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
-    vmaCreateImage(renderData.rdAllocator, &imageInfo, &allocInfo,
-                   &prefilteredMapData.image, &prefilteredMapData.imageAlloc, nullptr);
+    vmaCreateImage(renderData.rdAllocator, &imageInfo, &allocInfo, &prefilteredMapData.image,
+                   &prefilteredMapData.imageAlloc, nullptr);
 
     VkImageViewCreateInfo viewInfo{};
     viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -825,8 +803,7 @@ bool Core::Renderer::IBLGenerator::convertCubemapToPrefilteredMap(VkRenderData& 
     viewInfo.subresourceRange.levelCount = maxMipLevels;
     viewInfo.subresourceRange.layerCount = 6;
 
-    vkCreateImageView(renderData.rdVkbDevice.device, &viewInfo, nullptr,
-                      &prefilteredMapData.imageView);
+    vkCreateImageView(renderData.rdVkbDevice.device, &viewInfo, nullptr, &prefilteredMapData.imageView);
 
     VkImage offscreenImage;
     VmaAllocation offscreenAlloc;
@@ -872,7 +849,8 @@ bool Core::Renderer::IBLGenerator::convertCubemapToPrefilteredMap(VkRenderData& 
     begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     vkBeginCommandBuffer(cmd, &begin);
     {
-        Debug::Marker marker(renderData.rdVkbDevice.device, cmd, "Convert Cubemap To PrefilteredMap", Debug::Colors::Green);
+        Debug::Marker marker(renderData.rdVkbDevice.device, cmd, "Convert Cubemap To PrefilteredMap",
+                             Debug::Colors::Green);
 
         VkImageMemoryBarrier barrier{};
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -887,9 +865,8 @@ bool Core::Renderer::IBLGenerator::convertCubemapToPrefilteredMap(VkRenderData& 
         barrier.subresourceRange.baseArrayLayer = 0;
         barrier.subresourceRange.layerCount = 6;
 
-        vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,VK_PIPELINE_STAGE_TRANSFER_BIT,
-            0, 0, nullptr, 0, nullptr,
-            1, &barrier);
+        vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0,
+                             nullptr, 1, &barrier);
 
         for (uint32_t mip = 0; mip < maxMipLevels; ++mip)
         {
@@ -898,18 +875,23 @@ bool Core::Renderer::IBLGenerator::convertCubemapToPrefilteredMap(VkRenderData& 
 
             for (uint32_t face = 0; face < 6; ++face)
             {
-                struct { uint32_t face; float roughness; } pushData = { face, roughness };
+                struct
+                {
+                    uint32_t face;
+                    float roughness;
+                } pushData = {face, roughness};
                 vkCmdPushConstants(cmd, renderData.rdPrefilterPipelineLayout,
-                                VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushData), &pushData);
+                                   VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushData),
+                                   &pushData);
 
                 VkRenderPassBeginInfo rp{};
                 rp.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
                 rp.renderPass = renderData.rdIBLData.rdIBLRenderpass;
                 rp.framebuffer = framebuffer;
-                rp.renderArea.extent = { mipSize, mipSize };
+                rp.renderArea.extent = {mipSize, mipSize};
 
                 VkClearValue clear{};
-                clear.color = {{0,0,0,1}};
+                clear.color = {{0, 0, 0, 1}};
                 rp.clearValueCount = 1;
                 rp.pClearValues = &clear;
 
@@ -919,7 +901,7 @@ bool Core::Renderer::IBLGenerator::convertCubemapToPrefilteredMap(VkRenderData& 
                 viewport.x = 0.0f;
                 viewport.y = 0.0f;
                 viewport.width = static_cast<float>(mipSize);
-                viewport.height =  static_cast<float>(mipSize);
+                viewport.height = static_cast<float>(mipSize);
                 viewport.minDepth = 0.f;
                 viewport.maxDepth = 1.f;
 
@@ -932,13 +914,10 @@ bool Core::Renderer::IBLGenerator::convertCubemapToPrefilteredMap(VkRenderData& 
 
                 vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdPrefilterPipeline);
 
-                VkDescriptorSet sets[] = {
-                    renderData.rdCaptureUBO.rdUBODescriptorSet,
-                    cubemapData.descriptorSet
-                };
+                VkDescriptorSet sets[] = {renderData.rdCaptureUBO.rdUBODescriptorSet, cubemapData.descriptorSet};
 
-                vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdPrefilterPipelineLayout,
-                    0, 2, sets, 0, nullptr);
+                vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdPrefilterPipelineLayout, 0,
+                                        2, sets, 0, nullptr);
 
                 vkCmdDraw(cmd, 36, 1, 0, 0);
                 vkCmdEndRenderPass(cmd);
@@ -957,8 +936,7 @@ bool Core::Renderer::IBLGenerator::convertCubemapToPrefilteredMap(VkRenderData& 
                 toSrcImageMemoryBarrier.subresourceRange.layerCount = 1;
 
                 vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-                    0, 0, nullptr, 0, nullptr,
-                    1, &toSrcImageMemoryBarrier);
+                                     0, 0, nullptr, 0, nullptr, 1, &toSrcImageMemoryBarrier);
 
                 VkImageCopy copy{};
                 copy.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -969,10 +947,10 @@ bool Core::Renderer::IBLGenerator::convertCubemapToPrefilteredMap(VkRenderData& 
                 copy.dstSubresource.mipLevel = mip;
                 copy.dstSubresource.baseArrayLayer = face;
                 copy.dstSubresource.layerCount = 1;
-                copy.extent = { mipSize, mipSize, 1 };
+                copy.extent = {mipSize, mipSize, 1};
 
-                vkCmdCopyImage(cmd, offscreenImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-                    prefilteredMapData.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy);
+                vkCmdCopyImage(cmd, offscreenImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, prefilteredMapData.image,
+                               VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy);
 
                 VkImageMemoryBarrier backToColorBarrier{};
                 backToColorBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -985,9 +963,8 @@ bool Core::Renderer::IBLGenerator::convertCubemapToPrefilteredMap(VkRenderData& 
                 backToColorBarrier.subresourceRange.levelCount = 1;
                 backToColorBarrier.subresourceRange.layerCount = 1;
 
-                vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT,
-                    VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0, 0, nullptr,
-                    0, nullptr, 1, &backToColorBarrier);
+                vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                                     0, 0, nullptr, 0, nullptr, 1, &backToColorBarrier);
             }
         }
 
@@ -1004,9 +981,8 @@ bool Core::Renderer::IBLGenerator::convertCubemapToPrefilteredMap(VkRenderData& 
         prefilteredToSample.subresourceRange.baseArrayLayer = 0;
         prefilteredToSample.subresourceRange.layerCount = 6;
 
-        vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-            0, 0, nullptr, 0, nullptr,
-            1, &prefilteredToSample);
+        vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr,
+                             0, nullptr, 1, &prefilteredToSample);
     }
     vkEndCommandBuffer(cmd);
 
@@ -1033,7 +1009,8 @@ bool Core::Renderer::IBLGenerator::convertCubemapToPrefilteredMap(VkRenderData& 
     samplerInfo.minLod = 0.0f;
     samplerInfo.maxLod = static_cast<float>(maxMipLevels);
 
-    if (vkCreateSampler(renderData.rdVkbDevice.device, &samplerInfo, nullptr, &prefilteredMapData.sampler) != VK_SUCCESS)
+    if (vkCreateSampler(renderData.rdVkbDevice.device, &samplerInfo, nullptr, &prefilteredMapData.sampler) !=
+        VK_SUCCESS)
     {
         Logger::log(1, "%s error: failed to create cubemap sampler", __FUNCTION__);
         return false;
@@ -1050,12 +1027,14 @@ bool Core::Renderer::IBLGenerator::convertCubemapToPrefilteredMap(VkRenderData& 
     layoutInfo.bindingCount = 1;
     layoutInfo.pBindings = &binding;
 
-    vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &layoutInfo, nullptr, &prefilteredMapData.descriptorSetLayout);
+    vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &layoutInfo, nullptr,
+                                &prefilteredMapData.descriptorSetLayout);
 
     constexpr std::string_view descriptorSetLayoutObjectName = "Descriptor Set Layout IBL PrefilteredMap Data";
     vmaSetAllocationName(renderData.rdAllocator, prefilteredMapData.imageAlloc, descriptorSetLayoutObjectName.data());
-    Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(prefilteredMapData.descriptorSetLayout),
-               VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, descriptorSetLayoutObjectName.data());
+    Debug::setObjectName(renderData.rdVkbDevice.device,
+                         reinterpret_cast<uint64_t>(prefilteredMapData.descriptorSetLayout),
+                         VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, descriptorSetLayoutObjectName.data());
 
     VkDescriptorPoolSize poolSize{};
     poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -1067,7 +1046,8 @@ bool Core::Renderer::IBLGenerator::convertCubemapToPrefilteredMap(VkRenderData& 
     poolInfo.pPoolSizes = &poolSize;
     poolInfo.maxSets = 1;
 
-    if (vkCreateDescriptorPool(renderData.rdVkbDevice.device, &poolInfo, nullptr, &prefilteredMapData.descriptorPool) != VK_SUCCESS)
+    if (vkCreateDescriptorPool(renderData.rdVkbDevice.device, &poolInfo, nullptr, &prefilteredMapData.descriptorPool) !=
+        VK_SUCCESS)
     {
         Logger::log(1, "%s error: failed to create descriptor pool", __FUNCTION__);
         return false;
@@ -1076,7 +1056,7 @@ bool Core::Renderer::IBLGenerator::convertCubemapToPrefilteredMap(VkRenderData& 
     constexpr std::string_view descriptorPoolObjectName = "Descriptor Pool IBL PrefilteredMap Data";
     vmaSetAllocationName(renderData.rdAllocator, prefilteredMapData.imageAlloc, descriptorPoolObjectName.data());
     Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(prefilteredMapData.descriptorPool),
-                   VK_OBJECT_TYPE_DESCRIPTOR_POOL, descriptorPoolObjectName.data());
+                         VK_OBJECT_TYPE_DESCRIPTOR_POOL, descriptorPoolObjectName.data());
 
     VkDescriptorSetAllocateInfo allocInfoDS{};
     allocInfoDS.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -1114,7 +1094,7 @@ bool Core::Renderer::IBLGenerator::generateBRDFLUT(VkRenderData& renderData, VkT
     imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     imageInfo.imageType = VK_IMAGE_TYPE_2D;
     imageInfo.format = VK_FORMAT_R32G32B32A32_SFLOAT;
-    imageInfo.extent = { lutSize, lutSize, 1 };
+    imageInfo.extent = {lutSize, lutSize, 1};
     imageInfo.mipLevels = 1;
     imageInfo.arrayLayers = 1;
     imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -1124,8 +1104,8 @@ bool Core::Renderer::IBLGenerator::generateBRDFLUT(VkRenderData& renderData, VkT
     VmaAllocationCreateInfo allocInfo{};
     allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
-    vmaCreateImage(renderData.rdAllocator, &imageInfo, &allocInfo,
-                   &brdfLutData.image, &brdfLutData.imageAlloc, nullptr);
+    vmaCreateImage(renderData.rdAllocator, &imageInfo, &allocInfo, &brdfLutData.image, &brdfLutData.imageAlloc,
+                   nullptr);
 
     VkImageViewCreateInfo viewInfo{};
     viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -1167,18 +1147,17 @@ bool Core::Renderer::IBLGenerator::generateBRDFLUT(VkRenderData& renderData, VkT
         barrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         barrier.srcAccessMask = 0;
         barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        barrier.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+        barrier.subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1};
 
-        vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                             0, 0, nullptr, 0,
-                             nullptr, 1, &barrier);
+        vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0,
+                             0, nullptr, 0, nullptr, 1, &barrier);
 
         VkRenderPassBeginInfo rp{};
         rp.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         rp.renderPass = renderData.rdIBLData.rdIBLRenderpass;
         rp.framebuffer = framebuffer;
-        rp.renderArea.extent = { lutSize, lutSize };
-        VkClearValue clear = {{{0,0,0,1}}};
+        rp.renderArea.extent = {lutSize, lutSize};
+        VkClearValue clear = {{{0, 0, 0, 1}}};
         rp.clearValueCount = 1;
         rp.pClearValues = &clear;
 
@@ -1201,8 +1180,7 @@ bool Core::Renderer::IBLGenerator::generateBRDFLUT(VkRenderData& renderData, VkT
         barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
         vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-                             0, 0, nullptr, 0,
-                             nullptr, 1, &barrier);
+                             0, 0, nullptr, 0, nullptr, 1, &barrier);
     }
     vkEndCommandBuffer(cmd);
 
@@ -1245,7 +1223,7 @@ bool Core::Renderer::IBLGenerator::generateBRDFLUT(VkRenderData& renderData, VkT
     constexpr std::string_view descriptorSetLayoutObjectName = "Descriptor Set Layout IBL BRDF LUT Data";
     vmaSetAllocationName(renderData.rdAllocator, brdfLutData.imageAlloc, descriptorSetLayoutObjectName.data());
     Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(brdfLutData.descriptorSetLayout),
-               VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, descriptorSetLayoutObjectName.data());
+                         VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, descriptorSetLayoutObjectName.data());
 
     VkDescriptorPoolSize poolSize{};
     poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -1257,7 +1235,8 @@ bool Core::Renderer::IBLGenerator::generateBRDFLUT(VkRenderData& renderData, VkT
     poolInfo.pPoolSizes = &poolSize;
     poolInfo.maxSets = 1;
 
-    if (vkCreateDescriptorPool(renderData.rdVkbDevice.device, &poolInfo, nullptr, &brdfLutData.descriptorPool) != VK_SUCCESS)
+    if (vkCreateDescriptorPool(renderData.rdVkbDevice.device, &poolInfo, nullptr, &brdfLutData.descriptorPool) !=
+        VK_SUCCESS)
     {
         Logger::log(1, "%s error: failed to create descriptor pool", __FUNCTION__);
         return false;
@@ -1266,7 +1245,7 @@ bool Core::Renderer::IBLGenerator::generateBRDFLUT(VkRenderData& renderData, VkT
     constexpr std::string_view descriptorPoolObjectName = "Descriptor Pool IBL BRDF LUT Data";
     vmaSetAllocationName(renderData.rdAllocator, brdfLutData.imageAlloc, descriptorPoolObjectName.data());
     Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(brdfLutData.descriptorPool),
-               VK_OBJECT_TYPE_DESCRIPTOR_POOL, descriptorPoolObjectName.data());
+                         VK_OBJECT_TYPE_DESCRIPTOR_POOL, descriptorPoolObjectName.data());
 
     VkDescriptorSetAllocateInfo allocInfoDS{};
     allocInfoDS.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -1321,10 +1300,7 @@ void Core::Renderer::IBLGenerator::cleanupCubemapResources(VkRenderData& renderD
 
 bool Core::Renderer::IBLGenerator::createHDRToCubemapPipeline(VkRenderData& renderData)
 {
-    std::vector layouts = {
-        renderData.rdCaptureUBO.rdUBODescriptorLayout,
-        renderData.rdHDRTexture.descriptorSetLayout
-    };
+    std::vector layouts = {renderData.rdCaptureUBO.rdUBODescriptorLayout, renderData.rdHDRTexture.descriptorSetLayout};
 
     VkPushConstantRange pushConstantRange{};
     pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
@@ -1358,8 +1334,8 @@ bool Core::Renderer::IBLGenerator::createHDRToCubemapPipeline(VkRenderData& rend
     pipelineConfig.depthCompareOp = VK_COMPARE_OP_ALWAYS;
 
     if (!Pipeline::init(renderData, renderData.rdHDRToCubemapPipelineLayout, renderData.rdHDRToCubemapPipeline,
-                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile.data(),
-                        fragmentShaderFile.data(), pipelineConfig, renderData.rdHDRToCubemapRenderpass))
+                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile.data(), fragmentShaderFile.data(),
+                        pipelineConfig, renderData.rdHDRToCubemapRenderpass))
     {
         Logger::log(1, "%s error: could not init HDR to Cubemap pipeline\n", __FUNCTION__);
         return false;
@@ -1370,10 +1346,8 @@ bool Core::Renderer::IBLGenerator::createHDRToCubemapPipeline(VkRenderData& rend
 
 bool Core::Renderer::IBLGenerator::createIrradiancePipeline(VkRenderData& renderData)
 {
-    std::vector layouts = {
-        renderData.rdCaptureUBO.rdUBODescriptorLayout,
-        renderData.rdIBLData.rdSingleCubemapDescriptorLayout
-    };
+    std::vector layouts = {renderData.rdCaptureUBO.rdUBODescriptorLayout,
+                           renderData.rdIBLData.rdSingleCubemapDescriptorLayout};
 
     VkPushConstantRange pushConstantRange{};
     pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
@@ -1407,8 +1381,8 @@ bool Core::Renderer::IBLGenerator::createIrradiancePipeline(VkRenderData& render
     pipelineConfig.depthCompareOp = VK_COMPARE_OP_ALWAYS;
 
     if (!Pipeline::init(renderData, renderData.rdIrradiancePipelineLayout, renderData.rdIrradiancePipeline,
-                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile.data(),
-                        fragmentShaderFile.data(), pipelineConfig, renderData.rdIBLData.rdIBLRenderpass))
+                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile.data(), fragmentShaderFile.data(),
+                        pipelineConfig, renderData.rdIBLData.rdIBLRenderpass))
     {
         Logger::log(1, "%s error: could not init irradiance pipeline\n", __FUNCTION__);
         return false;
@@ -1419,10 +1393,8 @@ bool Core::Renderer::IBLGenerator::createIrradiancePipeline(VkRenderData& render
 
 bool Core::Renderer::IBLGenerator::createPrefilterPipeline(VkRenderData& renderData)
 {
-    std::vector layouts = {
-        renderData.rdCaptureUBO.rdUBODescriptorLayout,
-        renderData.rdIBLData.rdSingleCubemapDescriptorLayout
-    };
+    std::vector layouts = {renderData.rdCaptureUBO.rdUBODescriptorLayout,
+                           renderData.rdIBLData.rdSingleCubemapDescriptorLayout};
 
     VkPushConstantRange pushConstantRange{};
     pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -1456,8 +1428,8 @@ bool Core::Renderer::IBLGenerator::createPrefilterPipeline(VkRenderData& renderD
     pipelineConfig.depthCompareOp = VK_COMPARE_OP_ALWAYS;
 
     if (!Pipeline::init(renderData, renderData.rdPrefilterPipelineLayout, renderData.rdPrefilterPipeline,
-                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile.data(),
-                        fragmentShaderFile.data(), pipelineConfig, renderData.rdIBLData.rdIBLRenderpass))
+                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile.data(), fragmentShaderFile.data(),
+                        pipelineConfig, renderData.rdIBLData.rdIBLRenderpass))
     {
         Logger::log(1, "%s error: could not init irradiance pipeline\n", __FUNCTION__);
         return false;
@@ -1491,8 +1463,8 @@ bool Core::Renderer::IBLGenerator::createBRDFLUTPipeline(VkRenderData& renderDat
     pipelineConfig.depthCompareOp = VK_COMPARE_OP_ALWAYS;
 
     if (!Pipeline::init(renderData, renderData.rdBRDFLUTPipelineLayout, renderData.rdBRDFLUTPipeline,
-                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile.data(),
-                        fragmentShaderFile.data(), pipelineConfig, renderData.rdIBLData.rdIBLRenderpass))
+                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile.data(), fragmentShaderFile.data(),
+                        pipelineConfig, renderData.rdIBLData.rdIBLRenderpass))
     {
         Logger::log(1, "%s error: could not init BRDF LUT pipeline\n", __FUNCTION__);
         return false;
