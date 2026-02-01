@@ -7,6 +7,9 @@
 #include <glm/gtx/compatibility.hpp>
 #include <GLFW/glfw3.h>
 #include <array>
+#include <complex.h>
+
+#include "descriptors/DescriptorLayoutCache.h"
 
 namespace Core::Renderer
 {
@@ -288,6 +291,8 @@ struct VkRenderData
     VkImageView rdDepthImageView = VK_NULL_HANDLE;
     VkFormat rdDepthFormat;
     VmaAllocation rdDepthImageAlloc = VK_NULL_HANDLE;
+
+    std::unique_ptr<DescriptorLayoutCache> rdDescriptorLayoutCache{};
 
 #pragma region DescriptorLayouts
     VkDescriptorSetLayout rdGlobalSceneDescriptorLayout = VK_NULL_HANDLE;

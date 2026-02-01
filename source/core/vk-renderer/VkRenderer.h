@@ -6,14 +6,11 @@
 #include "core/tools/Timer.h"
 #include "core/tools/Camera.h"
 #include "core/events/EventListener.h"
-#include "Primitive.h"
-#include "../components/MeshComponent.h"
 #include "core/scene/Scene.h"
 #include "core/vk-renderer/viewport/ViewportTarget.h"
 #include "core/system/System.h"
 #include "core/system/Updatable.h"
 #include "core/system/Drawable.h"
-#include <glm/detail/type_quat.hpp>
 
 namespace Core::Renderer
 {
@@ -110,6 +107,8 @@ private:
     bool createRenderPass();
 
     bool createViewportRenderpass();
+
+    void initDescriptorLayoutCache();
 
     bool createPipelineLayout();
 

@@ -110,6 +110,8 @@ bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned i
         return false;
     }
 
+    initDescriptorLayoutCache();
+
     if (!createPrimitivePipeline())
     {
         return false;
@@ -436,6 +438,12 @@ void Core::Renderer::VkRenderer::cleanup(VkRenderData& renderData)
         mViewportTarget->cleanup(Engine::getInstance().getRenderData());
     }
 
+    if (renderData.rdDescriptorLayoutCache)
+    {
+        renderData.rdDescriptorLayoutCache->cleanup();
+        renderData.rdDescriptorLayoutCache.reset();
+    }
+
     vkDestroyImageView(renderData.rdVkbDevice.device, renderData.rdDepthImageView, nullptr);
     vmaDestroyImage(renderData.rdAllocator, renderData.rdDepthImage,
                     Engine::getInstance().getRenderData().rdDepthImageAlloc);
@@ -697,6 +705,14 @@ bool Core::Renderer::VkRenderer::createViewportRenderpass()
         return false;
     }
     return true;
+}
+
+void Core::Renderer::VkRenderer::initDescriptorLayoutCache()
+{
+    auto& renderData = Engine::getInstance().getRenderData();
+
+    renderData.rdDescriptorLayoutCache = std::make_unique<DescriptorLayoutCache>();
+    renderData.rdDescriptorLayoutCache->init(renderData.rdVkbDevice.device);
 }
 
 bool Core::Renderer::VkRenderer::createPipelineLayout()

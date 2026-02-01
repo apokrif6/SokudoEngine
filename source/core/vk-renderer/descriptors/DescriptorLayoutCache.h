@@ -15,6 +15,8 @@ public:
 
     VkDescriptorSetLayout createDescriptorLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings);
 
+    VkDescriptorSetLayout createDescriptorLayout(std::initializer_list<VkDescriptorSetLayoutBinding> bindings);
+
 private:
     VkDevice mDevice = VK_NULL_HANDLE;
 

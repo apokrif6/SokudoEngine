@@ -5,14 +5,11 @@
 
 namespace Core::Renderer
 {
-void DescriptorLayoutCache::init(VkDevice device)
-{
-    mDevice = device;
-}
+void DescriptorLayoutCache::init(VkDevice device) { mDevice = device; }
 
 void DescriptorLayoutCache::cleanup()
 {
-    for (const auto &layout: _layoutCache | std::views::values)
+    for (const auto& layout : _layoutCache | std::views::values)
     {
         vkDestroyDescriptorSetLayout(mDevice, layout, nullptr);
     }
@@ -25,9 +22,8 @@ DescriptorLayoutCache::createDescriptorLayout(const std::vector<VkDescriptorSetL
     DescriptorLayoutInfo layoutInfo;
     layoutInfo.bindings = bindings;
 
-    std::ranges::sort(layoutInfo.bindings,
-                      [](const VkDescriptorSetLayoutBinding& a, const VkDescriptorSetLayoutBinding& b)
-                      { return a.binding < b.binding; });
+    std::ranges::sort(layoutInfo.bindings, [](const VkDescriptorSetLayoutBinding& a,
+                                              const VkDescriptorSetLayoutBinding& b) { return a.binding < b.binding; });
 
     if (const auto it = _layoutCache.find(layoutInfo); it != _layoutCache.end())
     {
@@ -47,6 +43,12 @@ DescriptorLayoutCache::createDescriptorLayout(const std::vector<VkDescriptorSetL
     _layoutCache[layoutInfo] = layout;
 
     return layout;
+}
+
+VkDescriptorSetLayout
+DescriptorLayoutCache::createDescriptorLayout(std::initializer_list<VkDescriptorSetLayoutBinding> bindings)
+{
+    return createDescriptorLayout(std::vector(bindings));
 }
 
 bool DescriptorLayoutCache::DescriptorLayoutInfo::operator==(const DescriptorLayoutInfo& other) const
