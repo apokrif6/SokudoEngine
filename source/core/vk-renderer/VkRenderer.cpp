@@ -463,8 +463,26 @@ void Core::Renderer::VkRenderer::cleanup(VkRenderData& renderData)
 bool Core::Renderer::VkRenderer::deviceInit()
 {
     vkb::InstanceBuilder instBuild;
-    auto instRet = instBuild
-                       .use_default_debug_messenger()
+    auto instRet = instBuild.use_default_debug_messenger()
+                       .set_debug_callback(
+                           [](VkDebugUtilsMessageSeverityFlagBitsEXT severity, VkDebugUtilsMessageTypeFlagsEXT type,
+                              const VkDebugUtilsMessengerCallbackDataEXT* callbackData, void*)
+                           {
+                               if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
+                               {
+                                   Logger::log(1, "[VULKAN ERROR] %s\n", callbackData->pMessage);
+                               }
+                               else if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
+                               {
+                                   Logger::log(2, "[VULKAN WARNING] %s\n", callbackData->pMessage);
+                               }
+                               else
+                               {
+                                   Logger::log(3, "[VULKAN INFO] %s\n", callbackData->pMessage);
+                               }
+
+                               return VK_FALSE;
+                           })
 #if defined(_DEBUG) || !defined(NDEBUG)
                        .request_validation_layers()
 #endif
