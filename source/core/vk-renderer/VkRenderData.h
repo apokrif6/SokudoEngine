@@ -294,13 +294,6 @@ struct VkRenderData
 
     std::unique_ptr<DescriptorLayoutCache> rdDescriptorLayoutCache{};
 
-#pragma region DescriptorLayouts
-    VkDescriptorSetLayout rdGlobalSceneDescriptorLayout = VK_NULL_HANDLE;
-    VkDescriptorSetLayout rdPrimitiveDataDescriptorLayout = VK_NULL_HANDLE;
-    VkDescriptorSetLayout rdPrimitiveTextureDescriptorLayout = VK_NULL_HANDLE;
-    VkDescriptorSetLayout rdPrimitiveMaterialDescriptorLayout = VK_NULL_HANDLE;
-#pragma endregion
-
     VkRenderPass rdRenderpass = VK_NULL_HANDLE;
     VkPipelineLayout rdPipelineLayout = VK_NULL_HANDLE;
     VkPipelineLayout rdMeshPipelineLayout = VK_NULL_HANDLE;

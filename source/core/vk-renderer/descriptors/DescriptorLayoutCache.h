@@ -1,11 +1,20 @@
 #pragma once
 
+#include <string>
 #include <vulkan/vulkan.h>
 #include <vector>
 #include <unordered_map>
 
 namespace Core::Renderer
 {
+enum class DescriptorLayoutType
+{
+    GlobalScene,
+    PrimitiveData,
+    PrimitiveTextures,
+    MaterialData
+};
+
 class DescriptorLayoutCache
 {
 public:
@@ -13,12 +22,13 @@ public:
 
     void cleanup();
 
-    VkDescriptorSetLayout createDescriptorLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings);
-
-    VkDescriptorSetLayout createDescriptorLayout(std::initializer_list<VkDescriptorSetLayoutBinding> bindings);
+    VkDescriptorSetLayout getLayout(DescriptorLayoutType type);
 
 private:
     VkDevice mDevice = VK_NULL_HANDLE;
+
+    VkDescriptorSetLayout createDescriptorLayout(const std::vector<VkDescriptorSetLayoutBinding>& bindings,
+                                                 const std::string& debugName);
 
     struct DescriptorLayoutInfo
     {
@@ -32,6 +42,8 @@ private:
         size_t operator()(const DescriptorLayoutInfo& key) const;
     };
 
-    std::unordered_map<DescriptorLayoutInfo, VkDescriptorSetLayout, DescriptorLayoutHash> _layoutCache;
+    std::unordered_map<DescriptorLayoutInfo, VkDescriptorSetLayout, DescriptorLayoutHash> mLayoutBindingCache;
+
+    std::unordered_map<DescriptorLayoutType, VkDescriptorSetLayout> mLayoutTypeCache;
 };
 } // namespace Core::Renderer

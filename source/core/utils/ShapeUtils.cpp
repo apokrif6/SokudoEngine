@@ -203,7 +203,9 @@ void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiSc
     allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     allocInfo.descriptorPool = renderData.rdMaterialDescriptorPool;
     allocInfo.descriptorSetCount = 1;
-    allocInfo.pSetLayouts = &renderData.rdPrimitiveTextureDescriptorLayout;
+    VkDescriptorSetLayout layout =
+        renderData.rdDescriptorLayoutCache->getLayout(Core::Renderer::DescriptorLayoutType::PrimitiveTextures);
+    allocInfo.pSetLayouts = &layout;
 
     if (vkAllocateDescriptorSets(renderData.rdVkbDevice.device, &allocInfo, &primitiveData.materialDescriptorSet) !=
         VK_SUCCESS)

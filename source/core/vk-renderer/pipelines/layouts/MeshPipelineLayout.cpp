@@ -3,33 +3,12 @@
 
 bool Core::Renderer::MeshPipelineLayout::init(VkRenderData& renderData, VkPipelineLayout& pipelineLayout)
 {
-    auto& descriptorLayoutCache = renderData.rdDescriptorLayoutCache;
+    const auto& descriptorLayoutCache = renderData.rdDescriptorLayoutCache;
 
-    renderData.rdGlobalSceneDescriptorLayout = descriptorLayoutCache->createDescriptorLayout(
-        {{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT},
-         {1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT},
-         {2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT},
-         {3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT}});
-
-    renderData.rdPrimitiveDataDescriptorLayout = descriptorLayoutCache->createDescriptorLayout(
-        {{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT}});
-
-    std::vector<VkDescriptorSetLayoutBinding> textureBindings(5);
-    for (size_t i = 0; i < textureBindings.size(); ++i)
-    {
-        textureBindings[i].binding = static_cast<uint32_t>(i);
-        textureBindings[i].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        textureBindings[i].descriptorCount = 1;
-        textureBindings[i].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-    }
-    renderData.rdPrimitiveTextureDescriptorLayout = descriptorLayoutCache->createDescriptorLayout(textureBindings);
-
-    renderData.rdPrimitiveMaterialDescriptorLayout = descriptorLayoutCache->createDescriptorLayout(
-        {{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT}});
-
-    const VkDescriptorSetLayout layouts[] = {
-        renderData.rdGlobalSceneDescriptorLayout, renderData.rdPrimitiveDataDescriptorLayout,
-        renderData.rdPrimitiveTextureDescriptorLayout, renderData.rdPrimitiveMaterialDescriptorLayout};
+    const VkDescriptorSetLayout layouts[] = {descriptorLayoutCache->getLayout(DescriptorLayoutType::GlobalScene),
+                                             descriptorLayoutCache->getLayout(DescriptorLayoutType::PrimitiveData),
+                                             descriptorLayoutCache->getLayout(DescriptorLayoutType::PrimitiveTextures),
+                                             descriptorLayoutCache->getLayout(DescriptorLayoutType::MaterialData)};
 
     VkPushConstantRange pushConstantRange{};
     pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;

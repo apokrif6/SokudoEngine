@@ -720,7 +720,8 @@ bool Core::Renderer::VkRenderer::createPipelineLayout()
     auto& renderData = Engine::getInstance().getRenderData();
 
     auto pipelineLayoutConfig = PipelineLayoutConfig{};
-    pipelineLayoutConfig.setLayouts = {renderData.rdGlobalSceneDescriptorLayout};
+    pipelineLayoutConfig.setLayouts = {
+        renderData.rdDescriptorLayoutCache->getLayout(DescriptorLayoutType::GlobalScene)};
 
     if (!PipelineLayout::init(renderData, renderData.rdPipelineLayout, pipelineLayoutConfig))
     {
@@ -953,7 +954,7 @@ void Core::Renderer::VkRenderer::initPrimitiveGlobalSceneDescriptorSet()
     std::vector<VkDescriptorPoolSize> extraSizes = {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 3}};
 
     UniformBuffer::init(renderData, renderData.rdGlobalSceneUBO, sizeof(GlobalSceneData), "GlobalScene with IBL",
-                        renderData.rdGlobalSceneDescriptorLayout, extraSizes);
+                        renderData.rdDescriptorLayoutCache->getLayout(DescriptorLayoutType::GlobalScene), extraSizes);
 
     updateGlobalSceneDescriptorWrite();
 }
@@ -1017,7 +1018,8 @@ bool Core::Renderer::VkRenderer::createDebugSkeletonPipelineLayout()
     auto& renderData = Engine::getInstance().getRenderData();
 
     auto pipelineLayoutConfig = PipelineLayoutConfig{};
-    pipelineLayoutConfig.setLayouts = {renderData.rdGlobalSceneDescriptorLayout};
+    pipelineLayoutConfig.setLayouts = {
+        renderData.rdDescriptorLayoutCache->getLayout(DescriptorLayoutType::GlobalScene)};
 
     if (!PipelineLayout::init(renderData, renderData.rdDebugSkeletonPipelineLayout, pipelineLayoutConfig))
     {
@@ -1078,7 +1080,7 @@ bool Core::Renderer::VkRenderer::createSkyboxPipelineLayout()
     auto& renderData = Engine::getInstance().getRenderData();
 
     auto pipelineLayoutConfig = PipelineLayoutConfig{};
-    pipelineLayoutConfig.setLayouts = {renderData.rdGlobalSceneDescriptorLayout,
+    pipelineLayoutConfig.setLayouts = {renderData.rdDescriptorLayoutCache->getLayout(DescriptorLayoutType::GlobalScene),
                                        renderData.rdSkyboxData.descriptorSetLayout};
 
     if (!PipelineLayout::init(renderData, renderData.rdSkyboxPipelineLayout, pipelineLayoutConfig))
