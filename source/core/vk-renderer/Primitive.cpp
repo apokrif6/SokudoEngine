@@ -1,7 +1,6 @@
 #include "Primitive.h"
 #include "core/vk-renderer/buffers/UniformBuffer.h"
 #include "Texture.h"
-#include "../components/MeshComponent.h"
 
 Core::Renderer::Primitive::Primitive(const std::vector<Vertex>& vertexBufferData,
                                      const std::vector<uint32_t>& indexBufferData,
@@ -47,14 +46,15 @@ void Core::Renderer::Primitive::createIndexBuffer(VkRenderData& renderData)
 
 void Core::Renderer::Primitive::createMaterialBuffer(VkRenderData& renderData)
 {
-    UniformBuffer::init(renderData, mMaterialUBO, sizeof(MaterialInfo), "Material");
+    UniformBuffer::init(renderData, mMaterialUBO, sizeof(MaterialInfo), "Material", DescriptorLayoutType::MaterialData);
 
     UniformBuffer::uploadData(renderData, mMaterialUBO, mMaterialInfo);
 }
 
 void Core::Renderer::Primitive::createPrimitiveDataBuffer(VkRenderData& renderData)
 {
-    UniformBuffer::init(renderData, mPrimitiveDataUBO, sizeof(PrimitiveData), "Primitive Data");
+    UniformBuffer::init(renderData, mPrimitiveDataUBO, sizeof(PrimitiveData), "Primitive Data",
+                        DescriptorLayoutType::PrimitiveData);
 }
 
 void Core::Renderer::Primitive::uploadVertexBuffer(VkRenderData& renderData)

@@ -134,7 +134,6 @@ struct VkUniformBufferData
     VkDescriptorSetLayout rdUBODescriptorLayout = VK_NULL_HANDLE;
     VkDescriptorSet rdUBODescriptorSet = VK_NULL_HANDLE;
     std::string rdName;
-    bool ownsLayout = true;
 };
 
 struct VkShaderStorageBufferData

@@ -13,7 +13,8 @@ enum class DescriptorLayoutType
     PrimitiveData,
     SingleTexture,
     PBRTextures,
-    MaterialData
+    MaterialData,
+    SingleUBO
 };
 
 class DescriptorLayoutCache

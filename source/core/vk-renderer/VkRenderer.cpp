@@ -85,6 +85,8 @@ bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned i
         return false;
     }
 
+    initDescriptorLayoutCache();
+
     if (!loadPlaceholderTexture())
     {
         return false;
@@ -109,8 +111,6 @@ bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned i
     {
         return false;
     }
-
-    initDescriptorLayoutCache();
 
     if (!createPrimitivePipeline())
     {
@@ -869,7 +869,8 @@ bool Core::Renderer::VkRenderer::createDummyBonesTransformUBO()
 
     constexpr auto identityMatrix = glm::mat4(1.0f);
 
-    if (!UniformBuffer::init(renderData, renderData.rdDummyBonesUBO, sizeof(glm::mat4), "DummyBonesUBO"))
+    if (!UniformBuffer::init(renderData, renderData.rdDummyBonesUBO, sizeof(glm::mat4), "DummyBonesUBO",
+                             DescriptorLayoutType::SingleUBO))
     {
         Logger::log(1, "%s error: could not create dummy bones UBO\n", __FUNCTION__);
         return false;
@@ -961,7 +962,8 @@ void Core::Renderer::VkRenderer::initCaptureResources()
     captureInfo.views[4] = glm::lookAt(glm::vec3(0), glm::vec3(0, 0, 1), glm::vec3(0, -1, 0));
     captureInfo.views[5] = glm::lookAt(glm::vec3(0), glm::vec3(0, 0, -1), glm::vec3(0, -1, 0));
 
-    UniformBuffer::init(renderData, renderData.rdCaptureUBO, sizeof(CaptureInfo), "CaptureInfo");
+    UniformBuffer::init(renderData, renderData.rdCaptureUBO, sizeof(CaptureInfo), "CaptureInfo",
+                        DescriptorLayoutType::SingleUBO);
     UniformBuffer::uploadData(renderData, renderData.rdCaptureUBO, captureInfo);
 }
 
@@ -969,10 +971,8 @@ void Core::Renderer::VkRenderer::initPrimitiveGlobalSceneDescriptorSet()
 {
     auto& renderData = Engine::getInstance().getRenderData();
 
-    std::vector<VkDescriptorPoolSize> extraSizes = {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 3}};
-
     UniformBuffer::init(renderData, renderData.rdGlobalSceneUBO, sizeof(GlobalSceneData), "GlobalScene with IBL",
-                        renderData.rdDescriptorLayoutCache->getLayout(DescriptorLayoutType::GlobalScene), extraSizes);
+                        DescriptorLayoutType::GlobalScene);
 
     updateGlobalSceneDescriptorWrite();
 }

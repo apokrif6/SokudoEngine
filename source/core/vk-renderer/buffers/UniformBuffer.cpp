@@ -5,8 +5,7 @@
 #include "core/vk-renderer/debug/DebugUtils.h"
 
 bool Core::Renderer::UniformBuffer::init(VkRenderData& renderData, VkUniformBufferData& UBOData, size_t bufferSize,
-                                         const std::string& name, VkDescriptorSetLayout customLayout,
-                                         std::vector<VkDescriptorPoolSize> extraPoolSizes)
+                                         const std::string& name, DescriptorLayoutType layoutType)
 {
     VkBufferCreateInfo bufferInfo{};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -25,50 +24,15 @@ bool Core::Renderer::UniformBuffer::init(VkRenderData& renderData, VkUniformBuff
         return false;
     }
 
+    UBOData.rdUBODescriptorLayout = renderData.rdDescriptorLayoutCache->getLayout(layoutType);
+
     UBOData.rdName = "Uniform Buffer " + name;
     vmaSetAllocationName(renderData.rdAllocator, UBOData.rdUniformBufferAlloc, UBOData.rdName.c_str());
 
-    Debug::setObjectName(renderData.rdVkbDevice.device, (uint64_t)UBOData.rdUniformBuffer, VK_OBJECT_TYPE_BUFFER,
-                         UBOData.rdName);
-
-    UBOData.ownsLayout = true;
-
-    if (customLayout != VK_NULL_HANDLE)
-    {
-        // create complex layout e.g. (Binding 0: UBO, Binding 1: UBO, Binding 3: UBO)
-        // e.g. used to render primitive. GlobalScene plus IBL textures as one descriptor set
-        UBOData.rdUBODescriptorLayout = customLayout;
-        UBOData.ownsLayout = false;
-    }
-    else
-    {
-        // create standard layout with (Binding 0: UBO)
-        VkDescriptorSetLayoutBinding uboBind{};
-        uboBind.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uboBind.binding = 0;
-        uboBind.descriptorCount = 1;
-        uboBind.pImmutableSamplers = nullptr;
-        uboBind.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-
-        VkDescriptorSetLayoutCreateInfo uboCreateInfo{};
-        uboCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        uboCreateInfo.bindingCount = 1;
-        uboCreateInfo.pBindings = &uboBind;
-
-        if (vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &uboCreateInfo, nullptr,
-                                        &UBOData.rdUBODescriptorLayout) != VK_SUCCESS)
-        {
-            Logger::log(1, "%s error: could not create UBO descriptor set layout\n", __FUNCTION__);
-            return false;
-        }
-    }
+    Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(UBOData.rdUniformBuffer),
+                         VK_OBJECT_TYPE_BUFFER, UBOData.rdName);
 
     std::vector<VkDescriptorPoolSize> poolSizes = {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}};
-
-    if (!extraPoolSizes.empty())
-    {
-        poolSizes.insert(poolSizes.end(), extraPoolSizes.begin(), extraPoolSizes.end());
-    }
 
     VkDescriptorPoolCreateInfo descriptorPool{};
     descriptorPool.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -121,9 +85,5 @@ bool Core::Renderer::UniformBuffer::init(VkRenderData& renderData, VkUniformBuff
 void Core::Renderer::UniformBuffer::cleanup(VkRenderData& renderData, VkUniformBufferData& UBOData)
 {
     vkDestroyDescriptorPool(renderData.rdVkbDevice.device, UBOData.rdUBODescriptorPool, nullptr);
-    if (UBOData.ownsLayout)
-    {
-        vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, UBOData.rdUBODescriptorLayout, nullptr);
-    }
     vmaDestroyBuffer(renderData.rdAllocator, UBOData.rdUniformBuffer, UBOData.rdUniformBufferAlloc);
 }

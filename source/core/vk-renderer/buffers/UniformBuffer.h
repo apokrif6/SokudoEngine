@@ -9,8 +9,7 @@ class UniformBuffer
 {
 public:
     static bool init(VkRenderData& renderData, VkUniformBufferData& UBOData, size_t bufferSize, const std::string& name,
-                     VkDescriptorSetLayout customLayout = VK_NULL_HANDLE,
-                     std::vector<VkDescriptorPoolSize> extraPoolSizes = {});
+                     DescriptorLayoutType layoutType);
 
     template <typename T> static void uploadData(VkRenderData& renderData, VkUniformBufferData& UBOData, const T& data)
     {

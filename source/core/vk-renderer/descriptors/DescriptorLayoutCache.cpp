@@ -65,6 +65,11 @@ VkDescriptorSetLayout DescriptorLayoutCache::getLayout(DescriptorLayoutType type
             {{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT}},
             "DescriptorSetLayout_MaterialData");
         break;
+    case DescriptorLayoutType::SingleUBO:
+        layout = createDescriptorLayout(
+            {{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT}},
+            "DescriptorSetLayout_SingleUBO");
+        break;
     }
 
     mLayoutTypeCache[type] = layout;
