@@ -11,7 +11,8 @@ enum class DescriptorLayoutType
 {
     GlobalScene,
     PrimitiveData,
-    PrimitiveTextures,
+    SingleTexture,
+    PBRTextures,
     MaterialData
 };
 

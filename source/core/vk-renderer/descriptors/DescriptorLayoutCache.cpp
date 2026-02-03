@@ -42,7 +42,12 @@ VkDescriptorSetLayout DescriptorLayoutCache::getLayout(DescriptorLayoutType type
             {{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT}},
             "DescriptorSetLayout_PrimitiveData");
         break;
-    case DescriptorLayoutType::PrimitiveTextures:
+    case DescriptorLayoutType::SingleTexture:
+        layout =
+            createDescriptorLayout({{0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT}},
+                                   "DescriptorSetLayout_SingleTexture");
+        break;
+    case DescriptorLayoutType::PBRTextures:
     {
         std::vector<VkDescriptorSetLayoutBinding> textureBindings(5);
         for (size_t i = 0; i < textureBindings.size(); ++i)
@@ -52,7 +57,7 @@ VkDescriptorSetLayout DescriptorLayoutCache::getLayout(DescriptorLayoutType type
             textureBindings[i].descriptorCount = 1;
             textureBindings[i].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         }
-        layout = createDescriptorLayout(textureBindings, "DescriptorSetLayout_PrimitiveTextures");
+        layout = createDescriptorLayout(textureBindings, "DescriptorSetLayout_PBRTextures");
         break;
     }
     case DescriptorLayoutType::MaterialData:

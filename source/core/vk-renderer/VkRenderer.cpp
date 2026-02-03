@@ -1098,8 +1098,9 @@ bool Core::Renderer::VkRenderer::createSkyboxPipelineLayout()
     auto& renderData = Engine::getInstance().getRenderData();
 
     auto pipelineLayoutConfig = PipelineLayoutConfig{};
-    pipelineLayoutConfig.setLayouts = {renderData.rdDescriptorLayoutCache->getLayout(DescriptorLayoutType::GlobalScene),
-                                       renderData.rdSkyboxData.descriptorSetLayout};
+    pipelineLayoutConfig.setLayouts = {
+        renderData.rdDescriptorLayoutCache->getLayout(DescriptorLayoutType::GlobalScene),
+        renderData.rdDescriptorLayoutCache->getLayout(DescriptorLayoutType::SingleTexture)};
 
     if (!PipelineLayout::init(renderData, renderData.rdSkyboxPipelineLayout, pipelineLayoutConfig))
     {

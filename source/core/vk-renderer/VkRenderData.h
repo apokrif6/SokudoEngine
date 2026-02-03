@@ -102,7 +102,6 @@ struct VkTextureData
     VmaAllocation imageAlloc = nullptr;
 
     VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
-    VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
     VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
 };
 
@@ -182,7 +181,6 @@ struct VkCubemapData
     VkSampler sampler = VK_NULL_HANDLE;
 
     VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
-    VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
     VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
 };
 
@@ -225,8 +223,6 @@ struct PipelineLayoutConfig
 
 struct IBLData
 {
-    VkDescriptorSetLayout rdSingleCubemapDescriptorLayout = VK_NULL_HANDLE;
-
     VkRenderPass rdIBLRenderpass = VK_NULL_HANDLE;
 
     VkCubemapData rdIrradianceMap{};

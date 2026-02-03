@@ -7,7 +7,7 @@ bool Core::Renderer::MeshPipelineLayout::init(VkRenderData& renderData, VkPipeli
 
     const VkDescriptorSetLayout layouts[] = {descriptorLayoutCache->getLayout(DescriptorLayoutType::GlobalScene),
                                              descriptorLayoutCache->getLayout(DescriptorLayoutType::PrimitiveData),
-                                             descriptorLayoutCache->getLayout(DescriptorLayoutType::PrimitiveTextures),
+                                             descriptorLayoutCache->getLayout(DescriptorLayoutType::PBRTextures),
                                              descriptorLayoutCache->getLayout(DescriptorLayoutType::MaterialData)};
 
     VkPushConstantRange pushConstantRange{};

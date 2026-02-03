@@ -450,12 +450,6 @@ void Core::Renderer::Texture::cleanup(VkRenderData& renderData, VkTextureData& t
         textureData.descriptorPool = VK_NULL_HANDLE;
     }
 
-    if (textureData.descriptorSetLayout != VK_NULL_HANDLE)
-    {
-        vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, textureData.descriptorSetLayout, nullptr);
-        textureData.descriptorSetLayout = VK_NULL_HANDLE;
-    }
-
     vkDestroySampler(renderData.rdVkbDevice.device, textureData.sampler, nullptr);
     vkDestroyImageView(renderData.rdVkbDevice.device, textureData.imageView, nullptr);
     vmaDestroyImage(renderData.rdAllocator, textureData.image, textureData.imageAlloc);

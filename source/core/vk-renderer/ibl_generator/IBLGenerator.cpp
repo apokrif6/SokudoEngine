@@ -27,11 +27,6 @@ bool Core::Renderer::IBLGenerator::init(VkRenderData& renderData)
         return false;
     }
 
-    if (!createStaticCubemapLayout(renderData, renderData.rdIBLData.rdSingleCubemapDescriptorLayout))
-    {
-        return false;
-    }
-
     if (!createHDRToCubemapPipeline(renderData) || !createIrradiancePipeline(renderData) ||
         !createPrefilterPipeline(renderData) || !createBRDFLUTPipeline(renderData))
     {
@@ -74,32 +69,6 @@ bool Core::Renderer::IBLGenerator::generateIBL(VkRenderData& renderData)
 
 bool Core::Renderer::IBLGenerator::createDescriptorForHDR(VkRenderData& renderData)
 {
-    VkDescriptorSetLayoutBinding samplerBinding{};
-    samplerBinding.binding = 0;
-    samplerBinding.descriptorCount = 1;
-    samplerBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    samplerBinding.pImmutableSamplers = nullptr;
-    samplerBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-    VkDescriptorSetLayoutCreateInfo layoutInfo{};
-    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layoutInfo.bindingCount = 1;
-    layoutInfo.pBindings = &samplerBinding;
-
-    if (vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &layoutInfo, nullptr,
-                                    &renderData.rdHDRTexture.descriptorSetLayout) != VK_SUCCESS)
-    {
-        Logger::log(1, "%s error: failed to create descriptor set layout\n", __FUNCTION__);
-        return false;
-    }
-
-    constexpr std::string_view descriptorSetLayoutObjectName = "Descriptor Set Layout IBL HDR";
-    vmaSetAllocationName(renderData.rdAllocator, renderData.rdHDRTexture.imageAlloc,
-                         descriptorSetLayoutObjectName.data());
-    Debug::setObjectName(renderData.rdVkbDevice.device,
-                         reinterpret_cast<uint64_t>(renderData.rdHDRTexture.descriptorSetLayout),
-                         VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, descriptorSetLayoutObjectName.data());
-
     VkDescriptorPoolSize poolSize{};
     poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     poolSize.descriptorCount = 1;
@@ -127,7 +96,9 @@ bool Core::Renderer::IBLGenerator::createDescriptorForHDR(VkRenderData& renderDa
     allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     allocInfo.descriptorPool = renderData.rdHDRTexture.descriptorPool;
     allocInfo.descriptorSetCount = 1;
-    allocInfo.pSetLayouts = &renderData.rdHDRTexture.descriptorSetLayout;
+    const VkDescriptorSetLayout layout =
+        renderData.rdDescriptorLayoutCache->getLayout(DescriptorLayoutType::SingleTexture);
+    allocInfo.pSetLayouts = &layout;
 
     if (vkAllocateDescriptorSets(renderData.rdVkbDevice.device, &allocInfo, &renderData.rdHDRTexture.descriptorSet) !=
         VK_SUCCESS)
@@ -150,33 +121,6 @@ bool Core::Renderer::IBLGenerator::createDescriptorForHDR(VkRenderData& renderDa
     write.pImageInfo = &imageInfo;
 
     vkUpdateDescriptorSets(renderData.rdVkbDevice.device, 1, &write, 0, nullptr);
-
-    return true;
-}
-
-bool Core::Renderer::IBLGenerator::createStaticCubemapLayout(VkRenderData& renderData, VkDescriptorSetLayout& layout)
-{
-    VkDescriptorSetLayoutBinding samplerBinding{};
-    samplerBinding.binding = 0;
-    samplerBinding.descriptorCount = 1;
-    samplerBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    samplerBinding.pImmutableSamplers = nullptr;
-    samplerBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-    VkDescriptorSetLayoutCreateInfo layoutInfo{};
-    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layoutInfo.bindingCount = 1;
-    layoutInfo.pBindings = &samplerBinding;
-
-    if (vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &layoutInfo, nullptr, &layout) != VK_SUCCESS)
-    {
-        Logger::log(1, "%s error: could not create cubemap descriptor set layout", __FUNCTION__);
-        return false;
-    }
-
-    constexpr std::string_view descriptorSetLayoutObjectName = "Descriptor Set Layout IBL Static Cubemap";
-    Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(layout),
-                         VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, descriptorSetLayoutObjectName.data());
 
     return true;
 }
@@ -419,24 +363,6 @@ bool Core::Renderer::IBLGenerator::convertHDRToCubemap(VkRenderData& renderData,
         return false;
     }
 
-    VkDescriptorSetLayoutBinding binding{};
-    binding.binding = 0;
-    binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    binding.descriptorCount = 1;
-    binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-    VkDescriptorSetLayoutCreateInfo layoutInfo{};
-    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layoutInfo.bindingCount = 1;
-    layoutInfo.pBindings = &binding;
-
-    vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &layoutInfo, nullptr, &cubemapData.descriptorSetLayout);
-
-    constexpr std::string_view descriptorSetLayoutObjectName = "Descriptor Set Layout IBL Cubemap Data";
-    vmaSetAllocationName(renderData.rdAllocator, cubemapData.imageAlloc, descriptorSetLayoutObjectName.data());
-    Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(cubemapData.descriptorSetLayout),
-                         VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, descriptorSetLayoutObjectName.data());
-
     VkDescriptorPoolSize poolSize{};
     poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     poolSize.descriptorCount = 1;
@@ -463,7 +389,9 @@ bool Core::Renderer::IBLGenerator::convertHDRToCubemap(VkRenderData& renderData,
     allocInfoDS.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     allocInfoDS.descriptorPool = cubemapData.descriptorPool;
     allocInfoDS.descriptorSetCount = 1;
-    allocInfoDS.pSetLayouts = &cubemapData.descriptorSetLayout;
+    const VkDescriptorSetLayout layout =
+        renderData.rdDescriptorLayoutCache->getLayout(DescriptorLayoutType::SingleTexture);
+    allocInfoDS.pSetLayouts = &layout;
 
     vkAllocateDescriptorSets(renderData.rdVkbDevice.device, &allocInfoDS, &cubemapData.descriptorSet);
 
@@ -699,25 +627,6 @@ bool Core::Renderer::IBLGenerator::convertCubemapToIrradiance(VkRenderData& rend
         return false;
     }
 
-    VkDescriptorSetLayoutBinding binding{};
-    binding.binding = 0;
-    binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    binding.descriptorCount = 1;
-    binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-    VkDescriptorSetLayoutCreateInfo layoutInfo{};
-    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layoutInfo.bindingCount = 1;
-    layoutInfo.pBindings = &binding;
-
-    vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &layoutInfo, nullptr,
-                                &irradianceData.descriptorSetLayout);
-
-    constexpr std::string_view descriptorSetLayoutObjectName = "Descriptor Set Layout IBL Irradiance";
-    vmaSetAllocationName(renderData.rdAllocator, irradianceData.imageAlloc, descriptorSetLayoutObjectName.data());
-    Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(irradianceData.descriptorSetLayout),
-                         VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, descriptorSetLayoutObjectName.data());
-
     VkDescriptorPoolSize poolSize{};
     poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     poolSize.descriptorCount = 1;
@@ -744,7 +653,9 @@ bool Core::Renderer::IBLGenerator::convertCubemapToIrradiance(VkRenderData& rend
     allocInfoDS.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     allocInfoDS.descriptorPool = irradianceData.descriptorPool;
     allocInfoDS.descriptorSetCount = 1;
-    allocInfoDS.pSetLayouts = &irradianceData.descriptorSetLayout;
+    const VkDescriptorSetLayout layout =
+        renderData.rdDescriptorLayoutCache->getLayout(DescriptorLayoutType::SingleTexture);
+    allocInfoDS.pSetLayouts = &layout;
 
     vkAllocateDescriptorSets(renderData.rdVkbDevice.device, &allocInfoDS, &irradianceData.descriptorSet);
 
@@ -1016,26 +927,6 @@ bool Core::Renderer::IBLGenerator::convertCubemapToPrefilteredMap(VkRenderData& 
         return false;
     }
 
-    VkDescriptorSetLayoutBinding binding{};
-    binding.binding = 0;
-    binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    binding.descriptorCount = 1;
-    binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-    VkDescriptorSetLayoutCreateInfo layoutInfo{};
-    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layoutInfo.bindingCount = 1;
-    layoutInfo.pBindings = &binding;
-
-    vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &layoutInfo, nullptr,
-                                &prefilteredMapData.descriptorSetLayout);
-
-    constexpr std::string_view descriptorSetLayoutObjectName = "Descriptor Set Layout IBL PrefilteredMap Data";
-    vmaSetAllocationName(renderData.rdAllocator, prefilteredMapData.imageAlloc, descriptorSetLayoutObjectName.data());
-    Debug::setObjectName(renderData.rdVkbDevice.device,
-                         reinterpret_cast<uint64_t>(prefilteredMapData.descriptorSetLayout),
-                         VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, descriptorSetLayoutObjectName.data());
-
     VkDescriptorPoolSize poolSize{};
     poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     poolSize.descriptorCount = 1;
@@ -1062,7 +953,9 @@ bool Core::Renderer::IBLGenerator::convertCubemapToPrefilteredMap(VkRenderData& 
     allocInfoDS.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     allocInfoDS.descriptorPool = prefilteredMapData.descriptorPool;
     allocInfoDS.descriptorSetCount = 1;
-    allocInfoDS.pSetLayouts = &prefilteredMapData.descriptorSetLayout;
+    const VkDescriptorSetLayout layout =
+        renderData.rdDescriptorLayoutCache->getLayout(DescriptorLayoutType::SingleTexture);
+    allocInfoDS.pSetLayouts = &layout;
 
     vkAllocateDescriptorSets(renderData.rdVkbDevice.device, &allocInfoDS, &prefilteredMapData.descriptorSet);
 
@@ -1207,24 +1100,6 @@ bool Core::Renderer::IBLGenerator::generateBRDFLUT(VkRenderData& renderData, VkT
         return false;
     }
 
-    VkDescriptorSetLayoutBinding binding{};
-    binding.binding = 0;
-    binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    binding.descriptorCount = 1;
-    binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-    VkDescriptorSetLayoutCreateInfo layoutInfo{};
-    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layoutInfo.bindingCount = 1;
-    layoutInfo.pBindings = &binding;
-
-    vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &layoutInfo, nullptr, &brdfLutData.descriptorSetLayout);
-
-    constexpr std::string_view descriptorSetLayoutObjectName = "Descriptor Set Layout IBL BRDF LUT Data";
-    vmaSetAllocationName(renderData.rdAllocator, brdfLutData.imageAlloc, descriptorSetLayoutObjectName.data());
-    Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(brdfLutData.descriptorSetLayout),
-                         VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, descriptorSetLayoutObjectName.data());
-
     VkDescriptorPoolSize poolSize{};
     poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     poolSize.descriptorCount = 1;
@@ -1251,7 +1126,9 @@ bool Core::Renderer::IBLGenerator::generateBRDFLUT(VkRenderData& renderData, VkT
     allocInfoDS.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     allocInfoDS.descriptorPool = brdfLutData.descriptorPool;
     allocInfoDS.descriptorSetCount = 1;
-    allocInfoDS.pSetLayouts = &brdfLutData.descriptorSetLayout;
+    const VkDescriptorSetLayout layout =
+        renderData.rdDescriptorLayoutCache->getLayout(DescriptorLayoutType::SingleTexture);
+    allocInfoDS.pSetLayouts = &layout;
 
     vkAllocateDescriptorSets(renderData.rdVkbDevice.device, &allocInfoDS, &brdfLutData.descriptorSet);
 
@@ -1282,8 +1159,6 @@ void Core::Renderer::IBLGenerator::cleanup(VkRenderData& renderData, IBLData& ib
     Texture::cleanup(renderData, renderData.rdHDRTexture);
     Texture::cleanup(renderData, renderData.rdIBLData.rdBRDFLUT);
 
-    vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, iblData.rdSingleCubemapDescriptorLayout, nullptr);
-
     cleanupCubemapResources(renderData, iblData.rdPrefilterMap);
     cleanupCubemapResources(renderData, iblData.rdIrradianceMap);
     cleanupCubemapResources(renderData, renderData.rdSkyboxData);
@@ -1294,13 +1169,13 @@ void Core::Renderer::IBLGenerator::cleanupCubemapResources(VkRenderData& renderD
     vkDestroySampler(renderData.rdVkbDevice.device, cubemapData.sampler, nullptr);
     vkDestroyImageView(renderData.rdVkbDevice.device, cubemapData.imageView, nullptr);
     vmaDestroyImage(renderData.rdAllocator, cubemapData.image, cubemapData.imageAlloc);
-    vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, cubemapData.descriptorSetLayout, nullptr);
     vkDestroyDescriptorPool(renderData.rdVkbDevice.device, cubemapData.descriptorPool, nullptr);
 }
 
 bool Core::Renderer::IBLGenerator::createHDRToCubemapPipeline(VkRenderData& renderData)
 {
-    std::vector layouts = {renderData.rdCaptureUBO.rdUBODescriptorLayout, renderData.rdHDRTexture.descriptorSetLayout};
+    std::vector layouts = {renderData.rdCaptureUBO.rdUBODescriptorLayout,
+                           renderData.rdDescriptorLayoutCache->getLayout(DescriptorLayoutType::SingleTexture)};
 
     VkPushConstantRange pushConstantRange{};
     pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
@@ -1347,7 +1222,7 @@ bool Core::Renderer::IBLGenerator::createHDRToCubemapPipeline(VkRenderData& rend
 bool Core::Renderer::IBLGenerator::createIrradiancePipeline(VkRenderData& renderData)
 {
     std::vector layouts = {renderData.rdCaptureUBO.rdUBODescriptorLayout,
-                           renderData.rdIBLData.rdSingleCubemapDescriptorLayout};
+                           renderData.rdDescriptorLayoutCache->getLayout(DescriptorLayoutType::SingleTexture)};
 
     VkPushConstantRange pushConstantRange{};
     pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
@@ -1394,7 +1269,7 @@ bool Core::Renderer::IBLGenerator::createIrradiancePipeline(VkRenderData& render
 bool Core::Renderer::IBLGenerator::createPrefilterPipeline(VkRenderData& renderData)
 {
     std::vector layouts = {renderData.rdCaptureUBO.rdUBODescriptorLayout,
-                           renderData.rdIBLData.rdSingleCubemapDescriptorLayout};
+                           renderData.rdDescriptorLayoutCache->getLayout(DescriptorLayoutType::SingleTexture)};
 
     VkPushConstantRange pushConstantRange{};
     pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;

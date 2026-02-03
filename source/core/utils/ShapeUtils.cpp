@@ -204,7 +204,7 @@ void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiSc
     allocInfo.descriptorPool = renderData.rdMaterialDescriptorPool;
     allocInfo.descriptorSetCount = 1;
     VkDescriptorSetLayout layout =
-        renderData.rdDescriptorLayoutCache->getLayout(Core::Renderer::DescriptorLayoutType::PrimitiveTextures);
+        renderData.rdDescriptorLayoutCache->getLayout(Core::Renderer::DescriptorLayoutType::PBRTextures);
     allocInfo.pSetLayouts = &layout;
 
     if (vkAllocateDescriptorSets(renderData.rdVkbDevice.device, &allocInfo, &primitiveData.materialDescriptorSet) !=

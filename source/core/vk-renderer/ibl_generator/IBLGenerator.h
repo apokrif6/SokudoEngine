@@ -16,8 +16,6 @@ public:
 private:
     static bool createDescriptorForHDR(VkRenderData& renderData);
 
-    static bool createStaticCubemapLayout(VkRenderData& renderData, VkDescriptorSetLayout& layout);
-
     static bool convertHDRToCubemap(VkRenderData& renderData, VkTextureData& texture, VkCubemapData& cubemapData);
 
     static bool convertCubemapToIrradiance(VkRenderData& renderData, VkCubemapData& cubemapData,
