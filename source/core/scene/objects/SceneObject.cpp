@@ -68,6 +68,7 @@ void Core::Scene::SceneObject::deserialize(const YAML::Node& node)
 
         auto component = Component::ComponentFactory::create(type);
         component->setOwner(this);
+        component->onAdded();
         component->deserialize(componentNode["data"]);
 
         mComponents.push_back(std::move(component));
