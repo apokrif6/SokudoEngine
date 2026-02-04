@@ -227,98 +227,104 @@ void Core::Renderer::UserInterface::onEvent(const Event& event)
         }
     }
 }
-
 void Core::Renderer::UserInterface::setupImGuiStyle() const
 {
     ImGuiStyle& style = ImGui::GetStyle();
+
     style.Alpha = 1.f;
     style.WindowRounding = 6.f;
     style.ChildRounding = 6.f;
     style.FrameRounding = 4.f;
     style.PopupRounding = 6.f;
-    style.ScrollbarRounding = 9.f;
     style.GrabRounding = 4.f;
     style.TabRounding = 6.f;
+    style.ScrollbarSize = 12.f;
     style.WindowTitleAlign = ImVec2(0.5f, 0.5f);
+
+    style.FrameBorderSize = 1.f;
 
     ImVec4* colors = style.Colors;
 
-    const ImVec4 voidBackground = ImVec4(0.04f, 0.f, 0.12f, 1.f);
-    const ImVec4 midnightPurple = ImVec4(0.06f, 0.01f, 0.15f, 0.98f);
-    const ImVec4 electricViolet = ImVec4(0.45f, 0.05f, 0.75f, 1.f);
-    const ImVec4 electricVioletLight = ImVec4(0.55f, 0.15f, 0.85f, 1.f);
-    const ImVec4 electricVioletBright = ImVec4(0.65f, 0.2f, 0.95f, 1.f);
-    const ImVec4 textWhite = ImVec4(0.95f, 0.95f, 1.f, 1.f);
-    const ImVec4 textDisabled = ImVec4(0.5f, 0.4f, 0.6f, 1.f);
+    const auto deepBackground = ImVec4(0.03f, 0.03f, 0.04f, 1.f);
+    const auto panelBackground = ImVec4(0.07f, 0.07f, 0.09f, 1.f);
 
-    colors[ImGuiCol_WindowBg] = voidBackground;
-    colors[ImGuiCol_ChildBg] = voidBackground;
-    colors[ImGuiCol_PopupBg] = midnightPurple;
+    const auto inputBackground = ImVec4(0.05f, 0.05f, 0.07f, 1.f);
+
+    const auto violetDark = ImVec4(0.35f, 0.1f, 0.6f, 1.f);
+    const auto violetMain = ImVec4(0.55f, 0.15f, 0.85f, 1.f);
+    const auto violetNeon = ImVec4(0.75f, 0.35f, 1.f, 1.f);
+
+    const auto textWhite = ImVec4(0.98f, 0.98f, 1.f, 1.f);
+    const auto textGrey = ImVec4(0.6f, 0.6f, 0.65f, 1.f);
+
+    const auto borderCol = ImVec4(0.2f, 0.2f, 0.23f, 0.6f);
 
     colors[ImGuiCol_Text] = textWhite;
-    colors[ImGuiCol_TextDisabled] = textDisabled;
+    colors[ImGuiCol_TextDisabled] = textGrey;
 
-    colors[ImGuiCol_Button] = ImVec4(0.25f, 0.05f, 0.45f, 1.f);
-    colors[ImGuiCol_ButtonHovered] = electricViolet;
-    colors[ImGuiCol_ButtonActive] = electricVioletBright;
+    colors[ImGuiCol_WindowBg] = deepBackground;
+    colors[ImGuiCol_ChildBg] = panelBackground;
+    colors[ImGuiCol_PopupBg] = ImVec4(0.08f, 0.08f, 0.1f, 1.f);
 
-    colors[ImGuiCol_Header] = electricViolet;
-    colors[ImGuiCol_HeaderHovered] = electricVioletLight;
-    colors[ImGuiCol_HeaderActive] = electricVioletBright;
-
-    colors[ImGuiCol_Tab] = ImVec4(0.15f, 0.05f, 0.45f, 1.f);
-    colors[ImGuiCol_TabHovered] = electricVioletLight;
-    colors[ImGuiCol_TabActive] = electricViolet;
-    colors[ImGuiCol_TabUnfocused] = ImVec4(0.04f, 0.f, 0.1f, 1.f);
-    colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.25f, 0.05f, 0.45f, 1.f);
-
-    colors[ImGuiCol_TitleBg] = voidBackground;
-    colors[ImGuiCol_TitleBgActive] = ImVec4(0.08f, 0.02f, 0.18f, 1.f);
-    colors[ImGuiCol_TitleBgCollapsed] = voidBackground;
-
-    colors[ImGuiCol_ScrollbarBg] = ImVec4(0.02f, 0.f, 0.08f, 0.f);
-    colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.3f, 0.05f, 0.6f, 1.f);
-    colors[ImGuiCol_ScrollbarGrabHovered] = electricVioletLight;
-    colors[ImGuiCol_ScrollbarGrabActive] = electricVioletBright;
-
-    colors[ImGuiCol_CheckMark] = ImVec4(0.9f, 0.6f, 1.f, 1.f);
-
-    colors[ImGuiCol_SliderGrab] = electricViolet;
-    colors[ImGuiCol_SliderGrabActive] = electricVioletBright;
-
-    colors[ImGuiCol_Separator] = ImVec4(0.3f, 0.1f, 0.5f, 1.f);
-    colors[ImGuiCol_SeparatorHovered] = electricVioletLight;
-    colors[ImGuiCol_SeparatorActive] = electricVioletBright;
-
-    colors[ImGuiCol_FrameBg] = ImVec4(0.1f, 0.02f, 0.22f, 1.f);
-    colors[ImGuiCol_FrameBgHovered] = ImVec4(0.2f, 0.05f, 0.35f, 1.f);
-    colors[ImGuiCol_FrameBgActive] = ImVec4(0.3f, 0.1f, 0.5f, 1.f);
-
-    colors[ImGuiCol_ResizeGrip] = ImVec4(0.45f, 0.05f, 0.75f, 0.25f);
-    colors[ImGuiCol_ResizeGripHovered] = electricVioletLight;
-    colors[ImGuiCol_ResizeGripActive] = electricVioletBright;
-
-    colors[ImGuiCol_Border] = ImVec4(0.3f, 0.1f, 0.5f, 0.5f);
+    colors[ImGuiCol_Border] = borderCol;
     colors[ImGuiCol_BorderShadow] = ImVec4(0.f, 0.f, 0.f, 0.f);
 
-    colors[ImGuiCol_DockingPreview] = ImVec4(0.45f, 0.05f, 0.75f, 0.7f);
-    colors[ImGuiCol_DockingEmptyBg] = voidBackground;
+    colors[ImGuiCol_TitleBg] = deepBackground;
+    colors[ImGuiCol_TitleBgActive] = panelBackground;
+    colors[ImGuiCol_TitleBgCollapsed] = deepBackground;
 
-    colors[ImGuiCol_PlotLines] = ImVec4(0.61f, 0.61f, 0.61f, 1.f);
-    colors[ImGuiCol_PlotLinesHovered] = ImVec4(1.f, 0.43f, 0.35f, 1.f);
-    colors[ImGuiCol_PlotHistogram] = ImVec4(0.9f, 0.7f, 0.f, 1.f);
-    colors[ImGuiCol_PlotHistogramHovered] = ImVec4(1.f, 0.6f, 0.f, 1.f);
+    colors[ImGuiCol_MenuBarBg] = deepBackground;
 
-    colors[ImGuiCol_TableHeaderBg] = ImVec4(0.19f, 0.19f, 0.2f, 1.f);
+    colors[ImGuiCol_ScrollbarBg] = deepBackground;
+    colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.25f, 0.25f, 0.28f, 1.f);
+    colors[ImGuiCol_ScrollbarGrabHovered] = violetMain;
+    colors[ImGuiCol_ScrollbarGrabActive] = violetNeon;
+
+    colors[ImGuiCol_CheckMark] = violetNeon;
+    colors[ImGuiCol_SliderGrab] = violetMain;
+    colors[ImGuiCol_SliderGrabActive] = violetNeon;
+
+    colors[ImGuiCol_Button] = violetDark;
+    colors[ImGuiCol_ButtonHovered] = violetMain;
+    colors[ImGuiCol_ButtonActive] = violetNeon;
+
+    colors[ImGuiCol_Header] = violetDark;
+    colors[ImGuiCol_HeaderHovered] = violetMain;
+    colors[ImGuiCol_HeaderActive] = violetNeon;
+
+    colors[ImGuiCol_Tab] = deepBackground;
+    colors[ImGuiCol_TabHovered] = violetMain;
+    colors[ImGuiCol_TabActive] = panelBackground;
+    colors[ImGuiCol_TabUnfocused] = deepBackground;
+    colors[ImGuiCol_TabUnfocusedActive] = panelBackground;
+
+    colors[ImGuiCol_FrameBg] = inputBackground;
+    colors[ImGuiCol_FrameBgHovered] = ImVec4(0.12f, 0.12f, 0.15f, 1.f);
+    colors[ImGuiCol_FrameBgActive] = ImVec4(0.18f, 0.18f, 0.22f, 1.f);
+
+    colors[ImGuiCol_Separator] = borderCol;
+    colors[ImGuiCol_SeparatorHovered] = violetMain;
+    colors[ImGuiCol_SeparatorActive] = violetNeon;
+
+    colors[ImGuiCol_ResizeGrip] = ImVec4(0.f, 0.f, 0.f, 0.f);
+    colors[ImGuiCol_ResizeGripHovered] = violetMain;
+    colors[ImGuiCol_ResizeGripActive] = violetNeon;
+
+    colors[ImGuiCol_PlotLines] = violetMain;
+    colors[ImGuiCol_PlotLinesHovered] = violetNeon;
+    colors[ImGuiCol_PlotHistogram] = violetMain;
+    colors[ImGuiCol_PlotHistogramHovered] = violetNeon;
+
+    colors[ImGuiCol_TableHeaderBg] = panelBackground;
     colors[ImGuiCol_TableBorderStrong] = ImVec4(0.31f, 0.31f, 0.35f, 1.f);
     colors[ImGuiCol_TableBorderLight] = ImVec4(0.23f, 0.23f, 0.25f, 1.f);
-    colors[ImGuiCol_TableRowBg] = ImVec4(0.f, 0.f, 0.f, 0.f);
-    colors[ImGuiCol_TableRowBgAlt] = ImVec4(1.f, 1.f, 1.f, 0.06f);
+    colors[ImGuiCol_TableRowBg] = deepBackground;
+    colors[ImGuiCol_TableRowBgAlt] = ImVec4(1.f, 1.f, 1.f, 0.02f);
 
-    colors[ImGuiCol_TextSelectedBg] = ImVec4(0.45f, 0.05f, 0.75f, 0.35f);
-    colors[ImGuiCol_DragDropTarget] = ImVec4(1.f, 1.f, 0.f, 0.9f);
-    colors[ImGuiCol_NavHighlight] = electricViolet;
-    colors[ImGuiCol_NavWindowingHighlight] = textWhite;
-    colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.8f, 0.8f, 0.8f, 0.2f);
-    colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.8f, 0.8f, 0.8f, 0.35f);
+    colors[ImGuiCol_TextSelectedBg] = ImVec4(0.55f, 0.15f, 0.85f, 0.4f);
+    colors[ImGuiCol_DragDropTarget] = violetNeon;
+    colors[ImGuiCol_NavHighlight] = violetNeon;
+
+    colors[ImGuiCol_DockingPreview] = ImVec4(0.55f, 0.15f, 0.85f, 0.7f);
+    colors[ImGuiCol_DockingEmptyBg] = deepBackground;
 }
