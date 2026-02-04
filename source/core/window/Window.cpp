@@ -1,6 +1,11 @@
 #include "Window.h"
+#include "stb_image.h"
 #include "core/tools/Logger.h"
 #include "core/ui/UserInterface.h"
+#ifdef _WIN32
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h>
+#endif
 
 bool Core::Application::Window::init(int width, int height, const std::string& title)
 {
@@ -27,6 +32,17 @@ bool Core::Application::Window::init(int width, int height, const std::string& t
         glfwTerminate();
         return false;
     }
+
+#ifdef _WIN32
+    HWND hwnd = glfwGetWin32Window(mWindow);
+    HICON hIcon = static_cast<HICON>(LoadImage(GetModuleHandle(NULL), "MAINICON", IMAGE_ICON, 0, 0, LR_DEFAULTSIZE));
+
+    if (hIcon)
+    {
+        SendMessage(hwnd, WM_SETICON, ICON_BIG, reinterpret_cast<LPARAM>(hIcon));
+        SendMessage(hwnd, WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(hIcon));
+    }
+#endif
 
     Logger::log(1, "%s: window successfully initialized\n", __FUNCTION__);
     return true;

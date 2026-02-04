@@ -9,7 +9,13 @@ project(SokudoEngine)
 file(GLOB_RECURSE SOURCES
         source/*.cpp
 )
-add_executable(SokudoEngine ${SOURCES})
+
+set(ENGINE_RESOURCES "")
+if (WIN32)
+    set(ENGINE_RESOURCES "${CMAKE_CURRENT_SOURCE_DIR}/resources.rc")
+endif ()
+
+add_executable(${PROJECT_NAME} ${SOURCES} ${ENGINE_RESOURCES})
 
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
@@ -73,9 +79,15 @@ if (NOT MSVC)
     list(APPEND DEPENDENCIES stdc++)
 endif ()
 
-target_link_libraries(SokudoEngine PRIVATE ${DEPENDENCIES})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${DEPENDENCIES})
 
-target_compile_definitions(SokudoEngine PUBLIC
+target_compile_definitions(${PROJECT_NAME} PUBLIC
         $<$<CONFIG:Debug>:SE_LOG_INPUT=0>
         $<$<CONFIG:Release>:SE_LOG_INPUT=0>
+)
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/assets"
 )
