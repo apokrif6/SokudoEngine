@@ -17,8 +17,6 @@ class InspectorUIWindow : public UIWindow<InspectorUIWindow>
     {
         ImGui::Begin("Inspector");
 
-        ImGui::BeginChild("InspectorScroll", ImVec2(0, 0), false, ImGuiWindowFlags_AlwaysVerticalScrollbar);
-
         auto* scene = Engine::getInstance().getSystem<Scene::Scene>();
         auto objects = scene->getObjects();
         auto& selection = scene->getSceneObjectSelection();
@@ -74,8 +72,6 @@ class InspectorUIWindow : public UIWindow<InspectorUIWindow>
         {
             ImGui::TextDisabled("No object selected");
         }
-
-        ImGui::EndChild();
 
         ImGui::End();
 
