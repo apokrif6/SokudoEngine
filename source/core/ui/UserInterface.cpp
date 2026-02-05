@@ -12,6 +12,7 @@
 #include "inspector/InspectorUIWindow.h"
 #include "MiscUIWindow.h"
 #include "ViewportUIWindow.h"
+#include "core/tools/ColorConverter.h"
 
 bool Core::Renderer::UserInterface::init(VkRenderData& renderData)
 {
@@ -227,6 +228,7 @@ void Core::Renderer::UserInterface::onEvent(const Event& event)
         }
     }
 }
+
 void Core::Renderer::UserInterface::setupImGuiStyle() const
 {
     ImGuiStyle& style = ImGui::GetStyle();
@@ -245,26 +247,24 @@ void Core::Renderer::UserInterface::setupImGuiStyle() const
 
     ImVec4* colors = style.Colors;
 
-    const auto deepBackground = ImVec4(0.03f, 0.03f, 0.04f, 1.f);
-    const auto panelBackground = ImVec4(0.07f, 0.07f, 0.09f, 1.f);
+    const auto deepBackground = Tools::ColorConverter::toLinear(ImVec4(0.18f, 0.18f, 0.18f, 1.f));
+    const auto panelBackground = Tools::ColorConverter::toLinear(ImVec4(0.07f, 0.07f, 0.09f, 1.f));
+    const auto inputBackground = Tools::ColorConverter::toLinear(ImVec4(0.05f, 0.05f, 0.07f, 1.f));
 
-    const auto inputBackground = ImVec4(0.05f, 0.05f, 0.07f, 1.f);
+    const auto violetDark = Tools::ColorConverter::toLinear(ImVec4(0.35f, 0.1f, 0.6f, 1.f));
+    const auto violetMain = Tools::ColorConverter::toLinear(ImVec4(0.55f, 0.15f, 0.85f, 1.f));
+    const auto violetNeon = Tools::ColorConverter::toLinear(ImVec4(0.75f, 0.35f, 1.f, 1.f));
 
-    const auto violetDark = ImVec4(0.35f, 0.1f, 0.6f, 1.f);
-    const auto violetMain = ImVec4(0.55f, 0.15f, 0.85f, 1.f);
-    const auto violetNeon = ImVec4(0.75f, 0.35f, 1.f, 1.f);
-
-    const auto textWhite = ImVec4(0.98f, 0.98f, 1.f, 1.f);
-    const auto textGrey = ImVec4(0.6f, 0.6f, 0.65f, 1.f);
-
-    const auto borderCol = ImVec4(0.2f, 0.2f, 0.23f, 0.6f);
+    const auto textWhite = Tools::ColorConverter::toLinear(ImVec4(0.98f, 0.98f, 1.f, 1.f));
+    const auto textGrey = Tools::ColorConverter::toLinear(ImVec4(0.6f, 0.6f, 0.65f, 1.f));
+    const auto borderCol = Tools::ColorConverter::toLinear(ImVec4(0.2f, 0.2f, 0.23f, 0.6f));
 
     colors[ImGuiCol_Text] = textWhite;
     colors[ImGuiCol_TextDisabled] = textGrey;
 
     colors[ImGuiCol_WindowBg] = deepBackground;
     colors[ImGuiCol_ChildBg] = panelBackground;
-    colors[ImGuiCol_PopupBg] = ImVec4(0.08f, 0.08f, 0.1f, 1.f);
+    colors[ImGuiCol_PopupBg] = Tools::ColorConverter::toLinear(ImVec4(0.08f, 0.08f, 0.1f, 1.f));
 
     colors[ImGuiCol_Border] = borderCol;
     colors[ImGuiCol_BorderShadow] = ImVec4(0.f, 0.f, 0.f, 0.f);
@@ -276,7 +276,7 @@ void Core::Renderer::UserInterface::setupImGuiStyle() const
     colors[ImGuiCol_MenuBarBg] = deepBackground;
 
     colors[ImGuiCol_ScrollbarBg] = deepBackground;
-    colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.25f, 0.25f, 0.28f, 1.f);
+    colors[ImGuiCol_ScrollbarGrab] = Tools::ColorConverter::toLinear(ImVec4(0.25f, 0.25f, 0.28f, 1.f));
     colors[ImGuiCol_ScrollbarGrabHovered] = violetMain;
     colors[ImGuiCol_ScrollbarGrabActive] = violetNeon;
 
@@ -299,8 +299,8 @@ void Core::Renderer::UserInterface::setupImGuiStyle() const
     colors[ImGuiCol_TabUnfocusedActive] = panelBackground;
 
     colors[ImGuiCol_FrameBg] = inputBackground;
-    colors[ImGuiCol_FrameBgHovered] = ImVec4(0.12f, 0.12f, 0.15f, 1.f);
-    colors[ImGuiCol_FrameBgActive] = ImVec4(0.18f, 0.18f, 0.22f, 1.f);
+    colors[ImGuiCol_FrameBgHovered] = Tools::ColorConverter::toLinear(ImVec4(0.12f, 0.12f, 0.15f, 1.f));
+    colors[ImGuiCol_FrameBgActive] = Tools::ColorConverter::toLinear(ImVec4(0.18f, 0.18f, 0.22f, 1.f));
 
     colors[ImGuiCol_Separator] = borderCol;
     colors[ImGuiCol_SeparatorHovered] = violetMain;
@@ -316,15 +316,15 @@ void Core::Renderer::UserInterface::setupImGuiStyle() const
     colors[ImGuiCol_PlotHistogramHovered] = violetNeon;
 
     colors[ImGuiCol_TableHeaderBg] = panelBackground;
-    colors[ImGuiCol_TableBorderStrong] = ImVec4(0.31f, 0.31f, 0.35f, 1.f);
-    colors[ImGuiCol_TableBorderLight] = ImVec4(0.23f, 0.23f, 0.25f, 1.f);
+    colors[ImGuiCol_TableBorderStrong] = Tools::ColorConverter::toLinear(ImVec4(0.31f, 0.31f, 0.35f, 1.f));
+    colors[ImGuiCol_TableBorderLight] = Tools::ColorConverter::toLinear(ImVec4(0.23f, 0.23f, 0.25f, 1.f));
     colors[ImGuiCol_TableRowBg] = deepBackground;
-    colors[ImGuiCol_TableRowBgAlt] = ImVec4(1.f, 1.f, 1.f, 0.02f);
+    colors[ImGuiCol_TableRowBgAlt] = Tools::ColorConverter::toLinear(ImVec4(1.f, 1.f, 1.f, 0.02f));
 
-    colors[ImGuiCol_TextSelectedBg] = ImVec4(0.55f, 0.15f, 0.85f, 0.4f);
+    colors[ImGuiCol_TextSelectedBg] = Tools::ColorConverter::toLinear(ImVec4(0.55f, 0.15f, 0.85f, 0.4f));
     colors[ImGuiCol_DragDropTarget] = violetNeon;
     colors[ImGuiCol_NavHighlight] = violetNeon;
 
-    colors[ImGuiCol_DockingPreview] = ImVec4(0.55f, 0.15f, 0.85f, 0.7f);
+    colors[ImGuiCol_DockingPreview] = Tools::ColorConverter::toLinear(ImVec4(0.55f, 0.15f, 0.85f, 0.7f));
     colors[ImGuiCol_DockingEmptyBg] = deepBackground;
 }
