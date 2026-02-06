@@ -60,9 +60,7 @@ class ViewportUIWindow : public UIWindow<ViewportUIWindow>
                     ImGui::End();
                     return true;
                 }
-                Scene::Transform& sceneObjectTransform = transformComponent->transform;
-
-                glm::mat4 objectMatrix = sceneObjectTransform.getMatrix();
+                auto objectMatrix = transformComponent->getWorldMatrix();
 
                 ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(projection), currentManipulateOperation,
                                      ImGuizmo::LOCAL, glm::value_ptr(objectMatrix));
@@ -77,15 +75,15 @@ class ViewportUIWindow : public UIWindow<ViewportUIWindow>
 
                     if (currentManipulateOperation == ImGuizmo::TRANSLATE)
                     {
-                        sceneObjectTransform.setPosition(position);
+                        transformComponent->setPosition(position);
                     }
                     else if (currentManipulateOperation == ImGuizmo::ROTATE)
                     {
-                        sceneObjectTransform.setRotation(rotation);
+                        transformComponent->setRotation(rotation);
                     }
                     else if (currentManipulateOperation == ImGuizmo::SCALE)
                     {
-                        sceneObjectTransform.setScale(scale);
+                        transformComponent->setScale(scale);
                     }
                 }
             }

@@ -28,13 +28,6 @@ void Core::Engine::init()
 
     Component::ComponentFactory::registerAll();
 
-    // Sandbox
-    if (!renderer->loadMeshWithAssimp())
-    {
-        Logger::log(1, "%s error: could not load mesh with assimp", __FUNCTION__);
-        return;
-    }
-
     applicationWindow->bindInputs();
     applicationWindow->mainLoop();
     applicationWindow->cleanup();

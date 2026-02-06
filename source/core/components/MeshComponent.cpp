@@ -1,4 +1,7 @@
 #include "MeshComponent.h"
+
+#include <functional>
+
 #include "core/vk-renderer/buffers/UniformBuffer.h"
 #include "core/engine/Engine.h"
 #include "core/animations/AnimationsUtils.h"
@@ -67,27 +70,20 @@ void Core::Component::MeshComponent::addPrimitive(
 
 void Core::Component::MeshComponent::update(Renderer::VkRenderData& renderData)
 {
-    // TODO
-    // should be replaced with local transform, like SceneComponent
-    const auto* transformComponent = getOwner()->getComponent<TransformComponent>();
-    if (!transformComponent)
-    {
-        Logger::log(3, "%s: Warning! Mesh %s has no TransformComponent!", __FUNCTION__, getOwner()->getName().c_str());
-        return;
-    }
+    auto* transformComponent = getOwner()->getComponent<TransformComponent>();
+    glm::mat4 worldMatrix = transformComponent ? transformComponent->getWorldMatrix() : glm::mat4(1.0f);
 
     for (auto& primitive : mPrimitives)
     {
         primitive.uploadVertexBuffer(renderData);
         primitive.uploadIndexBuffer(renderData);
-        primitive.uploadUniformBuffer(renderData, transformComponent->transform.getMatrix());
+        primitive.uploadUniformBuffer(renderData, worldMatrix);
 
         if (shouldDrawDebugSkeleton())
         {
             std::vector<Renderer::Debug::DebugBone> debugBones;
             buildDebugSkeletonLines(mSkeleton, primitive.getBonesInfo(), debugBones, mSkeleton.getRootNode(),
-                                    transformComponent->transform.getMatrix(),
-                                    transformComponent->transform.getMatrix());
+                                    worldMatrix, worldMatrix);
             mSkeleton.updateDebug(renderData, debugBones);
         }
     }
@@ -95,14 +91,24 @@ void Core::Component::MeshComponent::update(Renderer::VkRenderData& renderData)
 
 void Core::Component::MeshComponent::draw(Renderer::VkRenderData& renderData)
 {
-    for (auto& primitive : mPrimitives)
+    if (mPrimitiveIndex >= 0)
     {
-        primitive.draw(renderData);
-
-        if (shouldDrawDebugSkeleton())
+        if (!mPrimitives.empty())
         {
-            mSkeleton.drawDebug(renderData);
+            mPrimitives[0].draw(renderData);
         }
+    }
+    else
+    {
+        for (auto& primitive : mPrimitives)
+        {
+            primitive.draw(renderData);
+        }
+    }
+
+    if (shouldDrawDebugSkeleton())
+    {
+        mSkeleton.drawDebug(renderData);
     }
 }
 
@@ -116,45 +122,13 @@ void Core::Component::MeshComponent::cleanup(Renderer::VkRenderData& renderData)
     mSkeleton.cleanup(renderData);
 }
 
-void Core::Component::MeshComponent::loadMesh(const std::string_view& filePath)
-{
-    auto& renderData = Engine::getInstance().getRenderData();
-
-    cleanup(renderData);
-    mPrimitives.clear();
-    mAnimations.clear();
-
-    mMeshFilePath = filePath;
-
-    const Utils::MeshData meshData = Utils::loadMeshFromFile(mMeshFilePath, renderData);
-
-    mSkeleton = meshData.skeleton;
-    mSkeleton.initDebug(renderData);
-    mAnimations.insert(mAnimations.end(), meshData.animations.begin(), meshData.animations.end());
-
-    std::vector<Animations::AnimationClip> animations;
-    animations.reserve(mAnimationFiles.size());
-    for (const auto& animPath : mAnimationFiles)
-    {
-        animations.push_back(Animations::AnimationsUtils::loadAnimationFromFile(animPath));
-    }
-
-    mAnimations.insert(mAnimations.end(), animations.begin(), animations.end());
-
-    for (auto& primitive : meshData.primitives)
-    {
-        addPrimitive(primitive.vertices, primitive.indices, primitive.textures, renderData, primitive.material,
-                     primitive.bones, primitive.materialDescriptorSet);
-    }
-
-    Logger::log(1, "Reloaded mesh: %s", mMeshFilePath.c_str());
-}
-
 YAML::Node Core::Component::MeshComponent::serialize() const
 {
     YAML::Node node;
 
     node["meshFile"] = mMeshFilePath;
+    node["nodeName"] = mMeshNodeName;
+    node["primitiveIndex"] = mPrimitiveIndex;
     for (auto& animPath : mAnimationFiles)
     {
         node["animations"].push_back(animPath);
@@ -179,6 +153,19 @@ void Core::Component::MeshComponent::deserialize(const YAML::Node& node)
         }
     }
 
-    const auto path = node["meshFile"].as<std::string>();
-    loadMesh(path);
+    if (node["meshFile"])
+    {
+        mMeshFilePath = node["meshFile"].as<std::string>();
+        mMeshNodeName = node["nodeName"].as<std::string>();
+        mPrimitiveIndex = node["primitiveIndex"].as<int32_t>();
+
+        auto& renderData = Engine::getInstance().getRenderData();
+        const auto data = Utils::loadMeshFromFile(mMeshFilePath, renderData);
+
+        for (const auto& primitive : data.rootNode.primitives)
+        {
+            addPrimitive(primitive.vertices, primitive.indices, primitive.textures, renderData, primitive.material,
+                         primitive.bones, primitive.materialDescriptorSet);
+        }
+    }
 }

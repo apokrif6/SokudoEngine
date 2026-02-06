@@ -61,13 +61,19 @@ public:
         }
     }
 
+    void setSourceMesh(const std::string_view& path, uint32_t primitiveIndex)
+    {
+        mMeshFilePath = path;
+        mPrimitiveIndex = primitiveIndex;
+    }
+
     [[nodiscard]] uint16_t getCurrentAnimationIndex() const { return mCurrentAnimationIndex; }
 
     [[nodiscard]] Animations::AnimationClip& getCurrentAnimation() { return mAnimations[mCurrentAnimationIndex]; }
 
-    void loadMesh(const std::string_view& filePath);
+    [[nodiscard]] std::string_view getMeshFilePath() const { return mMeshFilePath; }
 
-    std::string_view getMeshFilePath() const { return mMeshFilePath; }
+    [[nodiscard]] int32_t getPrimitiveIndex() const { return mPrimitiveIndex; }
 
     void setAnimationFiles(std::vector<std::string> files) { mAnimationFiles = std::move(files); }
 
@@ -86,6 +92,8 @@ private:
     // metadata for serialization
     // probably should be moved to other place (I don't know where exactly)
     std::string mMeshFilePath;
+    std::string mMeshNodeName;
+    int32_t mPrimitiveIndex = -1;
     std::vector<std::string> mAnimationFiles;
 };
 } // namespace Core::Component

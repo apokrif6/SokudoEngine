@@ -21,7 +21,7 @@ class TransformInspectorUIWindow : public UIWindow<TransformInspectorUIWindow>
             return true;
         }
 
-        auto& transform = transformComponent->transform;
+        auto transform = transformComponent->getTransform();
 
         ImGui::Text("Selected: %s", selectedObject->getName().c_str());
         ImGui::Separator();

@@ -24,11 +24,10 @@ void Core::Component::RotatingComponent::update(Renderer::VkRenderData& renderDa
 
     if (mOwnerTransformComponent)
     {
-        auto& transform = mOwnerTransformComponent->transform;
+        const glm::vec3 newRotation =
+            mOwnerTransformComponent->getTransform().getRotation() + mRotationSpeed * deltaTime;
 
-        const glm::vec3 newRotation = transform.getRotation() + mRotationSpeed * deltaTime;
-
-        transform.setRotation(newRotation);
+        mOwnerTransformComponent->getTransform().setRotation(newRotation);
     }
 }
 

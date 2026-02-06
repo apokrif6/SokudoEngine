@@ -3,6 +3,8 @@
 #include "UIWindow.h"
 #include "imgui.h"
 #include "glm/gtx/string_cast.hpp"
+#include "nfd.hpp"
+#include "core/scene/SceneImporter.h"
 
 namespace Core::UI
 {
@@ -18,6 +20,44 @@ class MiscUIWindow : public UIWindow<MiscUIWindow>
         }
 
         Renderer::VkRenderData& renderData = Engine::getInstance().getRenderData();
+
+        if (ImGui::Button("Import Mesh Scene"))
+        {
+            NFD::Init();
+
+            nfdfilteritem_t filterItem[1] = {{"3D Models", "gltf,glb,obj,fbx"}};
+
+            NFD::UniquePath outPath;
+
+            const nfdresult_t result = NFD::OpenDialog(outPath, filterItem, 1, nullptr);
+
+            if (result == NFD_OKAY)
+            {
+                const std::string path = outPath.get();
+
+                const Utils::MeshData meshData = Utils::loadMeshFromFile(path, renderData);
+
+                const auto rootModelObject =
+                    Scene::SceneImporter::createObjectFromNode(meshData.rootNode, meshData.skeleton, path);
+
+                auto* currentScene = Engine::getInstance().getSystem<Scene::Scene>();
+                currentScene->addObject(rootModelObject);
+
+                Logger::log(1, "Imported scene from: %s", path.c_str());
+            }
+            else if (result == NFD_CANCEL)
+            {
+                Logger::log(1, "File Dialog Cancelled");
+            }
+            else
+            {
+                Logger::log(1, "File Dialog Error: %s", NFD::GetError());
+            }
+
+            NFD::Quit();
+        }
+
+        ImGui::Separator();
 
         ImGui::Checkbox("Should draw skybox", &renderData.shouldDrawSkybox);
         ImGui::Checkbox("Should draw grid", &renderData.shouldDrawGrid);

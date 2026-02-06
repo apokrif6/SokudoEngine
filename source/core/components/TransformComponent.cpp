@@ -42,3 +42,48 @@ void Core::Component::TransformComponent::deserialize(const YAML::Node& node)
     transform.setScale(glm::vec3(transformNode["scale"][0].as<float>(), transformNode["scale"][1].as<float>(),
                                  transformNode["scale"][2].as<float>()));
 }
+
+void Core::Component::TransformComponent::setPosition(const glm::vec3& position)
+{
+    transform.setPosition(position);
+    setWorldDirty();
+}
+
+void Core::Component::TransformComponent::setRotation(const glm::quat& rotation)
+{
+    transform.setRotation(rotation);
+    setWorldDirty();
+}
+
+void Core::Component::TransformComponent::setScale(const glm::vec3& scale)
+{
+    transform.setScale(scale);
+    setWorldDirty();
+}
+
+void Core::Component::TransformComponent::setWorldDirty()
+{
+    if (bIsWorldDirty)
+    {
+        return;
+    }
+
+    bIsWorldDirty = true;
+
+    for (const auto& child : getOwner()->getChildren())
+    {
+        if (auto* childTransformComponent = child->getComponent<TransformComponent>())
+        {
+            childTransformComponent->setWorldDirty();
+        }
+    }
+}
+
+glm::mat4 Core::Component::TransformComponent::getWorldMatrix()
+{
+    if (bIsWorldDirty)
+    {
+        updateWorldMatrix();
+    }
+    return mCachedWorldMatrix;
+}

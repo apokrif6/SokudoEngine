@@ -58,10 +58,6 @@ public:
 
     void resizeViewportTarget(glm::int2 size);
 
-    // TODO
-    // move to Sandbox
-    bool loadMeshWithAssimp();
-
 private:
     Timer mUploadToVBOTimer{};
     Timer mUploadToUBOTimer{};
@@ -131,6 +127,8 @@ private:
     bool createDebugSkeletonPipelineLayout();
 
     bool createDebugSkeletonPipeline();
+
+    bool createDescriptorsForMaterial();
 #pragma endregion Renderer
 
 #pragma region Skybox

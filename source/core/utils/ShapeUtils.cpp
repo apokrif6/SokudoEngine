@@ -69,8 +69,8 @@ void processBones(Core::Utils::PrimitiveData& primitiveData, const aiMesh* mesh)
     primitiveData.bones.finalTransforms.resize(primitiveData.bones.bones.size(), glm::mat4(1.0));
 }
 
-void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiScene* scene, const aiMaterial* material,
-                 const glm::mat4& transform, Core::Renderer::VkRenderData& renderData, const std::string& baseDir)
+void processMesh(std::vector<Core::Utils::PrimitiveData>& outPrimitives, const aiMesh* mesh, const aiScene* scene,
+                 const aiMaterial* material, Core::Renderer::VkRenderData& renderData, const std::string& baseDir)
 {
     Core::Utils::PrimitiveData primitiveData;
     Core::Renderer::MaterialInfo materialInfo = {};
@@ -262,15 +262,13 @@ void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiSc
         if (mesh->HasPositions())
         {
             aiVector3D& position = mesh->mVertices[i];
-            glm::vec4 transformedPos = transform * glm::vec4(position.x, position.y, position.z, 1.0f);
-            vertex.position = {transformedPos.x, transformedPos.y, transformedPos.z};
+            vertex.position = {position.x, position.y, position.z};
         }
 
         if (mesh->HasNormals())
         {
             aiVector3D& normal = mesh->mNormals[i];
-            glm::vec3 transformedNormal = glm::mat3(transform) * glm::vec3(normal.x, normal.y, normal.z);
-            vertex.normal = glm::normalize(transformedNormal);
+            vertex.normal = {normal.x, normal.y, normal.z};
         }
 
         if (mesh->HasTangentsAndBitangents())
@@ -308,29 +306,34 @@ void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiSc
         processBones(primitiveData, mesh);
     }
 
-    meshData.primitives.emplace_back(primitiveData);
+    outPrimitives.emplace_back(std::move(primitiveData));
 }
 
-void processNode(Core::Utils::MeshData& meshData, aiNode* node, const aiScene* scene, const glm::mat4& parentTransform,
-                 Core::Renderer::VkRenderData& renderData, const std::string& baseDir)
+void processNodeHierarchy(Core::Utils::MeshNode& outNode, aiNode* node, const aiScene* scene,
+                          Core::Renderer::VkRenderData& renderData, const std::string& baseDir)
 {
-    glm::mat4 nodeTransform = glm::transpose(glm::make_mat4(&node->mTransformation.a1));
-    glm::mat4 globalTransform = parentTransform * nodeTransform;
+    outNode.name = node->mName.C_Str();
+
+    outNode.localTransform = glm::transpose(glm::make_mat4(&node->mTransformation.a1));
 
     for (size_t i = 0; i < node->mNumMeshes; ++i)
     {
         const aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
         const aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
-        processMesh(meshData, mesh, scene, material, globalTransform, renderData, baseDir);
+        processMesh(outNode.primitives, mesh, scene, material, renderData, baseDir);
     }
 
     for (size_t i = 0; i < node->mNumChildren; ++i)
     {
-        processNode(meshData, node->mChildren[i], scene, globalTransform, renderData, baseDir);
+        Core::Utils::MeshNode childNode;
+        processNodeHierarchy(childNode, node->mChildren[i], scene, renderData, baseDir);
+        outNode.children.push_back(std::move(childNode));
     }
 }
 
+// TODO
+// add meshes cache here!
 Core::Utils::MeshData Core::Utils::loadMeshFromFile(const std::string& fileName, Renderer::VkRenderData& renderData)
 {
     Assimp::Importer importer{};
@@ -353,7 +356,7 @@ Core::Utils::MeshData Core::Utils::loadMeshFromFile(const std::string& fileName,
     }
 
     MeshData mesh;
-    processNode(mesh, scene->mRootNode, scene, glm::mat4(1.0f), renderData, baseDir);
+    processNodeHierarchy(mesh.rootNode, scene->mRootNode, scene, renderData, baseDir);
     mesh.skeleton.setRootNode(Animations::AnimationsUtils::buildBoneHierarchy(scene->mRootNode));
     return mesh;
 }

@@ -2,11 +2,9 @@
 
 #include <string>
 #include <glm/fwd.hpp>
-#include <memory>
 #include "core/vk-renderer/VkRenderData.h"
 #include "unordered_map"
 #include "core/animations/AnimationsData.h"
-#include "assimp/Importer.hpp"
 #include "assimp/material.h"
 #include "core/animations/Skeleton.h"
 
@@ -24,9 +22,17 @@ struct PrimitiveData
     Animations::BonesInfo bones;
 };
 
+struct MeshNode
+{
+    std::string name;
+    glm::mat4 localTransform;
+    std::vector<PrimitiveData> primitives;
+    std::vector<MeshNode> children;
+};
+
 struct MeshData
 {
-    std::vector<PrimitiveData> primitives;
+    MeshNode rootNode;
     Animations::Skeleton skeleton;
     std::vector<Animations::AnimationClip> animations;
 };

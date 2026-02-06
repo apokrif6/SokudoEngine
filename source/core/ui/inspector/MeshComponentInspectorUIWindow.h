@@ -5,7 +5,6 @@
 #include "core/components/MeshComponent.h"
 #include "core/ui/UIWindow.h"
 #include "core/engine/Engine.h"
-#include "nfd.hpp"
 
 namespace Core::UI
 {
@@ -26,33 +25,7 @@ class MeshComponentInspectorUIWindow : public UIWindow<MeshComponentInspectorUIW
 
         ImGui::Text("Mesh file path %s", meshComponent->getMeshFilePath().data());
 
-        if (ImGui::Button("Load New Mesh"))
-        {
-            NFD::Init();
-
-            nfdfilteritem_t filterItem[1] = {{"3D Models", "gltf,glb,obj,fbx"}};
-
-            NFD::UniquePath outPath;
-
-            nfdresult_t result = NFD::OpenDialog(outPath, filterItem, 1, nullptr);
-
-            if (result == NFD_OKAY)
-            {
-                std::string path = outPath.get();
-
-                meshComponent->loadMesh(path);
-            }
-            else if (result == NFD_CANCEL)
-            {
-                Logger::log(1, "File Dialog Cancelled");
-            }
-            else
-            {
-                Logger::log(1, "File Dialog Error: %s", NFD::GetError());
-            }
-
-            NFD::Quit();
-        }
+        ImGui::Text("Primitive index %d", meshComponent->getPrimitiveIndex());
 
         if (meshComponent->hasAnimations())
         {

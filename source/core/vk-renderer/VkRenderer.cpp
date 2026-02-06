@@ -142,6 +142,11 @@ bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned i
         return false;
     }
 
+    if (!createDescriptorsForMaterial())
+    {
+        return false;
+    }
+
     Engine::getInstance().getRenderData().rdWidth = static_cast<int>(width);
     Engine::getInstance().getRenderData().rdHeight = static_cast<int>(height);
 
@@ -896,7 +901,7 @@ bool Core::Renderer::VkRenderer::initVma()
     return true;
 }
 
-bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
+bool Core::Renderer::VkRenderer::createDescriptorsForMaterial()
 {
     auto& renderData = Engine::getInstance().getRenderData();
 
@@ -921,20 +926,6 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
     createDebugSkeletonPipeline();
 
     initPrimitiveGlobalSceneDescriptorSet();
-
-    auto testObject = std::make_shared<Scene::SceneObject>("TestObject");
-
-    auto transformComponent = testObject->addComponent<Component::TransformComponent>();
-    transformComponent->transform.setPosition({0, 0, 0});
-
-    auto rotatingComponent = testObject->addComponent<Component::RotatingComponent>();
-    rotatingComponent->setRotationSpeed({0, 5, 0});
-
-    auto meshComponent = testObject->addComponent<Component::MeshComponent>();
-    constexpr std::string_view modelFileName = "assets/damaged_helmet/DamagedHelmet.gltf";
-    meshComponent->loadMesh(modelFileName);
-
-    Engine::getInstance().getSystem<Scene::Scene>()->addObject(testObject);
 
     return true;
 }
@@ -1122,7 +1113,8 @@ bool Core::Renderer::VkRenderer::loadSkybox()
 {
     auto& renderData = Engine::getInstance().getRenderData();
 
-    std::future<bool> hdrTextureFuture = Texture::loadHDRTexture(renderData, renderData.rdHDRTexture, "assets/textures/hdr/skybox.hdr");
+    std::future<bool> hdrTextureFuture =
+        Texture::loadHDRTexture(renderData, renderData.rdHDRTexture, "assets/textures/hdr/skybox.hdr");
     if (!hdrTextureFuture.get())
     {
         Logger::log(1, "%s error: could not load HDR texture", __FUNCTION__);
