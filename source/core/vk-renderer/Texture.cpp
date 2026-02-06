@@ -5,8 +5,6 @@
 #include "core/vk-renderer/buffers/CommandBuffer.h"
 #include "core/tools/Logger.h"
 
-constexpr std::string_view textureFolderPath = "assets/textures/";
-
 std::future<bool> Core::Renderer::Texture::loadTexture(VkRenderData& renderData, VkTextureData& textureData,
                                                        const std::string& textureFilename, VkFormat format)
 {
@@ -14,19 +12,17 @@ std::future<bool> Core::Renderer::Texture::loadTexture(VkRenderData& renderData,
         std::launch::async,
         [&renderData, &textureData, &textureFilename, format]
         {
-            const std::string texturePath = textureFolderPath.data() + textureFilename;
-
             int texWidth;
             int texHeight;
             int numberOfChannels;
 
             unsigned char* texData =
-                stbi_load(texturePath.c_str(), &texWidth, &texHeight, &numberOfChannels, STBI_rgb_alpha);
+                stbi_load(textureFilename.c_str(), &texWidth, &texHeight, &numberOfChannels, STBI_rgb_alpha);
 
             if (!texData)
             {
                 perror("Error");
-                Logger::log(1, "Could not load file '%s', because of '%s'\n", texturePath.c_str(),
+                Logger::log(1, "Could not load file '%s', because of '%s'\n", textureFilename.c_str(),
                             stbi_failure_reason());
                 stbi_image_free(texData);
                 return false;
@@ -258,9 +254,9 @@ std::future<bool> Core::Renderer::Texture::loadTexture(VkRenderData& renderData,
                 return false;
             }
 
-            textureData.name = texturePath;
+            textureData.name = textureFilename;
 
-            Logger::log(1, "Texture '%s' loaded (%dx%d, %d channels)\n", texturePath.c_str(), texWidth, texHeight,
+            Logger::log(1, "Texture '%s' loaded (%dx%d, %d channels)\n", textureFilename.c_str(), texWidth, texHeight,
                         numberOfChannels);
             return true;
         });
@@ -273,16 +269,14 @@ std::future<bool> Core::Renderer::Texture::loadHDRTexture(VkRenderData& renderDa
         std::launch::async,
         [&renderData, &textureData, textureFilename, format]
         {
-            const std::string texturePath = textureFolderPath.data() + textureFilename;
-
             stbi_set_flip_vertically_on_load(true);
 
             int width, height, channels;
-            float* hdrData = stbi_loadf(texturePath.c_str(), &width, &height, &channels, STBI_rgb_alpha);
+            float* hdrData = stbi_loadf(textureFilename.c_str(), &width, &height, &channels, STBI_rgb_alpha);
 
             if (!hdrData)
             {
-                Logger::log(1, "%s error: failed to load HDR texture %s", __FUNCTION__, texturePath.c_str());
+                Logger::log(1, "%s error: failed to load HDR texture %s", __FUNCTION__, textureFilename.c_str());
                 return false;
             }
 
@@ -434,9 +428,9 @@ std::future<bool> Core::Renderer::Texture::loadHDRTexture(VkRenderData& renderDa
                 return false;
             }
 
-            textureData.name = texturePath;
+            textureData.name = textureFilename;
 
-            Logger::log(1, "HDR Texture '%s' loaded (%dx%d, %d channels)\n", texturePath.c_str(), width, height,
+            Logger::log(1, "HDR Texture '%s' loaded (%dx%d, %d channels)\n", textureFilename.c_str(), width, height,
                         channels);
             return true;
         });

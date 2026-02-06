@@ -850,7 +850,7 @@ bool Core::Renderer::VkRenderer::createSyncObjects()
 
 bool Core::Renderer::VkRenderer::loadPlaceholderTexture()
 {
-    const std::string textureFileName = "placeholder_sampler.png";
+    const std::string textureFileName = "assets/textures/placeholder_sampler.png";
     std::future<bool> textureLoadFuture =
         Texture::loadTexture(Engine::getInstance().getRenderData(),
                              Engine::getInstance().getRenderData().rdPlaceholderTexture, textureFileName);
@@ -1122,7 +1122,7 @@ bool Core::Renderer::VkRenderer::loadSkybox()
 {
     auto& renderData = Engine::getInstance().getRenderData();
 
-    std::future<bool> hdrTextureFuture = Texture::loadHDRTexture(renderData, renderData.rdHDRTexture, "hdr/skybox.hdr");
+    std::future<bool> hdrTextureFuture = Texture::loadHDRTexture(renderData, renderData.rdHDRTexture, "assets/textures/hdr/skybox.hdr");
     if (!hdrTextureFuture.get())
     {
         Logger::log(1, "%s error: could not load HDR texture", __FUNCTION__);

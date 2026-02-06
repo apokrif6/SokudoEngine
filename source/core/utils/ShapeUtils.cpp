@@ -5,6 +5,7 @@
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 #include <glm/gtc/type_ptr.hpp>
+#include <filesystem>
 
 int getBoneID(Core::Utils::PrimitiveData& primitiveData, const aiBone* bone)
 {
@@ -69,8 +70,7 @@ void processBones(Core::Utils::PrimitiveData& primitiveData, const aiMesh* mesh)
 }
 
 void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiScene* scene, const aiMaterial* material,
-                 const glm::mat4& transform, Core::Renderer::VkRenderData& renderData,
-                 std::vector<Core::Renderer::VkTextureData> loadedTextures)
+                 const glm::mat4& transform, Core::Renderer::VkRenderData& renderData, const std::string& baseDir)
 {
     Core::Utils::PrimitiveData primitiveData;
     Core::Renderer::MaterialInfo materialInfo = {};
@@ -96,7 +96,7 @@ void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiSc
         aiString path;
         if (material->GetTexture(textureType, 0, &path) == AI_SUCCESS)
         {
-            std::string textureFileName = path.C_Str();
+            std::string textureFileName = baseDir + path.C_Str();
             Core::Renderer::VkTextureData textureData;
             std::future<bool> textureLoadFuture =
                 Core::Renderer::Texture::loadTexture(renderData, textureData, textureFileName);
@@ -114,7 +114,7 @@ void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiSc
         aiString path;
         if (material->GetTexture(aiTextureType_NORMALS, 0, &path) == AI_SUCCESS)
         {
-            std::string textureFileName = path.C_Str();
+            std::string textureFileName = baseDir + path.C_Str();
             Core::Renderer::VkTextureData textureData;
             std::future<bool> textureLoadFuture = Core::Renderer::Texture::loadTexture(
                 renderData, textureData, textureFileName, VK_FORMAT_R8G8B8A8_UNORM);
@@ -137,7 +137,7 @@ void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiSc
         aiString path;
         if (material->GetTexture(textureType, 0, &path) == AI_SUCCESS)
         {
-            std::string textureFileName = path.C_Str();
+            std::string textureFileName = baseDir + path.C_Str();
             Core::Renderer::VkTextureData textureData;
             std::future<bool> textureLoadFuture = Core::Renderer::Texture::loadTexture(
                 renderData, textureData, textureFileName, VK_FORMAT_R8G8B8A8_UNORM);
@@ -160,7 +160,7 @@ void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiSc
         aiString path;
         if (material->GetTexture(textureType, 0, &path) == AI_SUCCESS)
         {
-            std::string textureFileName = path.C_Str();
+            std::string textureFileName = baseDir + path.C_Str();
             Core::Renderer::VkTextureData textureData;
             std::future<bool> textureLoadFuture = Core::Renderer::Texture::loadTexture(
                 renderData, textureData, textureFileName, VK_FORMAT_R8G8B8A8_UNORM);
@@ -178,7 +178,7 @@ void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiSc
         aiString path;
         if (material->GetTexture(aiTextureType_EMISSIVE, 0, &path) == AI_SUCCESS)
         {
-            std::string textureFileName = path.C_Str();
+            std::string textureFileName = baseDir + path.C_Str();
             Core::Renderer::VkTextureData textureData;
             std::future<bool> textureLoadFuture =
                 Core::Renderer::Texture::loadTexture(renderData, textureData, textureFileName);
@@ -312,7 +312,7 @@ void processMesh(Core::Utils::MeshData& meshData, const aiMesh* mesh, const aiSc
 }
 
 void processNode(Core::Utils::MeshData& meshData, aiNode* node, const aiScene* scene, const glm::mat4& parentTransform,
-                 Core::Renderer::VkRenderData& renderData, std::vector<Core::Renderer::VkTextureData> loadedTextures)
+                 Core::Renderer::VkRenderData& renderData, const std::string& baseDir)
 {
     glm::mat4 nodeTransform = glm::transpose(glm::make_mat4(&node->mTransformation.a1));
     glm::mat4 globalTransform = parentTransform * nodeTransform;
@@ -322,12 +322,12 @@ void processNode(Core::Utils::MeshData& meshData, aiNode* node, const aiScene* s
         const aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
         const aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
-        processMesh(meshData, mesh, scene, material, globalTransform, renderData, loadedTextures);
+        processMesh(meshData, mesh, scene, material, globalTransform, renderData, baseDir);
     }
 
     for (size_t i = 0; i < node->mNumChildren; ++i)
     {
-        processNode(meshData, node->mChildren[i], scene, globalTransform, renderData, loadedTextures);
+        processNode(meshData, node->mChildren[i], scene, globalTransform, renderData, baseDir);
     }
 }
 
@@ -345,9 +345,15 @@ Core::Utils::MeshData Core::Utils::loadMeshFromFile(const std::string& fileName,
         return {};
     }
 
+    const std::filesystem::path meshPath(fileName);
+    std::string baseDir = meshPath.parent_path().string();
+    if (!baseDir.empty())
+    {
+        baseDir += "/";
+    }
+
     MeshData mesh;
-    std::vector<Renderer::VkTextureData> loadedTextures;
-    processNode(mesh, scene->mRootNode, scene, glm::mat4(1.0f), renderData, loadedTextures);
+    processNode(mesh, scene->mRootNode, scene, glm::mat4(1.0f), renderData, baseDir);
     mesh.skeleton.setRootNode(Animations::AnimationsUtils::buildBoneHierarchy(scene->mRootNode));
     return mesh;
 }
