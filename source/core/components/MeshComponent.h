@@ -41,8 +41,6 @@ public:
 
     [[nodiscard]] Animations::Skeleton& getSkeleton() { return mSkeleton; }
 
-    void setupAnimations(const std::vector<Animations::AnimationClip>& animationClips) { mAnimations = animationClips; }
-
     [[nodiscard]] const std::vector<Animations::AnimationClip>& getAnimations() const { return mAnimations; }
 
     [[nodiscard]] bool hasAnimations() const { return !mAnimations.empty(); }

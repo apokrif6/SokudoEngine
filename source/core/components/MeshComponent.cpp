@@ -130,7 +130,7 @@ void Core::Component::MeshComponent::loadMesh(const std::string_view& filePath)
 
     mSkeleton = meshData.skeleton;
     mSkeleton.initDebug(renderData);
-    setupAnimations(meshData.animations);
+    mAnimations.insert(mAnimations.end(), meshData.animations.begin(), meshData.animations.end());
 
     std::vector<Animations::AnimationClip> animations;
     animations.reserve(mAnimationFiles.size());
@@ -138,6 +138,8 @@ void Core::Component::MeshComponent::loadMesh(const std::string_view& filePath)
     {
         animations.push_back(Animations::AnimationsUtils::loadAnimationFromFile(animPath));
     }
+
+    mAnimations.insert(mAnimations.end(), animations.begin(), animations.end());
 
     for (auto& primitive : meshData.primitives)
     {
