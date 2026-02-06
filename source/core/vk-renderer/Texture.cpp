@@ -233,9 +233,9 @@ std::future<bool> Core::Renderer::Texture::loadTexture(VkRenderData& renderData,
             texSamplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
             texSamplerInfo.magFilter = VK_FILTER_LINEAR;
             texSamplerInfo.minFilter = VK_FILTER_LINEAR;
-            texSamplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+            texSamplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
             texSamplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-            texSamplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+            texSamplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
             texSamplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
             texSamplerInfo.unnormalizedCoordinates = VK_FALSE;
             texSamplerInfo.compareEnable = VK_FALSE;
