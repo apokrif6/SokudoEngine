@@ -46,7 +46,7 @@ std::future<bool> Core::Renderer::Texture::loadTexture(VkRenderData& renderData,
             imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
 
             VmaAllocationCreateInfo imageAllocInfo{};
-            imageAllocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
+            imageAllocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
             if (vmaCreateImage(renderData.rdAllocator, &imageInfo, &imageAllocInfo, &textureData.image,
                                &textureData.imageAlloc, nullptr) != VK_SUCCESS)
