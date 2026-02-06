@@ -917,12 +917,10 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
         return false;
     }
 
-    const std::string modelFileName = "assets/damaged_helmet/DamagedHelmet.gltf";
-
-    Utils::MeshData primitiveMeshData = Utils::loadMeshFromFile(modelFileName, renderData);
-
     createDebugSkeletonPipelineLayout();
     createDebugSkeletonPipeline();
+
+    initPrimitiveGlobalSceneDescriptorSet();
 
     auto testObject = std::make_shared<Scene::SceneObject>("TestObject");
 
@@ -932,19 +930,11 @@ bool Core::Renderer::VkRenderer::loadMeshWithAssimp()
     auto rotatingComponent = testObject->addComponent<Component::RotatingComponent>();
     rotatingComponent->setRotationSpeed({0, 5, 0});
 
-    auto meshComponent = testObject->addComponent<Component::MeshComponent>(primitiveMeshData.skeleton);
-    for (auto& primitive : primitiveMeshData.primitives)
-    {
-        meshComponent->addPrimitive(primitive.vertices, primitive.indices, primitive.textures, renderData,
-                                    primitive.material, primitive.bones, primitive.materialDescriptorSet);
-    }
-    meshComponent->setupAnimations(primitiveMeshData.animations);
-    meshComponent->initDebugSkeleton(renderData);
-    meshComponent->setMeshFilePath(modelFileName);
+    auto meshComponent = testObject->addComponent<Component::MeshComponent>();
+    constexpr std::string_view modelFileName = "assets/damaged_helmet/DamagedHelmet.gltf";
+    meshComponent->loadMesh(modelFileName);
 
     Engine::getInstance().getSystem<Scene::Scene>()->addObject(testObject);
-
-    initPrimitiveGlobalSceneDescriptorSet();
 
     return true;
 }

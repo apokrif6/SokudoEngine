@@ -67,9 +67,7 @@ public:
 
     [[nodiscard]] Animations::AnimationClip& getCurrentAnimation() { return mAnimations[mCurrentAnimationIndex]; }
 
-    void initDebugSkeleton(Renderer::VkRenderData& renderData) { mSkeleton.initDebug(renderData); }
-
-    void setMeshFilePath(std::string path) { mMeshFilePath = std::move(path); }
+    void loadMesh(const std::string_view& filePath);
 
     std::string_view getMeshFilePath() const { return mMeshFilePath; }
 

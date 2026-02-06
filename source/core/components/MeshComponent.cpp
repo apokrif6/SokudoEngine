@@ -116,6 +116,38 @@ void Core::Component::MeshComponent::cleanup(Renderer::VkRenderData& renderData)
     mSkeleton.cleanup(renderData);
 }
 
+void Core::Component::MeshComponent::loadMesh(const std::string_view& filePath)
+{
+    auto& renderData = Engine::getInstance().getRenderData();
+    
+    cleanup(renderData); 
+    mPrimitives.clear();
+    mAnimations.clear();
+
+    mMeshFilePath = filePath;
+
+    const Utils::MeshData meshData = Utils::loadMeshFromFile(mMeshFilePath, renderData);
+
+    mSkeleton = meshData.skeleton;
+    mSkeleton.initDebug(renderData);
+    setupAnimations(meshData.animations);
+
+    std::vector<Animations::AnimationClip> animations;
+    animations.reserve(mAnimationFiles.size());
+    for (const auto& animPath : mAnimationFiles)
+    {
+        animations.push_back(Animations::AnimationsUtils::loadAnimationFromFile(animPath));
+    }
+
+    for (auto& primitive : meshData.primitives)
+    {
+        addPrimitive(primitive.vertices, primitive.indices, primitive.textures, renderData, primitive.material,
+                     primitive.bones, primitive.materialDescriptorSet);
+    }
+
+    Logger::log(1, "Reloaded mesh: %s", mMeshFilePath.c_str());
+}
+
 YAML::Node Core::Component::MeshComponent::serialize() const
 {
     YAML::Node node;
@@ -133,7 +165,9 @@ YAML::Node Core::Component::MeshComponent::serialize() const
 
 void Core::Component::MeshComponent::deserialize(const YAML::Node& node)
 {
-    mMeshFilePath = node["meshFile"].as<std::string>();
+    mShouldPlayAnimation = node["shouldPlayAnimation"].as<bool>();
+    mCurrentAnimationIndex = node["currentAnimationIndex"].as<uint16_t>();
+
     mAnimationFiles.clear();
     if (node["animations"])
     {
@@ -142,26 +176,7 @@ void Core::Component::MeshComponent::deserialize(const YAML::Node& node)
             mAnimationFiles.push_back(animNode.as<std::string>());
         }
     }
-    mShouldPlayAnimation = node["shouldPlayAnimation"].as<bool>();
-    mCurrentAnimationIndex = node["currentAnimationIndex"].as<uint16_t>();
 
-    // I don't like this here, it should be done somewhere else (maybe time for a resource manager hehe?)
-    auto& renderData = Engine::getInstance().getRenderData();
-    Utils::MeshData meshData = Utils::loadMeshFromFile(mMeshFilePath, renderData);
-
-    std::vector<Animations::AnimationClip> animations;
-    for (auto& animPath : mAnimationFiles)
-    {
-        animations.push_back(Animations::AnimationsUtils::loadAnimationFromFile(animPath));
-    }
-    meshData.animations = animations;
-    mSkeleton = meshData.skeleton;
-    setupAnimations(meshData.animations);
-    initDebugSkeleton(renderData);
-
-    for (auto& primitive : meshData.primitives)
-    {
-        addPrimitive(primitive.vertices, primitive.indices, primitive.textures, renderData, primitive.material,
-                     primitive.bones, primitive.materialDescriptorSet);
-    }
+    const auto path = node["meshFile"].as<std::string>();
+    loadMesh(path);
 }
