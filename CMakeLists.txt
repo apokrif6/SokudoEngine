@@ -27,6 +27,7 @@ find_package(imgui REQUIRED)
 find_package(imguizmo CONFIG REQUIRED)
 find_package(unofficial-spirv-reflect REQUIRED)
 find_package(yaml-cpp REQUIRED)
+find_package(nfd REQUIRED)
 
 file(GLOB GLSL_SOURCE_FILES
         shaders/*.frag
@@ -73,6 +74,7 @@ set(DEPENDENCIES
         imguizmo::imguizmo
         unofficial::spirv-reflect
         yaml-cpp
+        nfd::nfd
 )
 
 if (NOT MSVC)

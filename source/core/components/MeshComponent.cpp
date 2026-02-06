@@ -119,8 +119,8 @@ void Core::Component::MeshComponent::cleanup(Renderer::VkRenderData& renderData)
 void Core::Component::MeshComponent::loadMesh(const std::string_view& filePath)
 {
     auto& renderData = Engine::getInstance().getRenderData();
-    
-    cleanup(renderData); 
+
+    cleanup(renderData);
     mPrimitives.clear();
     mAnimations.clear();
 
