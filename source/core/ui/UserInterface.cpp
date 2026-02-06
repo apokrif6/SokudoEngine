@@ -293,9 +293,9 @@ void Core::Renderer::UserInterface::setupImGuiStyle() const
     colors[ImGuiCol_SliderGrab] = violetDark;
     colors[ImGuiCol_SliderGrabActive] = violetMain;
 
-    colors[ImGuiCol_Button] = inputBackground;
-    colors[ImGuiCol_ButtonHovered] = violetDark;
-    colors[ImGuiCol_ButtonActive] = violetMain;
+    colors[ImGuiCol_Button] = violetDark;
+    colors[ImGuiCol_ButtonHovered] = violetMain;
+    colors[ImGuiCol_ButtonActive] = violetNeon;
 
     colors[ImGuiCol_Header] = violetDark;
     colors[ImGuiCol_HeaderHovered] = violetMain;
