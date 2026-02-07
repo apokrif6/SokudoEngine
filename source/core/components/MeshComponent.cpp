@@ -6,6 +6,7 @@
 #include "core/engine/Engine.h"
 #include "core/animations/AnimationsUtils.h"
 #include "core/components/TransformComponent.h"
+#include "core/utils/FileUtils.h"
 
 void buildDebugSkeletonLines(const Core::Animations::Skeleton& skeleton, const Core::Animations::BonesInfo& bonesInfo,
                              std::vector<Core::Renderer::Debug::DebugBone>& debugBones,
@@ -120,6 +121,12 @@ void Core::Component::MeshComponent::cleanup(Renderer::VkRenderData& renderData)
     }
 
     mSkeleton.cleanup(renderData);
+}
+
+void Core::Component::MeshComponent::setSourceMesh(const std::string_view& path, uint32_t primitiveIndex)
+{
+    mMeshFilePath = Utils::FileUtils::getRelativePath(path);
+    mPrimitiveIndex = primitiveIndex;
 }
 
 YAML::Node Core::Component::MeshComponent::serialize() const

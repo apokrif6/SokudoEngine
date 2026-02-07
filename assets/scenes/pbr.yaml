@@ -1,5 +1,5 @@
 objects:
-  - name: TestObject
+  - name: node_damagedHelmet_-6514
     components:
       - type: TransformComponent
         data:
@@ -9,21 +9,23 @@ objects:
               - 0
               - 0
             rotation:
-              - 0
-              - 30.3999023
+              - 90.0000076
+              - -0
               - 0
             scale:
               - 1
-              - 1
-              - 1
+              - 1.00000012
+              - 1.00000012
+      - type: MeshComponent
+        data:
+          meshFile: assets/damaged_helmet/DamagedHelmet.gltf
+          nodeName: ""
+          primitiveIndex: 0
+          shouldPlayAnimation: false
+          currentAnimationIndex: 0
       - type: RotatingComponent
         data:
           rotationSpeed:
             - 0
-            - 5
+            - 30
             - 0
-      - type: MeshComponent
-        data:
-          meshFile: assets/damaged_helmet/DamagedHelmet.gltf
-          shouldPlayAnimation: false
-          currentAnimationIndex: 0

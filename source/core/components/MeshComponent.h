@@ -61,11 +61,7 @@ public:
         }
     }
 
-    void setSourceMesh(const std::string_view& path, uint32_t primitiveIndex)
-    {
-        mMeshFilePath = path;
-        mPrimitiveIndex = primitiveIndex;
-    }
+    void setSourceMesh(const std::string_view& path, uint32_t primitiveIndex);
 
     [[nodiscard]] uint16_t getCurrentAnimationIndex() const { return mCurrentAnimationIndex; }
 
