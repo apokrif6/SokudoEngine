@@ -21,25 +21,23 @@ class TransformInspectorUIWindow : public UIWindow<TransformInspectorUIWindow>
             return true;
         }
 
-        auto transform = transformComponent->getTransform();
-
         ImGui::Text("Selected: %s", selectedObject->getName().c_str());
         ImGui::Separator();
 
-        glm::vec3 position = transform.getPosition();
+        glm::vec3 position = transformComponent->getPosition();
         if (ImGui::DragFloat3("Position", &position.x, 0.1f))
         {
-            transform.setPosition(position);
+            transformComponent->setPosition(position);
         }
-        glm::vec3 rotation = transform.getRotation();
+        glm::vec3 rotation = transformComponent->getRotation();
         if (ImGui::DragFloat3("Rotation", &rotation.x, 0.1f))
         {
-            transform.setRotation(rotation);
+            transformComponent->setRotation(rotation);
         }
-        glm::vec3 scale = transform.getScale();
+        glm::vec3 scale = transformComponent->getScale();
         if (ImGui::DragFloat3("Scale", &scale.x, 0.1f))
         {
-            transform.setScale(scale);
+            transformComponent->setScale(scale);
         }
 
         return true;

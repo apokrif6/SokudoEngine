@@ -24,10 +24,9 @@ void Core::Component::RotatingComponent::update(Renderer::VkRenderData& renderDa
 
     if (mOwnerTransformComponent)
     {
-        const glm::vec3 newRotation =
-            mOwnerTransformComponent->getTransform().getRotation() + mRotationSpeed * deltaTime;
+        const glm::vec3 newRotation = mOwnerTransformComponent->getRotation() + mRotationSpeed * deltaTime;
 
-        mOwnerTransformComponent->getTransform().setRotation(newRotation);
+        mOwnerTransformComponent->setRotation(newRotation);
     }
 }
 

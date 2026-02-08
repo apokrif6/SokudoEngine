@@ -20,33 +20,22 @@ public:
 
     void setRotation(const glm::quat& rotation);
 
+    void setRotation(const glm::vec3& rotation);
+
     void setScale(const glm::vec3& scale);
 
     void setWorldDirty();
 
     [[nodiscard]] glm::mat4 getWorldMatrix();
 
-    [[nodiscard]] Scene::Transform getTransform() const { return transform; }
+    [[nodiscard]] const glm::vec3& getPosition() const { return transform.getPosition(); }
+
+    [[nodiscard]] const glm::vec3& getRotation() const { return transform.getRotation(); }
+
+    [[nodiscard]] const glm::vec3& getScale() const { return transform.getScale(); }
 
 private:
-    void updateWorldMatrix()
-    {
-        const glm::mat4 local = transform.getMatrix();
-
-        if (auto* parent = getOwner()->getParent())
-        {
-            if (auto* parentTransformComponent = parent->getComponent<TransformComponent>())
-            {
-                mCachedWorldMatrix = parentTransformComponent->getWorldMatrix() * local;
-            }
-        }
-        else
-        {
-            mCachedWorldMatrix = local;
-        }
-
-        bIsWorldDirty = false;
-    }
+    void updateWorldMatrix();
 
     Scene::Transform transform;
     glm::mat4 mCachedWorldMatrix{1.0f};

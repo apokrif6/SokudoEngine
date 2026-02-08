@@ -55,6 +55,12 @@ void Core::Component::TransformComponent::setRotation(const glm::quat& rotation)
     setWorldDirty();
 }
 
+void Core::Component::TransformComponent::setRotation(const glm::vec3& rotation)
+{
+    transform.setRotation(rotation);
+    setWorldDirty();
+}
+
 void Core::Component::TransformComponent::setScale(const glm::vec3& scale)
 {
     transform.setScale(scale);
@@ -86,4 +92,23 @@ glm::mat4 Core::Component::TransformComponent::getWorldMatrix()
         updateWorldMatrix();
     }
     return mCachedWorldMatrix;
+}
+
+void Core::Component::TransformComponent::updateWorldMatrix()
+{
+    const glm::mat4 local = transform.getMatrix();
+
+    if (const auto* parent = getOwner()->getParent())
+    {
+        if (auto* parentTransformComponent = parent->getComponent<TransformComponent>())
+        {
+            mCachedWorldMatrix = parentTransformComponent->getWorldMatrix() * local;
+        }
+    }
+    else
+    {
+        mCachedWorldMatrix = local;
+    }
+
+    bIsWorldDirty = false;
 }

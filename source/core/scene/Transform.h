@@ -4,10 +4,39 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 
+namespace Core::Component
+{
+class TransformComponent;
+}
+
 namespace Core::Scene
 {
 struct Transform
 {
+    friend Component::TransformComponent;
+
+    [[nodiscard]] const glm::vec3& getPosition() const { return position; }
+
+    [[nodiscard]] const glm::vec3& getRotation() const { return rotation; }
+
+    [[nodiscard]] const glm::vec3& getScale() const { return scale; }
+
+    [[nodiscard]] const glm::mat4& getMatrix() const
+    {
+        if (bIsDirty)
+        {
+            const glm::mat4 translate = glm::translate(glm::mat4(1.0f), position);
+            const glm::mat4 rotate = glm::toMat4(glm::quat(glm::radians(rotation)));
+            const glm::mat4 scaling = glm::scale(glm::mat4(1.0f), scale);
+
+            cachedMatrix = translate * rotate * scaling;
+            bIsDirty = false;
+        }
+
+        return cachedMatrix;
+    }
+
+private:
     void setPosition(const glm::vec3& inPosition)
     {
         position = inPosition;
@@ -32,28 +61,6 @@ struct Transform
         bIsDirty = true;
     }
 
-    [[nodiscard]] const glm::vec3& getPosition() const { return position; }
-
-    [[nodiscard]] const glm::vec3& getRotation() const { return rotation; }
-
-    [[nodiscard]] const glm::vec3& getScale() const { return scale; }
-
-    [[nodiscard]] const glm::mat4& getMatrix() const
-    {
-        if (bIsDirty)
-        {
-            const glm::mat4 translate = glm::translate(glm::mat4(1.0f), position);
-            const glm::mat4 rotate = glm::toMat4(glm::quat(glm::radians(rotation)));
-            const glm::mat4 scaling = glm::scale(glm::mat4(1.0f), scale);
-
-            cachedMatrix = translate * rotate * scaling;
-            bIsDirty = false;
-        }
-
-        return cachedMatrix;
-    }
-
-private:
     glm::vec3 position{0.f};
     glm::vec3 rotation{0.f};
     glm::vec3 scale{1.f};
