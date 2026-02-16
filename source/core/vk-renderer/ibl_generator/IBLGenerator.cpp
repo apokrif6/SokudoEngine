@@ -77,7 +77,7 @@ bool Core::Renderer::IBLGenerator::createDescriptorForHDR(VkRenderData& renderDa
         Logger::log(1, "%s error: failed to allocate descriptor set", __FUNCTION__);
         return false;
     }
-    
+
     constexpr std::string_view descriptorSetObjectName = "Descriptor Set IBL HDR texture";
     vmaSetAllocationName(renderData.rdAllocator, renderData.rdHDRTexture.imageAlloc, descriptorSetObjectName.data());
     Debug::setObjectName(renderData.rdVkbDevice.device,
@@ -341,7 +341,7 @@ bool Core::Renderer::IBLGenerator::convertHDRToCubemap(VkRenderData& renderData,
     }
 
     const VkDescriptorSetLayout layout =
-       renderData.rdDescriptorLayoutCache->getLayout(DescriptorLayoutType::SingleTexture);
+        renderData.rdDescriptorLayoutCache->getLayout(DescriptorLayoutType::SingleTexture);
 
     if (!renderData.rdDescriptorAllocator->allocate(layout, cubemapData.descriptorSet))
     {
@@ -869,7 +869,7 @@ bool Core::Renderer::IBLGenerator::convertCubemapToPrefilteredMap(VkRenderData& 
     }
 
     const VkDescriptorSetLayout layout =
-         renderData.rdDescriptorLayoutCache->getLayout(DescriptorLayoutType::SingleTexture);
+        renderData.rdDescriptorLayoutCache->getLayout(DescriptorLayoutType::SingleTexture);
 
     if (!renderData.rdDescriptorAllocator->allocate(layout, prefilteredMapData.descriptorSet))
     {
@@ -1024,7 +1024,7 @@ bool Core::Renderer::IBLGenerator::generateBRDFLUT(VkRenderData& renderData, VkT
     }
 
     const VkDescriptorSetLayout layout =
-           renderData.rdDescriptorLayoutCache->getLayout(DescriptorLayoutType::SingleTexture);
+        renderData.rdDescriptorLayoutCache->getLayout(DescriptorLayoutType::SingleTexture);
 
     if (!renderData.rdDescriptorAllocator->allocate(layout, brdfLutData.descriptorSet))
     {

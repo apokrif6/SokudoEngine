@@ -26,7 +26,7 @@ bool Core::Renderer::VertexBuffer::init(VkRenderData& renderData, VkVertexBuffer
     vertexBufferData.rdName = "Vertex Buffer " + name;
     vmaSetAllocationName(renderData.rdAllocator, vertexBufferData.rdVertexBufferAlloc, vertexBufferData.rdName.c_str());
 
-    Debug::setObjectName(renderData.rdVkbDevice.device, (uint64_t)vertexBufferData.rdVertexBuffer,
+    Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(vertexBufferData.rdVertexBuffer),
                          VK_OBJECT_TYPE_BUFFER, vertexBufferData.rdName);
 
     VkBufferCreateInfo stagingBufferInfo{};

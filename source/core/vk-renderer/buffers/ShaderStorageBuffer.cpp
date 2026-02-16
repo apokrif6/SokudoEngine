@@ -27,27 +27,10 @@ bool Core::Renderer::ShaderStorageBuffer::init(VkRenderData& renderData, VkShade
     SSBOData.rdName = "Shader Storage Buffer " + name;
     vmaSetAllocationName(renderData.rdAllocator, SSBOData.rdShaderStorageBufferAlloc, SSBOData.rdName.c_str());
 
-    Debug::setObjectName(renderData.rdVkbDevice.device, (uint64_t)SSBOData.rdShaderStorageBuffer, VK_OBJECT_TYPE_BUFFER,
+    Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(SSBOData.rdShaderStorageBuffer), VK_OBJECT_TYPE_BUFFER,
                          SSBOData.rdName);
 
-    VkDescriptorSetLayoutBinding ssboBind{};
-    ssboBind.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-    ssboBind.binding = 0;
-    ssboBind.descriptorCount = 1;
-    ssboBind.pImmutableSamplers = nullptr;
-    ssboBind.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-
-    VkDescriptorSetLayoutCreateInfo ssboCreateInfo{};
-    ssboCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    ssboCreateInfo.bindingCount = 1;
-    ssboCreateInfo.pBindings = &ssboBind;
-
-    if (vkCreateDescriptorSetLayout(renderData.rdVkbDevice.device, &ssboCreateInfo, nullptr,
-                                    &SSBOData.rdSSBODescriptorLayout) != VK_SUCCESS)
-    {
-        Logger::log(1, "%s error: could not create SSBO descriptor set layout\n", __FUNCTION__);
-        return false;
-    }
+    SSBOData.rdSSBODescriptorLayout = renderData.rdDescriptorLayoutCache->getLayout(DescriptorLayoutType::SingleSSBO);
 
     if (!renderData.rdDescriptorAllocator->allocate(SSBOData.rdSSBODescriptorLayout, SSBOData.rdSSBODescriptorSet))
     {
