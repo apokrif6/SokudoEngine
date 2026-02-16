@@ -49,31 +49,7 @@ bool Core::Renderer::ShaderStorageBuffer::init(VkRenderData& renderData, VkShade
         return false;
     }
 
-    VkDescriptorPoolSize poolSize{};
-    poolSize.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-    poolSize.descriptorCount = 1;
-
-    VkDescriptorPoolCreateInfo descriptorPool{};
-    descriptorPool.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    descriptorPool.poolSizeCount = 1;
-    descriptorPool.pPoolSizes = &poolSize;
-    descriptorPool.maxSets = 1;
-
-    if (vkCreateDescriptorPool(renderData.rdVkbDevice.device, &descriptorPool, nullptr,
-                               &SSBOData.rdSSBODescriptorPool) != VK_SUCCESS)
-    {
-        Logger::log(1, "%s error: could not create ssbo descriptor pool\n", __FUNCTION__);
-        return false;
-    }
-
-    VkDescriptorSetAllocateInfo descriptorAllocateInfo{};
-    descriptorAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    descriptorAllocateInfo.descriptorPool = SSBOData.rdSSBODescriptorPool;
-    descriptorAllocateInfo.descriptorSetCount = 1;
-    descriptorAllocateInfo.pSetLayouts = &SSBOData.rdSSBODescriptorLayout;
-
-    if (vkAllocateDescriptorSets(renderData.rdVkbDevice.device, &descriptorAllocateInfo,
-                                 &SSBOData.rdSSBODescriptorSet) != VK_SUCCESS)
+    if (!renderData.rdDescriptorAllocator->allocate(SSBOData.rdSSBODescriptorLayout, SSBOData.rdSSBODescriptorSet))
     {
         Logger::log(1, "%s error: could not allocate SSBO descriptor set\n", __FUNCTION__);
         return false;
@@ -117,7 +93,6 @@ void Core::Renderer::ShaderStorageBuffer::uploadData(VkRenderData& renderData, V
 
 void Core::Renderer::ShaderStorageBuffer::cleanup(VkRenderData& renderData, VkShaderStorageBufferData& SSBOData)
 {
-    vkDestroyDescriptorPool(renderData.rdVkbDevice.device, SSBOData.rdSSBODescriptorPool, nullptr);
     vkDestroyDescriptorSetLayout(renderData.rdVkbDevice.device, SSBOData.rdSSBODescriptorLayout, nullptr);
     vmaDestroyBuffer(renderData.rdAllocator, SSBOData.rdShaderStorageBuffer, SSBOData.rdShaderStorageBufferAlloc);
 }

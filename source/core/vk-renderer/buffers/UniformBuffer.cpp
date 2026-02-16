@@ -32,29 +32,7 @@ bool Core::Renderer::UniformBuffer::init(VkRenderData& renderData, VkUniformBuff
     Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(UBOData.rdUniformBuffer),
                          VK_OBJECT_TYPE_BUFFER, UBOData.rdName);
 
-    std::vector<VkDescriptorPoolSize> poolSizes = {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}};
-
-    VkDescriptorPoolCreateInfo descriptorPool{};
-    descriptorPool.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    descriptorPool.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
-    descriptorPool.pPoolSizes = poolSizes.data();
-    descriptorPool.maxSets = 1;
-
-    if (vkCreateDescriptorPool(renderData.rdVkbDevice.device, &descriptorPool, nullptr, &UBOData.rdUBODescriptorPool) !=
-        VK_SUCCESS)
-    {
-        Logger::log(1, "%s error: could not create UBO descriptor pool\n", __FUNCTION__);
-        return false;
-    }
-
-    VkDescriptorSetAllocateInfo descriptorAllocateInfo{};
-    descriptorAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    descriptorAllocateInfo.descriptorPool = UBOData.rdUBODescriptorPool;
-    descriptorAllocateInfo.descriptorSetCount = 1;
-    descriptorAllocateInfo.pSetLayouts = &UBOData.rdUBODescriptorLayout;
-
-    if (vkAllocateDescriptorSets(renderData.rdVkbDevice.device, &descriptorAllocateInfo, &UBOData.rdUBODescriptorSet) !=
-        VK_SUCCESS)
+    if (!renderData.rdDescriptorAllocator->allocate(UBOData.rdUBODescriptorLayout, UBOData.rdUBODescriptorSet))
     {
         Logger::log(1, "%s error: could not allocate UBO descriptor set\n", __FUNCTION__);
         return false;
@@ -84,6 +62,5 @@ bool Core::Renderer::UniformBuffer::init(VkRenderData& renderData, VkUniformBuff
 
 void Core::Renderer::UniformBuffer::cleanup(VkRenderData& renderData, VkUniformBufferData& UBOData)
 {
-    vkDestroyDescriptorPool(renderData.rdVkbDevice.device, UBOData.rdUBODescriptorPool, nullptr);
     vmaDestroyBuffer(renderData.rdAllocator, UBOData.rdUniformBuffer, UBOData.rdUniformBufferAlloc);
 }

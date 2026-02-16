@@ -4,6 +4,8 @@
 #include "VkBootstrap.h"
 #include <glm/glm.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
+#include "descriptors/DescriptorAllocator.h"
+
 #include <glm/gtx/compatibility.hpp>
 #include <GLFW/glfw3.h>
 #include <array>
@@ -130,7 +132,6 @@ struct VkUniformBufferData
     size_t rdUniformBufferSize = 0;
     VkBuffer rdUniformBuffer = VK_NULL_HANDLE;
     VmaAllocation rdUniformBufferAlloc = nullptr;
-    VkDescriptorPool rdUBODescriptorPool = VK_NULL_HANDLE;
     VkDescriptorSetLayout rdUBODescriptorLayout = VK_NULL_HANDLE;
     VkDescriptorSet rdUBODescriptorSet = VK_NULL_HANDLE;
     std::string rdName;
@@ -141,7 +142,6 @@ struct VkShaderStorageBufferData
     size_t rdShaderStorageBufferSize = 0;
     VkBuffer rdShaderStorageBuffer = VK_NULL_HANDLE;
     VmaAllocation rdShaderStorageBufferAlloc = nullptr;
-    VkDescriptorPool rdSSBODescriptorPool = VK_NULL_HANDLE;
     VkDescriptorSetLayout rdSSBODescriptorLayout = VK_NULL_HANDLE;
     VkDescriptorSet rdSSBODescriptorSet = VK_NULL_HANDLE;
     std::string rdName;
@@ -287,6 +287,7 @@ struct VkRenderData
     VkFormat rdDepthFormat;
     VmaAllocation rdDepthImageAlloc = VK_NULL_HANDLE;
 
+    std::unique_ptr<DescriptorAllocator> rdDescriptorAllocator;
     std::unique_ptr<DescriptorLayoutCache> rdDescriptorLayoutCache{};
 
     VkRenderPass rdRenderpass = VK_NULL_HANDLE;
@@ -332,8 +333,6 @@ struct VkRenderData
     IBLData rdIBLData{};
 
     VkDescriptorPool rdImguiDescriptorPool;
-
-    VkDescriptorPool rdMaterialDescriptorPool;
 
 #pragma region DummyDescriptors
     VkUniformBufferData rdDummyBonesUBO{};

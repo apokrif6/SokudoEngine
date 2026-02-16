@@ -69,43 +69,20 @@ bool Core::Renderer::IBLGenerator::generateIBL(VkRenderData& renderData)
 
 bool Core::Renderer::IBLGenerator::createDescriptorForHDR(VkRenderData& renderData)
 {
-    VkDescriptorPoolSize poolSize{};
-    poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    poolSize.descriptorCount = 1;
-
-    VkDescriptorPoolCreateInfo poolInfo{};
-    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    poolInfo.poolSizeCount = 1;
-    poolInfo.pPoolSizes = &poolSize;
-    poolInfo.maxSets = 1;
-
-    if (vkCreateDescriptorPool(renderData.rdVkbDevice.device, &poolInfo, nullptr,
-                               &renderData.rdHDRTexture.descriptorPool) != VK_SUCCESS)
-    {
-        Logger::log(1, "%s error: failed to create descriptor pool", __FUNCTION__);
-        return false;
-    }
-
-    constexpr std::string_view descriptorPoolObjectName = "Descriptor Pool IBL HDR texture";
-    vmaSetAllocationName(renderData.rdAllocator, renderData.rdHDRTexture.imageAlloc, descriptorPoolObjectName.data());
-    Debug::setObjectName(renderData.rdVkbDevice.device,
-                         reinterpret_cast<uint64_t>(renderData.rdHDRTexture.descriptorPool),
-                         VK_OBJECT_TYPE_DESCRIPTOR_POOL, descriptorPoolObjectName.data());
-
-    VkDescriptorSetAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    allocInfo.descriptorPool = renderData.rdHDRTexture.descriptorPool;
-    allocInfo.descriptorSetCount = 1;
     const VkDescriptorSetLayout layout =
         renderData.rdDescriptorLayoutCache->getLayout(DescriptorLayoutType::SingleTexture);
-    allocInfo.pSetLayouts = &layout;
 
-    if (vkAllocateDescriptorSets(renderData.rdVkbDevice.device, &allocInfo, &renderData.rdHDRTexture.descriptorSet) !=
-        VK_SUCCESS)
+    if (!renderData.rdDescriptorAllocator->allocate(layout, renderData.rdHDRTexture.descriptorSet))
     {
         Logger::log(1, "%s error: failed to allocate descriptor set", __FUNCTION__);
         return false;
     }
+    
+    constexpr std::string_view descriptorSetObjectName = "Descriptor Set IBL HDR texture";
+    vmaSetAllocationName(renderData.rdAllocator, renderData.rdHDRTexture.imageAlloc, descriptorSetObjectName.data());
+    Debug::setObjectName(renderData.rdVkbDevice.device,
+                         reinterpret_cast<uint64_t>(renderData.rdHDRTexture.descriptorSet),
+                         VK_OBJECT_TYPE_DESCRIPTOR_SET, descriptorSetObjectName.data());
 
     VkDescriptorImageInfo imageInfo{};
     imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -363,37 +340,19 @@ bool Core::Renderer::IBLGenerator::convertHDRToCubemap(VkRenderData& renderData,
         return false;
     }
 
-    VkDescriptorPoolSize poolSize{};
-    poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    poolSize.descriptorCount = 1;
+    const VkDescriptorSetLayout layout =
+       renderData.rdDescriptorLayoutCache->getLayout(DescriptorLayoutType::SingleTexture);
 
-    VkDescriptorPoolCreateInfo poolInfo{};
-    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    poolInfo.poolSizeCount = 1;
-    poolInfo.pPoolSizes = &poolSize;
-    poolInfo.maxSets = 1;
-
-    if (vkCreateDescriptorPool(renderData.rdVkbDevice.device, &poolInfo, nullptr, &cubemapData.descriptorPool) !=
-        VK_SUCCESS)
+    if (!renderData.rdDescriptorAllocator->allocate(layout, cubemapData.descriptorSet))
     {
-        Logger::log(1, "%s error: failed to create descriptor pool", __FUNCTION__);
+        Logger::log(1, "%s error: failed to allocate descriptor set for Cubemap", __FUNCTION__);
         return false;
     }
 
-    constexpr std::string_view descriptorPoolObjectName = "Descriptor Pool IBL Cubemap Data";
-    vmaSetAllocationName(renderData.rdAllocator, cubemapData.imageAlloc, descriptorPoolObjectName.data());
-    Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(cubemapData.descriptorPool),
-                         VK_OBJECT_TYPE_DESCRIPTOR_POOL, descriptorPoolObjectName.data());
-
-    VkDescriptorSetAllocateInfo allocInfoDS{};
-    allocInfoDS.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    allocInfoDS.descriptorPool = cubemapData.descriptorPool;
-    allocInfoDS.descriptorSetCount = 1;
-    const VkDescriptorSetLayout layout =
-        renderData.rdDescriptorLayoutCache->getLayout(DescriptorLayoutType::SingleTexture);
-    allocInfoDS.pSetLayouts = &layout;
-
-    vkAllocateDescriptorSets(renderData.rdVkbDevice.device, &allocInfoDS, &cubemapData.descriptorSet);
+    constexpr std::string_view descriptorSetObjectName = "Descriptor Set IBL Cubemap Data";
+    vmaSetAllocationName(renderData.rdAllocator, cubemapData.imageAlloc, descriptorSetObjectName.data());
+    Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(cubemapData.descriptorSet),
+                         VK_OBJECT_TYPE_DESCRIPTOR_SET, descriptorSetObjectName.data());
 
     VkDescriptorImageInfo imageInfoDS{};
     imageInfoDS.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -627,37 +586,19 @@ bool Core::Renderer::IBLGenerator::convertCubemapToIrradiance(VkRenderData& rend
         return false;
     }
 
-    VkDescriptorPoolSize poolSize{};
-    poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    poolSize.descriptorCount = 1;
+    const VkDescriptorSetLayout layout =
+        renderData.rdDescriptorLayoutCache->getLayout(DescriptorLayoutType::SingleTexture);
 
-    VkDescriptorPoolCreateInfo poolInfo{};
-    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    poolInfo.poolSizeCount = 1;
-    poolInfo.pPoolSizes = &poolSize;
-    poolInfo.maxSets = 1;
-
-    if (vkCreateDescriptorPool(renderData.rdVkbDevice.device, &poolInfo, nullptr, &irradianceData.descriptorPool) !=
-        VK_SUCCESS)
+    if (!renderData.rdDescriptorAllocator->allocate(layout, irradianceData.descriptorSet))
     {
-        Logger::log(1, "%s error: failed to create descriptor pool", __FUNCTION__);
+        Logger::log(1, "%s error: failed to allocate descriptor set for Irradiance map", __FUNCTION__);
         return false;
     }
 
-    constexpr std::string_view descriptorPoolObjectName = "Descriptor Pool IBL Irradiance Data";
-    vmaSetAllocationName(renderData.rdAllocator, irradianceData.imageAlloc, descriptorPoolObjectName.data());
-    Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(irradianceData.descriptorPool),
-                         VK_OBJECT_TYPE_DESCRIPTOR_POOL, descriptorPoolObjectName.data());
-
-    VkDescriptorSetAllocateInfo allocInfoDS{};
-    allocInfoDS.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    allocInfoDS.descriptorPool = irradianceData.descriptorPool;
-    allocInfoDS.descriptorSetCount = 1;
-    const VkDescriptorSetLayout layout =
-        renderData.rdDescriptorLayoutCache->getLayout(DescriptorLayoutType::SingleTexture);
-    allocInfoDS.pSetLayouts = &layout;
-
-    vkAllocateDescriptorSets(renderData.rdVkbDevice.device, &allocInfoDS, &irradianceData.descriptorSet);
+    constexpr std::string_view descriptorSetObjectName = "Descriptor Set IBL Irradiance Data";
+    vmaSetAllocationName(renderData.rdAllocator, irradianceData.imageAlloc, descriptorSetObjectName.data());
+    Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(irradianceData.descriptorSet),
+                         VK_OBJECT_TYPE_DESCRIPTOR_SET, descriptorSetObjectName.data());
 
     VkDescriptorImageInfo imageInfoDS{};
     imageInfoDS.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -927,37 +868,19 @@ bool Core::Renderer::IBLGenerator::convertCubemapToPrefilteredMap(VkRenderData& 
         return false;
     }
 
-    VkDescriptorPoolSize poolSize{};
-    poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    poolSize.descriptorCount = 1;
+    const VkDescriptorSetLayout layout =
+         renderData.rdDescriptorLayoutCache->getLayout(DescriptorLayoutType::SingleTexture);
 
-    VkDescriptorPoolCreateInfo poolInfo{};
-    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    poolInfo.poolSizeCount = 1;
-    poolInfo.pPoolSizes = &poolSize;
-    poolInfo.maxSets = 1;
-
-    if (vkCreateDescriptorPool(renderData.rdVkbDevice.device, &poolInfo, nullptr, &prefilteredMapData.descriptorPool) !=
-        VK_SUCCESS)
+    if (!renderData.rdDescriptorAllocator->allocate(layout, prefilteredMapData.descriptorSet))
     {
-        Logger::log(1, "%s error: failed to create descriptor pool", __FUNCTION__);
+        Logger::log(1, "%s error: failed to allocate descriptor set for Prefiltered Map", __FUNCTION__);
         return false;
     }
 
-    constexpr std::string_view descriptorPoolObjectName = "Descriptor Pool IBL PrefilteredMap Data";
-    vmaSetAllocationName(renderData.rdAllocator, prefilteredMapData.imageAlloc, descriptorPoolObjectName.data());
-    Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(prefilteredMapData.descriptorPool),
-                         VK_OBJECT_TYPE_DESCRIPTOR_POOL, descriptorPoolObjectName.data());
-
-    VkDescriptorSetAllocateInfo allocInfoDS{};
-    allocInfoDS.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    allocInfoDS.descriptorPool = prefilteredMapData.descriptorPool;
-    allocInfoDS.descriptorSetCount = 1;
-    const VkDescriptorSetLayout layout =
-        renderData.rdDescriptorLayoutCache->getLayout(DescriptorLayoutType::SingleTexture);
-    allocInfoDS.pSetLayouts = &layout;
-
-    vkAllocateDescriptorSets(renderData.rdVkbDevice.device, &allocInfoDS, &prefilteredMapData.descriptorSet);
+    constexpr std::string_view descriptorSetObjectName = "Descriptor Set IBL PrefilteredMap Data";
+    vmaSetAllocationName(renderData.rdAllocator, prefilteredMapData.imageAlloc, descriptorSetObjectName.data());
+    Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(prefilteredMapData.descriptorSet),
+                         VK_OBJECT_TYPE_DESCRIPTOR_SET, descriptorSetObjectName.data());
 
     VkDescriptorImageInfo imageInfoDS{};
     imageInfoDS.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -1100,37 +1023,19 @@ bool Core::Renderer::IBLGenerator::generateBRDFLUT(VkRenderData& renderData, VkT
         return false;
     }
 
-    VkDescriptorPoolSize poolSize{};
-    poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    poolSize.descriptorCount = 1;
+    const VkDescriptorSetLayout layout =
+           renderData.rdDescriptorLayoutCache->getLayout(DescriptorLayoutType::SingleTexture);
 
-    VkDescriptorPoolCreateInfo poolInfo{};
-    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    poolInfo.poolSizeCount = 1;
-    poolInfo.pPoolSizes = &poolSize;
-    poolInfo.maxSets = 1;
-
-    if (vkCreateDescriptorPool(renderData.rdVkbDevice.device, &poolInfo, nullptr, &brdfLutData.descriptorPool) !=
-        VK_SUCCESS)
+    if (!renderData.rdDescriptorAllocator->allocate(layout, brdfLutData.descriptorSet))
     {
-        Logger::log(1, "%s error: failed to create descriptor pool", __FUNCTION__);
+        Logger::log(1, "%s error: failed to allocate descriptor set for BRDF LUT", __FUNCTION__);
         return false;
     }
 
-    constexpr std::string_view descriptorPoolObjectName = "Descriptor Pool IBL BRDF LUT Data";
-    vmaSetAllocationName(renderData.rdAllocator, brdfLutData.imageAlloc, descriptorPoolObjectName.data());
-    Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(brdfLutData.descriptorPool),
-                         VK_OBJECT_TYPE_DESCRIPTOR_POOL, descriptorPoolObjectName.data());
-
-    VkDescriptorSetAllocateInfo allocInfoDS{};
-    allocInfoDS.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    allocInfoDS.descriptorPool = brdfLutData.descriptorPool;
-    allocInfoDS.descriptorSetCount = 1;
-    const VkDescriptorSetLayout layout =
-        renderData.rdDescriptorLayoutCache->getLayout(DescriptorLayoutType::SingleTexture);
-    allocInfoDS.pSetLayouts = &layout;
-
-    vkAllocateDescriptorSets(renderData.rdVkbDevice.device, &allocInfoDS, &brdfLutData.descriptorSet);
+    constexpr std::string_view descriptorSetObjectName = "Descriptor Set IBL BRDF LUT Data";
+    vmaSetAllocationName(renderData.rdAllocator, brdfLutData.imageAlloc, descriptorSetObjectName.data());
+    Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(brdfLutData.descriptorSet),
+                         VK_OBJECT_TYPE_DESCRIPTOR_SET, descriptorSetObjectName.data());
 
     VkDescriptorImageInfo imageInfoDS{};
     imageInfoDS.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -1169,7 +1074,6 @@ void Core::Renderer::IBLGenerator::cleanupCubemapResources(VkRenderData& renderD
     vkDestroySampler(renderData.rdVkbDevice.device, cubemapData.sampler, nullptr);
     vkDestroyImageView(renderData.rdVkbDevice.device, cubemapData.imageView, nullptr);
     vmaDestroyImage(renderData.rdAllocator, cubemapData.image, cubemapData.imageAlloc);
-    vkDestroyDescriptorPool(renderData.rdVkbDevice.device, cubemapData.descriptorPool, nullptr);
 }
 
 bool Core::Renderer::IBLGenerator::createHDRToCubemapPipeline(VkRenderData& renderData)

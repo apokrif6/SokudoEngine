@@ -199,18 +199,12 @@ void processMesh(std::vector<Core::Utils::PrimitiveData>& outPrimitives, const a
 
     primitiveData.material = materialInfo;
 
-    VkDescriptorSetAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    allocInfo.descriptorPool = renderData.rdMaterialDescriptorPool;
-    allocInfo.descriptorSetCount = 1;
     VkDescriptorSetLayout layout =
         renderData.rdDescriptorLayoutCache->getLayout(Core::Renderer::DescriptorLayoutType::PBRTextures);
-    allocInfo.pSetLayouts = &layout;
 
-    if (vkAllocateDescriptorSets(renderData.rdVkbDevice.device, &allocInfo, &primitiveData.materialDescriptorSet) !=
-        VK_SUCCESS)
+    if (!renderData.rdDescriptorAllocator->allocate(layout, primitiveData.materialDescriptorSet))
     {
-        Logger::log(1, "Failed to allocate material descriptor set!\n");
+        Logger::log(1, "Failed to allocate material descriptor set via Allocator!\n");
     }
     else
     {
@@ -225,19 +219,19 @@ void processMesh(std::vector<Core::Utils::PrimitiveData>& outPrimitives, const a
 
         VkDescriptorImageInfo imageInfos[5]{};
 
-        imageInfos[0] = primitiveData.textures.count(aiTextureType_DIFFUSE)
+        imageInfos[0] = primitiveData.textures.contains(aiTextureType_DIFFUSE)
                             ? makeInfo(primitiveData.textures[aiTextureType_DIFFUSE])
                             : makeInfo(renderData.rdPlaceholderTexture);
-        imageInfos[1] = primitiveData.textures.count(aiTextureType_NORMALS)
+        imageInfos[1] = primitiveData.textures.contains(aiTextureType_NORMALS)
                             ? makeInfo(primitiveData.textures[aiTextureType_NORMALS])
                             : makeInfo(renderData.rdPlaceholderTexture);
-        imageInfos[2] = primitiveData.textures.count(aiTextureType_METALNESS)
+        imageInfos[2] = primitiveData.textures.contains(aiTextureType_METALNESS)
                             ? makeInfo(primitiveData.textures[aiTextureType_METALNESS])
                             : makeInfo(renderData.rdPlaceholderTexture);
-        imageInfos[3] = primitiveData.textures.count(aiTextureType_AMBIENT_OCCLUSION)
+        imageInfos[3] = primitiveData.textures.contains(aiTextureType_AMBIENT_OCCLUSION)
                             ? makeInfo(primitiveData.textures[aiTextureType_AMBIENT_OCCLUSION])
                             : makeInfo(renderData.rdPlaceholderTexture);
-        imageInfos[4] = primitiveData.textures.count(aiTextureType_EMISSIVE)
+        imageInfos[4] = primitiveData.textures.contains(aiTextureType_EMISSIVE)
                             ? makeInfo(primitiveData.textures[aiTextureType_EMISSIVE])
                             : makeInfo(renderData.rdPlaceholderTexture);
 

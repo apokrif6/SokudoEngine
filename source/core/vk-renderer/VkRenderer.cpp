@@ -85,6 +85,8 @@ bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned i
         return false;
     }
 
+    initDescriptorAllocator();
+
     initDescriptorLayoutCache();
 
     if (!loadPlaceholderTexture())
@@ -443,6 +445,12 @@ void Core::Renderer::VkRenderer::cleanup(VkRenderData& renderData)
         mViewportTarget->cleanup(Engine::getInstance().getRenderData());
     }
 
+    if (renderData.rdDescriptorAllocator)
+    {
+        renderData.rdDescriptorAllocator->cleanup();
+        renderData.rdDescriptorAllocator.reset();
+    }
+
     if (renderData.rdDescriptorLayoutCache)
     {
         renderData.rdDescriptorLayoutCache->cleanup();
@@ -730,6 +738,14 @@ bool Core::Renderer::VkRenderer::createViewportRenderpass()
     return true;
 }
 
+void Core::Renderer::VkRenderer::initDescriptorAllocator()
+{
+    auto& renderData = Engine::getInstance().getRenderData();
+
+    renderData.rdDescriptorAllocator = std::make_unique<DescriptorAllocator>();
+    renderData.rdDescriptorAllocator->init(renderData.rdVkbDevice.device);
+}
+
 void Core::Renderer::VkRenderer::initDescriptorLayoutCache()
 {
     auto& renderData = Engine::getInstance().getRenderData();
@@ -903,25 +919,7 @@ bool Core::Renderer::VkRenderer::initVma()
 
 bool Core::Renderer::VkRenderer::createDescriptorsForMaterial()
 {
-    auto& renderData = Engine::getInstance().getRenderData();
-
-    VkDescriptorPoolSize poolSize{};
-    poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    poolSize.descriptorCount = maxNumberOfMaterials * 5;
-
-    VkDescriptorPoolCreateInfo poolInfo{};
-    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    poolInfo.poolSizeCount = 1;
-    poolInfo.pPoolSizes = &poolSize;
-    poolInfo.maxSets = maxNumberOfMaterials;
-
-    if (vkCreateDescriptorPool(renderData.rdVkbDevice.device, &poolInfo, nullptr,
-                               &renderData.rdMaterialDescriptorPool) != VK_SUCCESS)
-    {
-        Logger::log(1, "failed to create material descriptor pool!\n");
-        return false;
-    }
-
+    // This function is a placeholder for future material system implementation
     createDebugSkeletonPipelineLayout();
     createDebugSkeletonPipeline();
 

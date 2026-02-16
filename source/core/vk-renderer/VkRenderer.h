@@ -104,6 +104,8 @@ private:
 
     bool createViewportRenderpass();
 
+    void initDescriptorAllocator();
+
     void initDescriptorLayoutCache();
 
     bool createPipelineLayout();
