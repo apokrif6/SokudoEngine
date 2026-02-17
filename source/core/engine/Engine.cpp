@@ -1,7 +1,7 @@
 #include "Engine.h"
 
 #include "core/components/ComponentFactory.h"
-#include "core/ui/UserInterface.h"
+#include "ui/UserInterface.h"
 #include "core/window/Window.h"
 
 void Core::Engine::init()

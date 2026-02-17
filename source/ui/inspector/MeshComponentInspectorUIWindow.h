@@ -3,7 +3,7 @@
 #include "AnimationInspectorUIWindow.h"
 #include "imgui.h"
 #include "core/components/MeshComponent.h"
-#include "core/ui/UIWindow.h"
+#include "ui/UIWindow.h"
 #include "core/engine/Engine.h"
 
 namespace Core::UI
