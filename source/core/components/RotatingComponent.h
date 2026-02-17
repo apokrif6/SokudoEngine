@@ -2,7 +2,7 @@
 
 #include "core/components/Component.h"
 #include "core/components/TransformComponent.h"
-#include "core/scene/objects/SceneObject.h"
+#include "scene/objects/SceneObject.h"
 
 namespace Core::Component
 {

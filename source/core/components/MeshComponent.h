@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/scene/objects/SceneObject.h"
+#include "scene/objects/SceneObject.h"
 #include <utility>
 #include <vector>
 #include "core/vk-renderer/Primitive.h"

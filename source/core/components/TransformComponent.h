@@ -3,8 +3,8 @@
 #include <yaml-cpp/node/node.h>
 
 #include "Component.h"
-#include "core/scene/Transform.h"
-#include "core/scene/objects/SceneObject.h"
+#include "scene/Transform.h"
+#include "scene/objects/SceneObject.h"
 
 namespace Core::Component
 {

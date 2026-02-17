@@ -2,10 +2,10 @@
 
 #include "assimp/scene.h"
 #include "core/vk-renderer/VkRenderData.h"
-#include "../components/MeshComponent.h"
+#include "core/components/MeshComponent.h"
 #include "core/system/System.h"
 #include "core/system/Updatable.h"
-#include <core/tools/Timer.h>
+#include "core/tools/Timer.h"
 
 namespace Core::Animations
 {

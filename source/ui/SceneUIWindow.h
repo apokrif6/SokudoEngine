@@ -4,7 +4,7 @@
 #include <memory>
 #include "UIWindow.h"
 #include "string"
-#include "core/scene/SceneEditor.h"
+#include "scene/SceneEditor.h"
 
 namespace Core::UI
 {

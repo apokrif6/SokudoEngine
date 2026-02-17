@@ -6,7 +6,7 @@
 #include "core/tools/Timer.h"
 #include "core/tools/Camera.h"
 #include "core/events/EventListener.h"
-#include "core/scene/Scene.h"
+#include "scene/Scene.h"
 #include "core/vk-renderer/viewport/ViewportTarget.h"
 #include "core/system/System.h"
 #include "core/system/Updatable.h"

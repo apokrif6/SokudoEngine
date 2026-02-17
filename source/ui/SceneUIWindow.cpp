@@ -1,8 +1,8 @@
 #include "SceneUIWindow.h"
 #include "core/engine/Engine.h"
 #include "core/engine/ScopedEngineState.h"
-#include "core/scene/SceneEditor.h"
-#include "core/scene/Serialization.h"
+#include "scene/SceneEditor.h"
+#include "scene/Serialization.h"
 #include "imgui.h"
 #include "imgui_stdlib.h"
 #include <filesystem>

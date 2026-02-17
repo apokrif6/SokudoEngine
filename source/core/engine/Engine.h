@@ -3,7 +3,7 @@
 #include "EngineState.h"
 #include <memory>
 #include <typeindex>
-#include "core/scene/Scene.h"
+#include "scene/Scene.h"
 #include "core/vk-renderer/VkRenderer.h"
 #include "core/animations/Animator.h"
 

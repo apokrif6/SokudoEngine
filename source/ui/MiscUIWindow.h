@@ -4,7 +4,7 @@
 #include "imgui.h"
 #include "glm/gtx/string_cast.hpp"
 #include "nfd.hpp"
-#include "core/scene/SceneImporter.h"
+#include "scene/SceneImporter.h"
 
 namespace Core::UI
 {
