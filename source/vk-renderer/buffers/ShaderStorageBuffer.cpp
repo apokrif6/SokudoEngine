@@ -27,8 +27,8 @@ bool Core::Renderer::ShaderStorageBuffer::init(VkRenderData& renderData, VkShade
     SSBOData.rdName = "Shader Storage Buffer " + name;
     vmaSetAllocationName(renderData.rdAllocator, SSBOData.rdShaderStorageBufferAlloc, SSBOData.rdName.c_str());
 
-    Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(SSBOData.rdShaderStorageBuffer), VK_OBJECT_TYPE_BUFFER,
-                         SSBOData.rdName);
+    Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(SSBOData.rdShaderStorageBuffer),
+                         VK_OBJECT_TYPE_BUFFER, SSBOData.rdName);
 
     SSBOData.rdSSBODescriptorLayout = renderData.rdDescriptorLayoutCache->getLayout(DescriptorLayoutType::SingleSSBO);
 

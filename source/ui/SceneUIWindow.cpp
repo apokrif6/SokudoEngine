@@ -6,6 +6,7 @@
 #include "imgui.h"
 #include "imgui_stdlib.h"
 #include <filesystem>
+#include "core/Assertion.h"
 
 bool Core::UI::SceneUIWindow::getBody()
 {
@@ -171,8 +172,8 @@ void Core::UI::SceneUIWindow::refreshSceneFiles()
 void Core::UI::SceneUIWindow::drawSceneObjectNode(std::shared_ptr<Scene::SceneObject> object,
                                                   Scene::SceneObjectSelection& selection)
 {
-    // TODO
-    // add ensure
+    SE_ASSERT(object, "Attempting to draw a null SceneObject node!");
+
     if (!object)
     {
         return;

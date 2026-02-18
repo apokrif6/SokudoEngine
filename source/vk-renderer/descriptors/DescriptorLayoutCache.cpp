@@ -1,9 +1,8 @@
 #include "DescriptorLayoutCache.h"
-
 #include <algorithm>
 #include <ranges>
-
 #include "vk-renderer/debug/DebugUtils.h"
+#include "core/Assertion.h"
 
 namespace Core::Renderer
 {
@@ -103,9 +102,8 @@ DescriptorLayoutCache::createDescriptorLayout(const std::vector<VkDescriptorSetL
     createInfo.bindingCount = static_cast<uint32_t>(layoutInfo.bindings.size());
 
     VkDescriptorSetLayout layout;
-    vkCreateDescriptorSetLayout(mDevice, &createInfo, nullptr, &layout);
-    // TODO
-    // add ensure when ensure wrappers are ready
+    SE_VK_CHECK(vkCreateDescriptorSetLayout(mDevice, &createInfo, nullptr, &layout),
+        "Failed to create descriptor set layout for: %s", debugName.c_str());
 
     Debug::setObjectName(mDevice, reinterpret_cast<uint64_t>(layout), VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, debugName);
 

@@ -29,8 +29,8 @@ bool Core::Renderer::IndexBuffer::init(VkRenderData& renderData, VkIndexBufferDa
     indexBufferData.rdName = "Index Buffer " + name;
     vmaSetAllocationName(renderData.rdAllocator, indexBufferData.rdIndexBufferAlloc, indexBufferData.rdName.c_str());
 
-    Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(indexBufferData.rdIndexBuffer), VK_OBJECT_TYPE_BUFFER,
-                         indexBufferData.rdName);
+    Debug::setObjectName(renderData.rdVkbDevice.device, reinterpret_cast<uint64_t>(indexBufferData.rdIndexBuffer),
+                         VK_OBJECT_TYPE_BUFFER, indexBufferData.rdName);
 
     VkBufferCreateInfo stagingBufferInfo{};
     stagingBufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;

@@ -1,5 +1,6 @@
 #include "DescriptorAllocator.h"
 #include <vector>
+#include "core/Assertion.h"
 
 void Core::Renderer::DescriptorAllocator::init(VkDevice device) { mDevice = device; }
 
@@ -82,8 +83,7 @@ VkDescriptorPool Core::Renderer::DescriptorAllocator::grabPool()
     poolInfo.pPoolSizes = poolSizes.data();
 
     VkDescriptorPool newPool;
-    vkCreateDescriptorPool(mDevice, &poolInfo, nullptr, &newPool);
-    // TODO
-    // add assert
+    SE_VK_CHECK(vkCreateDescriptorPool(mDevice, &poolInfo, nullptr, &newPool), "Failed to create descriptor pool!");
+
     return newPool;
 }
