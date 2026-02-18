@@ -2,7 +2,7 @@
 #include "core/components/MeshComponent.h"
 #include "core/components/TransformComponent.h"
 #include "engine/Engine.h"
-#include "core/utils/ShapeUtils.h"
+#include "utils/ShapeUtils.h"
 #include "objects/SceneObject.h"
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/matrix_decompose.hpp>

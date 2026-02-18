@@ -22,7 +22,7 @@
 #include "imgui.h"
 #include "core/vk-renderer/buffers/VertexBuffer.h"
 #include "core/events/input-events/MouseMovementEvent.h"
-#include "core/utils/ShapeUtils.h"
+#include "utils/ShapeUtils.h"
 #include "core/vk-renderer/pipelines/layouts/MeshPipelineLayout.h"
 #include "animations/Animator.h"
 #include <core/events/input-events/MouseLockEvent.h>

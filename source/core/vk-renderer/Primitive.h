@@ -3,7 +3,7 @@
 #include "string"
 #include "core/vk-renderer/buffers/VertexBuffer.h"
 #include "core/vk-renderer/buffers/IndexBuffer.h"
-#include "core/utils/ShapeUtils.h"
+#include "utils/ShapeUtils.h"
 
 namespace Core::Renderer
 {

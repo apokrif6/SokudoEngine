@@ -2,7 +2,7 @@
 
 #include "core/components/ComponentFactory.h"
 #include "ui/UserInterface.h"
-#include "core/window/Window.h"
+#include "window/Window.h"
 
 void Core::Engine::init()
 {
