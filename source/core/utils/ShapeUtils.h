@@ -4,9 +4,9 @@
 #include <glm/fwd.hpp>
 #include "core/vk-renderer/VkRenderData.h"
 #include "unordered_map"
-#include "core/animations/AnimationsData.h"
+#include "animations/AnimationsData.h"
+#include "animations/Skeleton.h"
 #include "assimp/material.h"
-#include "core/animations/Skeleton.h"
 
 namespace Core::Utils
 {

@@ -1,6 +1,6 @@
 #include "ShapeUtils.h"
 #include "core/vk-renderer/Texture.h"
-#include "core/animations/AnimationsUtils.h"
+#include "animations/AnimationsUtils.h"
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>

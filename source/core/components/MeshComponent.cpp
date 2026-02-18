@@ -4,7 +4,7 @@
 
 #include "core/vk-renderer/buffers/UniformBuffer.h"
 #include "core/engine/Engine.h"
-#include "core/animations/AnimationsUtils.h"
+#include "animations/AnimationsUtils.h"
 #include "core/components/TransformComponent.h"
 #include "core/utils/FileUtils.h"
 

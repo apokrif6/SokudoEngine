@@ -24,7 +24,7 @@
 #include "core/events/input-events/MouseMovementEvent.h"
 #include "core/utils/ShapeUtils.h"
 #include "core/vk-renderer/pipelines/layouts/MeshPipelineLayout.h"
-#include "core/animations/Animator.h"
+#include "animations/Animator.h"
 #include <core/events/input-events/MouseLockEvent.h>
 #include <algorithm>
 #include <glm/gtc/matrix_transform.hpp>

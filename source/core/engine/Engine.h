@@ -5,7 +5,7 @@
 #include <typeindex>
 #include "scene/Scene.h"
 #include "core/vk-renderer/VkRenderer.h"
-#include "core/animations/Animator.h"
+#include "animations/Animator.h"
 
 namespace Core
 {
