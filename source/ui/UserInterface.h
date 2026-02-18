@@ -1,8 +1,8 @@
 #pragma once
 
 #include "core/vk-renderer/VkRenderData.h"
-#include "core/events/EventListener.h"
-#include "core/events/EventDispatcher.h"
+#include "events/EventListener.h"
+#include "events/EventDispatcher.h"
 #include "core/system/System.h"
 #include "core/system/Updatable.h"
 #include "core/system/Drawable.h"

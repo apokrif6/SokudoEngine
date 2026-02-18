@@ -21,15 +21,12 @@
 #include "core/vk-renderer/buffers/UniformBuffer.h"
 #include "imgui.h"
 #include "core/vk-renderer/buffers/VertexBuffer.h"
-#include "core/events/input-events/MouseMovementEvent.h"
+#include "events/input-events/MouseMovementEvent.h"
 #include "utils/ShapeUtils.h"
 #include "core/vk-renderer/pipelines/layouts/MeshPipelineLayout.h"
-#include "animations/Animator.h"
-#include <core/events/input-events/MouseLockEvent.h>
+#include "events/input-events/MouseLockEvent.h"
 #include <algorithm>
 #include <glm/gtc/matrix_transform.hpp>
-
-#include "core/components/RotatingComponent.h"
 #include "core/components/TransformComponent.h"
 #include "core/vk-renderer/pipelines/DebugSkeletonPipeline.h"
 #include "engine/Engine.h"

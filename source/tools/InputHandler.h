@@ -1,7 +1,7 @@
 #pragma once
 
 #include <GLFW/glfw3.h>
-#include "core/events/EventDispatcher.h"
+#include "events/EventDispatcher.h"
 
 class InputHandler
 {

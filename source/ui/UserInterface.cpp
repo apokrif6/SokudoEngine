@@ -3,7 +3,7 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_vulkan.h"
 #include "UserInterface.h"
-#include "core/events/input-events/KeyEvent.h"
+#include "events/input-events/KeyEvent.h"
 #include "core/vk-renderer/buffers/CommandBuffer.h"
 #include "tools/Logger.h"
 #include "ui/ProfilingUIWindow.h"

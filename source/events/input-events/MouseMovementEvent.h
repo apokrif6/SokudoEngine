@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/events/Event.h"
+#include "events/Event.h"
 
 struct MouseMovementEvent final : Event
 {

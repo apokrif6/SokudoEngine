@@ -1,9 +1,9 @@
 #include "InputHandler.h"
 
-#include "core/events/input-events/KeyEvent.h"
+#include "events/input-events/KeyEvent.h"
 #include "tools/Logger.h"
-#include "core/events/input-events/MouseMovementEvent.h"
-#include "core/events/input-events/MouseLockEvent.h"
+#include "events/input-events/MouseMovementEvent.h"
+#include "events/input-events/MouseLockEvent.h"
 #include <imgui.h>
 #include <string>
 #include <GLFW/glfw3.h>
