@@ -4,7 +4,7 @@
 #include "imgui.h"
 #include "string"
 #include "engine/Engine.h"
-#include "core/profiling/PlotBuffer.h"
+#include "profiling/PlotBuffer.h"
 
 namespace Core::UI
 {
