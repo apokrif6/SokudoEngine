@@ -27,7 +27,7 @@
 #include "events/input-events/MouseLockEvent.h"
 #include <algorithm>
 #include <glm/gtc/matrix_transform.hpp>
-#include "core/components/TransformComponent.h"
+#include "components/TransformComponent.h"
 #include "core/vk-renderer/pipelines/DebugSkeletonPipeline.h"
 #include "engine/Engine.h"
 #include "core/vk-renderer/viewport/ViewportRenderpass.h"

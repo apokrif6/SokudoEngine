@@ -1,6 +1,6 @@
 #include "Scene.h"
 
-#include "core/components/TransformComponent.h"
+#include "components/TransformComponent.h"
 
 void Core::Scene::Scene::addObject(std::shared_ptr<SceneObject> object)
 {

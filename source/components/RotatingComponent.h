@@ -1,7 +1,7 @@
 #pragma once
 
-#include "core/components/Component.h"
-#include "core/components/TransformComponent.h"
+#include "components/Component.h"
+#include "components/TransformComponent.h"
 #include "scene/objects/SceneObject.h"
 
 namespace Core::Component

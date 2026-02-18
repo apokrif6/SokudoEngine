@@ -2,7 +2,7 @@
 
 #include "AnimationInspectorUIWindow.h"
 #include "imgui.h"
-#include "core/components/MeshComponent.h"
+#include "components/MeshComponent.h"
 #include "ui/UIWindow.h"
 #include "engine/Engine.h"
 

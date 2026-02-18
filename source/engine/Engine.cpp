@@ -1,6 +1,6 @@
 #include "Engine.h"
 
-#include "core/components/ComponentFactory.h"
+#include "components/ComponentFactory.h"
 #include "ui/UserInterface.h"
 #include "window/Window.h"
 

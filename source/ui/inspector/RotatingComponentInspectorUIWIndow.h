@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/components/RotatingComponent.h"
+#include "components/RotatingComponent.h"
 #include "ui/UIWindow.h"
 #include "engine/Engine.h"
 

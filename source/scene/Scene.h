@@ -4,9 +4,9 @@
 #include "scene/objects/SceneObject.h"
 #include "SceneEditor.h"
 #include "tools/Timer.h"
-#include "core/system/System.h"
-#include "core/system/Updatable.h"
-#include "core/system/Drawable.h"
+#include "system/System.h"
+#include "system/Updatable.h"
+#include "system/Drawable.h"
 
 namespace Core::Scene
 {

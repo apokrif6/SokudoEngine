@@ -1,6 +1,6 @@
 #include "SceneImporter.h"
-#include "core/components/MeshComponent.h"
-#include "core/components/TransformComponent.h"
+#include "components/MeshComponent.h"
+#include "components/TransformComponent.h"
 #include "engine/Engine.h"
 #include "utils/ShapeUtils.h"
 #include "objects/SceneObject.h"

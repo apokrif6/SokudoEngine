@@ -1,8 +1,8 @@
 #include "SceneObject.h"
 #include "yaml-cpp/node/node.h"
 #include <algorithm>
-#include "core/components/ComponentFactory.h"
-#include "core/components/TransformComponent.h"
+#include "components/ComponentFactory.h"
+#include "components/TransformComponent.h"
 
 void Core::Scene::SceneObject::update(Renderer::VkRenderData& renderData)
 {

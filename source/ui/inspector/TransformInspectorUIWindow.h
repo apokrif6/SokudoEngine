@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/components/TransformComponent.h"
+#include "components/TransformComponent.h"
 #include "ui/UIWindow.h"
 #include "engine/Engine.h"
 
