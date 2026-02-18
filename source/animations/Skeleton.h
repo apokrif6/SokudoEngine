@@ -1,7 +1,7 @@
 #pragma once
 
 #include "AnimationsData.h"
-#include "core/serialization/Serializable.h"
+#include "serialization/Serializable.h"
 
 namespace Core::Animations
 {

@@ -5,7 +5,7 @@
 #include "components/Component.h"
 #include "core/vk-renderer/VkRenderData.h"
 #include "yaml-cpp/node/node.h"
-#include "core/serialization/Serializable.h"
+#include "serialization/Serializable.h"
 
 namespace Core::Scene
 {

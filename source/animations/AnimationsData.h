@@ -4,7 +4,7 @@
 #include "glm/glm.hpp"
 #include "glm/detail/type_quat.hpp"
 #include "core/vk-renderer/debug/Skeleton.h"
-#include "core/serialization/Serializable.h"
+#include "serialization/Serializable.h"
 #include <vector>
 #include <map>
 #include <string>

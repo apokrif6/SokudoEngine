@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/serialization/Serializable.h"
+#include "serialization/Serializable.h"
 #include "core/vk-renderer/VkRenderData.h"
 
 namespace Core::Scene
