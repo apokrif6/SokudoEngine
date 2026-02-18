@@ -3,7 +3,7 @@
 #include <string>
 
 #include "components/Component.h"
-#include "core/vk-renderer/VkRenderData.h"
+#include "vk-renderer/VkRenderData.h"
 #include "yaml-cpp/node/node.h"
 #include "serialization/Serializable.h"
 

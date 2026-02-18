@@ -3,7 +3,7 @@
 #include "scene/objects/SceneObject.h"
 #include <utility>
 #include <vector>
-#include "core/vk-renderer/Primitive.h"
+#include "vk-renderer/Primitive.h"
 
 // should be moved to Component folder, and renamed to MeshComponent
 namespace Core::Component

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/vk-renderer/VkRenderData.h"
+#include "vk-renderer/VkRenderData.h"
 #include "events/EventListener.h"
 #include "events/EventDispatcher.h"
 #include "system/System.h"

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/vk-renderer/VkRenderData.h"
+#include "vk-renderer/VkRenderData.h"
 
 namespace Core::System
 {

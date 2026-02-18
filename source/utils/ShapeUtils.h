@@ -2,7 +2,7 @@
 
 #include <string>
 #include <glm/fwd.hpp>
-#include "core/vk-renderer/VkRenderData.h"
+#include "vk-renderer/VkRenderData.h"
 #include "unordered_map"
 #include "animations/AnimationsData.h"
 #include "animations/Skeleton.h"

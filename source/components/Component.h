@@ -1,7 +1,7 @@
 #pragma once
 
 #include "serialization/Serializable.h"
-#include "core/vk-renderer/VkRenderData.h"
+#include "vk-renderer/VkRenderData.h"
 
 namespace Core::Scene
 {

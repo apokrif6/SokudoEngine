@@ -2,7 +2,7 @@
 
 #include <functional>
 
-#include "core/vk-renderer/buffers/UniformBuffer.h"
+#include "vk-renderer/buffers/UniformBuffer.h"
 #include "engine/Engine.h"
 #include "animations/AnimationsUtils.h"
 #include "components/TransformComponent.h"

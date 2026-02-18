@@ -1,5 +1,5 @@
 #include "ShapeUtils.h"
-#include "core/vk-renderer/Texture.h"
+#include "vk-renderer/Texture.h"
 #include "animations/AnimationsUtils.h"
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>

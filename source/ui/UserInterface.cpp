@@ -4,7 +4,7 @@
 #include "imgui_impl_vulkan.h"
 #include "UserInterface.h"
 #include "events/input-events/KeyEvent.h"
-#include "core/vk-renderer/buffers/CommandBuffer.h"
+#include "vk-renderer/buffers/CommandBuffer.h"
 #include "tools/Logger.h"
 #include "ui/ProfilingUIWindow.h"
 #include "ui/SceneUIWindow.h"

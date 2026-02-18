@@ -1,7 +1,7 @@
 #pragma once
 
 #include "assimp/scene.h"
-#include "core/vk-renderer/VkRenderData.h"
+#include "vk-renderer/VkRenderData.h"
 #include "components/MeshComponent.h"
 #include "system/System.h"
 #include "system/Updatable.h"

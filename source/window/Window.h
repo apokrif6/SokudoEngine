@@ -5,7 +5,7 @@
 #include <GLFW/glfw3.h>
 #include <string>
 #include <iostream>
-#include "core/vk-renderer/VkRenderer.h"
+#include "vk-renderer/VkRenderer.h"
 #include "tools/InputHandler.h"
 #include "engine/Engine.h"
 

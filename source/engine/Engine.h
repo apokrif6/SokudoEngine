@@ -4,7 +4,7 @@
 #include <memory>
 #include <typeindex>
 #include "scene/Scene.h"
-#include "core/vk-renderer/VkRenderer.h"
+#include "vk-renderer/VkRenderer.h"
 #include "animations/Animator.h"
 
 namespace Core

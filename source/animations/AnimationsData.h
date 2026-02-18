@@ -3,7 +3,7 @@
 #include "tools/Logger.h"
 #include "glm/glm.hpp"
 #include "glm/detail/type_quat.hpp"
-#include "core/vk-renderer/debug/Skeleton.h"
+#include "vk-renderer/debug/Skeleton.h"
 #include "serialization/Serializable.h"
 #include <vector>
 #include <map>
