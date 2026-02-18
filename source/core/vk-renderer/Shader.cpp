@@ -2,7 +2,7 @@
 #include <cstring>
 #include <algorithm>
 #include "Shader.h"
-#include "core/tools/Logger.h"
+#include "tools/Logger.h"
 #include "spirv-reflect/spirv_reflect.h"
 
 constexpr uint32_t spvReflectionInterfaceVariableLocationNotFound = 0xFFFFFFFF;

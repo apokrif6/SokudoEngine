@@ -1,5 +1,5 @@
 #include "HDRToCubemapRenderpass.h"
-#include "core/tools/Logger.h"
+#include "tools/Logger.h"
 
 bool Core::Renderer::HDRToCubemapRenderpass::init(VkRenderData& renderData, VkRenderPass& outRenderPass)
 {

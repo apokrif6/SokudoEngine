@@ -3,7 +3,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 #include "core/vk-renderer/buffers/CommandBuffer.h"
-#include "core/tools/Logger.h"
+#include "tools/Logger.h"
 
 std::future<bool> Core::Renderer::Texture::loadTexture(VkRenderData& renderData, VkTextureData& textureData,
                                                        const std::string& textureFilename, VkFormat format)

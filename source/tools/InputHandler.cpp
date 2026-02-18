@@ -1,7 +1,7 @@
 #include "InputHandler.h"
 
 #include "core/events/input-events/KeyEvent.h"
-#include "core/tools/Logger.h"
+#include "tools/Logger.h"
 #include "core/events/input-events/MouseMovementEvent.h"
 #include "core/events/input-events/MouseLockEvent.h"
 #include <imgui.h>

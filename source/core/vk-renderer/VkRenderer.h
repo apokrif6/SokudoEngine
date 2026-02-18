@@ -3,8 +3,8 @@
 #include <vulkan/vulkan.h>
 #include <GLFW/glfw3.h>
 #include "VkRenderData.h"
-#include "core/tools/Timer.h"
-#include "core/tools/Camera.h"
+#include "tools/Timer.h"
+#include "tools/Camera.h"
 #include "core/events/EventListener.h"
 #include "scene/Scene.h"
 #include "core/vk-renderer/viewport/ViewportTarget.h"

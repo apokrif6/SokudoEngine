@@ -1,7 +1,7 @@
 #include "IBLGenerator.h"
 
 #include "engine/Engine.h"
-#include "core/tools/Logger.h"
+#include "tools/Logger.h"
 #include "core/vk-renderer/buffers/CommandBuffer.h"
 #include "HDRToCubemapRenderpass.h"
 #include "core/vk-renderer/Texture.h"

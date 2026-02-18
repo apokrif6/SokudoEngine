@@ -1,6 +1,6 @@
 #include "DebugSkeletonPipeline.h"
 #include <vector>
-#include "core/tools/Logger.h"
+#include "tools/Logger.h"
 #include "core/vk-renderer/Shader.h"
 #include "core/vk-renderer/debug/DebugRenderer.h"
 

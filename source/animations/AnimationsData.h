@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/tools/Logger.h"
+#include "tools/Logger.h"
 #include "glm/glm.hpp"
 #include "glm/detail/type_quat.hpp"
 #include "core/vk-renderer/debug/Skeleton.h"

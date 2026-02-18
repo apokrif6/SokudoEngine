@@ -1,6 +1,6 @@
 #include "Window.h"
 #include "stb_image.h"
-#include "core/tools/Logger.h"
+#include "tools/Logger.h"
 #include "ui/UserInterface.h"
 #ifdef _WIN32
 #define GLFW_EXPOSE_NATIVE_WIN32

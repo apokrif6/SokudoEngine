@@ -1,6 +1,6 @@
 #include "RotatingComponent.h"
 
-#include "core/tools/Logger.h"
+#include "tools/Logger.h"
 
 void Core::Component::RotatingComponent::onAdded()
 {

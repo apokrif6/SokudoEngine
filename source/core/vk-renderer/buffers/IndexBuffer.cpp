@@ -2,7 +2,7 @@
 
 #include "IndexBuffer.h"
 #include "core/vk-renderer/buffers/CommandBuffer.h"
-#include "core/tools/Logger.h"
+#include "tools/Logger.h"
 #include "core/vk-renderer/debug/DebugUtils.h"
 
 bool Core::Renderer::IndexBuffer::init(VkRenderData& renderData, VkIndexBufferData& indexBufferData,

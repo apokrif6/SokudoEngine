@@ -6,7 +6,7 @@
 #include <string>
 #include <iostream>
 #include "core/vk-renderer/VkRenderer.h"
-#include "core/tools/InputHandler.h"
+#include "tools/InputHandler.h"
 #include "engine/Engine.h"
 
 namespace Core::Application

@@ -3,7 +3,7 @@
 #include <memory>
 #include "scene/objects/SceneObject.h"
 #include "SceneEditor.h"
-#include "core/tools/Timer.h"
+#include "tools/Timer.h"
 #include "core/system/System.h"
 #include "core/system/Updatable.h"
 #include "core/system/Drawable.h"

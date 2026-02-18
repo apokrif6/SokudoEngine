@@ -5,14 +5,14 @@
 #include "UserInterface.h"
 #include "core/events/input-events/KeyEvent.h"
 #include "core/vk-renderer/buffers/CommandBuffer.h"
-#include "core/tools/Logger.h"
+#include "tools/Logger.h"
 #include "ui/ProfilingUIWindow.h"
 #include "ui/SceneUIWindow.h"
 #include "imgui_internal.h"
 #include "inspector/InspectorUIWindow.h"
 #include "MiscUIWindow.h"
 #include "ViewportUIWindow.h"
-#include "core/tools/ColorConverter.h"
+#include "tools/ColorConverter.h"
 
 bool Core::Renderer::UserInterface::init(VkRenderData& renderData)
 {
