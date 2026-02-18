@@ -1,7 +1,7 @@
 #include "SceneImporter.h"
 #include "core/components/MeshComponent.h"
 #include "core/components/TransformComponent.h"
-#include "core/engine/Engine.h"
+#include "engine/Engine.h"
 #include "core/utils/ShapeUtils.h"
 #include "objects/SceneObject.h"
 #define GLM_ENABLE_EXPERIMENTAL

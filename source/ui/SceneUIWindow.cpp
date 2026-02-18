@@ -1,6 +1,6 @@
 #include "SceneUIWindow.h"
-#include "core/engine/Engine.h"
-#include "core/engine/ScopedEngineState.h"
+#include "engine/Engine.h"
+#include "engine/ScopedEngineState.h"
 #include "scene/SceneEditor.h"
 #include "scene/Serialization.h"
 #include "imgui.h"

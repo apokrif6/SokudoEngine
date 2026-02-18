@@ -3,7 +3,7 @@
 #include "UIWindow.h"
 #include "imgui.h"
 #include "string"
-#include "core/engine/Engine.h"
+#include "engine/Engine.h"
 #include "core/profiling/PlotBuffer.h"
 
 namespace Core::UI

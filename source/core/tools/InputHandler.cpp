@@ -8,7 +8,7 @@
 #include <string>
 #include <GLFW/glfw3.h>
 
-#include "core/engine/Engine.h"
+#include "engine/Engine.h"
 
 void InputHandler::subscribeToEvents(EventListener* listener) { mEventDispatcher.subscribe(listener); }
 

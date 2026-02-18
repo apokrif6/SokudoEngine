@@ -32,7 +32,7 @@
 #include "core/components/RotatingComponent.h"
 #include "core/components/TransformComponent.h"
 #include "core/vk-renderer/pipelines/DebugSkeletonPipeline.h"
-#include "core/engine/Engine.h"
+#include "engine/Engine.h"
 #include "core/vk-renderer/viewport/ViewportRenderpass.h"
 #include "core/vk-renderer/viewport/ViewportTarget.h"
 #include "ibl_generator/HDRToCubemapRenderpass.h"

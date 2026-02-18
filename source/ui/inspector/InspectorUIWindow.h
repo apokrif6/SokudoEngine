@@ -5,7 +5,7 @@
 #include "MeshComponentInspectorUIWindow.h"
 #include "RotatingComponentInspectorUIWIndow.h"
 #include "TransformInspectorUIWindow.h"
-#include "core/engine/Engine.h"
+#include "engine/Engine.h"
 
 namespace Core::UI
 {

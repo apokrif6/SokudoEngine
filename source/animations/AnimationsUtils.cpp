@@ -5,7 +5,7 @@
 #include "assimp/scene.h"
 #include "Animator.h"
 #include "glm/gtc/type_ptr.hpp"
-#include "core/engine/Engine.h"
+#include "engine/Engine.h"
 
 Core::Animations::AnimationClip Core::Animations::AnimationsUtils::loadAnimationFromFile(const std::string& filePath)
 {
