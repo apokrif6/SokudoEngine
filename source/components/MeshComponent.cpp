@@ -129,6 +129,24 @@ void Core::Component::MeshComponent::setSourceMesh(const std::string_view& path,
     mPrimitiveIndex = primitiveIndex;
 }
 
+void Core::Component::MeshComponent::loadAnimationFromFile(const std::string_view& filePath)
+{
+    Animations::AnimationClip clip = Animations::AnimationsUtils::loadAnimationFromFile(filePath);
+
+    if (!clip.channels.empty())
+    {
+        mAnimations.push_back(std::move(clip));
+
+        if (mAnimations.size() == 1)
+        {
+            mCurrentAnimationIndex = 0;
+            mShouldPlayAnimation = true;
+        }
+
+        Logger::log(1, "Animation %s loaded and added for mesh %s", filePath.data(), getOwner()->getName().c_str());
+    }
+}
+
 YAML::Node Core::Component::MeshComponent::serialize() const
 {
     YAML::Node node;

@@ -7,21 +7,21 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "engine/Engine.h"
 
-Core::Animations::AnimationClip Core::Animations::AnimationsUtils::loadAnimationFromFile(const std::string& filePath)
+Core::Animations::AnimationClip Core::Animations::AnimationsUtils::loadAnimationFromFile(const std::string_view& filePath)
 {
     Assimp::Importer importer{};
-    const aiScene* scene = importer.ReadFile(filePath, aiProcess_Triangulate | aiProcess_GlobalScale);
+    const aiScene* scene = importer.ReadFile(filePath.data(), aiProcess_Triangulate | aiProcess_GlobalScale);
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->HasAnimations())
     {
-        Logger::log(1, "Failed to load animation: %s\n", filePath.c_str());
+        Logger::log(1, "Failed to load animation: %s\n", filePath.data());
         return {};
     }
 
     aiAnimation* aiAnim = scene->mAnimations[0];
     if (!aiAnim)
     {
-        Logger::log(1, "No animation found in file: %s\n", filePath.c_str());
+        Logger::log(1, "No animation found in file: %s\n", filePath.data());
         return {};
     }
 

@@ -27,11 +27,8 @@ class MeshComponentInspectorUIWindow : public UIWindow<MeshComponentInspectorUIW
 
         ImGui::Text("Primitive index %d", meshComponent->getPrimitiveIndex());
 
-        if (meshComponent->hasAnimations())
-        {
-            ImGui::Separator();
-            AnimationInspectorUIWindow::renderBody(meshComponent);
-        }
+        ImGui::Separator();
+        AnimationInspectorUIWindow::renderBody(meshComponent);
 
         return true;
     }

@@ -51,7 +51,7 @@ public:
         return {pOrientation.w, pOrientation.x, pOrientation.y, pOrientation.z};
     }
 
-    static AnimationClip loadAnimationFromFile(const std::string& filePath);
+    static AnimationClip loadAnimationFromFile(const std::string_view& filePath);
 
     static BoneNode buildBoneHierarchy(const aiNode* node);
 };

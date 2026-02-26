@@ -71,15 +71,19 @@ public:
 
     [[nodiscard]] int32_t getPrimitiveIndex() const { return mPrimitiveIndex; }
 
+    void loadAnimationFromFile(const std::string_view& filePath);
+
     void setAnimationFiles(std::vector<std::string> files) { mAnimationFiles = std::move(files); }
 
-    YAML::Node serialize() const override;
+    [[nodiscard]] YAML::Node serialize() const override;
 
     void deserialize(const YAML::Node& node) override;
 
 private:
     std::vector<Renderer::Primitive> mPrimitives;
     Animations::Skeleton mSkeleton;
+    // TODO
+    // I guess it should be moved to global animation manager, and mesh should store only shared pointers
     std::vector<Animations::AnimationClip> mAnimations;
     bool mShouldPlayAnimation = false;
     bool mShouldDrawDebugSkeleton = false;
