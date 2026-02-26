@@ -2,6 +2,8 @@
 
 #include <memory>
 #include <string_view>
+#include <vector>
+#include <glm/fwd.hpp>
 
 namespace Core::Animations
 {
@@ -10,8 +12,9 @@ class Skeleton;
 
 namespace Core::Utils
 {
+struct PrimitiveData;
 struct MeshNode;
-}
+} // namespace Core::Utils
 
 namespace Core::Scene
 {
@@ -22,6 +25,10 @@ class SceneImporter
 public:
     static std::shared_ptr<SceneObject> createObjectFromNode(const Utils::MeshNode& node,
                                                              const Animations::Skeleton& skeleton,
-                                                             const std::string_view& filePath);
+                                                             const std::string_view& filePath, bool shouldMergeMeshes);
+
+private:
+    static void collectPrimitivesRecursive(const Utils::MeshNode& node, glm::mat4 parentTransform,
+                                           std::vector<Utils::PrimitiveData>& outAllPrimitives);
 };
 } // namespace Core::Scene

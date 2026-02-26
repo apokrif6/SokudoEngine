@@ -7,7 +7,8 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "engine/Engine.h"
 
-Core::Animations::AnimationClip Core::Animations::AnimationsUtils::loadAnimationFromFile(const std::string_view& filePath)
+Core::Animations::AnimationClip
+Core::Animations::AnimationsUtils::loadAnimationFromFile(const std::string_view& filePath)
 {
     Assimp::Importer importer{};
     const aiScene* scene = importer.ReadFile(filePath.data(), aiProcess_Triangulate | aiProcess_GlobalScale);

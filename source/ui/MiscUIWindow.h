@@ -21,6 +21,8 @@ class MiscUIWindow : public UIWindow<MiscUIWindow>
 
         Renderer::VkRenderData& renderData = Engine::getInstance().getRenderData();
 
+        static bool shouldMergeMeshes = false;
+
         if (ImGui::Button("Import Mesh Scene"))
         {
             NFD::Init();
@@ -37,8 +39,8 @@ class MiscUIWindow : public UIWindow<MiscUIWindow>
 
                 const Utils::MeshData meshData = Utils::loadMeshFromFile(path, renderData);
 
-                const auto rootModelObject =
-                    Scene::SceneImporter::createObjectFromNode(meshData.rootNode, meshData.skeleton, path);
+                const auto rootModelObject = Scene::SceneImporter::createObjectFromNode(
+                    meshData.rootNode, meshData.skeleton, path, shouldMergeMeshes);
 
                 auto* currentScene = Engine::getInstance().getSystem<Scene::Scene>();
                 currentScene->addObject(rootModelObject);
@@ -56,6 +58,8 @@ class MiscUIWindow : public UIWindow<MiscUIWindow>
 
             NFD::Quit();
         }
+        ImGui::SameLine();
+        ImGui::Checkbox("Merge Meshes on Import", &shouldMergeMeshes);
 
         ImGui::Separator();
 
