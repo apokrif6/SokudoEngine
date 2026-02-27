@@ -352,5 +352,6 @@ Core::Utils::MeshData Core::Utils::loadMeshFromFile(const std::string& fileName,
     MeshData mesh;
     processNodeHierarchy(mesh.rootNode, scene->mRootNode, scene, renderData, baseDir);
     mesh.skeleton.setRootNode(Animations::AnimationsUtils::buildBoneHierarchy(scene->mRootNode));
+    mesh.skeleton.initDebug(renderData);
     return mesh;
 }
