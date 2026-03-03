@@ -15,7 +15,7 @@ for shader in "$SHADER_DIR"/*.vert "$SHADER_DIR"/*.frag; do
     if [ -f "$shader" ]; then
         output="$shader.spv"
         echo "  $shader -> $output"
-        glslc "$shader" -o "$output"
+        glslc "$shader" -o "$output" -I "$SHADER_DIR"
     fi
 done
 

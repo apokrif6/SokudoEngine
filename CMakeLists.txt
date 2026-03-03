@@ -41,7 +41,7 @@ if (Vulkan_GLSLC_EXECUTABLE)
         set(SPIRV "${CMAKE_SOURCE_DIR}/shaders/${FILE_NAME}.spv")
         add_custom_command(
                 OUTPUT ${SPIRV}
-                COMMAND ${Vulkan_GLSLC_EXECUTABLE} -o ${SPIRV} ${GLSL}
+                COMMAND ${Vulkan_GLSLC_EXECUTABLE} -o ${SPIRV} ${GLSL} -I"${CMAKE_SOURCE_DIR}/shaders"
                 DEPENDS ${GLSL})
         list(APPEND SPIRV_BINARY_FILES ${SPIRV})
     endforeach (GLSL)
@@ -52,7 +52,7 @@ elseif (Vulkan_GLSLANG_VALIDATOR_EXECUTABLE)
         set(SPIRV "${CMAKE_SOURCE_DIR}/shaders/${FILE_NAME}.spv")
         add_custom_command(
                 OUTPUT ${SPIRV}
-                COMMAND ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE} -V -o ${SPIRV} ${GLSL}
+                COMMAND ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE} -V -o ${SPIRV} ${GLSL} -I"${CMAKE_SOURCE_DIR}/shaders"
                 DEPENDS ${GLSL})
         list(APPEND SPIRV_BINARY_FILES ${SPIRV})
     endforeach (GLSL)
