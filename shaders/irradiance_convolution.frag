@@ -1,14 +1,14 @@
 #version 460
 
 #extension GL_ARB_separate_shader_objects : enable
+#extension GL_GOOGLE_include_directive : require
+#include "pbr_utils.glsl"
 
 layout (location = 0) in vec3 fragDir;
 
 layout (location = 0) out vec4 FragColor;
 
 layout (set = 1, binding = 0) uniform samplerCube environmentMap;
-
-const float PI = 3.14159265359;
 
 void main()
 {

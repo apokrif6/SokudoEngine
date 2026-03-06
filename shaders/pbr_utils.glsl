@@ -60,3 +60,11 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
     float NdotL = max(dot(N, L), 0.0);
     return GeometrySchlickGGX(NdotV, roughness) * GeometrySchlickGGX(NdotL, roughness);
 }
+
+vec2 SampleSphericalMap(vec3 v)
+{
+    vec2 uv;
+    uv.x = atan(v.z, v.x) / (2.0 * PI) + 0.5;
+    uv.y = asin(clamp(v.y, -1.0, 1.0)) / PI + 0.5;
+    return uv;
+}
