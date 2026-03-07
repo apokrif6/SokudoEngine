@@ -20,7 +20,7 @@ Core::Scene::SceneImporter::createObjectFromNode(const Utils::MeshNode& node, co
         meshComp->setSourceMesh(filePath, -1);
 
         std::vector<Utils::PrimitiveData> allPrimitives;
-        collectPrimitivesRecursive(node, glm::mat4(1.0f), allPrimitives);
+        Utils::collectPrimitivesRecursive(node, glm::mat4(1.0f), allPrimitives);
 
         for (const auto& primitive : allPrimitives)
         {
@@ -82,26 +82,4 @@ Core::Scene::SceneImporter::createObjectFromNode(const Utils::MeshNode& node, co
     }
 
     return sceneObject;
-}
-
-void Core::Scene::SceneImporter::collectPrimitivesRecursive(const Utils::MeshNode& node, glm::mat4 parentTransform,
-                                                            std::vector<Utils::PrimitiveData>& outAllPrimitives)
-{
-    glm::mat4 globalTransform = parentTransform * node.localTransform;
-
-    for (auto& primitive : node.primitives)
-    {
-        Utils::PrimitiveData transformedPrimitive = primitive;
-        for (auto& vertex : transformedPrimitive.vertices)
-        {
-            vertex.position = glm::vec3(globalTransform * glm::vec4(vertex.position, 1.0f));
-            vertex.normal = glm::normalize(glm::mat3(globalTransform) * vertex.normal);
-        }
-        outAllPrimitives.push_back(std::move(transformedPrimitive));
-    }
-
-    for (const auto& child : node.children)
-    {
-        collectPrimitivesRecursive(child, globalTransform, outAllPrimitives);
-    }
 }

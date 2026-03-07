@@ -170,6 +170,7 @@ void Core::Component::MeshComponent::deserialize(const YAML::Node& node)
     mCurrentAnimationIndex = node["currentAnimationIndex"].as<uint16_t>();
 
     mAnimationFiles.clear();
+    mPrimitives.clear();
     if (node["animations"])
     {
         for (auto& animNode : node["animations"])
@@ -187,10 +188,24 @@ void Core::Component::MeshComponent::deserialize(const YAML::Node& node)
         auto& renderData = Engine::getInstance().getRenderData();
         const auto data = Utils::loadMeshFromFile(mMeshFilePath, renderData);
 
-        for (const auto& primitive : data.rootNode.primitives)
+        if (mPrimitiveIndex == -1)
         {
-            addPrimitive(primitive.vertices, primitive.indices, primitive.textures, renderData, primitive.material,
-                         primitive.bones, primitive.materialDescriptorSet);
+            std::vector<Utils::PrimitiveData> collectedPrimitives;
+            Utils::collectPrimitivesRecursive(data.rootNode, glm::mat4(1.0f), collectedPrimitives);
+
+            for (const auto& primitive : collectedPrimitives)
+            {
+                addPrimitive(primitive.vertices, primitive.indices, primitive.textures, renderData, primitive.material,
+                             primitive.bones, primitive.materialDescriptorSet);
+            }
+        }
+        else
+        {
+            for (const auto& primitive : data.rootNode.primitives)
+            {
+                addPrimitive(primitive.vertices, primitive.indices, primitive.textures, renderData, primitive.material,
+                             primitive.bones, primitive.materialDescriptorSet);
+            }
         }
     }
 }

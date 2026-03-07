@@ -355,3 +355,25 @@ Core::Utils::MeshData Core::Utils::loadMeshFromFile(const std::string& fileName,
     mesh.skeleton.initDebug(renderData);
     return mesh;
 }
+
+void Core::Utils::collectPrimitivesRecursive(const MeshNode& node, const glm::mat4& parentTransform,
+                                             std::vector<PrimitiveData>& outAllPrimitives)
+{
+    glm::mat4 globalTransform = parentTransform * node.localTransform;
+
+    for (auto& primitive : node.primitives)
+    {
+        PrimitiveData transformedPrimitive = primitive;
+        for (auto& vertex : transformedPrimitive.vertices)
+        {
+            vertex.position = glm::vec3(globalTransform * glm::vec4(vertex.position, 1.0f));
+            vertex.normal = glm::normalize(glm::mat3(globalTransform) * vertex.normal);
+        }
+        outAllPrimitives.push_back(std::move(transformedPrimitive));
+    }
+
+    for (const auto& child : node.children)
+    {
+        collectPrimitivesRecursive(child, globalTransform, outAllPrimitives);
+    }
+}

@@ -10,6 +10,8 @@
 
 namespace Core::Utils
 {
+// TODO
+// move this struct to a more general place, since it can be used by other systems as well
 struct PrimitiveData
 {
     std::vector<Renderer::Vertex> vertices;
@@ -38,4 +40,7 @@ struct MeshData
 };
 
 MeshData loadMeshFromFile(const std::string& fileName, Renderer::VkRenderData& renderData);
+
+void collectPrimitivesRecursive(const MeshNode& node, const glm::mat4& parentTransform,
+                                std::vector<PrimitiveData>& outAllPrimitives);
 } // namespace Core::Utils

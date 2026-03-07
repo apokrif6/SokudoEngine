@@ -1,13 +1,13 @@
 objects:
-  - name: TestObject_1
+  - name: RootNode
     components:
       - type: TransformComponent
         data:
           transform:
             position:
-              - 1
+              - -1
               - 0
-              - 1
+              - -1
             rotation:
               - 0
               - 0
@@ -19,15 +19,11 @@ objects:
       - type: MeshComponent
         data:
           meshFile: assets/mixamo/models/FemaleModel.fbx
-          animations:
-            - assets/mixamo/animations/AngryAnimation.fbx
-            - assets/mixamo/animations/BoxingAnimation.fbx
-            - assets/mixamo/animations/HipHopDancingAnimation.fbx
-            - assets/mixamo/animations/StandingIdleAnimation.fbx
-            - assets/mixamo/animations/StandingReactDeathBackwardAnimation.fbx
+          nodeName: ""
+          primitiveIndex: -1
           shouldPlayAnimation: true
-          currentAnimationIndex: 4
-  - name: TestObject_2
+          currentAnimationIndex: 0
+  - name: RootNode
     components:
       - type: TransformComponent
         data:
@@ -47,15 +43,11 @@ objects:
       - type: MeshComponent
         data:
           meshFile: assets/mixamo/models/FemaleModel.fbx
-          animations:
-            - assets/mixamo/animations/AngryAnimation.fbx
-            - assets/mixamo/animations/BoxingAnimation.fbx
-            - assets/mixamo/animations/HipHopDancingAnimation.fbx
-            - assets/mixamo/animations/StandingIdleAnimation.fbx
-            - assets/mixamo/animations/StandingReactDeathBackwardAnimation.fbx
+          nodeName: ""
+          primitiveIndex: -1
           shouldPlayAnimation: true
-          currentAnimationIndex: 1
-  - name: TestObject_3
+          currentAnimationIndex: 0
+  - name: RootNode
     components:
       - type: TransformComponent
         data:
@@ -75,23 +67,19 @@ objects:
       - type: MeshComponent
         data:
           meshFile: assets/mixamo/models/FemaleModel.fbx
-          animations:
-            - assets/mixamo/animations/AngryAnimation.fbx
-            - assets/mixamo/animations/BoxingAnimation.fbx
-            - assets/mixamo/animations/HipHopDancingAnimation.fbx
-            - assets/mixamo/animations/StandingIdleAnimation.fbx
-            - assets/mixamo/animations/StandingReactDeathBackwardAnimation.fbx
+          nodeName: ""
+          primitiveIndex: -1
           shouldPlayAnimation: true
-          currentAnimationIndex: 2
-  - name: TestObject_4
+          currentAnimationIndex: 0
+  - name: RootNode
     components:
       - type: TransformComponent
         data:
           transform:
             position:
-              - -1
+              - 1
               - 0
-              - -1
+              - 1
             rotation:
               - 0
               - 0
@@ -103,11 +91,7 @@ objects:
       - type: MeshComponent
         data:
           meshFile: assets/mixamo/models/FemaleModel.fbx
-          animations:
-            - assets/mixamo/animations/AngryAnimation.fbx
-            - assets/mixamo/animations/BoxingAnimation.fbx
-            - assets/mixamo/animations/HipHopDancingAnimation.fbx
-            - assets/mixamo/animations/StandingIdleAnimation.fbx
-            - assets/mixamo/animations/StandingReactDeathBackwardAnimation.fbx
-          shouldPlayAnimation: false
+          nodeName: ""
+          primitiveIndex: -1
+          shouldPlayAnimation: true
           currentAnimationIndex: 0

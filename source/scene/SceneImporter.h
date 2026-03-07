@@ -26,9 +26,5 @@ public:
     static std::shared_ptr<SceneObject> createObjectFromNode(const Utils::MeshNode& node,
                                                              const Animations::Skeleton& skeleton,
                                                              const std::string_view& filePath, bool shouldMergeMeshes);
-
-private:
-    static void collectPrimitivesRecursive(const Utils::MeshNode& node, glm::mat4 parentTransform,
-                                           std::vector<Utils::PrimitiveData>& outAllPrimitives);
 };
 } // namespace Core::Scene
