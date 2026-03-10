@@ -21,6 +21,8 @@ objects:
           meshFile: assets/mixamo/models/FemaleModel.fbx
           nodeName: ""
           primitiveIndex: -1
+          animations:
+            - assets/mixamo/animations/AngryAnimation.fbx
           shouldPlayAnimation: true
           currentAnimationIndex: 0
   - name: RootNode
@@ -45,6 +47,8 @@ objects:
           meshFile: assets/mixamo/models/FemaleModel.fbx
           nodeName: ""
           primitiveIndex: -1
+          animations:
+            - assets/mixamo/animations/BoxingAnimation.fbx
           shouldPlayAnimation: true
           currentAnimationIndex: 0
   - name: RootNode
@@ -69,6 +73,8 @@ objects:
           meshFile: assets/mixamo/models/FemaleModel.fbx
           nodeName: ""
           primitiveIndex: -1
+          animations:
+            - assets/mixamo/animations/HipHopDancingAnimation.fbx
           shouldPlayAnimation: true
           currentAnimationIndex: 0
   - name: RootNode
@@ -93,5 +99,8 @@ objects:
           meshFile: assets/mixamo/models/FemaleModel.fbx
           nodeName: ""
           primitiveIndex: -1
+          animations:
+            - assets/mixamo/animations/StandingIdleAnimation.fbx
+            - assets/mixamo/animations/StandingReactDeathBackwardAnimation.fbx
           shouldPlayAnimation: true
-          currentAnimationIndex: 0
+          currentAnimationIndex: 1

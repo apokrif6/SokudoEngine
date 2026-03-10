@@ -38,7 +38,7 @@ void buildDebugSkeletonLines(const Core::Animations::Skeleton& skeleton, const C
     }
 }
 
-Core::Component::MeshComponent::MeshComponent(Core::Animations::Skeleton skeleton) : mSkeleton(std::move(skeleton)) {}
+Core::Component::MeshComponent::MeshComponent(Animations::Skeleton skeleton) : mSkeleton(std::move(skeleton)) {}
 
 Core::Component::MeshComponent::~MeshComponent()
 {
@@ -135,6 +135,7 @@ void Core::Component::MeshComponent::loadAnimationFromFile(const std::string_vie
 
     if (!clip.channels.empty())
     {
+        mAnimationFiles.push_back(Utils::FileUtils::getRelativePath(filePath));
         mAnimations.push_back(std::move(clip));
 
         if (mAnimations.size() == 1)
@@ -169,15 +170,8 @@ void Core::Component::MeshComponent::deserialize(const YAML::Node& node)
     mShouldPlayAnimation = node["shouldPlayAnimation"].as<bool>();
     mCurrentAnimationIndex = node["currentAnimationIndex"].as<uint16_t>();
 
-    mAnimationFiles.clear();
     mPrimitives.clear();
-    if (node["animations"])
-    {
-        for (auto& animNode : node["animations"])
-        {
-            mAnimationFiles.push_back(animNode.as<std::string>());
-        }
-    }
+    mAnimationFiles.clear();
 
     if (node["meshFile"])
     {
@@ -205,6 +199,17 @@ void Core::Component::MeshComponent::deserialize(const YAML::Node& node)
             {
                 addPrimitive(primitive.vertices, primitive.indices, primitive.textures, renderData, primitive.material,
                              primitive.bones, primitive.materialDescriptorSet);
+            }
+        }
+
+        mSkeleton = data.skeleton;
+
+        // no sense to load animations if there is no mesh, since they won't be used anyway
+        if (node["animations"])
+        {
+            for (auto& animNode : node["animations"])
+            {
+                loadAnimationFromFile(animNode.as<std::string>());
             }
         }
     }

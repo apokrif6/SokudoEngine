@@ -5,7 +5,7 @@
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 #include <glm/gtc/type_ptr.hpp>
-#include <filesystem>
+#include "FileUtils.h"
 
 int getBoneID(Core::Utils::PrimitiveData& primitiveData, const aiBone* bone)
 {
@@ -342,12 +342,7 @@ Core::Utils::MeshData Core::Utils::loadMeshFromFile(const std::string& fileName,
         return {};
     }
 
-    const std::filesystem::path meshPath(fileName);
-    std::string baseDir = meshPath.parent_path().string();
-    if (!baseDir.empty())
-    {
-        baseDir += "/";
-    }
+    const std::string baseDir = FileUtils::getParentDirectory(fileName);
 
     MeshData mesh;
     processNodeHierarchy(mesh.rootNode, scene->mRootNode, scene, renderData, baseDir);
