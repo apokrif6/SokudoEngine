@@ -17,6 +17,10 @@ public:
 
     std::shared_ptr<SceneObject> createObject(const std::string& name);
 
+    // how can I cleanup data without referencing renderData? maybe I can just mark object as deleted and then cleanup
+    // in update?
+    void removeObject(const std::shared_ptr<SceneObject>& object, Renderer::VkRenderData& renderData);
+
     virtual void update(Renderer::VkRenderData& renderData, float deltaTime) override;
 
     virtual System::DrawLayer getDrawLayer() const override { return System::DrawLayer::World; }

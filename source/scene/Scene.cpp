@@ -20,6 +20,25 @@ std::shared_ptr<Core::Scene::SceneObject> Core::Scene::Scene::createObject(const
     return newObject;
 }
 
+void Core::Scene::Scene::removeObject(const std::shared_ptr<SceneObject>& object, Renderer::VkRenderData& renderData)
+{
+    if (sceneObjectSelection.selectedObject.lock() == object)
+    {
+        sceneObjectSelection.selectedObject.reset();
+    }
+
+    object->cleanup(renderData);
+
+    if (auto* parent = object->getParent())
+    {
+        parent->removeChild(object.get());
+    }
+    else
+    {
+        mObjects.erase(std::remove(mObjects.begin(), mObjects.end(), object), mObjects.end());
+    }
+}
+
 void Core::Scene::Scene::update(Renderer::VkRenderData& renderData, float deltaTime)
 {
     mUpdateSceneProfilingTimer.start();

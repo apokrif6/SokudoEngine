@@ -61,6 +61,8 @@ public:
 
     void removeChild(SceneObject* child);
 
+    void setName(const std::string_view& name) { mName = name; }
+
 protected:
     std::string mName;
     SceneObject* mParent = nullptr;

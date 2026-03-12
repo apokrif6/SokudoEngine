@@ -134,7 +134,8 @@ bool Core::UI::SceneUIWindow::getBody()
         }
     }
 
-    if (ImGui::BeginPopupContextWindow("InspectorContextMenu", ImGuiPopupFlags_MouseButtonRight))
+    if (ImGui::BeginPopupContextWindow("InspectorContextMenu",
+                                       ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
     {
         if (ImGui::MenuItem("Create Empty Object"))
         {
@@ -194,6 +195,42 @@ void Core::UI::SceneUIWindow::drawSceneObjectNode(std::shared_ptr<Scene::SceneOb
     if (ImGui::IsItemClicked())
     {
         selection.selectedObject = object;
+    }
+
+    if (ImGui::BeginPopupContextItem())
+    {
+        selection.selectedObject = object;
+
+        static std::string editName;
+
+        if (ImGui::IsWindowAppearing())
+        {
+            editName = object->getName();
+        }
+
+        ImGui::Text("Object:");
+        ImGui::InputText("##Rename", &editName, ImGuiInputTextFlags_AutoSelectAll);
+        if (ImGui::IsItemDeactivatedAfterEdit())
+        {
+            if (!editName.empty())
+            {
+                object->setName(editName);
+            }
+        }
+
+        if (ImGui::MenuItem("Delete"))
+        {
+            auto* scene = Engine::getInstance().getSystem<Scene::Scene>();
+            scene->removeObject(selectedObject, Engine::getInstance().getRenderData());
+            ImGui::EndPopup();
+            if (opened && !isLeaf)
+            {
+                ImGui::TreePop();
+            }
+            return;
+        }
+
+        ImGui::EndPopup();
     }
 
     if (ImGui::BeginDragDropSource())
