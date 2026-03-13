@@ -16,6 +16,7 @@ class ProfilingUIWindow : public UIWindow<ProfilingUIWindow>
     {
         if (!ImGui::Begin("Profiling"))
         {
+            ImGui::End();
             return false;
         }
 

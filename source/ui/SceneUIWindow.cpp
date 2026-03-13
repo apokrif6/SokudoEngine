@@ -184,13 +184,13 @@ void Core::UI::SceneUIWindow::drawSceneObjectNode(std::shared_ptr<Scene::SceneOb
     ImGuiTreeNodeFlags flags =
         ImGuiTreeNodeFlags_OpenOnArrow | (selectedObject == object ? ImGuiTreeNodeFlags_Selected : 0);
 
-    bool isLeaf = object->getChildren().empty();
+    const bool isLeaf = object->getChildren().empty();
     if (isLeaf)
     {
         flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
     }
 
-    bool opened = ImGui::TreeNodeEx((void*)object.get(), flags, "%s", object->getName().c_str());
+    const bool opened = ImGui::TreeNodeEx(object.get(), flags, "%s", object->getName().c_str());
 
     if (ImGui::IsItemClicked())
     {

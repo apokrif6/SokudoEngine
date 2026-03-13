@@ -7,6 +7,7 @@
 #include "vk-renderer/buffers/CommandBuffer.h"
 #include "tools/Logger.h"
 #include "ui/ProfilingUIWindow.h"
+#include "ui/AnimationSequenceUIWindow.h"
 #include "ui/SceneUIWindow.h"
 #include "imgui_internal.h"
 #include "inspector/InspectorUIWindow.h"
@@ -173,6 +174,7 @@ void Core::Renderer::UserInterface::update(VkRenderData& renderData, float delta
         ImGui::DockBuilderDockWindow("Scene", dockLeftTop);
         ImGui::DockBuilderDockWindow("Inspector", dockRightMisc);
         ImGui::DockBuilderDockWindow("Profiling", dockBottom);
+        ImGui::DockBuilderDockWindow("Animation Sequence", dockBottom);
         ImGui::DockBuilderDockWindow("Viewport", dockCenterViewport);
         ImGui::DockBuilderDockWindow("Misc", dockLeftBottom);
 
@@ -186,6 +188,7 @@ void Core::Renderer::UserInterface::update(VkRenderData& renderData, float delta
     UI::SceneUIWindow::renderBody();
     UI::InspectorUIWindow::renderBody();
     UI::ProfilingUIWindow::renderBody();
+    UI::AnimationSequenceUIWindow::renderBody();
     UI::MiscUIWindow::renderBody();
     UI::ViewportUIWindow::renderBody();
 
