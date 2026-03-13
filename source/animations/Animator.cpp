@@ -6,15 +6,21 @@ void Core::Animations::Animator::update(Renderer::VkRenderData& renderData, floa
     mAnimationBonesTransformCalculationTimer.start();
     for (Component::MeshComponent* mesh : mMeshes)
     {
-        if (!mesh->shouldPlayAnimation())
+        if (!mesh->hasAnimations() || !mesh->shouldPlayAnimation())
         {
             continue;
         }
+
+        const auto& clip = mesh->getAnimations()[mesh->getCurrentAnimationIndex()];
+        const float ticksPerSecond = clip.ticksPerSecond != 0 ? clip.ticksPerSecond : 30.0f;
+
+        const float newTime = mesh->getCurrentAnimationTime() + deltaTime * ticksPerSecond;
+        mesh->setAnimationTime(fmod(newTime, clip.duration));
+
         updateBonesTransform(mesh, mesh->getCurrentAnimationIndex());
     }
-    renderData.rdAnimationBonesTransformCalculationTime = mAnimationBonesTransformCalculationTimer.stop();
 
-    mAnimationTime += deltaTime;
+    renderData.rdAnimationBonesTransformCalculationTime = mAnimationBonesTransformCalculationTimer.stop();
 }
 
 void Core::Animations::Animator::updateBonesTransform(Component::MeshComponent* mesh, uint16_t animationToPlayIndex)
@@ -33,9 +39,7 @@ void Core::Animations::Animator::updateBonesTransform(Component::MeshComponent* 
         const auto& animations = mesh->getAnimations();
         const AnimationClip& animation = animations[animationToPlayIndex];
 
-        float duration = animation.duration;
-        float ticksPerSecond = animation.ticksPerSecond != 0 ? animation.ticksPerSecond : 30.f;
-        float timeInTicks = fmod(mAnimationTime * ticksPerSecond, duration);
+        const float timeInTicks = mesh->getCurrentAnimationTime();
 
         const Skeleton& skeleton = mesh->getSkeleton();
 

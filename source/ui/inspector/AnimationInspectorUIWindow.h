@@ -41,12 +41,6 @@ class AnimationInspectorUIWindow : public UIWindow<AnimationInspectorUIWindow>
             return true;
         }
 
-        bool shouldPlayAnimation = meshComponent->shouldPlayAnimation();
-        if (ImGui::Checkbox("Should play animation", &shouldPlayAnimation))
-        {
-            meshComponent->setShouldPlayAnimation(shouldPlayAnimation);
-        }
-
         bool shouldDrawDebugSkeleton = meshComponent->shouldDrawDebugSkeleton();
         if (ImGui::Checkbox("Should draw debug skeleton", &shouldDrawDebugSkeleton))
         {
@@ -55,6 +49,7 @@ class AnimationInspectorUIWindow : public UIWindow<AnimationInspectorUIWindow>
 
         const std::vector<Animations::AnimationClip>& loadedAnimations = meshComponent->getAnimations();
         int currentAnimationIndex = meshComponent->getCurrentAnimationIndex();
+        ImGui::Text("Active Clip:");
         if (ImGui::BeginCombo("##Loaded animations", loadedAnimations[currentAnimationIndex].name.c_str(),
                               ImGuiComboFlags_WidthFitPreview))
         {
@@ -64,6 +59,7 @@ class AnimationInspectorUIWindow : public UIWindow<AnimationInspectorUIWindow>
                 if (ImGui::Selectable(loadedAnimations[i].name.c_str(), isAnimationToPlaySelected))
                 {
                     meshComponent->setCurrentAnimationIndex(i);
+                    meshComponent->setAnimationTime(0.f);
                 }
 
                 if (isAnimationToPlaySelected)
@@ -74,6 +70,41 @@ class AnimationInspectorUIWindow : public UIWindow<AnimationInspectorUIWindow>
 
             ImGui::EndCombo();
         }
+
+        const auto& currentClip = loadedAnimations[currentAnimationIndex];
+        float timeInTicks = meshComponent->getCurrentAnimationTime();
+        const float duration = currentClip.duration;
+        const std::string overlay = std::format("{:.1f} / {:.1f}", timeInTicks, duration);
+
+        ImGui::Text("Timeline (Ticks)");
+        if (ImGui::SliderFloat("##TimelineSlider", &timeInTicks, 0.0f, duration, overlay.c_str()))
+        {
+            meshComponent->setShouldPlayAnimation(false);
+            meshComponent->setAnimationTime(timeInTicks);
+        }
+
+        if (meshComponent->shouldPlayAnimation())
+        {
+            if (ImGui::Button("Pause"))
+            {
+                meshComponent->setShouldPlayAnimation(false);
+            }
+        }
+        else
+        {
+            if (ImGui::Button("Play"))
+            {
+                meshComponent->setShouldPlayAnimation(true);
+            }
+        }
+
+        ImGui::SameLine();
+        if (ImGui::Button("Reset"))
+        {
+            meshComponent->setAnimationTime(0.0f);
+        }
+
+        ImGui::TextDisabled("Ticks Per Second: %.1f", currentClip.ticksPerSecond);
 
         return true;
     }

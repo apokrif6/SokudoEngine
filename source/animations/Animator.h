@@ -38,8 +38,6 @@ private:
     void readNodeHierarchyClip(const AnimationClip& clip, float animationTime, const BoneNode& node,
                                const glm::mat4& parentTransform, BonesInfo& bonesInfo, const Skeleton& skeleton);
 
-    float mAnimationTime = 0.f;
-
     Timer mAnimationBonesTransformCalculationTimer;
 };
 } // namespace Core::Animations

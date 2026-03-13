@@ -61,6 +61,10 @@ public:
         }
     }
 
+    float getCurrentAnimationTime() const { return mCurrentAnimationTime; }
+
+    void setAnimationTime(float time) { mCurrentAnimationTime = time; }
+
     void setSourceMesh(const std::string_view& path, uint32_t primitiveIndex);
 
     [[nodiscard]] uint16_t getCurrentAnimationIndex() const { return mCurrentAnimationIndex; }
@@ -88,6 +92,7 @@ private:
     bool mShouldPlayAnimation = false;
     bool mShouldDrawDebugSkeleton = false;
     uint16_t mCurrentAnimationIndex = 0;
+    float mCurrentAnimationTime = 0.f;
 
     // metadata for serialization
     // probably should be moved to other place (I don't know where exactly)
