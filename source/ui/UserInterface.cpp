@@ -159,24 +159,26 @@ void Core::Renderer::UserInterface::update(VkRenderData& renderData, float delta
         ImGui::DockBuilderAddNode(dockspaceID, ImGuiDockNodeFlags_DockSpace);
         ImGui::DockBuilderSetNodeSize(dockspaceID, viewport->Size);
 
-        ImGuiID dockLeft, dockRight;
-        ImGui::DockBuilderSplitNode(dockspaceID, ImGuiDir_Left, 0.25f, &dockLeft, &dockRight);
+        ImGuiID dockLeft, dockRemaining;
+        ImGui::DockBuilderSplitNode(dockspaceID, ImGuiDir_Left, 0.20f, &dockLeft, &dockRemaining);
 
-        ImGuiID dockLeftBottom, dockLeftTop;
+        ImGuiID dockRight, dockCenter;
+        ImGui::DockBuilderSplitNode(dockRemaining, ImGuiDir_Right, 0.25f, &dockRight, &dockCenter);
+
+        ImGuiID dockCenterTop, dockCenterBottom;
+        ImGui::DockBuilderSplitNode(dockCenter, ImGuiDir_Down, 0.30f, &dockCenterBottom, &dockCenterTop);
+
+        ImGuiID dockLeftTop, dockLeftBottom;
         ImGui::DockBuilderSplitNode(dockLeft, ImGuiDir_Down, 0.35f, &dockLeftBottom, &dockLeftTop);
 
-        ImGuiID dockBottom, dockTop;
-        ImGui::DockBuilderSplitNode(dockRight, ImGuiDir_Down, 0.25f, &dockBottom, &dockTop);
-
-        ImGuiID dockRightMisc, dockCenterViewport;
-        ImGui::DockBuilderSplitNode(dockTop, ImGuiDir_Right, 0.25f, &dockRightMisc, &dockCenterViewport);
-
         ImGui::DockBuilderDockWindow("Scene", dockLeftTop);
-        ImGui::DockBuilderDockWindow("Inspector", dockRightMisc);
-        ImGui::DockBuilderDockWindow("Profiling", dockBottom);
-        ImGui::DockBuilderDockWindow("Animation Sequence", dockBottom);
-        ImGui::DockBuilderDockWindow("Viewport", dockCenterViewport);
         ImGui::DockBuilderDockWindow("Misc", dockLeftBottom);
+    
+        ImGui::DockBuilderDockWindow("Viewport", dockCenterTop);
+        ImGui::DockBuilderDockWindow("Profiling", dockCenterBottom);
+        ImGui::DockBuilderDockWindow("Animation Sequence", dockCenterBottom);
+
+        ImGui::DockBuilderDockWindow("Inspector", dockRight);
 
         ImGui::DockBuilderFinish(dockspaceID);
     }
