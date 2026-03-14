@@ -68,8 +68,6 @@ class MiscUIWindow : public UIWindow<MiscUIWindow>
 
         ImGui::Separator();
 
-        ImGui::Text("Field Of View");
-        ImGui::SameLine();
         ImGui::SliderInt("FOV", &renderData.rdFieldOfView, 40, 150);
 
         ImGui::Text("Camera Position:");

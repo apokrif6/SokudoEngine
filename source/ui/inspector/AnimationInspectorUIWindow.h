@@ -44,8 +44,8 @@ class AnimationInspectorUIWindow : public UIWindow<AnimationInspectorUIWindow>
         const std::vector<Animations::AnimationClip>& loadedAnimations = meshComponent->getAnimations();
         int currentAnimationIndex = meshComponent->getCurrentAnimationIndex();
         ImGui::Text("Current Animation:");
-        if (ImGui::BeginCombo("##Loaded animations", loadedAnimations[currentAnimationIndex].name.c_str(),
-                              ImGuiComboFlags_WidthFitPreview))
+        ImGui::PushItemWidth(-1.0f);
+        if (ImGui::BeginCombo("##Loaded animations", loadedAnimations[currentAnimationIndex].name.c_str()))
         {
             for (int i = 0; i < loadedAnimations.size(); ++i)
             {
