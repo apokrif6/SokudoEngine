@@ -6,11 +6,13 @@
 #include "tools/Logger.h"
 
 std::future<bool> Core::Renderer::Texture::loadTexture(VkRenderData& renderData, VkTextureData& textureData,
-                                                       const std::string& textureFilename, VkFormat format)
+                                                       const std::string& textureFilename, VkFormat format,
+                                                       VkSamplerAddressMode addressModeU,
+                                                       VkSamplerAddressMode addressModeV)
 {
     return std::async(
         std::launch::async,
-        [&renderData, &textureData, &textureFilename, format]
+        [&renderData, &textureData, &textureFilename, format, addressModeU, addressModeV]
         {
             int texWidth;
             int texHeight;
@@ -233,9 +235,9 @@ std::future<bool> Core::Renderer::Texture::loadTexture(VkRenderData& renderData,
             texSamplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
             texSamplerInfo.magFilter = VK_FILTER_LINEAR;
             texSamplerInfo.minFilter = VK_FILTER_LINEAR;
-            texSamplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-            texSamplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-            texSamplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+            texSamplerInfo.addressModeU = addressModeU;
+            texSamplerInfo.addressModeV = addressModeV;
+            texSamplerInfo.addressModeW = addressModeU;
             texSamplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
             texSamplerInfo.unnormalizedCoordinates = VK_FALSE;
             texSamplerInfo.compareEnable = VK_FALSE;

@@ -6,6 +6,7 @@
 #include <assimp/scene.h>
 #include <glm/gtc/type_ptr.hpp>
 #include "FileUtils.h"
+#include "core/Assertion.h"
 
 int getBoneID(Core::Utils::PrimitiveData& primitiveData, const aiBone* bone)
 {
@@ -96,10 +97,30 @@ void processMesh(std::vector<Core::Utils::PrimitiveData>& outPrimitives, const a
         aiString path;
         if (material->GetTexture(textureType, 0, &path) == AI_SUCCESS)
         {
+            auto convertMode = [](const int mode)
+            {
+                return mode == aiTextureMapMode_Clamp ? VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE
+                                                      : VK_SAMPLER_ADDRESS_MODE_REPEAT;
+            };
+
+            VkSamplerAddressMode addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+            VkSamplerAddressMode addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+
+            int mapModeU = aiTextureMapMode_Wrap;
+            int mapModeV = aiTextureMapMode_Wrap;
+            if (material->Get(AI_MATKEY_MAPPINGMODE_U(textureType, 0), mapModeU) == AI_SUCCESS)
+            {
+                addressModeU = convertMode(mapModeU);
+            }
+            if (material->Get(AI_MATKEY_MAPPINGMODE_V(textureType, 0), mapModeV) == AI_SUCCESS)
+            {
+                addressModeV = convertMode(mapModeV);
+            }
+
             std::string textureFileName = baseDir + path.C_Str();
             Core::Renderer::VkTextureData textureData;
-            std::future<bool> textureLoadFuture =
-                Core::Renderer::Texture::loadTexture(renderData, textureData, textureFileName);
+            std::future<bool> textureLoadFuture = Core::Renderer::Texture::loadTexture(
+                renderData, textureData, textureFileName, VK_FORMAT_R8G8B8A8_SRGB, addressModeU, addressModeV);
 
             if (textureLoadFuture.get())
             {
