@@ -173,7 +173,7 @@ void Core::Renderer::UserInterface::update(VkRenderData& renderData, float delta
 
         ImGui::DockBuilderDockWindow("Scene", dockLeftTop);
         ImGui::DockBuilderDockWindow("Misc", dockLeftBottom);
-    
+
         ImGui::DockBuilderDockWindow("Viewport", dockCenterTop);
         ImGui::DockBuilderDockWindow("Profiling", dockCenterBottom);
         ImGui::DockBuilderDockWindow("Animation Sequence", dockCenterBottom);

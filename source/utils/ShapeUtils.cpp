@@ -69,8 +69,8 @@ void processBones(Core::Utils::PrimitiveData& primitiveData, const aiMesh* mesh)
     primitiveData.bones.finalTransforms.resize(primitiveData.bones.bones.size(), glm::mat4(1.0));
 }
 
-void processMesh(std::vector<Core::Utils::PrimitiveData>& outPrimitives, const aiMesh* mesh, const aiScene* scene,
-                 const aiMaterial* material, Core::Renderer::VkRenderData& renderData, const std::string& baseDir)
+void processMesh(std::vector<Core::Utils::PrimitiveData>& outPrimitives, const aiMesh* mesh, const aiMaterial* material,
+                 Core::Renderer::VkRenderData& renderData, const std::string& baseDir)
 {
     Core::Utils::PrimitiveData primitiveData;
     Core::Renderer::MaterialInfo materialInfo = {};
@@ -315,7 +315,7 @@ void processNodeHierarchy(Core::Utils::MeshNode& outNode, aiNode* node, const ai
         const aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
         const aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
-        processMesh(outNode.primitives, mesh, scene, material, renderData, baseDir);
+        processMesh(outNode.primitives, mesh, material, renderData, baseDir);
     }
 
     for (size_t i = 0; i < node->mNumChildren; ++i)
