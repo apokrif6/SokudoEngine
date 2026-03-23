@@ -288,8 +288,12 @@ void processMesh(std::vector<Core::Utils::PrimitiveData>& outPrimitives, const a
 
         if (mesh->HasTangentsAndBitangents())
         {
-            aiVector3D& tangent = mesh->mTangents[i];
-            vertex.tangent = glm::vec4(tangent.x, tangent.y, tangent.z, mesh->mBitangents ? 1.0f : -1.0f);
+            glm::vec3 n = {mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z};
+            glm::vec3 t = {mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z};
+            glm::vec3 b = {mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z};
+
+            float w = glm::dot(glm::cross(n, t), b) < 0.0f ? -1.0f : 1.0f;
+            vertex.tangent = glm::vec4(t, w);
         }
 
         if (mesh->HasVertexColors(0))
