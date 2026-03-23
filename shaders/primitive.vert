@@ -55,7 +55,8 @@ void main()
 
     normal = normalize(mat3(primitiveData.model) * mat3(boneTransform) * aNormal);
 
-    tangent.xyz = normalize(normal * aTangent.xyz);
+    vec3 worldTangent = mat3(primitiveData.model) * mat3(boneTransform) * aTangent.xyz;
+    tangent.xyz = normalize(worldTangent);
     tangent.w = aTangent.w;
 
     textCoord = aUV;
