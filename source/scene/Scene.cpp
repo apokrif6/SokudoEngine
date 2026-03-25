@@ -41,6 +41,10 @@ void Core::Scene::Scene::removeObject(const std::shared_ptr<SceneObject>& object
 
 void Core::Scene::Scene::update(Renderer::VkRenderData& renderData, float deltaTime)
 {
+    // TODO
+    // where to move this?
+    renderData.rdGlobalSceneData.lightCount.x = 0;
+
     mUpdateSceneProfilingTimer.start();
     for (auto& object : mObjects)
     {
@@ -56,6 +60,7 @@ void Core::Scene::Scene::draw(Renderer::VkRenderData& renderData)
         object->draw(renderData);
     }
 }
+
 void Core::Scene::Scene::cleanup(Renderer::VkRenderData& renderData)
 {
     for (auto& object : mObjects)

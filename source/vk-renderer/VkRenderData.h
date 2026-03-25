@@ -36,13 +36,21 @@ struct Vertex
     }
 };
 
-struct GlobalSceneData
+// TODO
+// rewrite it to lights use SSBO, and remove the max number of lights and light count
+constexpr size_t maxNumberOfLights = 64;
+struct alignas(16) PointLightInfo
+{
+    glm::vec4 position;
+    glm::vec4 color;
+};
+
+struct alignas(16) GlobalSceneData
 {
     glm::mat4 view;
     glm::mat4 projection;
     glm::vec4 camPos;
-    glm::vec4 lightPositions[4];
-    glm::vec4 lightColors[4];
+    PointLightInfo lights[maxNumberOfLights];
     glm::ivec4 lightCount;
 };
 
@@ -73,14 +81,6 @@ struct MaterialInfo
 struct CameraInfo
 {
     glm::vec4 position;
-};
-
-constexpr size_t maxNumberOfLights = 4;
-struct LightsInfo
-{
-    glm::vec4 positions[maxNumberOfLights];
-    glm::vec4 colors[maxNumberOfLights];
-    glm::ivec4 count;
 };
 
 struct alignas(16) CaptureInfo
@@ -320,6 +320,8 @@ struct VkRenderData
     VkTextureData rdPlaceholderTexture{};
 
     VkVertexBufferData rdVertexBufferData{};
+
+    GlobalSceneData rdGlobalSceneData{};
 
     // stores only GlobalScene data
     VkUniformBufferData rdGlobalSceneUBO{};

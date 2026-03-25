@@ -1,5 +1,9 @@
 #version 460 core
 
+#extension GL_GOOGLE_include_directive : require
+#include "pbr_utils.glsl"
+#include "shared_scene.glsl"
+
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 aNormal;
 layout (location = 2) in vec4 aTangent;
@@ -13,16 +17,6 @@ layout (location = 1) out vec3 normal;
 layout (location = 2) out vec2 textCoord;
 layout (location = 3) out vec4 tangent;
 layout (location = 4) out vec4 vertColor;
-
-layout (set = 0, binding = 0) uniform GlobalScene
-{
-    mat4 view;
-    mat4 projection;
-    vec4 camPos;
-    vec4 lightPositions[4];
-    vec4 lightColors[4];
-    ivec4 lightCount;
-} scene;
 
 const int MAX_BONES = 200;
 layout (set = 1, binding = 0) uniform PrimitiveData

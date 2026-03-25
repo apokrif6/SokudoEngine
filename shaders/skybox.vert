@@ -1,18 +1,10 @@
 #version 460 core
 
 #extension GL_ARB_separate_shader_objects : enable
+#extension GL_GOOGLE_include_directive : require
+#include "shared_scene.glsl"
 
 layout (location = 0) out vec3 texCoord;
-
-layout (set = 0, binding = 0) uniform GlobalScene
-{
-    mat4 view;
-    mat4 projection;
-    vec4 camPos;
-    vec4 lightPositions[4];
-    vec4 lightColors[4];
-    ivec4 lightCount;
-} scene;
 
 const vec3 positions[8] = vec3[8](
     vec3(-1.0, -1.0, -1.0),

@@ -1,5 +1,5 @@
 objects:
-  - name: node_damagedHelmet_-6514
+  - name: PBR Object
     components:
       - type: TransformComponent
         data:
@@ -10,7 +10,7 @@ objects:
               - 0
             rotation:
               - 90.0000076
-              - -0
+              - 1858.45471
               - 0
             scale:
               - 1
@@ -29,3 +29,28 @@ objects:
             - 0
             - 30
             - 0
+  - name: Point Light Object
+    components:
+      - type: TransformComponent
+        data:
+          transform:
+            position:
+              - -2.40421486
+              - 0
+              - 0
+            rotation:
+              - 0
+              - 0
+              - 0
+            scale:
+              - 1
+              - 1
+              - 1
+      - type: PointLightComponent
+        data:
+          color:
+            - 0.176991165
+            - 0.0140966363
+            - 0.169783458
+          intensity: 100
+          radius: 15

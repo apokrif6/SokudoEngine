@@ -1220,20 +1220,16 @@ void Core::Renderer::VkRenderer::updateGlobalSceneData()
 {
     auto& renderData = Engine::getInstance().getRenderData();
 
-    mGlobalSceneData.view = mCamera.getViewMatrix(renderData);
-    mGlobalSceneData.projection = glm::perspective(glm::radians(static_cast<float>(renderData.rdFieldOfView)),
-                                                   static_cast<float>(renderData.rdVkbSwapchain.extent.width) /
-                                                       static_cast<float>(renderData.rdVkbSwapchain.extent.height),
-                                                   0.01f, 50.0f);
+    renderData.rdGlobalSceneData.view = mCamera.getViewMatrix(renderData);
+    renderData.rdGlobalSceneData.projection =
+        glm::perspective(glm::radians(static_cast<float>(renderData.rdFieldOfView)),
+                         static_cast<float>(renderData.rdVkbSwapchain.extent.width) /
+                             static_cast<float>(renderData.rdVkbSwapchain.extent.height),
+                         0.01f, 50.0f);
 
-    mGlobalSceneData.camPos = glm::vec4(renderData.rdCameraWorldPosition, 1.0f);
+    renderData.rdGlobalSceneData.camPos = glm::vec4(renderData.rdCameraWorldPosition, 1.0f);
 
-    // dummy light. will be replaced later with real lights from the scene
-    mGlobalSceneData.lightCount = glm::ivec4(1, 0, 0, 0);
-    mGlobalSceneData.lightPositions[0] = glm::vec4(0.f, 10.f, 10.f, 1.f);
-    mGlobalSceneData.lightColors[0] = glm::vec4(1.f, 1.f, 1.f, 1.f);
-
-    UniformBuffer::uploadData(renderData, renderData.rdGlobalSceneUBO, mGlobalSceneData);
+    UniformBuffer::uploadData(renderData, renderData.rdGlobalSceneUBO, renderData.rdGlobalSceneData);
 }
 
 void Core::Renderer::VkRenderer::handleCameraMovementKeys()

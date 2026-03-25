@@ -1,21 +1,14 @@
 #version 460 core
 
+#extension GL_GOOGLE_include_directive : require
+#include "shared_scene.glsl"
+
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 aColor;
 layout (location = 2) in vec2 aTexCoord;
 
 layout (location = 0) out vec3 nearPoint;
 layout (location = 1) out vec3 farPoint;
-
-layout (set = 0, binding = 0) uniform GlobalScene
-{
-    mat4 view;
-    mat4 projection;
-    vec4 camPos;
-    vec4 lightPositions[4];
-    vec4 lightColors[4];
-    ivec4 lightCount;
-} scene;
 
 vec3 gridPlane[6] = vec3[](
 vec3(1, 1, 0), vec3(-1, 1, 0), vec3(-1, -1, 0),

@@ -2,6 +2,7 @@
 
 #extension GL_GOOGLE_include_directive : require
 #include "pbr_utils.glsl"
+#include "shared_scene.glsl"
 
 layout (location = 0) in vec3 worldPos;
 layout (location = 1) in vec3 normal;
@@ -10,16 +11,6 @@ layout (location = 3) in vec4 tangent;
 layout (location = 4) in vec4 vertColor;
 
 layout (location = 0) out vec4 FragColor;
-
-layout (set = 0, binding = 0) uniform GlobalScene
-{
-    mat4 view;
-    mat4 projection;
-    vec4 camPos;
-    vec4 lightPositions[4];
-    vec4 lightColors[4];
-    ivec4 lightCount;
-} scene;
 
 layout (set = 0, binding = 1) uniform samplerCube irradianceMap;
 layout (set = 0, binding = 2) uniform samplerCube prefilterMap;
@@ -102,7 +93,7 @@ void main() {
     {
         vec4 mr = texture(metallicRoughnessMap, textCoord);
         metallic = material.metallicFactor * mr.b;
-        roughness = material.roughnessFactor * mr.g;
+        roughness = clamp(material.roughnessFactor * mr.g, 0.04, 1.0);
     }
 
     float ao = 1.0;
@@ -119,16 +110,20 @@ void main() {
 
     vec3 Lo = vec3(0.0);
     vec3 F0 = mix(vec3(0.04), albedo, metallic);
-    //int count = lightCount.x; // lol
-    int count = 0; // lol
+    int count = min(scene.lightCount.x, MAX_LIGHTS);
     for (int i = 0 ; i < count; i++)
     {
-        vec3 L = normalize(scene.lightPositions[i].xyz - worldPos);
-        vec3 H = normalize(V + L);
+        vec3 lightPosition = scene.lights[i].position.xyz;
+        float lightRadius = scene.lights[i].position.w;
+        vec3 lightColor = scene.lights[i].color.rgb;
+        float lightIntensity = scene.lights[i].color.w;
 
-        float distance = length(scene.lightPositions[i].xyz - worldPos);
-        float attenuation = 1.0 / (distance*distance);
-        vec3 radiance = scene.lightColors[i].rgb * attenuation;
+        float distance = length(lightPosition - worldPos);
+        float attenuation = pow(clamp(1.0 - pow(distance / lightRadius, 4.0), 0.0, 1.0), 2.0) / (distance * distance + 1.0);
+        vec3 radiance = lightColor * lightIntensity * attenuation;
+
+        vec3 L = (lightPosition - worldPos) / max(distance, 0.001);
+        vec3 H = normalize(V + L);
 
         float NDF = DistributionGGX(N, H, roughness);
         float G = GeometrySmith(N, V, L, roughness);

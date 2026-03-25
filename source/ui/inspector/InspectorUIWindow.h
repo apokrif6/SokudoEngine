@@ -5,6 +5,8 @@
 #include "MeshComponentInspectorUIWindow.h"
 #include "RotatingComponentInspectorUIWIndow.h"
 #include "TransformInspectorUIWindow.h"
+#include "PointLightComponentInspectorUIWindow.h"
+#include "components/PointLightComponent.h"
 #include "engine/Engine.h"
 
 namespace Core::UI
@@ -21,6 +23,8 @@ class InspectorUIWindow : public UIWindow<InspectorUIWindow>
         auto objects = scene->getObjects();
         auto& selection = scene->getSceneObjectSelection();
 
+        // TODO
+        // probably some abstraction is needed :)
         if (auto selectedObject = selection.selectedObject.lock())
         {
             if (auto* transformComponent = selectedObject->getComponent<Component::TransformComponent>())
@@ -47,6 +51,14 @@ class InspectorUIWindow : public UIWindow<InspectorUIWindow>
                 }
             }
 
+            if (auto* pointLightComponent = selectedObject->getComponent<Component::PointLightComponent>())
+            {
+                if (ImGui::CollapsingHeader("Point Light Component", ImGuiTreeNodeFlags_DefaultOpen))
+                {
+                    PointLightComponentInspectorUIWindow::renderBody();
+                }
+            }
+
             if (ImGui::BeginPopupContextWindow("AddComponentContext", ImGuiPopupFlags_MouseButtonRight))
             {
                 if (ImGui::MenuItem("Rotating Component"))
@@ -62,6 +74,14 @@ class InspectorUIWindow : public UIWindow<InspectorUIWindow>
                     if (!selectedObject->getComponent<Component::MeshComponent>())
                     {
                         selectedObject->addComponent<Component::MeshComponent>();
+                    }
+                }
+
+                if (ImGui::MenuItem("Point Light Component"))
+                {
+                    if (!selectedObject->getComponent<Component::PointLightComponent>())
+                    {
+                        selectedObject->addComponent<Component::PointLightComponent>();
                     }
                 }
 

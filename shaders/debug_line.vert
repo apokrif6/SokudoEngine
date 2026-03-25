@@ -1,20 +1,12 @@
 #version 460 core
 
+#extension GL_GOOGLE_include_directive : require
+#include "shared_scene.glsl"
+
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 aColor;
 
 layout (location = 0) out vec4 lineColor;
-
-layout (set = 0, binding = 0) uniform GlobalScene
-{
-    mat4 view;
-    mat4 projection;
-    vec4 camPos;
-    vec4 lightPositions[4];
-    vec4 lightColors[4];
-    ivec4 lightCount;
-} scene;
-
 
 void main() {
     gl_Position = scene.projection * scene.view * vec4(aPos, 1.0);

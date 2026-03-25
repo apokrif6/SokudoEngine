@@ -54,8 +54,6 @@ public:
 
     void cleanup(VkRenderData& renderData);
 
-    const GlobalSceneData& getGlobalSceneData() { return mGlobalSceneData; }
-
     void resizeViewportTarget(glm::int2 size);
 
 private:
@@ -66,8 +64,6 @@ private:
     VkSurfaceKHR mSurface = VK_NULL_HANDLE;
 
     VkDeviceSize mMinUniformBufferOffsetAlignment = 0;
-
-    GlobalSceneData mGlobalSceneData{};
 
     void updateGlobalSceneData();
 
