@@ -48,17 +48,20 @@ float DistributionGGX(vec3 N, vec3 H, float roughness)
     return nom / denom;
 }
 
-float GeometrySchlickGGX(float NdotV, float roughness)
+float GeometrySchlickGGX(float NdotV, float k)
 {
-    float k = (roughness * roughness) / 2.0;
     return NdotV / (NdotV * (1.0 - k) + k);
 }
 
 float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
 {
+    float r = (roughness + 1.0);
+    float k = (r * r) / 8.0;
+
     float NdotV = max(dot(N, V), 0.0);
     float NdotL = max(dot(N, L), 0.0);
-    return GeometrySchlickGGX(NdotV, roughness) * GeometrySchlickGGX(NdotL, roughness);
+
+    return GeometrySchlickGGX(NdotV, k) * GeometrySchlickGGX(NdotL, k);
 }
 
 vec2 SampleSphericalMap(vec3 v)
