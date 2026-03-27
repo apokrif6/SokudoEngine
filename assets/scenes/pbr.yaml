@@ -54,3 +54,6 @@ objects:
             - 0.169783458
           intensity: 100
           radius: 15
+      - type: SpriteComponent
+        data:
+          spriteFile: assets/sprites/PointLight.png

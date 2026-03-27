@@ -6,7 +6,9 @@
 #include "RotatingComponentInspectorUIWIndow.h"
 #include "TransformInspectorUIWindow.h"
 #include "PointLightComponentInspectorUIWindow.h"
+#include "SpriteComponentInspectorUIWindow.h"
 #include "components/PointLightComponent.h"
+#include "components/SpriteComponent.h"
 #include "engine/Engine.h"
 
 namespace Core::UI
@@ -51,6 +53,14 @@ class InspectorUIWindow : public UIWindow<InspectorUIWindow>
                 }
             }
 
+            if (auto* spriteComponent = selectedObject->getComponent<Component::SpriteComponent>())
+            {
+                if (ImGui::CollapsingHeader("Sprite Component", ImGuiTreeNodeFlags_DefaultOpen))
+                {
+                    SpriteComponentInspectorUIWindow::renderBody();
+                }
+            }
+
             if (auto* pointLightComponent = selectedObject->getComponent<Component::PointLightComponent>())
             {
                 if (ImGui::CollapsingHeader("Point Light Component", ImGuiTreeNodeFlags_DefaultOpen))
@@ -82,6 +92,14 @@ class InspectorUIWindow : public UIWindow<InspectorUIWindow>
                     if (!selectedObject->getComponent<Component::PointLightComponent>())
                     {
                         selectedObject->addComponent<Component::PointLightComponent>();
+                    }
+                }
+
+                if (ImGui::MenuItem("Sprite Component"))
+                {
+                    if (!selectedObject->getComponent<Component::SpriteComponent>())
+                    {
+                        selectedObject->addComponent<Component::SpriteComponent>();
                     }
                 }
 

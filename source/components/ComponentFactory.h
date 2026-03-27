@@ -6,6 +6,7 @@
 #include "MeshComponent.h"
 #include "PointLightComponent.h"
 #include "RotatingComponent.h"
+#include "SpriteComponent.h"
 
 namespace Core::Component
 {
@@ -20,6 +21,7 @@ public:
         registerComponent("MeshComponent", [] { return std::make_unique<MeshComponent>(); });
         registerComponent("RotatingComponent", [] { return std::make_unique<RotatingComponent>(); });
         registerComponent("PointLightComponent", [] { return std::make_unique<PointLightComponent>(); });
+        registerComponent("SpriteComponent", [] { return std::make_unique<SpriteComponent>(); });
     }
 
     static void registerComponent(const std::string& name, Creator creator) { getMap()[name] = std::move(creator); }

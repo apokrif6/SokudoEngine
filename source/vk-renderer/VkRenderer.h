@@ -126,6 +126,8 @@ private:
 
     bool createDebugSkeletonPipeline();
 
+    bool createSpritePipeline();
+
     bool createDescriptorsForMaterial();
 #pragma endregion Renderer
 

@@ -294,6 +294,7 @@ struct VkRenderData
     VkPipelineLayout rdPipelineLayout = VK_NULL_HANDLE;
     VkPipelineLayout rdMeshPipelineLayout = VK_NULL_HANDLE;
     VkPipelineLayout rdDebugSkeletonPipelineLayout = VK_NULL_HANDLE;
+    VkPipelineLayout rdSpritePipelineLayout = VK_NULL_HANDLE;
     VkPipelineLayout rdSkyboxPipelineLayout = VK_NULL_HANDLE;
     VkPipelineLayout rdHDRToCubemapPipelineLayout = VK_NULL_HANDLE;
     VkPipelineLayout rdIrradiancePipelineLayout = VK_NULL_HANDLE;
@@ -302,6 +303,7 @@ struct VkRenderData
     VkPipeline rdGridPipeline = VK_NULL_HANDLE;
     VkPipeline rdMeshPipeline = VK_NULL_HANDLE;
     VkPipeline rdDebugSkeletonPipeline = VK_NULL_HANDLE;
+    VkPipeline rdSpritePipeline = VK_NULL_HANDLE;
     VkPipeline rdSkyboxPipeline = VK_NULL_HANDLE;
     VkPipeline rdHDRToCubemapPipeline = VK_NULL_HANDLE;
     VkPipeline rdIrradiancePipeline = VK_NULL_HANDLE;

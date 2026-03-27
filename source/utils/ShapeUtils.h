@@ -43,4 +43,7 @@ MeshData loadMeshFromFile(const std::string& fileName, Renderer::VkRenderData& r
 
 void collectPrimitivesRecursive(const MeshNode& node, const glm::mat4& parentTransform,
                                 std::vector<PrimitiveData>& outAllPrimitives);
+
+void createSpritePrimitiveData(const std::string& spritePath, Renderer::VkRenderData& renderData,
+                               PrimitiveData& outPrimitiveData);
 } // namespace Core::Utils

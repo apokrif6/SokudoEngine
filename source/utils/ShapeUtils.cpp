@@ -397,3 +397,43 @@ void Core::Utils::collectPrimitivesRecursive(const MeshNode& node, const glm::ma
         collectPrimitivesRecursive(child, globalTransform, outAllPrimitives);
     }
 }
+
+void Core::Utils::createSpritePrimitiveData(const std::string& spritePath, Renderer::VkRenderData& renderData,
+                                            PrimitiveData& outPrimitiveData)
+{
+    outPrimitiveData.vertices = {
+        {{-0.5f, -0.5f, 0.0f}, {0, 0, 1}, {0, 0, 0, 1}, {1, 1, 1, 1}, {0.0f, 0.0f}}, // LB
+        {{0.5f, -0.5f, 0.0f}, {0, 0, 1}, {0, 0, 0, 1}, {1, 1, 1, 1}, {1.0f, 0.0f}},  // RB
+        {{0.5f, 0.5f, 0.0f}, {0, 0, 1}, {0, 0, 0, 1}, {1, 1, 1, 1}, {1.0f, 1.0f}},   // RT
+        {{-0.5f, 0.5f, 0.0f}, {0, 0, 1}, {0, 0, 0, 1}, {1, 1, 1, 1}, {0.0f, 1.0f}}   // LT
+    };
+    outPrimitiveData.indices = {0, 1, 2, 2, 3, 0};
+
+    Renderer::VkTextureData textureData;
+    std::future<bool> textureLoadFuture =
+        Renderer::Texture::loadTexture(renderData, textureData, spritePath, VK_FORMAT_R8G8B8A8_SRGB);
+
+    if (textureLoadFuture.get())
+    {
+        outPrimitiveData.textures[aiTextureType_DIFFUSE] = textureData;
+    }
+
+    if (auto layout = renderData.rdDescriptorLayoutCache->getLayout(Renderer::DescriptorLayoutType::SingleTexture);
+        renderData.rdDescriptorAllocator->allocate(layout, outPrimitiveData.materialDescriptorSet))
+    {
+        VkDescriptorImageInfo imageInfo{};
+        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imageInfo.imageView = textureData.imageView;
+        imageInfo.sampler = textureData.sampler;
+
+        VkWriteDescriptorSet write{};
+        write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write.dstSet = outPrimitiveData.materialDescriptorSet;
+        write.dstBinding = 0;
+        write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        write.descriptorCount = 1;
+        write.pImageInfo = &imageInfo;
+
+        vkUpdateDescriptorSets(renderData.rdVkbDevice.device, 1, &write, 0, nullptr);
+    }
+}

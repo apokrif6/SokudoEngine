@@ -1,6 +1,8 @@
 #include "Primitive.h"
 #include "vk-renderer/buffers/UniformBuffer.h"
 #include "Texture.h"
+#include "buffers/IndexBuffer.h"
+#include "buffers/VertexBuffer.h"
 
 Core::Renderer::Primitive::Primitive(const std::vector<Vertex>& vertexBufferData,
                                      const std::vector<uint32_t>& indexBufferData,
@@ -80,27 +82,45 @@ void Core::Renderer::Primitive::uploadUniformBuffer(VkRenderData& renderData, co
     UniformBuffer::uploadData(renderData, mPrimitiveDataUBO, data);
 }
 
-void Core::Renderer::Primitive::draw(const VkRenderData& renderData)
+void Core::Renderer::Primitive::draw(const VkRenderData& renderData, PrimitiveRenderType renderType)
 {
-    vkCmdBindPipeline(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, renderData.rdMeshPipeline);
+    VkPipeline pipeline;
+    VkPipelineLayout layout;
+    if (renderType == Sprite)
+    {
+        pipeline = renderData.rdSpritePipeline;
+        layout = renderData.rdSpritePipelineLayout;
+    }
+    else
+    {
+        pipeline = renderData.rdMeshPipeline;
+        layout = renderData.rdMeshPipelineLayout;
+    }
+    vkCmdBindPipeline(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
-    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            renderData.rdMeshPipelineLayout, 0, 1, &renderData.rdGlobalSceneUBO.rdUBODescriptorSet, 0,
-                            nullptr);
+    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1,
+                            &renderData.rdGlobalSceneUBO.rdUBODescriptorSet, 0, nullptr);
 
-    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            renderData.rdMeshPipelineLayout, 1, 1, &mPrimitiveDataUBO.rdUBODescriptorSet, 0, nullptr);
+    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 1, 1,
+                            &mPrimitiveDataUBO.rdUBODescriptorSet, 0, nullptr);
 
-    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            renderData.rdMeshPipelineLayout, 2, 1, &mMaterialDescriptorSet, 0, nullptr);
+    if (renderType == Sprite)
+    {
+        vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 2, 1,
+                                &mMaterialDescriptorSet, 0, nullptr);
+    }
+    else
+    {
+        vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 2, 1,
+                                &mMaterialDescriptorSet, 0, nullptr);
 
-    vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            renderData.rdMeshPipelineLayout, 3, 1, &mMaterialUBO.rdUBODescriptorSet, 0, nullptr);
+        vkCmdBindDescriptorSets(renderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 3, 1,
+                                &mMaterialUBO.rdUBODescriptorSet, 0, nullptr);
 
-    vkCmdPushConstants(renderData.rdCommandBuffer, renderData.rdMeshPipelineLayout,
-                       VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
-                       sizeof(PrimitiveFlagsPushConstants), &primitiveFlagsPushConstants);
-
+        vkCmdPushConstants(renderData.rdCommandBuffer, layout,
+                           VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
+                           sizeof(PrimitiveFlagsPushConstants), &primitiveFlagsPushConstants);
+    }
     VkDeviceSize offset = 0;
     vkCmdBindVertexBuffers(renderData.rdCommandBuffer, 0, 1,
                            &primitiveRenderData.rdModelVertexBufferData.rdVertexBuffer, &offset);

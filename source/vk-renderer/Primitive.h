@@ -1,12 +1,16 @@
 #pragma once
 
-#include "string"
-#include "vk-renderer/buffers/VertexBuffer.h"
-#include "vk-renderer/buffers/IndexBuffer.h"
 #include "utils/ShapeUtils.h"
 
 namespace Core::Renderer
 {
+enum PrimitiveRenderType
+{
+    PBR,
+    Sprite,
+    Unlit
+};
+
 class Primitive
 {
 public:
@@ -20,7 +24,7 @@ public:
 
     void uploadUniformBuffer(VkRenderData& renderData, const glm::mat4& modelMatrix);
 
-    void draw(const VkRenderData& renderData);
+    void draw(const VkRenderData& renderData, PrimitiveRenderType renderType = PrimitiveRenderType::PBR);
 
     void cleanup(VkRenderData& renderData);
 

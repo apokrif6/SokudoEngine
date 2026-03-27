@@ -9,7 +9,7 @@ class ISerializable
 public:
     virtual ~ISerializable() = default;
 
-    virtual YAML::Node serialize() const = 0;
+    [[nodiscard]] virtual YAML::Node serialize() const = 0;
     virtual void deserialize(const YAML::Node& node) = 0;
 };
 } // namespace Core::Serialization

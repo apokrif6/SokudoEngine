@@ -126,6 +126,11 @@ bool Core::Renderer::VkRenderer::init(const unsigned int width, const unsigned i
         return false;
     }
 
+    if (!createSpritePipeline())
+    {
+        return false;
+    }
+
     if (!loadSkybox())
     {
         return false;
@@ -407,6 +412,7 @@ void Core::Renderer::VkRenderer::cleanup(VkRenderData& renderData)
 
     Pipeline::cleanup(renderData, renderData.rdMeshPipeline);
     DebugSkeletonPipeline::cleanup(renderData, renderData.rdDebugSkeletonPipeline);
+    Pipeline::cleanup(renderData, renderData.rdSpritePipeline);
     Pipeline::cleanup(renderData, renderData.rdGridPipeline);
     Pipeline::cleanup(renderData, renderData.rdSkyboxPipeline);
     Pipeline::cleanup(renderData, renderData.rdHDRToCubemapPipeline);
@@ -417,6 +423,7 @@ void Core::Renderer::VkRenderer::cleanup(VkRenderData& renderData)
     MeshPipelineLayout::cleanup(renderData, renderData.rdMeshPipelineLayout);
     PipelineLayout::cleanup(renderData, renderData.rdPipelineLayout);
     PipelineLayout::cleanup(renderData, renderData.rdDebugSkeletonPipelineLayout);
+    PipelineLayout::cleanup(renderData, renderData.rdSpritePipelineLayout);
     PipelineLayout::cleanup(renderData, renderData.rdSkyboxPipelineLayout);
     PipelineLayout::cleanup(renderData, renderData.rdHDRToCubemapPipelineLayout);
     PipelineLayout::cleanup(renderData, renderData.rdIrradiancePipelineLayout);
@@ -1063,6 +1070,38 @@ bool Core::Renderer::VkRenderer::createDebugSkeletonPipeline()
                                      VK_PRIMITIVE_TOPOLOGY_LINE_LIST, vertexShaderFile, fragmentShaderFile))
     {
         Logger::log(1, "%s error: could not init debug skeleton shader pipeline\n", __FUNCTION__);
+        return false;
+    }
+
+    return true;
+}
+
+bool Core::Renderer::VkRenderer::createSpritePipeline()
+{
+    constexpr std::string_view vertexShaderFile = "shaders/sprite.vert.spv";
+    constexpr std::string_view fragmentShaderFile = "shaders/sprite.frag.spv";
+
+    auto& renderData = Engine::getInstance().getRenderData();
+
+    PipelineLayoutConfig pipelineLayoutConfig{};
+    pipelineLayoutConfig.setLayouts = {
+        renderData.rdDescriptorLayoutCache->getLayout(DescriptorLayoutType::GlobalScene),
+        renderData.rdDescriptorLayoutCache->getLayout(DescriptorLayoutType::PrimitiveData),
+        renderData.rdDescriptorLayoutCache->getLayout(DescriptorLayoutType::SingleTexture)};
+
+    if (!PipelineLayout::init(renderData, renderData.rdSpritePipelineLayout, pipelineLayoutConfig))
+    {
+        return false;
+    }
+
+    PipelineConfig pipelineConfig{};
+    pipelineConfig.enableBlending = VK_TRUE;
+
+    if (!Pipeline::init(renderData, renderData.rdSpritePipelineLayout, renderData.rdSpritePipeline,
+                        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, vertexShaderFile.data(), fragmentShaderFile.data(),
+                        pipelineConfig))
+    {
+        Logger::log(1, "%s error: could not init sprite pipeline\n", __FUNCTION__);
         return false;
     }
 
