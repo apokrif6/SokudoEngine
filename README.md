@@ -18,6 +18,7 @@ Game Engine written in C++ and Vulkan. I am writing this in my free time to lear
 
 ![PBR 1](https://github.com/apokrif6/apokrif6.github.io/blob/main/assets/images/portfolio/sokudoengine/SokudoEngine_PBR1.gif)
 ![PBR 2](https://github.com/apokrif6/apokrif6.github.io/blob/main/assets/images/portfolio/sokudoengine/SokudoEngine_PBR2.gif)
+![PBR 3](https://github.com/apokrif6/apokrif6.github.io/blob/main/assets/images/portfolio/sokudoengine/SokudoEngine_PBR3.gif)
 
 
 ### 🧱 Component System
@@ -47,7 +48,8 @@ Game Engine written in C++ and Vulkan. I am writing this in my free time to lear
 - Supports custom data types and references between objects
 - Uses meta-data to store asset paths instead of raw data
 
-![Serialization Example](https://github.com/apokrif6/apokrif6.github.io/blob/main/assets/images/portfolio/sokudoengine/SokudoEngine_SceneSerialization.gif)
+![Serialization Example 1](https://github.com/apokrif6/apokrif6.github.io/blob/main/assets/images/portfolio/sokudoengine/SokudoEngine_SceneSerialization1.gif)
+![Serialization Example 2](https://github.com/apokrif6/apokrif6.github.io/blob/main/assets/images/portfolio/sokudoengine/SokudoEngine_SceneSerialization2.gif)
 
 ## 🔗 Dependencies
 
