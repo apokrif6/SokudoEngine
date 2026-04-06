@@ -351,10 +351,27 @@ void processNodeHierarchy(Core::Utils::MeshNode& outNode, aiNode* node, const ai
     }
 }
 
-// TODO
-// add meshes cache here!
+namespace
+{
+std::mutex meshCacheMutex;
+std::unordered_map<std::string, Core::Utils::MeshData> meshCache;
+
+std::string makeMeshCacheKey(const std::string& fileName) { return Core::Utils::FileUtils::getRelativePath(fileName); }
+} // namespace
+
 Core::Utils::MeshData Core::Utils::loadMeshFromFile(const std::string& fileName, Renderer::VkRenderData& renderData)
 {
+    const std::string cacheKey = makeMeshCacheKey(fileName);
+    {
+        std::lock_guard lock(meshCacheMutex);
+        if (auto it = meshCache.find(cacheKey); it != meshCache.end())
+        {
+            MeshData mesh = it->second;
+            mesh.skeleton.initDebug(renderData);
+            return mesh;
+        }
+    }
+
     Assimp::Importer importer{};
     importer.ReadFile(fileName, aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_JoinIdenticalVertices |
                                     aiProcess_TransformUVCoords | aiProcess_GlobalScale | aiProcess_CalcTangentSpace);
@@ -372,6 +389,11 @@ Core::Utils::MeshData Core::Utils::loadMeshFromFile(const std::string& fileName,
     MeshData mesh;
     processNodeHierarchy(mesh.rootNode, scene->mRootNode, scene, renderData, baseDir);
     mesh.skeleton.setRootNode(Animations::AnimationsUtils::buildBoneHierarchy(scene->mRootNode));
+    {
+        std::lock_guard lock(meshCacheMutex);
+        meshCache[cacheKey] = mesh;
+    }
+
     mesh.skeleton.initDebug(renderData);
     return mesh;
 }
