@@ -67,4 +67,5 @@ void Core::Scene::Scene::cleanup(Renderer::VkRenderData& renderData)
     {
         object->cleanup(renderData);
     }
+    mObjects.clear();
 }

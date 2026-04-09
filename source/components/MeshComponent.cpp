@@ -61,12 +61,12 @@ void Core::Component::MeshComponent::onRemoved()
 
 void Core::Component::MeshComponent::addPrimitive(
     const std::vector<Renderer::Vertex>& vertexBufferData, const std::vector<uint32_t>& indexBufferData,
-    const std::unordered_map<aiTextureType, Renderer::VkTextureData>& textures, Renderer::VkRenderData& renderData,
-    const Renderer::MaterialInfo& materialInfo, const Animations::BonesInfo& bonesInfo,
-    VkDescriptorSet materialDescriptorSet)
+    const std::unordered_map<aiTextureType, std::shared_ptr<Assets::TextureAsset>>& textures,
+    Renderer::VkRenderData& renderData, const Renderer::MaterialInfo& materialInfo,
+    VkDescriptorSet materialDescriptorSet, const Animations::BonesInfo& bonesInfo)
 {
-    mPrimitives.emplace_back(vertexBufferData, indexBufferData, textures, materialInfo, bonesInfo, renderData,
-                             materialDescriptorSet);
+    mPrimitives.emplace_back(vertexBufferData, indexBufferData, textures, materialInfo, materialDescriptorSet,
+                             bonesInfo, renderData);
 }
 
 void Core::Component::MeshComponent::update(Renderer::VkRenderData& renderData)
@@ -190,7 +190,7 @@ void Core::Component::MeshComponent::deserialize(const YAML::Node& node)
             for (const auto& primitive : collectedPrimitives)
             {
                 addPrimitive(primitive.vertices, primitive.indices, primitive.textures, renderData, primitive.material,
-                             primitive.bones, primitive.materialDescriptorSet);
+                             primitive.materialDescriptorSet, primitive.bones);
             }
         }
         else
@@ -198,7 +198,7 @@ void Core::Component::MeshComponent::deserialize(const YAML::Node& node)
             for (const auto& primitive : data.rootNode.primitives)
             {
                 addPrimitive(primitive.vertices, primitive.indices, primitive.textures, renderData, primitive.material,
-                             primitive.bones, primitive.materialDescriptorSet);
+                             primitive.materialDescriptorSet, primitive.bones);
             }
         }
 

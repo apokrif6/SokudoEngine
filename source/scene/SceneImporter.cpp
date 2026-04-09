@@ -25,8 +25,8 @@ Core::Scene::SceneImporter::createObjectFromNode(const Utils::MeshNode& node, co
         for (const auto& primitive : allPrimitives)
         {
             meshComp->addPrimitive(primitive.vertices, primitive.indices, primitive.textures,
-                                   Engine::getInstance().getRenderData(), primitive.material, primitive.bones,
-                                   primitive.materialDescriptorSet);
+                                   Engine::getInstance().getRenderData(), primitive.material,
+                                   primitive.materialDescriptorSet, primitive.bones);
         }
 
         return rootObject;
@@ -61,8 +61,8 @@ Core::Scene::SceneImporter::createObjectFromNode(const Utils::MeshNode& node, co
 
             const auto& primitive = node.primitives[i];
             meshComp->addPrimitive(primitive.vertices, primitive.indices, primitive.textures,
-                                   Engine::getInstance().getRenderData(), primitive.material, primitive.bones,
-                                   primitive.materialDescriptorSet);
+                                   Engine::getInstance().getRenderData(), primitive.material,
+                                   primitive.materialDescriptorSet, primitive.bones);
 
             sceneObject->addChild(partObject);
         }
@@ -71,9 +71,10 @@ Core::Scene::SceneImporter::createObjectFromNode(const Utils::MeshNode& node, co
     {
         auto* meshComp = sceneObject->addComponent<Component::MeshComponent>(skeleton);
         meshComp->setSourceMesh(filePath, 0);
-        const auto& prim = node.primitives[0];
-        meshComp->addPrimitive(prim.vertices, prim.indices, prim.textures, Engine::getInstance().getRenderData(),
-                               prim.material, prim.bones, prim.materialDescriptorSet);
+        const auto& primitive = node.primitives[0];
+        meshComp->addPrimitive(primitive.vertices, primitive.indices, primitive.textures,
+                               Engine::getInstance().getRenderData(), primitive.material,
+                               primitive.materialDescriptorSet, primitive.bones);
     }
 
     for (const auto& childNode : node.children)

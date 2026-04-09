@@ -4,28 +4,14 @@
 #include "buffers/IndexBuffer.h"
 #include "buffers/VertexBuffer.h"
 
-Core::Renderer::Primitive::Primitive(const std::vector<Vertex>& vertexBufferData,
-                                     const std::vector<uint32_t>& indexBufferData,
-                                     const std::unordered_map<aiTextureType, VkTextureData>& textures,
-                                     const MaterialInfo& materialInfo, const Animations::BonesInfo& bonesInfo,
-                                     VkRenderData& renderData, VkDescriptorSet materialDescriptorSet)
+Core::Renderer::Primitive::Primitive(
+    const std::vector<Vertex>& vertexBufferData, const std::vector<uint32_t>& indexBufferData,
+    const std::unordered_map<aiTextureType, std::shared_ptr<Assets::TextureAsset>>& textures,
+    const MaterialInfo& materialInfo, VkDescriptorSet materialDescriptorSet, const Animations::BonesInfo& bonesInfo,
+    VkRenderData& renderData)
     : mVertexBufferData(vertexBufferData), mIndexBufferData(indexBufferData), mTextures(textures),
-      mMaterialInfo(materialInfo), mBonesInfo(bonesInfo), mMaterialDescriptorSet(materialDescriptorSet)
+      mMaterialInfo(materialInfo), mMaterialDescriptorSet(materialDescriptorSet), mBonesInfo(bonesInfo)
 {
-    auto foundAlbedoTexture = mTextures.find(aiTextureType_DIFFUSE);
-    if (foundAlbedoTexture != mTextures.end())
-    {
-        mAlbedoTexture = foundAlbedoTexture->second;
-    }
-    else
-    {
-        auto foundBaseColorTexture = mTextures.find(aiTextureType_BASE_COLOR);
-        if (foundBaseColorTexture != mTextures.end())
-        {
-            mAlbedoTexture = foundBaseColorTexture->second;
-        }
-    }
-
     createVertexBuffer(renderData);
     createIndexBuffer(renderData);
     createMaterialBuffer(renderData);
@@ -136,11 +122,6 @@ void Core::Renderer::Primitive::cleanup(VkRenderData& renderData)
     VertexBuffer::cleanup(renderData, primitiveRenderData.rdModelVertexBufferData);
 
     IndexBuffer::cleanup(renderData, primitiveRenderData.rdModelIndexBufferData);
-
-    for (auto texture : mTextures)
-    {
-        Texture::cleanup(renderData, texture.second);
-    }
 
     UniformBuffer::cleanup(renderData, mMaterialUBO);
     UniformBuffer::cleanup(renderData, mPrimitiveDataUBO);

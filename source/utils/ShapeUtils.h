@@ -8,6 +8,11 @@
 #include "animations/Skeleton.h"
 #include "assimp/material.h"
 
+namespace Core::Assets
+{
+class TextureAsset;
+}
+
 namespace Core::Utils
 {
 // TODO
@@ -16,7 +21,7 @@ struct PrimitiveData
 {
     std::vector<Renderer::Vertex> vertices;
     std::vector<uint32_t> indices;
-    std::unordered_map<aiTextureType, Renderer::VkTextureData> textures;
+    std::unordered_map<aiTextureType, std::shared_ptr<Assets::TextureAsset>> textures;
     Renderer::MaterialInfo material;
     // TODO
     // should it be part of MaterialInfo?
@@ -40,6 +45,8 @@ struct MeshData
 };
 
 MeshData loadMeshFromFile(const std::string& fileName, Renderer::VkRenderData& renderData);
+
+void clearMeshCache();
 
 void collectPrimitivesRecursive(const MeshNode& node, const glm::mat4& parentTransform,
                                 std::vector<PrimitiveData>& outAllPrimitives);

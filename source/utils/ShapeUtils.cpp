@@ -6,6 +6,8 @@
 #include <assimp/scene.h>
 #include <glm/gtc/type_ptr.hpp>
 #include "FileUtils.h"
+#include "asset-manager/AssetManager.h"
+#include "asset-manager/TextureAsset.h"
 #include "core/Assertion.h"
 
 int getBoneID(Core::Utils::PrimitiveData& primitiveData, const aiBone* bone)
@@ -118,13 +120,12 @@ void processMesh(std::vector<Core::Utils::PrimitiveData>& outPrimitives, const a
             }
 
             std::string textureFileName = baseDir + path.C_Str();
-            Core::Renderer::VkTextureData textureData;
-            std::future<bool> textureLoadFuture = Core::Renderer::Texture::loadTexture(
-                renderData, textureData, textureFileName, VK_FORMAT_R8G8B8A8_SRGB, addressModeU, addressModeV);
+            auto textureAsset = Core::Assets::AssetManager::getInstance().getOrCreate<Core::Assets::TextureAsset>(
+                textureFileName, renderData, VK_FORMAT_R8G8B8A8_SRGB);
 
-            if (textureLoadFuture.get())
+            if (textureAsset)
             {
-                primitiveData.textures[aiTextureType_DIFFUSE] = textureData;
+                primitiveData.textures[aiTextureType_DIFFUSE] = textureAsset;
                 materialInfo.useAlbedoMap = 1;
             }
         }
@@ -136,13 +137,12 @@ void processMesh(std::vector<Core::Utils::PrimitiveData>& outPrimitives, const a
         if (material->GetTexture(aiTextureType_NORMALS, 0, &path) == AI_SUCCESS)
         {
             std::string textureFileName = baseDir + path.C_Str();
-            Core::Renderer::VkTextureData textureData;
-            std::future<bool> textureLoadFuture = Core::Renderer::Texture::loadTexture(
-                renderData, textureData, textureFileName, VK_FORMAT_R8G8B8A8_UNORM);
+            auto textureAsset = Core::Assets::AssetManager::getInstance().getOrCreate<Core::Assets::TextureAsset>(
+                textureFileName, renderData, VK_FORMAT_R8G8B8A8_UNORM);
 
-            if (textureLoadFuture.get())
+            if (textureAsset)
             {
-                primitiveData.textures[aiTextureType_NORMALS] = textureData;
+                primitiveData.textures[aiTextureType_NORMALS] = textureAsset;
                 materialInfo.useNormalMap = 1;
             }
         }
@@ -159,13 +159,12 @@ void processMesh(std::vector<Core::Utils::PrimitiveData>& outPrimitives, const a
         if (material->GetTexture(textureType, 0, &path) == AI_SUCCESS)
         {
             std::string textureFileName = baseDir + path.C_Str();
-            Core::Renderer::VkTextureData textureData;
-            std::future<bool> textureLoadFuture = Core::Renderer::Texture::loadTexture(
-                renderData, textureData, textureFileName, VK_FORMAT_R8G8B8A8_UNORM);
+            auto textureAsset = Core::Assets::AssetManager::getInstance().getOrCreate<Core::Assets::TextureAsset>(
+                textureFileName, renderData, VK_FORMAT_R8G8B8A8_UNORM);
 
-            if (textureLoadFuture.get())
+            if (textureAsset)
             {
-                primitiveData.textures[aiTextureType_METALNESS] = textureData;
+                primitiveData.textures[aiTextureType_METALNESS] = textureAsset;
                 materialInfo.useMetallicRoughnessMap = 1;
             }
         }
@@ -182,13 +181,12 @@ void processMesh(std::vector<Core::Utils::PrimitiveData>& outPrimitives, const a
         if (material->GetTexture(textureType, 0, &path) == AI_SUCCESS)
         {
             std::string textureFileName = baseDir + path.C_Str();
-            Core::Renderer::VkTextureData textureData;
-            std::future<bool> textureLoadFuture = Core::Renderer::Texture::loadTexture(
-                renderData, textureData, textureFileName, VK_FORMAT_R8G8B8A8_UNORM);
+            auto textureAsset = Core::Assets::AssetManager::getInstance().getOrCreate<Core::Assets::TextureAsset>(
+                textureFileName, renderData, VK_FORMAT_R8G8B8A8_UNORM);
 
-            if (textureLoadFuture.get())
+            if (textureAsset)
             {
-                primitiveData.textures[aiTextureType_AMBIENT_OCCLUSION] = textureData;
+                primitiveData.textures[aiTextureType_AMBIENT_OCCLUSION] = textureAsset;
                 materialInfo.useAOMap = 1;
             }
         }
@@ -200,13 +198,12 @@ void processMesh(std::vector<Core::Utils::PrimitiveData>& outPrimitives, const a
         if (material->GetTexture(aiTextureType_EMISSIVE, 0, &path) == AI_SUCCESS)
         {
             std::string textureFileName = baseDir + path.C_Str();
-            Core::Renderer::VkTextureData textureData;
-            std::future<bool> textureLoadFuture =
-                Core::Renderer::Texture::loadTexture(renderData, textureData, textureFileName);
+            auto textureAsset = Core::Assets::AssetManager::getInstance().getOrCreate<Core::Assets::TextureAsset>(
+                textureFileName, renderData, VK_FORMAT_R8G8B8A8_SRGB);
 
-            if (textureLoadFuture.get())
+            if (textureAsset)
             {
-                primitiveData.textures[aiTextureType_EMISSIVE] = textureData;
+                primitiveData.textures[aiTextureType_EMISSIVE] = textureAsset;
                 materialInfo.useEmissiveMap = 1;
             }
         }
@@ -229,12 +226,13 @@ void processMesh(std::vector<Core::Utils::PrimitiveData>& outPrimitives, const a
     }
     else
     {
-        auto makeInfo = [](const Core::Renderer::VkTextureData& tex)
+        auto makeInfo = [](const std::shared_ptr<Core::Assets::TextureAsset>& textureAsset)
         {
+            const auto& textureData = textureAsset->getTextureData();
             VkDescriptorImageInfo info{};
             info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            info.imageView = tex.imageView;
-            info.sampler = tex.sampler;
+            info.imageView = textureData.imageView;
+            info.sampler = textureData.sampler;
             return info;
         };
 
@@ -398,6 +396,8 @@ Core::Utils::MeshData Core::Utils::loadMeshFromFile(const std::string& fileName,
     return mesh;
 }
 
+void Core::Utils::clearMeshCache() { meshCache.clear(); }
+
 void Core::Utils::collectPrimitivesRecursive(const MeshNode& node, const glm::mat4& parentTransform,
                                              std::vector<PrimitiveData>& outAllPrimitives)
 {
@@ -431,18 +431,19 @@ void Core::Utils::createSpritePrimitiveData(const std::string& spritePath, Rende
     };
     outPrimitiveData.indices = {0, 1, 2, 2, 3, 0};
 
-    Renderer::VkTextureData textureData;
-    std::future<bool> textureLoadFuture =
-        Renderer::Texture::loadTexture(renderData, textureData, spritePath, VK_FORMAT_R8G8B8A8_SRGB);
+    auto textureAsset = Assets::AssetManager::getInstance().getOrCreate<Assets::TextureAsset>(spritePath, renderData,
+                                                                                              VK_FORMAT_R8G8B8A8_SRGB);
 
-    if (textureLoadFuture.get())
+    if (textureAsset)
     {
-        outPrimitiveData.textures[aiTextureType_DIFFUSE] = textureData;
+        outPrimitiveData.textures[aiTextureType_DIFFUSE] = textureAsset;
     }
 
     if (auto layout = renderData.rdDescriptorLayoutCache->getLayout(Renderer::DescriptorLayoutType::SingleTexture);
         renderData.rdDescriptorAllocator->allocate(layout, outPrimitiveData.materialDescriptorSet))
     {
+        const auto& textureData = textureAsset->getTextureData();
+
         VkDescriptorImageInfo imageInfo{};
         imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         imageInfo.imageView = textureData.imageView;

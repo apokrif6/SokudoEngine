@@ -53,7 +53,6 @@ void Core::Component::SpriteComponent::deserialize(const YAML::Node& node)
 void Core::Component::SpriteComponent::loadSpriteFromFile(const std::string& path)
 {
     mSpriteFilePath = mSpriteFilePath = Utils::FileUtils::getRelativePath(path);
-    ;
 
     auto& renderData = Engine::getInstance().getRenderData();
 
@@ -62,7 +61,7 @@ void Core::Component::SpriteComponent::loadSpriteFromFile(const std::string& pat
     Utils::createSpritePrimitiveData(path, renderData, data);
 
     mPrimitive = std::make_unique<Renderer::Primitive>(data.vertices, data.indices, data.textures, data.material,
-                                                       Animations::BonesInfo{}, renderData, data.materialDescriptorSet);
+                                                       data.materialDescriptorSet, Animations::BonesInfo{}, renderData);
 
     mPrimitive->uploadVertexBuffer(renderData);
     mPrimitive->uploadIndexBuffer(renderData);

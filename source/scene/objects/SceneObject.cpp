@@ -37,11 +37,13 @@ void Core::Scene::SceneObject::cleanup(Renderer::VkRenderData& renderData)
         component->onRemoved();
         component->cleanup(renderData);
     }
+    mComponents.clear();
 
     for (auto& child : mChildren)
     {
         child->cleanup(renderData);
     }
+    mChildren.clear();
 }
 
 YAML::Node Core::Scene::SceneObject::serialize() const

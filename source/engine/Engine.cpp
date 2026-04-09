@@ -1,5 +1,6 @@
 #include "Engine.h"
 
+#include "asset-manager/AssetManager.h"
 #include "components/ComponentFactory.h"
 #include "ui/UserInterface.h"
 #include "window/Window.h"
@@ -94,6 +95,9 @@ void Core::Engine::draw()
 void Core::Engine::cleanup()
 {
     vkDeviceWaitIdle(mRenderData.rdVkbDevice);
+
+    Utils::clearMeshCache();
+    Assets::AssetManager::getInstance().clear();
 
     getSystem<Scene::Scene>()->cleanup(mRenderData);
     getSystem<Renderer::UserInterface>()->cleanup(mRenderData);

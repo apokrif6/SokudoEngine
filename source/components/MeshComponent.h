@@ -27,9 +27,9 @@ public:
 
     void addPrimitive(const std::vector<Renderer::Vertex>& vertexBufferData,
                       const std::vector<uint32_t>& indexBufferData,
-                      const std::unordered_map<aiTextureType, Renderer::VkTextureData>& textures,
+                      const std::unordered_map<aiTextureType, std::shared_ptr<Assets::TextureAsset>>& textures,
                       Renderer::VkRenderData& renderData, const Renderer::MaterialInfo& materialInfo,
-                      const Animations::BonesInfo& bonesInfo, VkDescriptorSet materialDescriptorSet);
+                      VkDescriptorSet materialDescriptorSet, const Animations::BonesInfo& bonesInfo);
 
     void update(Renderer::VkRenderData& renderData) override;
 

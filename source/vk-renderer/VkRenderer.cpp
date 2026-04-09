@@ -27,6 +27,8 @@
 #include "events/input-events/MouseLockEvent.h"
 #include <algorithm>
 #include <glm/gtc/matrix_transform.hpp>
+#include "asset-manager/AssetManager.h"
+#include "asset-manager/TextureAsset.h"
 #include "components/TransformComponent.h"
 #include "vk-renderer/pipelines/DebugSkeletonPipeline.h"
 #include "engine/Engine.h"
@@ -438,7 +440,7 @@ void Core::Renderer::VkRenderer::cleanup(VkRenderData& renderData)
     UniformBuffer::cleanup(renderData, renderData.rdCaptureUBO);
     VertexBuffer::cleanup(renderData, renderData.rdVertexBufferData);
 
-    Texture::cleanup(renderData, renderData.rdPlaceholderTexture);
+    renderData.rdPlaceholderTexture.reset();
 
     UniformBuffer::cleanup(renderData, renderData.rdDummyBonesUBO);
 
@@ -876,14 +878,9 @@ bool Core::Renderer::VkRenderer::createSyncObjects()
 bool Core::Renderer::VkRenderer::loadPlaceholderTexture()
 {
     const std::string textureFileName = "assets/textures/placeholder_sampler.png";
-    std::future<bool> textureLoadFuture =
-        Texture::loadTexture(Engine::getInstance().getRenderData(),
-                             Engine::getInstance().getRenderData().rdPlaceholderTexture, textureFileName);
-    if (!textureLoadFuture.get())
-    {
-        Logger::log(1, "%s error: could not load texture\n", __FUNCTION__);
-        return false;
-    }
+    Engine::getInstance().getRenderData().rdPlaceholderTexture =
+        Assets::AssetManager::getInstance().getOrCreate<Assets::TextureAsset>(
+            textureFileName, Engine::getInstance().getRenderData(), VK_FORMAT_R8G8B8A8_SRGB);
 
     return true;
 }

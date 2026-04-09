@@ -13,6 +13,11 @@
 
 #include "descriptors/DescriptorLayoutCache.h"
 
+namespace Core::Assets
+{
+class TextureAsset;
+}
+
 namespace Core::Renderer
 {
 struct Vertex
@@ -319,7 +324,7 @@ struct VkRenderData
     VkSemaphore rdRenderSemaphore = VK_NULL_HANDLE;
     VkFence rdRenderFence = VK_NULL_HANDLE;
 
-    VkTextureData rdPlaceholderTexture{};
+    std::shared_ptr<Assets::TextureAsset> rdPlaceholderTexture{};
 
     VkVertexBufferData rdVertexBufferData{};
 

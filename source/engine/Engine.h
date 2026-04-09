@@ -6,24 +6,24 @@
 #include "scene/Scene.h"
 #include "vk-renderer/VkRenderer.h"
 #include "animations/Animator.h"
+#include "core/Singleton.h"
 
 namespace Core
 {
 enum class EngineState;
 template <class> inline constexpr bool always_false_v = false;
 
-class Engine
+class Engine final : public Singleton<Engine>
 {
-public:
-    static Engine& getInstance()
-    {
-        static Engine instance;
-        return instance;
-    }
+    friend class Singleton;
 
+public:
     void init();
+
     void update();
+
     void draw();
+
     void cleanup();
 
     template <typename T, typename... Args> T* createSystem(Args&&... args)
@@ -63,7 +63,6 @@ public:
 
 private:
     Engine() = default;
-    ~Engine() = default;
 
     float mLastTickTime = 0.0;
     Timer mFrameTimer{};
