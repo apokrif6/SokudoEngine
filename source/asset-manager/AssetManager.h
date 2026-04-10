@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/Singleton.h"
-#include "Asset.h"
+#include "assets/Asset.h"
 #include <memory>
 #include <string>
 #include <unordered_map>

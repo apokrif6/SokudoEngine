@@ -11,12 +11,12 @@ Core::Assets::TextureAsset::TextureAsset(const std::string& path, Renderer::VkRe
     // make it proper async loading
     if (!future.get())
     {
-        Logger::log(1, "Failed to load texture asset: %s", path.c_str());
+        Logger::log(1, "Failed to load Textureasset: %s", path.c_str());
     }
 }
 
 Core::Assets::TextureAsset::~TextureAsset()
 {
-    Logger::log(1, "AssetManager: Texture %s is being freed", mPath.c_str());
+    Logger::log(1, "AssetManager: TextureAsset %s is being freed", mPath.c_str());
     Renderer::Texture::cleanup(mRenderData, mTextureData);
 }

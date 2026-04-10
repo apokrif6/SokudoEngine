@@ -4,6 +4,7 @@
 #include "tools/Logger.h"
 #include "vk-renderer/buffers/CommandBuffer.h"
 #include "HDRToCubemapRenderpass.h"
+#include "asset-manager/assets/TextureAsset.h"
 #include "vk-renderer/Texture.h"
 #include "vk-renderer/debug/DebugUtils.h"
 #include "vk-renderer/pipelines/Pipeline.h"
@@ -38,7 +39,7 @@ bool Core::Renderer::IBLGenerator::init(VkRenderData& renderData)
 
 bool Core::Renderer::IBLGenerator::generateIBL(VkRenderData& renderData)
 {
-    if (!convertHDRToCubemap(renderData, renderData.rdHDRTexture, renderData.rdSkyboxData))
+    if (!convertHDRToCubemap(renderData, renderData.rdHDRTexture->getTextureData(), renderData.rdSkyboxData))
     {
         Logger::log(1, "IBL Error: Failed to convert HDR to Cubemap");
         return false;
@@ -72,26 +73,26 @@ bool Core::Renderer::IBLGenerator::createDescriptorForHDR(VkRenderData& renderDa
     const VkDescriptorSetLayout layout =
         renderData.rdDescriptorLayoutCache->getLayout(DescriptorLayoutType::SingleTexture);
 
-    if (!renderData.rdDescriptorAllocator->allocate(layout, renderData.rdHDRTexture.descriptorSet))
+    if (!renderData.rdDescriptorAllocator->allocate(layout, renderData.rdHDRTexture->getTextureData().descriptorSet))
     {
         Logger::log(1, "%s error: failed to allocate descriptor set", __FUNCTION__);
         return false;
     }
 
     constexpr std::string_view descriptorSetObjectName = "Descriptor Set IBL HDR texture";
-    vmaSetAllocationName(renderData.rdAllocator, renderData.rdHDRTexture.imageAlloc, descriptorSetObjectName.data());
+    vmaSetAllocationName(renderData.rdAllocator, renderData.rdHDRTexture->getTextureData().imageAlloc, descriptorSetObjectName.data());
     Debug::setObjectName(renderData.rdVkbDevice.device,
-                         reinterpret_cast<uint64_t>(renderData.rdHDRTexture.descriptorSet),
+                         reinterpret_cast<uint64_t>(renderData.rdHDRTexture->getTextureData().descriptorSet),
                          VK_OBJECT_TYPE_DESCRIPTOR_SET, descriptorSetObjectName.data());
 
     VkDescriptorImageInfo imageInfo{};
     imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    imageInfo.imageView = renderData.rdHDRTexture.imageView;
-    imageInfo.sampler = renderData.rdHDRTexture.sampler;
+    imageInfo.imageView = renderData.rdHDRTexture->getTextureData().imageView;
+    imageInfo.sampler = renderData.rdHDRTexture->getTextureData().sampler;
 
     VkWriteDescriptorSet write{};
     write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    write.dstSet = renderData.rdHDRTexture.descriptorSet;
+    write.dstSet = renderData.rdHDRTexture->getTextureData().descriptorSet;
     write.dstBinding = 0;
     write.descriptorCount = 1;
     write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -1061,7 +1062,7 @@ void Core::Renderer::IBLGenerator::cleanup(VkRenderData& renderData, IBLData& ib
 {
     HDRToCubemapRenderpass::cleanup(renderData, renderData.rdIBLData.rdIBLRenderpass);
 
-    Texture::cleanup(renderData, renderData.rdHDRTexture);
+    renderData.rdHDRTexture.reset();
     Texture::cleanup(renderData, renderData.rdIBLData.rdBRDFLUT);
 
     cleanupCubemapResources(renderData, iblData.rdPrefilterMap);

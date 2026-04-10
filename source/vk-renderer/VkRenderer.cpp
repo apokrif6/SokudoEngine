@@ -28,7 +28,7 @@
 #include <algorithm>
 #include <glm/gtc/matrix_transform.hpp>
 #include "asset-manager/AssetManager.h"
-#include "asset-manager/TextureAsset.h"
+#include "../asset-manager/assets/TextureAsset.h"
 #include "components/TransformComponent.h"
 #include "vk-renderer/pipelines/DebugSkeletonPipeline.h"
 #include "engine/Engine.h"
@@ -1144,13 +1144,9 @@ bool Core::Renderer::VkRenderer::loadSkybox()
 {
     auto& renderData = Engine::getInstance().getRenderData();
 
-    std::future<bool> hdrTextureFuture =
-        Texture::loadHDRTexture(renderData, renderData.rdHDRTexture, "assets/textures/hdr/skybox.hdr");
-    if (!hdrTextureFuture.get())
-    {
-        Logger::log(1, "%s error: could not load HDR texture", __FUNCTION__);
-        return false;
-    }
+    const std::string textureFileName = "assets/textures/hdr/skybox.hdr";
+    renderData.rdHDRTexture = Assets::AssetManager::getInstance().getOrCreate<Assets::TextureAsset>(
+        textureFileName, renderData, VK_FORMAT_R32G32B32A32_SFLOAT);
 
     initCaptureResources();
 

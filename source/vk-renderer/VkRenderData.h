@@ -335,7 +335,7 @@ struct VkRenderData
 
     VkUniformBufferData rdCaptureUBO{};
 
-    VkTextureData rdHDRTexture{};
+    std::shared_ptr<Assets::TextureAsset> rdHDRTexture{};
 
     VkCubemapData rdSkyboxData{};
 

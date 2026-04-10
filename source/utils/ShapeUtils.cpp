@@ -7,7 +7,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "FileUtils.h"
 #include "asset-manager/AssetManager.h"
-#include "asset-manager/TextureAsset.h"
+#include "../asset-manager/assets/TextureAsset.h"
 #include "core/Assertion.h"
 
 int getBoneID(Core::Utils::PrimitiveData& primitiveData, const aiBone* bone)
