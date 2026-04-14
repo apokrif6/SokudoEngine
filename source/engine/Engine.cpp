@@ -96,7 +96,6 @@ void Core::Engine::cleanup()
 {
     vkDeviceWaitIdle(mRenderData.rdVkbDevice);
 
-    Utils::clearMeshCache();
     Assets::AssetManager::getInstance().clear();
 
     getSystem<Scene::Scene>()->cleanup(mRenderData);

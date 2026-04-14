@@ -1,5 +1,6 @@
 #pragma once
 
+#include "animations/Skeleton.h"
 #include "scene/objects/SceneObject.h"
 #include <utility>
 #include <vector>
@@ -15,7 +16,7 @@ class MeshComponent : public Component
 public:
     MeshComponent() = default;
 
-    explicit MeshComponent(Animations::Skeleton skeleton);
+    explicit MeshComponent(const Utils::SkeletonData* skeletonData);
 
     ~MeshComponent() override;
 

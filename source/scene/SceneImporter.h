@@ -12,6 +12,7 @@ class Skeleton;
 
 namespace Core::Utils
 {
+struct SkeletonData;
 struct PrimitiveData;
 struct MeshNode;
 } // namespace Core::Utils
@@ -24,7 +25,7 @@ class SceneImporter
 {
 public:
     static std::shared_ptr<SceneObject> createObjectFromNode(const Utils::MeshNode& node,
-                                                             const Animations::Skeleton& skeleton,
+                                                             const Utils::SkeletonData& skeletonData,
                                                              const std::string_view& filePath, bool shouldMergeMeshes);
 };
 } // namespace Core::Scene

@@ -12,7 +12,7 @@ public:
 
     ~TextureAsset() override;
 
-    Renderer::VkTextureData& getTextureData() { return mTextureData; }
+    [[nodiscard]] Renderer::VkTextureData& getTextureData() { return mTextureData; }
 
 private:
     Renderer::VkTextureData mTextureData;

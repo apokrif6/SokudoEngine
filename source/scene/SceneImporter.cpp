@@ -8,7 +8,7 @@
 #include <glm/gtx/matrix_decompose.hpp>
 
 std::shared_ptr<Core::Scene::SceneObject>
-Core::Scene::SceneImporter::createObjectFromNode(const Utils::MeshNode& node, const Animations::Skeleton& skeleton,
+Core::Scene::SceneImporter::createObjectFromNode(const Utils::MeshNode& node, const Utils::SkeletonData& skeletonData,
                                                  const std::string_view& filePath, bool shouldMergeMeshes)
 {
     if (shouldMergeMeshes)
@@ -16,7 +16,7 @@ Core::Scene::SceneImporter::createObjectFromNode(const Utils::MeshNode& node, co
         auto rootObject = std::make_shared<SceneObject>(std::string(node.name));
         rootObject->addComponent<Component::TransformComponent>();
 
-        auto* meshComp = rootObject->addComponent<Component::MeshComponent>(skeleton);
+        auto* meshComp = rootObject->addComponent<Component::MeshComponent>(&skeletonData);
         meshComp->setSourceMesh(filePath, -1);
 
         std::vector<Utils::PrimitiveData> allPrimitives;
@@ -56,7 +56,7 @@ Core::Scene::SceneImporter::createObjectFromNode(const Utils::MeshNode& node, co
 
             partObject->addComponent<Component::TransformComponent>();
 
-            auto* meshComp = partObject->addComponent<Component::MeshComponent>(skeleton);
+            auto* meshComp = partObject->addComponent<Component::MeshComponent>(&skeletonData);
             meshComp->setSourceMesh(filePath, i);
 
             const auto& primitive = node.primitives[i];
@@ -69,7 +69,7 @@ Core::Scene::SceneImporter::createObjectFromNode(const Utils::MeshNode& node, co
     }
     else if (node.primitives.size() == 1)
     {
-        auto* meshComp = sceneObject->addComponent<Component::MeshComponent>(skeleton);
+        auto* meshComp = sceneObject->addComponent<Component::MeshComponent>(&skeletonData);
         meshComp->setSourceMesh(filePath, 0);
         const auto& primitive = node.primitives[0];
         meshComp->addPrimitive(primitive.vertices, primitive.indices, primitive.textures,
@@ -79,7 +79,7 @@ Core::Scene::SceneImporter::createObjectFromNode(const Utils::MeshNode& node, co
 
     for (const auto& childNode : node.children)
     {
-        sceneObject->addChild(createObjectFromNode(childNode, skeleton, filePath, shouldMergeMeshes));
+        sceneObject->addChild(createObjectFromNode(childNode, skeletonData, filePath, shouldMergeMeshes));
     }
 
     return sceneObject;

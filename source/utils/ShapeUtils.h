@@ -5,7 +5,6 @@
 #include "vk-renderer/VkRenderData.h"
 #include "unordered_map"
 #include "animations/AnimationsData.h"
-#include "animations/Skeleton.h"
 #include "assimp/material.h"
 
 namespace Core::Assets
@@ -37,16 +36,19 @@ struct MeshNode
     std::vector<MeshNode> children;
 };
 
+struct SkeletonData
+{
+    Animations::BoneNode rootNode;
+};
+
 struct MeshData
 {
     MeshNode rootNode;
-    Animations::Skeleton skeleton;
+    SkeletonData skeletonData;
     std::vector<Animations::AnimationClip> animations;
 };
 
 MeshData loadMeshFromFile(const std::string& fileName, Renderer::VkRenderData& renderData);
-
-void clearMeshCache();
 
 void collectPrimitivesRecursive(const MeshNode& node, const glm::mat4& parentTransform,
                                 std::vector<PrimitiveData>& outAllPrimitives);

@@ -11,7 +11,7 @@ Core::Assets::TextureAsset::TextureAsset(const std::string& path, Renderer::VkRe
     // make it proper async loading
     if (!future.get())
     {
-        Logger::log(1, "Failed to load Textureasset: %s", path.c_str());
+        Logger::log(1, "Failed to load TextureAsset: %s", path.c_str());
     }
 }
 

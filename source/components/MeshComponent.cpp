@@ -5,6 +5,8 @@
 #include "vk-renderer/buffers/UniformBuffer.h"
 #include "engine/Engine.h"
 #include "animations/AnimationsUtils.h"
+#include "asset-manager/AssetManager.h"
+#include "asset-manager/assets/MeshAsset.h"
 #include "components/TransformComponent.h"
 #include "utils/FileUtils.h"
 
@@ -38,7 +40,11 @@ void buildDebugSkeletonLines(const Core::Animations::Skeleton& skeleton, const C
     }
 }
 
-Core::Component::MeshComponent::MeshComponent(Animations::Skeleton skeleton) : mSkeleton(std::move(skeleton)) {}
+Core::Component::MeshComponent::MeshComponent(const Utils::SkeletonData* skeletonData)
+{
+    mSkeleton.setData(skeletonData);
+    mSkeleton.initDebug(Engine::getInstance().getRenderData());
+}
 
 Core::Component::MeshComponent::~MeshComponent()
 {
@@ -180,7 +186,9 @@ void Core::Component::MeshComponent::deserialize(const YAML::Node& node)
         mPrimitiveIndex = node["primitiveIndex"].as<int32_t>();
 
         auto& renderData = Engine::getInstance().getRenderData();
-        const auto data = Utils::loadMeshFromFile(mMeshFilePath, renderData);
+        const auto meshAsset =
+            Assets::AssetManager::getInstance().getOrCreate<Assets::MeshAsset>(mMeshFilePath, renderData);
+        const auto& data = meshAsset->getMeshData();
 
         if (mPrimitiveIndex == -1)
         {
@@ -202,7 +210,8 @@ void Core::Component::MeshComponent::deserialize(const YAML::Node& node)
             }
         }
 
-        mSkeleton = data.skeleton;
+        mSkeleton.setData(&data.skeletonData);
+        mSkeleton.initDebug(renderData);
 
         // no sense to load animations if there is no mesh, since they won't be used anyway
         if (node["animations"])

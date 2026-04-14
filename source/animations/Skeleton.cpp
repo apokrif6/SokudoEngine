@@ -34,12 +34,3 @@ void Core::Animations::Skeleton::cleanup(Renderer::VkRenderData& renderData)
         debugDraw.reset();
     }
 }
-
-YAML::Node Core::Animations::Skeleton::serialize() const
-{
-    YAML::Node node;
-    node["rootNode"] = rootNode.serialize();
-    return node;
-}
-
-void Core::Animations::Skeleton::deserialize(const YAML::Node& node) { rootNode.deserialize(node["rootNode"]); }

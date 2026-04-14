@@ -4,6 +4,8 @@
 #include "imgui.h"
 #include "glm/gtx/string_cast.hpp"
 #include "nfd.hpp"
+#include "asset-manager/AssetManager.h"
+#include "asset-manager/assets/MeshAsset.h"
 #include "scene/SceneImporter.h"
 
 namespace Core::UI
@@ -31,21 +33,23 @@ class MiscUIWindow : public UIWindow<MiscUIWindow>
 
             NFD::UniquePath outPath;
 
-            const nfdresult_t result = NFD::OpenDialog(outPath, filterItem, 1, nullptr);
-
-            if (result == NFD_OKAY)
+            if (const nfdresult_t result = NFD::OpenDialog(outPath, filterItem, 1, nullptr); result == NFD_OKAY)
             {
                 const std::string path = outPath.get();
 
-                const Utils::MeshData meshData = Utils::loadMeshFromFile(path, renderData);
+                if (auto meshAsset =
+                        Assets::AssetManager::getInstance().getOrCreate<Assets::MeshAsset>(path, renderData))
+                {
+                    const auto& meshData = meshAsset->getMeshData();
 
-                const auto rootModelObject = Scene::SceneImporter::createObjectFromNode(
-                    meshData.rootNode, meshData.skeleton, path, shouldMergeMeshes);
+                    const auto rootModelObject = Scene::SceneImporter::createObjectFromNode(
+                        meshData.rootNode, meshData.skeletonData, path, shouldMergeMeshes);
 
-                auto* currentScene = Engine::getInstance().getSystem<Scene::Scene>();
-                currentScene->addObject(rootModelObject);
+                    auto* currentScene = Engine::getInstance().getSystem<Scene::Scene>();
+                    currentScene->addObject(rootModelObject);
 
-                Logger::log(1, "Imported scene from: %s", path.c_str());
+                    Logger::log(1, "Imported scene from: %s", path.c_str());
+                }
             }
             else if (result == NFD_CANCEL)
             {

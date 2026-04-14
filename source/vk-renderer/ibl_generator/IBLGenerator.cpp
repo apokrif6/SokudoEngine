@@ -80,7 +80,8 @@ bool Core::Renderer::IBLGenerator::createDescriptorForHDR(VkRenderData& renderDa
     }
 
     constexpr std::string_view descriptorSetObjectName = "Descriptor Set IBL HDR texture";
-    vmaSetAllocationName(renderData.rdAllocator, renderData.rdHDRTexture->getTextureData().imageAlloc, descriptorSetObjectName.data());
+    vmaSetAllocationName(renderData.rdAllocator, renderData.rdHDRTexture->getTextureData().imageAlloc,
+                         descriptorSetObjectName.data());
     Debug::setObjectName(renderData.rdVkbDevice.device,
                          reinterpret_cast<uint64_t>(renderData.rdHDRTexture->getTextureData().descriptorSet),
                          VK_OBJECT_TYPE_DESCRIPTOR_SET, descriptorSetObjectName.data());

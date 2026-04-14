@@ -2,15 +2,16 @@
 
 #include "AnimationsData.h"
 #include "serialization/Serializable.h"
+#include "utils/ShapeUtils.h"
 
 namespace Core::Animations
 {
-class Skeleton : public Serialization::ISerializable
+class Skeleton
 {
 public:
-    void setRootNode(const BoneNode& node) { rootNode = node; }
+    void setData(const Utils::SkeletonData* skeletonData) { mSkeletonData = skeletonData; }
 
-    [[nodiscard]] const BoneNode& getRootNode() const { return rootNode; }
+    [[nodiscard]] const BoneNode& getRootNode() const { return mSkeletonData->rootNode; }
 
     void initDebug(Renderer::VkRenderData& renderData);
 
@@ -20,12 +21,8 @@ public:
 
     void cleanup(Renderer::VkRenderData& renderData);
 
-    YAML::Node serialize() const override;
-
-    void deserialize(const YAML::Node& node) override;
-
 private:
-    BoneNode rootNode;
+    const Utils::SkeletonData* mSkeletonData = nullptr;
 
     std::shared_ptr<Renderer::Debug::Skeleton> debugDraw;
 };
