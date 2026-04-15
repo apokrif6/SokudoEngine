@@ -16,7 +16,7 @@ class MeshComponent : public Component
 public:
     MeshComponent() = default;
 
-    explicit MeshComponent(const Utils::SkeletonData* skeletonData);
+    explicit MeshComponent(const Resources::SkeletonData* skeletonData);
 
     ~MeshComponent() override;
 

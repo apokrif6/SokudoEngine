@@ -8,7 +8,7 @@
 #include <glm/gtx/matrix_decompose.hpp>
 
 std::shared_ptr<Core::Scene::SceneObject>
-Core::Scene::SceneImporter::createObjectFromNode(const Utils::MeshNode& node, const Utils::SkeletonData& skeletonData,
+Core::Scene::SceneImporter::createObjectFromNode(const Resources::MeshNode& node, const Resources::SkeletonData& skeletonData,
                                                  const std::string_view& filePath, bool shouldMergeMeshes)
 {
     if (shouldMergeMeshes)
@@ -19,7 +19,7 @@ Core::Scene::SceneImporter::createObjectFromNode(const Utils::MeshNode& node, co
         auto* meshComp = rootObject->addComponent<Component::MeshComponent>(&skeletonData);
         meshComp->setSourceMesh(filePath, -1);
 
-        std::vector<Utils::PrimitiveData> allPrimitives;
+        std::vector<Resources::PrimitiveData> allPrimitives;
         Utils::collectPrimitivesRecursive(node, glm::mat4(1.0f), allPrimitives);
 
         for (const auto& primitive : allPrimitives)

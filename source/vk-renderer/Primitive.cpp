@@ -1,6 +1,5 @@
 #include "Primitive.h"
 #include "vk-renderer/buffers/UniformBuffer.h"
-#include "Texture.h"
 #include "buffers/IndexBuffer.h"
 #include "buffers/VertexBuffer.h"
 

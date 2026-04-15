@@ -40,7 +40,7 @@ void buildDebugSkeletonLines(const Core::Animations::Skeleton& skeleton, const C
     }
 }
 
-Core::Component::MeshComponent::MeshComponent(const Utils::SkeletonData* skeletonData)
+Core::Component::MeshComponent::MeshComponent(const Resources::SkeletonData* skeletonData)
 {
     mSkeleton.setData(skeletonData);
     mSkeleton.initDebug(Engine::getInstance().getRenderData());
@@ -192,7 +192,7 @@ void Core::Component::MeshComponent::deserialize(const YAML::Node& node)
 
         if (mPrimitiveIndex == -1)
         {
-            std::vector<Utils::PrimitiveData> collectedPrimitives;
+            std::vector<Resources::PrimitiveData> collectedPrimitives;
             Utils::collectPrimitivesRecursive(data.rootNode, glm::mat4(1.0f), collectedPrimitives);
 
             for (const auto& primitive : collectedPrimitives)

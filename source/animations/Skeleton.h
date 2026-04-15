@@ -9,7 +9,7 @@ namespace Core::Animations
 class Skeleton
 {
 public:
-    void setData(const Utils::SkeletonData* skeletonData) { mSkeletonData = skeletonData; }
+    void setData(const Resources::SkeletonData* skeletonData) { mSkeletonData = skeletonData; }
 
     [[nodiscard]] const BoneNode& getRootNode() const { return mSkeletonData->rootNode; }
 
@@ -22,7 +22,7 @@ public:
     void cleanup(Renderer::VkRenderData& renderData);
 
 private:
-    const Utils::SkeletonData* mSkeletonData = nullptr;
+    const Resources::SkeletonData* mSkeletonData = nullptr;
 
     std::shared_ptr<Renderer::Debug::Skeleton> debugDraw;
 };

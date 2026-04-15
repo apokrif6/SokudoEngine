@@ -12,9 +12,9 @@ public:
 
     ~MeshAsset() override = default;
 
-    [[nodiscard]] const Utils::MeshData& getMeshData() const { return mMeshData; }
+    [[nodiscard]] const Resources::MeshData& getMeshData() const { return mMeshData; }
 
 private:
-    Utils::MeshData mMeshData;
+    Resources::MeshData mMeshData;
 };
 } // namespace Core::Assets

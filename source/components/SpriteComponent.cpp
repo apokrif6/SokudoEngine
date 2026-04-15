@@ -56,7 +56,7 @@ void Core::Component::SpriteComponent::loadSpriteFromFile(const std::string& pat
 
     auto& renderData = Engine::getInstance().getRenderData();
 
-    Utils::PrimitiveData data;
+    Resources::PrimitiveData data;
 
     Utils::createSpritePrimitiveData(path, renderData, data);
 
