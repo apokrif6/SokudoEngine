@@ -1,11 +1,10 @@
 #include "MeshComponent.h"
-
 #include <functional>
-
 #include "vk-renderer/buffers/UniformBuffer.h"
 #include "engine/Engine.h"
 #include "animations/AnimationsUtils.h"
 #include "asset-manager/AssetManager.h"
+#include "asset-manager/ModelLoader.h"
 #include "asset-manager/assets/MeshAsset.h"
 #include "components/TransformComponent.h"
 #include "utils/FileUtils.h"
@@ -193,7 +192,7 @@ void Core::Component::MeshComponent::deserialize(const YAML::Node& node)
         if (mPrimitiveIndex == -1)
         {
             std::vector<Resources::PrimitiveData> collectedPrimitives;
-            Utils::collectPrimitivesRecursive(data.rootNode, glm::mat4(1.0f), collectedPrimitives);
+            Assets::ModelLoader::collectPrimitivesRecursive(data.rootNode, glm::mat4(1.0f), collectedPrimitives);
 
             for (const auto& primitive : collectedPrimitives)
             {

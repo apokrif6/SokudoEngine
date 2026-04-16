@@ -25,5 +25,8 @@ private:
     std::unique_ptr<Renderer::Primitive> mPrimitive;
 
     std::string mSpriteFilePath;
+
+    void createSpritePrimitiveData(const std::string& spritePath, Renderer::VkRenderData& renderData,
+                                   Resources::PrimitiveData& outPrimitiveData);
 };
 } // namespace Core::Component

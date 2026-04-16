@@ -1,8 +1,7 @@
 #pragma once
 
 #include "AnimationsData.h"
-#include "serialization/Serializable.h"
-#include "utils/ShapeUtils.h"
+#include "resources/Mesh.h"
 
 namespace Core::Animations
 {

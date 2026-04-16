@@ -1,82 +1,90 @@
-#include "ShapeUtils.h"
+#include "ModelLoader.h"
+#include "AssetManager.h"
 #include "vk-renderer/Texture.h"
 #include "animations/AnimationsUtils.h"
+#include "assets/TextureAsset.h"
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 #include <glm/gtc/type_ptr.hpp>
-#include "FileUtils.h"
-#include "asset-manager/AssetManager.h"
-#include "asset-manager/assets/TextureAsset.h"
+#include "utils/FileUtils.h"
 #include "core/Assertion.h"
 
-int getBoneID(Core::Resources::PrimitiveData& primitiveData, const aiBone* bone)
+Core::Resources::MeshData Core::Assets::ModelLoader::loadMeshFromFile(const std::string& fileName,
+                                                                      Renderer::VkRenderData& renderData)
 {
-    int boneID;
-    const std::string boneName = bone->mName.C_Str();
+    Assimp::Importer importer{};
+    importer.ReadFile(fileName, aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_JoinIdenticalVertices |
+                                    aiProcess_TransformUVCoords | aiProcess_GlobalScale | aiProcess_CalcTangentSpace);
 
-    if (!primitiveData.bones.boneNameToIndexMap.contains(boneName))
+    const aiScene* scene = importer.GetScene();
+
+    if (!scene || !scene->mRootNode || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE)
     {
-        boneID = static_cast<int>(primitiveData.bones.bones.size());
-        Core::Animations::Bone newBone;
-        primitiveData.bones.bones.emplace_back(newBone);
-    }
-    else
-    {
-        boneID = primitiveData.bones.boneNameToIndexMap[boneName];
+        Logger::log(1, "%s error: Failed to load mesh %s \n", __FUNCTION__, fileName.c_str());
+        return {};
     }
 
-    primitiveData.bones.boneNameToIndexMap[boneName] = boneID;
-    primitiveData.bones.bones[boneID] =
-        Core::Animations::Bone{Core::Animations::AnimationsUtils::convertMatrixToGlm(bone->mOffsetMatrix)};
+    const std::string baseDir = Utils::FileUtils::getParentDirectory(fileName);
 
-    return boneID;
+    Resources::MeshData mesh;
+    processNodeHierarchy(mesh.rootNode, scene->mRootNode, scene, renderData, baseDir);
+    mesh.skeletonData.rootNode = Animations::AnimationsUtils::buildBoneHierarchy(scene->mRootNode);
+    return mesh;
 }
 
-void setVertexBoneData(Core::Renderer::Vertex& vertex, int id, float weight)
+void Core::Assets::ModelLoader::collectPrimitivesRecursive(const Resources::MeshNode& node,
+                                                           const glm::mat4& parentTransform,
+                                                           std::vector<Resources::PrimitiveData>& outAllPrimitives)
 {
-    for (size_t i = 0; i < maxNumberOfBonesPerVertex; i++)
+    const glm::mat4 globalTransform = parentTransform * node.localTransform;
+
+    for (auto& primitive : node.primitives)
     {
-        if (vertex.weights[i] == 0.f)
+        Resources::PrimitiveData transformedPrimitive = primitive;
+        for (auto& vertex : transformedPrimitive.vertices)
         {
-            vertex.boneID[i] = id;
-            vertex.weights[i] = weight;
-            break;
+            vertex.position = glm::vec3(globalTransform * glm::vec4(vertex.position, 1.0f));
+            vertex.normal = glm::normalize(glm::mat3(globalTransform) * vertex.normal);
         }
+        outAllPrimitives.push_back(std::move(transformedPrimitive));
     }
-}
 
-void processSingleBone(Core::Resources::PrimitiveData& primitiveData, const aiBone* bone)
-{
-    Logger::log(1, "Bone '%s': num vertices affected by this bone: %d\n", bone->mName.C_Str(), bone->mNumWeights);
-
-    int boneID = getBoneID(primitiveData, bone);
-    Logger::log(1, "bone id %d\n", boneID);
-
-    aiVertexWeight* weights = bone->mWeights;
-    for (int boneWeight = 0; boneWeight < bone->mNumWeights; ++boneWeight)
+    for (const auto& child : node.children)
     {
-        unsigned int vertexID = weights[boneWeight].mVertexId;
-        float weight = weights[boneWeight].mWeight;
-        setVertexBoneData(primitiveData.vertices[vertexID], boneID, weight);
+        collectPrimitivesRecursive(child, globalTransform, outAllPrimitives);
     }
 }
 
-void processBones(Core::Resources::PrimitiveData& primitiveData, const aiMesh* mesh)
+void Core::Assets::ModelLoader::processNodeHierarchy(Resources::MeshNode& outNode, aiNode* node, const aiScene* scene,
+                                                     Renderer::VkRenderData& renderData, const std::string& baseDir)
 {
-    for (unsigned int i = 0; i < mesh->mNumBones; i++)
+    outNode.name = node->mName.C_Str();
+
+    outNode.localTransform = glm::transpose(glm::make_mat4(&node->mTransformation.a1));
+
+    for (size_t i = 0; i < node->mNumMeshes; ++i)
     {
-        processSingleBone(primitiveData, mesh->mBones[i]);
+        const aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+        const aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+
+        processMesh(outNode.primitives, mesh, material, renderData, baseDir);
     }
 
-    primitiveData.bones.finalTransforms.resize(primitiveData.bones.bones.size(), glm::mat4(1.0));
+    for (size_t i = 0; i < node->mNumChildren; ++i)
+    {
+        Resources::MeshNode childNode;
+        processNodeHierarchy(childNode, node->mChildren[i], scene, renderData, baseDir);
+        outNode.children.push_back(std::move(childNode));
+    }
 }
 
-void processMesh(std::vector<Core::Resources::PrimitiveData>& outPrimitives, const aiMesh* mesh, const aiMaterial* material,
-                 Core::Renderer::VkRenderData& renderData, const std::string& baseDir)
+void Core::Assets::ModelLoader::processMesh(std::vector<Resources::PrimitiveData>& outPrimitives, const aiMesh* mesh,
+                                            const aiMaterial* material, Renderer::VkRenderData& renderData,
+                                            const std::string& baseDir)
 {
-    Core::Resources::PrimitiveData primitiveData;
-    Core::Renderer::MaterialInfo materialInfo = {};
+    Resources::PrimitiveData primitiveData;
+    Renderer::MaterialInfo materialInfo = {};
 
     aiColor4D baseColor(1.f, 1.f, 1.f, 1.f);
     if (AI_SUCCESS == material->Get(AI_MATKEY_BASE_COLOR, baseColor))
@@ -120,8 +128,8 @@ void processMesh(std::vector<Core::Resources::PrimitiveData>& outPrimitives, con
             }
 
             std::string textureFileName = baseDir + path.C_Str();
-            auto textureAsset = Core::Assets::AssetManager::getInstance().getOrCreate<Core::Assets::TextureAsset>(
-                textureFileName, renderData, VK_FORMAT_R8G8B8A8_SRGB);
+            auto textureAsset = AssetManager::getInstance().getOrCreate<TextureAsset>(textureFileName, renderData,
+                                                                                      VK_FORMAT_R8G8B8A8_SRGB);
 
             if (textureAsset)
             {
@@ -137,8 +145,8 @@ void processMesh(std::vector<Core::Resources::PrimitiveData>& outPrimitives, con
         if (material->GetTexture(aiTextureType_NORMALS, 0, &path) == AI_SUCCESS)
         {
             std::string textureFileName = baseDir + path.C_Str();
-            auto textureAsset = Core::Assets::AssetManager::getInstance().getOrCreate<Core::Assets::TextureAsset>(
-                textureFileName, renderData, VK_FORMAT_R8G8B8A8_UNORM);
+            auto textureAsset = AssetManager::getInstance().getOrCreate<TextureAsset>(textureFileName, renderData,
+                                                                                      VK_FORMAT_R8G8B8A8_UNORM);
 
             if (textureAsset)
             {
@@ -159,8 +167,8 @@ void processMesh(std::vector<Core::Resources::PrimitiveData>& outPrimitives, con
         if (material->GetTexture(textureType, 0, &path) == AI_SUCCESS)
         {
             std::string textureFileName = baseDir + path.C_Str();
-            auto textureAsset = Core::Assets::AssetManager::getInstance().getOrCreate<Core::Assets::TextureAsset>(
-                textureFileName, renderData, VK_FORMAT_R8G8B8A8_UNORM);
+            auto textureAsset = AssetManager::getInstance().getOrCreate<TextureAsset>(textureFileName, renderData,
+                                                                                      VK_FORMAT_R8G8B8A8_UNORM);
 
             if (textureAsset)
             {
@@ -181,8 +189,8 @@ void processMesh(std::vector<Core::Resources::PrimitiveData>& outPrimitives, con
         if (material->GetTexture(textureType, 0, &path) == AI_SUCCESS)
         {
             std::string textureFileName = baseDir + path.C_Str();
-            auto textureAsset = Core::Assets::AssetManager::getInstance().getOrCreate<Core::Assets::TextureAsset>(
-                textureFileName, renderData, VK_FORMAT_R8G8B8A8_UNORM);
+            auto textureAsset = AssetManager::getInstance().getOrCreate<TextureAsset>(textureFileName, renderData,
+                                                                                      VK_FORMAT_R8G8B8A8_UNORM);
 
             if (textureAsset)
             {
@@ -198,8 +206,8 @@ void processMesh(std::vector<Core::Resources::PrimitiveData>& outPrimitives, con
         if (material->GetTexture(aiTextureType_EMISSIVE, 0, &path) == AI_SUCCESS)
         {
             std::string textureFileName = baseDir + path.C_Str();
-            auto textureAsset = Core::Assets::AssetManager::getInstance().getOrCreate<Core::Assets::TextureAsset>(
-                textureFileName, renderData, VK_FORMAT_R8G8B8A8_SRGB);
+            auto textureAsset = AssetManager::getInstance().getOrCreate<TextureAsset>(textureFileName, renderData,
+                                                                                      VK_FORMAT_R8G8B8A8_SRGB);
 
             if (textureAsset)
             {
@@ -218,7 +226,7 @@ void processMesh(std::vector<Core::Resources::PrimitiveData>& outPrimitives, con
     primitiveData.material = materialInfo;
 
     VkDescriptorSetLayout layout =
-        renderData.rdDescriptorLayoutCache->getLayout(Core::Renderer::DescriptorLayoutType::PBRTextures);
+        renderData.rdDescriptorLayoutCache->getLayout(Renderer::DescriptorLayoutType::PBRTextures);
 
     if (!renderData.rdDescriptorAllocator->allocate(layout, primitiveData.materialDescriptorSet))
     {
@@ -226,7 +234,7 @@ void processMesh(std::vector<Core::Resources::PrimitiveData>& outPrimitives, con
     }
     else
     {
-        auto makeInfo = [](const std::shared_ptr<Core::Assets::TextureAsset>& textureAsset)
+        auto makeInfo = [](const std::shared_ptr<TextureAsset>& textureAsset)
         {
             const auto& textureData = textureAsset->getTextureData();
             VkDescriptorImageInfo info{};
@@ -271,7 +279,7 @@ void processMesh(std::vector<Core::Resources::PrimitiveData>& outPrimitives, con
 
     for (size_t i = 0; i < mesh->mNumVertices; ++i)
     {
-        Core::Renderer::Vertex vertex{};
+        Renderer::Vertex vertex{};
         if (mesh->HasPositions())
         {
             aiVector3D& position = mesh->mVertices[i];
@@ -326,110 +334,64 @@ void processMesh(std::vector<Core::Resources::PrimitiveData>& outPrimitives, con
     outPrimitives.emplace_back(std::move(primitiveData));
 }
 
-void processNodeHierarchy(Core::Resources::MeshNode& outNode, aiNode* node, const aiScene* scene,
-                          Core::Renderer::VkRenderData& renderData, const std::string& baseDir)
+void Core::Assets::ModelLoader::processBones(Resources::PrimitiveData& primitiveData, const aiMesh* mesh)
 {
-    outNode.name = node->mName.C_Str();
-
-    outNode.localTransform = glm::transpose(glm::make_mat4(&node->mTransformation.a1));
-
-    for (size_t i = 0; i < node->mNumMeshes; ++i)
+    for (unsigned int i = 0; i < mesh->mNumBones; i++)
     {
-        const aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-        const aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-
-        processMesh(outNode.primitives, mesh, material, renderData, baseDir);
+        processSingleBone(primitiveData, mesh->mBones[i]);
     }
 
-    for (size_t i = 0; i < node->mNumChildren; ++i)
+    primitiveData.bones.finalTransforms.resize(primitiveData.bones.bones.size(), glm::mat4(1.0));
+}
+
+void Core::Assets::ModelLoader::processSingleBone(Resources::PrimitiveData& primitiveData, const aiBone* bone)
+{
+    Logger::log(1, "Bone '%s': num vertices affected by this bone: %d\n", bone->mName.C_Str(), bone->mNumWeights);
+
+    int boneID = getBoneID(primitiveData, bone);
+    Logger::log(1, "bone id %d\n", boneID);
+
+    aiVertexWeight* weights = bone->mWeights;
+    for (int boneWeight = 0; boneWeight < bone->mNumWeights; ++boneWeight)
     {
-        Core::Resources::MeshNode childNode;
-        processNodeHierarchy(childNode, node->mChildren[i], scene, renderData, baseDir);
-        outNode.children.push_back(std::move(childNode));
+        unsigned int vertexID = weights[boneWeight].mVertexId;
+        float weight = weights[boneWeight].mWeight;
+        setVertexBoneData(primitiveData.vertices[vertexID], boneID, weight);
     }
 }
 
-Core::Resources::MeshData Core::Utils::loadMeshFromFile(const std::string& fileName, Renderer::VkRenderData& renderData)
+void Core::Assets::ModelLoader::setVertexBoneData(Renderer::Vertex& vertex, int id, float weight)
 {
-    Assimp::Importer importer{};
-    importer.ReadFile(fileName, aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_JoinIdenticalVertices |
-                                    aiProcess_TransformUVCoords | aiProcess_GlobalScale | aiProcess_CalcTangentSpace);
-
-    const aiScene* scene = importer.GetScene();
-
-    if (!scene || !scene->mRootNode || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE)
+    for (size_t i = 0; i < maxNumberOfBonesPerVertex; i++)
     {
-        Logger::log(1, "%s error: Failed to load mesh %s \n", __FUNCTION__, fileName.c_str());
-        return {};
-    }
-
-    const std::string baseDir = FileUtils::getParentDirectory(fileName);
-
-    Resources::MeshData mesh;
-    processNodeHierarchy(mesh.rootNode, scene->mRootNode, scene, renderData, baseDir);
-    mesh.skeletonData.rootNode = Animations::AnimationsUtils::buildBoneHierarchy(scene->mRootNode);
-    return mesh;
-}
-
-void Core::Utils::collectPrimitivesRecursive(const Resources::MeshNode& node, const glm::mat4& parentTransform,
-                                             std::vector<Resources::PrimitiveData>& outAllPrimitives)
-{
-    glm::mat4 globalTransform = parentTransform * node.localTransform;
-
-    for (auto& primitive : node.primitives)
-    {
-        Resources::PrimitiveData transformedPrimitive = primitive;
-        for (auto& vertex : transformedPrimitive.vertices)
+        if (vertex.weights[i] == 0.f)
         {
-            vertex.position = glm::vec3(globalTransform * glm::vec4(vertex.position, 1.0f));
-            vertex.normal = glm::normalize(glm::mat3(globalTransform) * vertex.normal);
+            vertex.boneID[i] = id;
+            vertex.weights[i] = weight;
+            break;
         }
-        outAllPrimitives.push_back(std::move(transformedPrimitive));
-    }
-
-    for (const auto& child : node.children)
-    {
-        collectPrimitivesRecursive(child, globalTransform, outAllPrimitives);
     }
 }
 
-void Core::Utils::createSpritePrimitiveData(const std::string& spritePath, Renderer::VkRenderData& renderData,
-                                            Resources::PrimitiveData& outPrimitiveData)
+int Core::Assets::ModelLoader::getBoneID(Resources::PrimitiveData& primitiveData, const aiBone* bone)
 {
-    outPrimitiveData.vertices = {
-        {{-0.5f, -0.5f, 0.0f}, {0, 0, 1}, {0, 0, 0, 1}, {1, 1, 1, 1}, {0.0f, 0.0f}}, // LB
-        {{0.5f, -0.5f, 0.0f}, {0, 0, 1}, {0, 0, 0, 1}, {1, 1, 1, 1}, {1.0f, 0.0f}},  // RB
-        {{0.5f, 0.5f, 0.0f}, {0, 0, 1}, {0, 0, 0, 1}, {1, 1, 1, 1}, {1.0f, 1.0f}},   // RT
-        {{-0.5f, 0.5f, 0.0f}, {0, 0, 1}, {0, 0, 0, 1}, {1, 1, 1, 1}, {0.0f, 1.0f}}   // LT
-    };
-    outPrimitiveData.indices = {0, 1, 2, 2, 3, 0};
+    int boneID;
+    const std::string boneName = bone->mName.C_Str();
 
-    auto textureAsset = Assets::AssetManager::getInstance().getOrCreate<Assets::TextureAsset>(spritePath, renderData,
-                                                                                              VK_FORMAT_R8G8B8A8_SRGB);
-
-    if (textureAsset)
+    if (!primitiveData.bones.boneNameToIndexMap.contains(boneName))
     {
-        outPrimitiveData.textures[aiTextureType_DIFFUSE] = textureAsset;
+        boneID = static_cast<int>(primitiveData.bones.bones.size());
+        Animations::Bone newBone;
+        primitiveData.bones.bones.emplace_back(newBone);
+    }
+    else
+    {
+        boneID = primitiveData.bones.boneNameToIndexMap[boneName];
     }
 
-    if (auto layout = renderData.rdDescriptorLayoutCache->getLayout(Renderer::DescriptorLayoutType::SingleTexture);
-        renderData.rdDescriptorAllocator->allocate(layout, outPrimitiveData.materialDescriptorSet))
-    {
-        const auto& textureData = textureAsset->getTextureData();
+    primitiveData.bones.boneNameToIndexMap[boneName] = boneID;
+    primitiveData.bones.bones[boneID] =
+        Animations::Bone{Animations::AnimationsUtils::convertMatrixToGlm(bone->mOffsetMatrix)};
 
-        VkDescriptorImageInfo imageInfo{};
-        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        imageInfo.imageView = textureData.imageView;
-        imageInfo.sampler = textureData.sampler;
-
-        VkWriteDescriptorSet write{};
-        write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        write.dstSet = outPrimitiveData.materialDescriptorSet;
-        write.dstBinding = 0;
-        write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        write.descriptorCount = 1;
-        write.pImageInfo = &imageInfo;
-
-        vkUpdateDescriptorSets(renderData.rdVkbDevice.device, 1, &write, 0, nullptr);
-    }
+    return boneID;
 }

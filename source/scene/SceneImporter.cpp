@@ -2,13 +2,15 @@
 #include "components/MeshComponent.h"
 #include "components/TransformComponent.h"
 #include "engine/Engine.h"
-#include "utils/ShapeUtils.h"
 #include "objects/SceneObject.h"
 #define GLM_ENABLE_EXPERIMENTAL
+#include "asset-manager/ModelLoader.h"
+
 #include <glm/gtx/matrix_decompose.hpp>
 
 std::shared_ptr<Core::Scene::SceneObject>
-Core::Scene::SceneImporter::createObjectFromNode(const Resources::MeshNode& node, const Resources::SkeletonData& skeletonData,
+Core::Scene::SceneImporter::createObjectFromNode(const Resources::MeshNode& node,
+                                                 const Resources::SkeletonData& skeletonData,
                                                  const std::string_view& filePath, bool shouldMergeMeshes)
 {
     if (shouldMergeMeshes)
@@ -20,7 +22,7 @@ Core::Scene::SceneImporter::createObjectFromNode(const Resources::MeshNode& node
         meshComp->setSourceMesh(filePath, -1);
 
         std::vector<Resources::PrimitiveData> allPrimitives;
-        Utils::collectPrimitivesRecursive(node, glm::mat4(1.0f), allPrimitives);
+        Assets::ModelLoader::collectPrimitivesRecursive(node, glm::mat4(1.0f), allPrimitives);
 
         for (const auto& primitive : allPrimitives)
         {

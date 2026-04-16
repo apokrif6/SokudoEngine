@@ -22,13 +22,12 @@
 #include "imgui.h"
 #include "vk-renderer/buffers/VertexBuffer.h"
 #include "events/input-events/MouseMovementEvent.h"
-#include "utils/ShapeUtils.h"
 #include "vk-renderer/pipelines/layouts/MeshPipelineLayout.h"
 #include "events/input-events/MouseLockEvent.h"
 #include <algorithm>
 #include <glm/gtc/matrix_transform.hpp>
 #include "asset-manager/AssetManager.h"
-#include "../asset-manager/assets/TextureAsset.h"
+#include "asset-manager/assets/TextureAsset.h"
 #include "components/TransformComponent.h"
 #include "vk-renderer/pipelines/DebugSkeletonPipeline.h"
 #include "engine/Engine.h"

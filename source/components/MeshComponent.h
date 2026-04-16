@@ -62,7 +62,7 @@ public:
         }
     }
 
-    float getCurrentAnimationTime() const { return mCurrentAnimationTime; }
+    [[nodiscard]] float getCurrentAnimationTime() const { return mCurrentAnimationTime; }
 
     void setAnimationTime(float time) { mCurrentAnimationTime = time; }
 

@@ -1,7 +1,8 @@
 #pragma once
 
 #include "Asset.h"
-#include "utils/ShapeUtils.h"
+#include "resources/Mesh.h"
+#include "vk-renderer/VkRenderData.h"
 
 namespace Core::Assets
 {

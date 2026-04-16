@@ -5,12 +5,10 @@
 #include <glm/glm.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
 #include "descriptors/DescriptorAllocator.h"
-
 #include <glm/gtx/compatibility.hpp>
 #include <GLFW/glfw3.h>
 #include <array>
 #include <complex.h>
-
 #include "descriptors/DescriptorLayoutCache.h"
 
 namespace Core::Assets

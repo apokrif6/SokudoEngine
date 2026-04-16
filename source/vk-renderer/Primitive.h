@@ -1,9 +1,21 @@
 #pragma once
 
-#include "utils/ShapeUtils.h"
+#include "VkRenderData.h"
+#include "animations/AnimationsData.h"
+#include <memory>
+#include <unordered_map>
+#include <vector>
+#include <assimp/material.h>
+#include <glm/fwd.hpp>
 
+namespace Core::Assets
+{
+class TextureAsset;
+}
 namespace Core::Renderer
 {
+struct MaterialInfo;
+struct Vertex;
 enum PrimitiveRenderType
 {
     PBR,
