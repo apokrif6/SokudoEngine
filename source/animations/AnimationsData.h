@@ -17,7 +17,7 @@ namespace Core::Animations
 {
 struct VertexBoneData
 {
-    unsigned int boneIDs[maxNumberOfBonesPerVertex] = {0};
+    unsigned int boneIDs[maxNumberOfBonesPerVertex] = {};
     float weights[maxNumberOfBonesPerVertex] = {0.f};
 
     VertexBoneData() = default;
@@ -42,6 +42,25 @@ struct BonesInfo
     std::map<std::string, int> boneNameToIndexMap;
     std::vector<Bone> bones;
     std::vector<glm::mat4> finalTransforms;
+};
+
+struct BoneTransform
+{
+    glm::vec3 position{0.f};
+    glm::quat rotation{1.f, 0.f, 0.f, 0.f};
+    glm::vec3 scale{1.f};
+
+    BoneTransform() = default;
+    explicit BoneTransform(const glm::vec3& inPosition, const glm::quat& inRotation, const glm::vec3& inScale)
+        : position(inPosition), rotation(inRotation), scale(inScale)
+    {
+    }
+
+    glm::mat4 toMatrix() const
+    {
+        return glm::translate(glm::mat4(1.0f), position) * glm::mat4_cast(rotation) *
+               glm::scale(glm::mat4(1.0f), scale);
+    }
 };
 
 struct KeyframeVec3
@@ -79,56 +98,10 @@ struct AnimationClip
     std::vector<AnimationChannel> channels;
 };
 
-struct BoneNode : public Serialization::ISerializable
+struct BoneNode
 {
     std::string name;
     glm::mat4 localTransform;
     std::vector<BoneNode> children;
-
-    YAML::Node serialize() const override
-    {
-        YAML::Node n;
-        n["name"] = name;
-
-        YAML::Node matrix;
-        for (int i = 0; i < 4; ++i)
-        {
-            for (int j = 0; j < 4; ++j)
-            {
-                matrix.push_back(localTransform[i][j]);
-            }
-        }
-
-        n["localTransform"] = matrix;
-
-        for (const auto& child : children)
-        {
-            n["children"].push_back(child.serialize());
-        }
-
-        return n;
-    }
-
-    void deserialize(const YAML::Node& node) override
-    {
-        name = node["name"].as<std::string>();
-
-        const auto& matrixNode = node["localTransform"];
-        for (int i = 0; i < 4; ++i)
-        {
-            for (int j = 0; j < 4; ++j)
-            {
-                localTransform[i][j] = matrixNode[i * 4 + j].as<float>();
-            }
-        }
-
-        children.clear();
-        for (const auto& childNode : node["children"])
-        {
-            BoneNode child;
-            child.deserialize(childNode);
-            children.push_back(std::move(child));
-        }
-    }
 };
 } // namespace Core::Animations

@@ -121,33 +121,23 @@ void Core::Animations::Animator::readNodeHierarchyClip(const AnimationClip& clip
                                                        const BoneNode& node, const glm::mat4& parentTransform,
                                                        BonesInfo& bonesInfo, const Skeleton& skeleton)
 {
-    std::string nodeName = node.name;
-    glm::mat4 nodeTransform = node.localTransform;
+    const std::string nodeName = node.name;
+    glm::mat4 nodeTransform;
 
-    const AnimationChannel* channel = findChannel(clip, nodeName);
-    if (channel)
+    if (const AnimationChannel* channel = findChannel(clip, nodeName))
     {
-        glm::vec3 position = interpolatePositionClip(channel->positions, animationTime);
-        glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), position);
-
-        glm::quat rotation = interpolateRotationClip(channel->rotations, animationTime);
-        glm::mat4 rotationMatrix = glm::mat4_cast(rotation);
-
-        glm::vec3 scale = interpolateScaleClip(channel->scalings, animationTime);
-        glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), scale);
-
-        nodeTransform = translationMatrix * rotationMatrix * scaleMatrix;
+        nodeTransform = getBoneTransform(channel, animationTime).toMatrix();
     }
     else
     {
         nodeTransform = glm::mat4(1.f);
     }
 
-    glm::mat4 globalTransform = parentTransform * nodeTransform;
+    const glm::mat4 globalTransform = parentTransform * nodeTransform;
 
     if (bonesInfo.boneNameToIndexMap.contains(nodeName))
     {
-        int boneIndex = bonesInfo.boneNameToIndexMap[nodeName];
+        const int boneIndex = bonesInfo.boneNameToIndexMap[nodeName];
         bonesInfo.bones[boneIndex].animatedGlobalTransform = globalTransform;
         bonesInfo.bones[boneIndex].finalTransform = globalTransform * bonesInfo.bones[boneIndex].offset;
     }
@@ -156,4 +146,12 @@ void Core::Animations::Animator::readNodeHierarchyClip(const AnimationClip& clip
     {
         readNodeHierarchyClip(clip, animationTime, child, globalTransform, bonesInfo, skeleton);
     }
+}
+
+Core::Animations::BoneTransform Core::Animations::Animator::getBoneTransform(const AnimationChannel* channel,
+                                                                             float time)
+{
+    return BoneTransform{interpolatePositionClip(channel->positions, time),
+                         interpolateRotationClip(channel->rotations, time),
+                         interpolateScaleClip(channel->scalings, time)};
 }
