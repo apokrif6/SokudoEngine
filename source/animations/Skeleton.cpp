@@ -1,4 +1,5 @@
 #include "Skeleton.h"
+#include "vk-renderer/debug/Skeleton.h"
 
 void Core::Animations::Skeleton::initDebug(Renderer::VkRenderData& renderData)
 {

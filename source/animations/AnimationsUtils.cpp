@@ -6,6 +6,7 @@
 #include "Animator.h"
 #include "glm/gtc/type_ptr.hpp"
 #include "engine/Engine.h"
+#include "tools/Logger.h"
 
 Core::Animations::AnimationClip
 Core::Animations::AnimationsUtils::loadAnimationFromFile(const std::string_view& filePath)

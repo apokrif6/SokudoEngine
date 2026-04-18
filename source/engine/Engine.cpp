@@ -2,6 +2,7 @@
 
 #include "asset-manager/AssetManager.h"
 #include "components/ComponentFactory.h"
+#include "tools/Logger.h"
 #include "ui/UserInterface.h"
 #include "window/Window.h"
 

@@ -3,6 +3,11 @@
 #include "AnimationsData.h"
 #include "resources/Mesh.h"
 
+namespace Core::Renderer::Debug
+{
+class Skeleton;
+struct DebugBone;
+} // namespace Core::Renderer::Debug
 namespace Core::Animations
 {
 class Skeleton

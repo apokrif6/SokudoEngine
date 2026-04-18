@@ -50,9 +50,25 @@ public:
 
     void setShouldPlayAnimation(bool shouldPlay) { mShouldPlayAnimation = shouldPlay; }
 
+    [[nodiscard]] bool shouldBlendAnimations() const { return mShouldBlendAnimations; }
+
+    void setShouldBlendAnimations(bool shouldBlend) { mShouldBlendAnimations = shouldBlend; }
+
+    [[nodiscard]] float getBlendFactor() const { return mBlendFactor; }
+
+    void setBlendFactor(float blendFactor) { mBlendFactor = blendFactor; }
+
     [[nodiscard]] bool shouldDrawDebugSkeleton() const { return mShouldDrawDebugSkeleton; }
 
     void setShouldDrawDebugSkeleton(bool shouldDraw) { mShouldDrawDebugSkeleton = shouldDraw; }
+
+    [[nodiscard]] float getCurrentAnimationTime() const { return mCurrentAnimationTime; }
+
+    void setAnimationTime(float time) { mCurrentAnimationTime = time; }
+
+    void setSourceMesh(const std::string_view& path, uint32_t primitiveIndex);
+
+    [[nodiscard]] uint16_t getCurrentAnimationIndex() const { return mCurrentAnimationIndex; }
 
     void setCurrentAnimationIndex(uint32_t index)
     {
@@ -62,13 +78,15 @@ public:
         }
     }
 
-    [[nodiscard]] float getCurrentAnimationTime() const { return mCurrentAnimationTime; }
+    [[nodiscard]] uint16_t getTargetAnimationIndex() const { return mTargetAnimationIndex; }
 
-    void setAnimationTime(float time) { mCurrentAnimationTime = time; }
-
-    void setSourceMesh(const std::string_view& path, uint32_t primitiveIndex);
-
-    [[nodiscard]] uint16_t getCurrentAnimationIndex() const { return mCurrentAnimationIndex; }
+    void setTargetAnimationIndex(uint32_t index)
+    {
+        if (index < mAnimations.size())
+        {
+            mTargetAnimationIndex = index;
+        }
+    }
 
     [[nodiscard]] Animations::AnimationClip& getCurrentAnimation() { return mAnimations[mCurrentAnimationIndex]; }
 
@@ -87,14 +105,18 @@ public:
 private:
     std::vector<Renderer::Primitive> mPrimitives;
     Animations::Skeleton mSkeleton;
+#pragma region Animation
     // TODO
     // I guess it should be moved to global animation manager, and mesh should store only shared pointers
     std::vector<Animations::AnimationClip> mAnimations;
     bool mShouldPlayAnimation = false;
+    bool mShouldBlendAnimations = false;
     bool mShouldDrawDebugSkeleton = false;
     uint16_t mCurrentAnimationIndex = 0;
+    uint16_t mTargetAnimationIndex = 0;
     float mCurrentAnimationTime = 0.f;
-
+    float mBlendFactor = 0.f;
+#pragma endregion
     // metadata for serialization
     // probably should be moved to other place (I don't know where exactly)
     std::string mMeshFilePath;

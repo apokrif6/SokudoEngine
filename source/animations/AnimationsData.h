@@ -1,15 +1,14 @@
 #pragma once
 
-#include "tools/Logger.h"
 #include "glm/glm.hpp"
 #include "glm/detail/type_quat.hpp"
-#include "vk-renderer/debug/Skeleton.h"
 #include "serialization/Serializable.h"
 #include <vector>
 #include <map>
 #include <string>
 #include <memory>
-#include <unordered_map>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/matrix_decompose.hpp>
 
 constexpr size_t maxNumberOfBonesPerVertex = 4;
 
@@ -54,6 +53,13 @@ struct BoneTransform
     explicit BoneTransform(const glm::vec3& inPosition, const glm::quat& inRotation, const glm::vec3& inScale)
         : position(inPosition), rotation(inRotation), scale(inScale)
     {
+    }
+
+    explicit BoneTransform(const glm::mat4& matrix)
+    {
+        glm::vec3 skew;
+        glm::vec4 perspective;
+        glm::decompose(matrix, scale, rotation, position, skew, perspective);
     }
 
     glm::mat4 toMatrix() const

@@ -17,18 +17,18 @@ void Core::Animations::Animator::update(Renderer::VkRenderData& renderData, floa
         const float newTime = mesh->getCurrentAnimationTime() + deltaTime * ticksPerSecond;
         mesh->setAnimationTime(fmod(newTime, clip.duration));
 
-        updateBonesTransform(mesh, mesh->getCurrentAnimationIndex());
+        updateBonesTransform(mesh);
     }
 
     renderData.rdAnimationBonesTransformCalculationTime = mAnimationBonesTransformCalculationTimer.stop();
 }
 
-void Core::Animations::Animator::updateBonesTransform(Component::MeshComponent* mesh, uint16_t animationToPlayIndex)
+void Core::Animations::Animator::updateBonesTransform(Component::MeshComponent* mesh)
 {
     for (Renderer::Primitive& primitive : mesh->getPrimitives())
     {
         BonesInfo& bonesInfo = primitive.getBonesInfo();
-        size_t bonesInfoSize = bonesInfo.bones.size();
+        const size_t bonesInfoSize = bonesInfo.bones.size();
         bonesInfo.finalTransforms.resize(bonesInfoSize, glm::mat4(1.0));
 
         if (!mesh->hasAnimations())
@@ -37,13 +37,25 @@ void Core::Animations::Animator::updateBonesTransform(Component::MeshComponent* 
         }
 
         const auto& animations = mesh->getAnimations();
-        const AnimationClip& animation = animations[animationToPlayIndex];
-
-        const float timeInTicks = mesh->getCurrentAnimationTime();
-
         const Skeleton& skeleton = mesh->getSkeleton();
 
-        readNodeHierarchyClip(animation, timeInTicks, skeleton.getRootNode(), glm::mat4(1.0f), bonesInfo, skeleton);
+        const AnimationClip& clipA = animations[mesh->getCurrentAnimationIndex()];
+        const float timeA = mesh->getCurrentAnimationTime();
+
+        if (mesh->shouldBlendAnimations())
+        {
+            const AnimationClip& clipB = animations[mesh->getTargetAnimationIndex()];
+            const float blendFactor = mesh->getBlendFactor();
+
+            const float timeB = timeA / clipA.duration * clipB.duration;
+
+            readNodeHierarchyBlend(clipA, timeA, clipB, timeB, blendFactor, skeleton.getRootNode(), glm::mat4(1.0f),
+                                   bonesInfo);
+        }
+        else
+        {
+            readNodeHierarchyClip(clipA, timeA, skeleton.getRootNode(), glm::mat4(1.0f), bonesInfo);
+        }
 
         for (size_t i = 0; i < bonesInfoSize; ++i)
         {
@@ -119,7 +131,7 @@ glm::vec3 Core::Animations::Animator::interpolateScaleClip(const std::vector<Key
 
 void Core::Animations::Animator::readNodeHierarchyClip(const AnimationClip& clip, float animationTime,
                                                        const BoneNode& node, const glm::mat4& parentTransform,
-                                                       BonesInfo& bonesInfo, const Skeleton& skeleton)
+                                                       BonesInfo& bonesInfo)
 {
     const std::string nodeName = node.name;
     glm::mat4 nodeTransform;
@@ -144,7 +156,49 @@ void Core::Animations::Animator::readNodeHierarchyClip(const AnimationClip& clip
 
     for (const BoneNode& child : node.children)
     {
-        readNodeHierarchyClip(clip, animationTime, child, globalTransform, bonesInfo, skeleton);
+        readNodeHierarchyClip(clip, animationTime, child, globalTransform, bonesInfo);
+    }
+}
+
+void Core::Animations::Animator::readNodeHierarchyBlend(const AnimationClip& clipA, float animationTimeA,
+                                                        const AnimationClip& clipB, float animationTimeB,
+                                                        float blendFactor, const BoneNode& node,
+                                                        const glm::mat4& parentTransform, BonesInfo& bonesInfo)
+{
+    const std::string& nodeName = node.name;
+    glm::mat4 nodeTransform;
+
+    const AnimationChannel* channelA = findChannel(clipA, nodeName);
+    const AnimationChannel* channelB = findChannel(clipB, nodeName);
+
+    if (channelA || channelB)
+    {
+        BoneTransform boneTransformA =
+            channelA ? getBoneTransform(channelA, animationTimeA) : BoneTransform{node.localTransform};
+
+        BoneTransform boneTransformB =
+            channelB ? getBoneTransform(channelB, animationTimeB) : BoneTransform{node.localTransform};
+
+        nodeTransform = blendTransforms(boneTransformA, boneTransformB, blendFactor).toMatrix();
+    }
+    else
+    {
+        nodeTransform = glm::mat4(1.f);
+    }
+
+    glm::mat4 globalTransform = parentTransform * nodeTransform;
+
+    if (bonesInfo.boneNameToIndexMap.contains(nodeName))
+    {
+        const int boneIndex = bonesInfo.boneNameToIndexMap[nodeName];
+        bonesInfo.bones[boneIndex].animatedGlobalTransform = globalTransform;
+        bonesInfo.bones[boneIndex].finalTransform = globalTransform * bonesInfo.bones[boneIndex].offset;
+    }
+
+    for (const BoneNode& child : node.children)
+    {
+        readNodeHierarchyBlend(clipA, animationTimeA, clipB, animationTimeB, blendFactor, child, globalTransform,
+                               bonesInfo);
     }
 }
 
@@ -154,4 +208,13 @@ Core::Animations::BoneTransform Core::Animations::Animator::getBoneTransform(con
     return BoneTransform{interpolatePositionClip(channel->positions, time),
                          interpolateRotationClip(channel->rotations, time),
                          interpolateScaleClip(channel->scalings, time)};
+}
+
+Core::Animations::BoneTransform Core::Animations::Animator::blendTransforms(const BoneTransform& transformA,
+                                                                            const BoneTransform& transformB,
+                                                                            float blendFactor)
+{
+    return BoneTransform{glm::mix(transformA.position, transformB.position, blendFactor),
+                         glm::slerp(transformA.rotation, transformB.rotation, blendFactor),
+                         glm::mix(transformA.scale, transformB.scale, blendFactor)};
 }

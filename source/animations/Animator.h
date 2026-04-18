@@ -27,7 +27,7 @@ public:
 private:
     std::vector<Component::MeshComponent*> mMeshes;
 
-    void updateBonesTransform(Component::MeshComponent* mesh, uint16_t animationToPlayIndex);
+    void updateBonesTransform(Component::MeshComponent* mesh);
 
     glm::vec3 interpolatePositionClip(const std::vector<KeyframeVec3>& keyframes, float animationTime);
 
@@ -36,9 +36,15 @@ private:
     glm::vec3 interpolateScaleClip(const std::vector<KeyframeVec3>& keyframes, float animationTime);
 
     void readNodeHierarchyClip(const AnimationClip& clip, float animationTime, const BoneNode& node,
-                               const glm::mat4& parentTransform, BonesInfo& bonesInfo, const Skeleton& skeleton);
+                               const glm::mat4& parentTransform, BonesInfo& bonesInfo);
+
+    void readNodeHierarchyBlend(const AnimationClip& clipA, float animationTimeA, const AnimationClip& clipB,
+                                float animationTimeB, float blendFactor, const BoneNode& node,
+                                const glm::mat4& parentTransform, BonesInfo& bonesInfo);
 
     BoneTransform getBoneTransform(const AnimationChannel* channel, float time);
+
+    BoneTransform blendTransforms(const BoneTransform& transformA, const BoneTransform& transformB, float blendFactor);
 
     Timer mAnimationBonesTransformCalculationTimer;
 };

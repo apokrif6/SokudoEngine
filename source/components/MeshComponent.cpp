@@ -7,7 +7,9 @@
 #include "asset-manager/ModelLoader.h"
 #include "asset-manager/assets/MeshAsset.h"
 #include "components/TransformComponent.h"
+#include "tools/Logger.h"
 #include "utils/FileUtils.h"
+#include "vk-renderer/debug/Skeleton.h"
 
 void buildDebugSkeletonLines(const Core::Animations::Skeleton& skeleton, const Core::Animations::BonesInfo& bonesInfo,
                              std::vector<Core::Renderer::Debug::DebugBone>& debugBones,
@@ -25,8 +27,8 @@ void buildDebugSkeletonLines(const Core::Animations::Skeleton& skeleton, const C
         currentTransform = parentTransform * node.localTransform;
     }
 
-    glm::vec3 parentPos = glm::vec3(parentTransform * glm::vec4(0, 0, 0, 1));
-    glm::vec3 currentPos = glm::vec3(currentTransform * glm::vec4(0, 0, 0, 1));
+    const glm::vec3 parentPos = glm::vec3(parentTransform * glm::vec4(0, 0, 0, 1));
+    const glm::vec3 currentPos = glm::vec3(currentTransform * glm::vec4(0, 0, 0, 1));
 
     if (parentTransform != glm::mat4(1.f))
     {
