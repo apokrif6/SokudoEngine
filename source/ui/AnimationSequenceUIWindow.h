@@ -100,24 +100,25 @@ class AnimationSequenceUIWindow : public UIWindow<AnimationSequenceUIWindow>
             meshComponent->setAnimationTime(0.0f);
         }
     }
-
     static void drawBoneNodeRecursive(const Animations::BoneNode& node, Component::MeshComponent* meshComponent)
     {
         ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
 
-        if (node.children.empty())
-        {
-            flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
-        }
-
+        int boneIndex = -1;
         bool isActualBone = false;
         if (!meshComponent->getPrimitives().empty())
         {
             const auto& bonesMap = meshComponent->getPrimitives()[0].getBonesInfo().boneNameToIndexMap;
-            if (bonesMap.contains(node.name))
+            if (const auto it = bonesMap.find(node.name); it != bonesMap.end())
             {
                 isActualBone = true;
+                boneIndex = it->second;
             }
+        }
+
+        if (node.children.empty())
+        {
+            flags |= ImGuiTreeNodeFlags_Leaf;
         }
 
         if (isActualBone)
@@ -126,6 +127,7 @@ class AnimationSequenceUIWindow : public UIWindow<AnimationSequenceUIWindow>
         }
 
         const auto nodeID = reinterpret_cast<void*>(std::hash<std::string>{}(node.name));
+
         const bool opened = ImGui::TreeNodeEx(nodeID, flags, "%s", node.name.c_str());
 
         if (isActualBone)
@@ -133,7 +135,28 @@ class AnimationSequenceUIWindow : public UIWindow<AnimationSequenceUIWindow>
             ImGui::PopStyleColor();
         }
 
-        if (!node.children.empty() && opened)
+        if (isActualBone)
+        {
+            ImGui::SameLine(ImGui::GetContentRegionAvail().x - 250.0f);
+
+            const auto& boneData = meshComponent->getPrimitives()[0].getBonesInfo().bones[boneIndex];
+
+            const Animations::BoneTransform transform{boneData.animatedGlobalTransform};
+
+            const glm::vec3 euler = glm::degrees(glm::eulerAngles(transform.rotation));
+
+            ImGui::TextDisabled("P: %.1f %.1f %.1f | R: %.0f %.0f %.0f", transform.position.x, transform.position.y,
+                                transform.position.z, euler.x, euler.y, euler.z);
+
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip("Position: %.3f, %.3f, %.3f\nRotation (Euler): %.2f, %.2f, %.2f",
+                                  transform.position.x, transform.position.y, transform.position.z, euler.x, euler.y,
+                                  euler.z);
+            }
+        }
+
+        if (opened)
         {
             for (const auto& child : node.children)
             {
