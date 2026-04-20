@@ -49,6 +49,38 @@ class AnimationSequenceUIWindow : public UIWindow<AnimationSequenceUIWindow>
             meshComponent->setShouldDrawDebugSkeleton(shouldDrawDebugSkeleton);
         }
 
+        if (ImGui::CollapsingHeader("Animation Masks", ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            if (ImGui::Button("Create New Mask"))
+            {
+                Animations::AnimationMask newMask;
+                newMask.name = "Mask_" + std::to_string(meshComponent->getMasksCount());
+                meshComponent->addMask(newMask);
+            }
+
+            const int currentMask = meshComponent->getCurrentMaskIndex();
+            ImGui::Spacing();
+            ImGui::Text("Active Mask:");
+            ImGui::PushItemWidth(-1.0f);
+            if (ImGui::BeginCombo(
+                    "###ActiveMaskCombo",
+                    (currentMask == -1 ? "None (Global)" : meshComponent->getMaskName(currentMask)).c_str()))
+            {
+                if (ImGui::Selectable("None (Global)", currentMask == -1))
+                {
+                    meshComponent->setMaskIndex(-1);
+                }
+                for (int i = 0; i < meshComponent->getMasksCount(); i++)
+                {
+                    if (ImGui::Selectable(meshComponent->getMaskName(i).c_str(), currentMask == i))
+                    {
+                        meshComponent->setMaskIndex(i);
+                    }
+                }
+                ImGui::EndCombo();
+            }
+        }
+
         if (ImGui::CollapsingHeader("Skeleton Hierarchy", ImGuiTreeNodeFlags_DefaultOpen))
         {
             const auto& skeleton = meshComponent->getSkeleton();
@@ -56,6 +88,7 @@ class AnimationSequenceUIWindow : public UIWindow<AnimationSequenceUIWindow>
         }
 
         ImGui::End();
+
         return true;
     }
 
@@ -100,6 +133,7 @@ class AnimationSequenceUIWindow : public UIWindow<AnimationSequenceUIWindow>
             meshComponent->setAnimationTime(0.0f);
         }
     }
+
     static void drawBoneNodeRecursive(const Animations::BoneNode& node, Component::MeshComponent* meshComponent)
     {
         ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
@@ -133,6 +167,31 @@ class AnimationSequenceUIWindow : public UIWindow<AnimationSequenceUIWindow>
         if (isActualBone)
         {
             ImGui::PopStyleColor();
+        }
+
+        if (const int currentMaskIdx = meshComponent->getCurrentMaskIndex(); currentMaskIdx != -1)
+        {
+            ImGui::SameLine(ImGui::GetContentRegionAvail().x - 380.0f);
+
+            auto& mask = meshComponent->getMask(currentMaskIdx);
+            float& weight = mask.boneWeights[node.name];
+
+            ImGui::PushItemWidth(80.0f);
+
+            const std::string sliderLabel = "##w_" + node.name;
+            ImGui::SliderFloat(sliderLabel.c_str(), &weight, 0.0f, 1.0f, "%.1f");
+            ImGui::PopItemWidth();
+
+            ImGui::SameLine();
+            const std::string buttonLabel = "V##btn_" + node.name;
+            if (ImGui::Button(buttonLabel.c_str()))
+            {
+                mask.setWeightRecursively(node, weight, true);
+            }
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip("Apply this weight to '%s' and all its children", node.name.c_str());
+            }
         }
 
         if (isActualBone)

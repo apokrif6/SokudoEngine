@@ -88,6 +88,33 @@ public:
         }
     }
 
+    void addMask(const Animations::AnimationMask& mask) { mMasks.push_back(mask); }
+
+    [[nodiscard]] size_t getMasksCount() const { return mMasks.size(); }
+
+    [[nodiscard]] const std::string& getMaskName(int index) const
+    {
+        if (index >= 0 && index < mMasks.size())
+        {
+            return mMasks[index].name;
+        }
+        throw std::out_of_range("Invalid mask index");
+    }
+
+    [[nodiscard]] int getCurrentMaskIndex() const { return mCurrentMaskIndex; }
+
+    void setMaskIndex(int index)
+    {
+        if (index >= -1 && index < mMasks.size())
+        {
+            mCurrentMaskIndex = index;
+        }
+    }
+
+    [[nodiscard]] Animations::AnimationMask& getMask(int index) { return mMasks[index]; }
+
+    [[nodiscard]] float getWeightForBone(const std::string& boneName, float globalBlendFactor);
+
     [[nodiscard]] Animations::AnimationClip& getCurrentAnimation() { return mAnimations[mCurrentAnimationIndex]; }
 
     [[nodiscard]] std::string_view getMeshFilePath() const { return mMeshFilePath; }
@@ -116,6 +143,8 @@ private:
     uint16_t mTargetAnimationIndex = 0;
     float mCurrentAnimationTime = 0.f;
     float mBlendFactor = 0.f;
+    std::vector<Animations::AnimationMask> mMasks;
+    int mCurrentMaskIndex = -1;
 #pragma endregion
     // metadata for serialization
     // probably should be moved to other place (I don't know where exactly)

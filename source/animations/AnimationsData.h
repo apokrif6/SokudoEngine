@@ -2,7 +2,6 @@
 
 #include "glm/glm.hpp"
 #include "glm/detail/type_quat.hpp"
-#include "serialization/Serializable.h"
 #include <vector>
 #include <map>
 #include <string>
@@ -62,7 +61,7 @@ struct BoneTransform
         glm::decompose(matrix, scale, rotation, position, skew, perspective);
     }
 
-    glm::mat4 toMatrix() const
+    [[nodiscard]] glm::mat4 toMatrix() const
     {
         return glm::translate(glm::mat4(1.0f), position) * glm::mat4_cast(rotation) *
                glm::scale(glm::mat4(1.0f), scale);
@@ -109,5 +108,26 @@ struct BoneNode
     std::string name;
     glm::mat4 localTransform;
     std::vector<BoneNode> children;
+};
+
+struct AnimationMask
+{
+    std::string name;
+    std::map<std::string, float> boneWeights;
+
+    void setWeightRecursively(const BoneNode& node, float weight, bool includeChildren = true)
+    {
+        boneWeights[node.name] = weight;
+
+        if (!includeChildren)
+        {
+            return;
+        }
+
+        for (const BoneNode& child : node.children)
+        {
+            setWeightRecursively(child, weight, true);
+        }
+    }
 };
 } // namespace Core::Animations

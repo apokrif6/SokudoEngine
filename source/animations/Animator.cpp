@@ -45,11 +45,9 @@ void Core::Animations::Animator::updateBonesTransform(Component::MeshComponent* 
         if (mesh->shouldBlendAnimations())
         {
             const AnimationClip& clipB = animations[mesh->getTargetAnimationIndex()];
-            const float blendFactor = mesh->getBlendFactor();
-
             const float timeB = timeA / clipA.duration * clipB.duration;
 
-            readNodeHierarchyBlend(clipA, timeA, clipB, timeB, blendFactor, skeleton.getRootNode(), glm::mat4(1.0f),
+            readNodeHierarchyBlend(clipA, timeA, clipB, timeB, mesh, skeleton.getRootNode(), glm::mat4(1.0f),
                                    bonesInfo);
         }
         else
@@ -162,10 +160,11 @@ void Core::Animations::Animator::readNodeHierarchyClip(const AnimationClip& clip
 
 void Core::Animations::Animator::readNodeHierarchyBlend(const AnimationClip& clipA, float animationTimeA,
                                                         const AnimationClip& clipB, float animationTimeB,
-                                                        float blendFactor, const BoneNode& node,
+                                                        Component::MeshComponent* meshComponent, const BoneNode& node,
                                                         const glm::mat4& parentTransform, BonesInfo& bonesInfo)
 {
     const std::string& nodeName = node.name;
+    float weight = meshComponent->getWeightForBone(nodeName, meshComponent->getBlendFactor());
     glm::mat4 nodeTransform;
 
     const AnimationChannel* channelA = findChannel(clipA, nodeName);
@@ -179,7 +178,7 @@ void Core::Animations::Animator::readNodeHierarchyBlend(const AnimationClip& cli
         BoneTransform boneTransformB =
             channelB ? getBoneTransform(channelB, animationTimeB) : BoneTransform{node.localTransform};
 
-        nodeTransform = blendTransforms(boneTransformA, boneTransformB, blendFactor).toMatrix();
+        nodeTransform = blendTransforms(boneTransformA, boneTransformB, weight).toMatrix();
     }
     else
     {
@@ -197,7 +196,7 @@ void Core::Animations::Animator::readNodeHierarchyBlend(const AnimationClip& cli
 
     for (const BoneNode& child : node.children)
     {
-        readNodeHierarchyBlend(clipA, animationTimeA, clipB, animationTimeB, blendFactor, child, globalTransform,
+        readNodeHierarchyBlend(clipA, animationTimeA, clipB, animationTimeB, meshComponent, child, globalTransform,
                                bonesInfo);
     }
 }

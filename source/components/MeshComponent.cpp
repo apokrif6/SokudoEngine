@@ -136,6 +136,22 @@ void Core::Component::MeshComponent::setSourceMesh(const std::string_view& path,
     mPrimitiveIndex = primitiveIndex;
 }
 
+float Core::Component::MeshComponent::getWeightForBone(const std::string& boneName, float globalBlendFactor)
+{
+    if (mCurrentMaskIndex == -1)
+    {
+        return globalBlendFactor;
+    }
+
+    const Animations::AnimationMask& mask = mMasks[mCurrentMaskIndex];
+    if (const auto it = mask.boneWeights.find(boneName); it != mask.boneWeights.end())
+    {
+        return it->second;
+    }
+
+    return 0.f;
+}
+
 void Core::Component::MeshComponent::loadAnimationFromFile(const std::string_view& filePath)
 {
     Animations::AnimationClip clip = Animations::AnimationsUtils::loadAnimationFromFile(filePath);

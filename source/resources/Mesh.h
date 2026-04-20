@@ -37,4 +37,4 @@ struct MeshData
     SkeletonData skeletonData;
     std::vector<Animations::AnimationClip> animations;
 };
-}
+} // namespace Core::Resources

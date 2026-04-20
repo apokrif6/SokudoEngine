@@ -7,7 +7,7 @@ namespace Core::Resources
 {
 struct SkeletonData;
 struct MeshNode;
-}
+} // namespace Core::Resources
 namespace Core::Animations
 {
 class Skeleton;

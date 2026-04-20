@@ -43,6 +43,7 @@ class AnimationInspectorUIWindow : public UIWindow<AnimationInspectorUIWindow>
 
         const std::vector<Animations::AnimationClip>& loadedAnimations = meshComponent->getAnimations();
         const int currentAnimationIndex = meshComponent->getCurrentAnimationIndex();
+        ImGui::Spacing();
         ImGui::Text("Current Animation:");
         ImGui::PushItemWidth(-1.0f);
         if (ImGui::BeginCombo("##Loaded animations", loadedAnimations[currentAnimationIndex].name.c_str()))

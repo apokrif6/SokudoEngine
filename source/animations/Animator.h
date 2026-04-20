@@ -39,7 +39,7 @@ private:
                                const glm::mat4& parentTransform, BonesInfo& bonesInfo);
 
     void readNodeHierarchyBlend(const AnimationClip& clipA, float animationTimeA, const AnimationClip& clipB,
-                                float animationTimeB, float blendFactor, const BoneNode& node,
+                                float animationTimeB, Component::MeshComponent* meshComponent, const BoneNode& node,
                                 const glm::mat4& parentTransform, BonesInfo& bonesInfo);
 
     BoneTransform getBoneTransform(const AnimationChannel* channel, float time);
