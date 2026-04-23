@@ -101,13 +101,45 @@ class AnimationInspectorUIWindow : public UIWindow<AnimationInspectorUIWindow>
             }
             ImGui::PopItemWidth();
 
-            float blendFactor = meshComponent->getBlendFactor();
-            ImGui::Text("Blend Factor (A -> B):");
-            if (ImGui::SliderFloat("##BlendFactor", &blendFactor, 0.0f, 1.0f, "%.2f"))
+            ImGui::Spacing();
+            ImGui::Separator();
+            ImGui::Spacing();
+
+            ImGui::Text("Blending Mode:");
+            const auto blendingMode = meshComponent->getBlendingMode();
+            if (ImGui::RadioButton("Crossfade", blendingMode == Animations::AnimationBlendingMode::Crossfade))
             {
-                meshComponent->setBlendFactor(blendFactor);
+                meshComponent->setBlendingMode(Animations::AnimationBlendingMode::Crossfade);
+            }
+            ImGui::SameLine();
+            if (ImGui::RadioButton("Masked Blend", blendingMode == Animations::AnimationBlendingMode::Masked))
+            {
+                meshComponent->setBlendingMode(Animations::AnimationBlendingMode::Masked);
             }
 
+            ImGui::Spacing();
+
+            if (blendingMode == Animations::AnimationBlendingMode::Crossfade)
+            {
+                float blendFactor = meshComponent->getBlendFactor();
+                ImGui::Text("Global Fade Factor:");
+                if (ImGui::SliderFloat("##BlendFactor", &blendFactor, 0.0f, 1.0f, "%.2f"))
+                {
+                    meshComponent->setBlendFactor(blendFactor);
+                }
+            }
+            else
+            {
+                if (const int maskIndex = meshComponent->getCurrentMaskIndex(); maskIndex == -1)
+                {
+                    ImGui::TextColored(ImVec4(1, 0.4f, 0.4f, 1), "Warning: No mask selected!");
+                    ImGui::TextWrapped("Go to 'Animation Sequence' tab to create/select a mask");
+                }
+                else
+                {
+                    ImGui::Text("Active Mask: %s", meshComponent->getMaskName(maskIndex).c_str());
+                }
+            }
             ImGui::Unindent();
         }
 

@@ -130,4 +130,10 @@ struct AnimationMask
         }
     }
 };
+
+enum class AnimationBlendingMode : uint8_t
+{
+    Crossfade,
+    Masked
+};
 } // namespace Core::Animations

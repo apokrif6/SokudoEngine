@@ -88,11 +88,15 @@ public:
         }
     }
 
+    [[nodiscard]] Animations::AnimationBlendingMode getBlendingMode() const { return mBlendingMode; }
+
+    void setBlendingMode(const Animations::AnimationBlendingMode mode) { mBlendingMode = mode; }
+
     void addMask(const Animations::AnimationMask& mask) { mMasks.push_back(mask); }
 
     [[nodiscard]] size_t getMasksCount() const { return mMasks.size(); }
 
-    [[nodiscard]] const std::string& getMaskName(int index) const
+    [[nodiscard]] const std::string& getMaskName(const int index) const
     {
         if (index >= 0 && index < mMasks.size())
         {
@@ -103,7 +107,7 @@ public:
 
     [[nodiscard]] int getCurrentMaskIndex() const { return mCurrentMaskIndex; }
 
-    void setMaskIndex(int index)
+    void setMaskIndex(const int index)
     {
         if (index >= -1 && index < mMasks.size())
         {
@@ -111,7 +115,7 @@ public:
         }
     }
 
-    [[nodiscard]] Animations::AnimationMask& getMask(int index) { return mMasks[index]; }
+    [[nodiscard]] Animations::AnimationMask& getMask(const int index) { return mMasks[index]; }
 
     [[nodiscard]] float getWeightForBone(const std::string& boneName, float globalBlendFactor);
 
@@ -142,6 +146,7 @@ private:
     uint16_t mCurrentAnimationIndex = 0;
     uint16_t mTargetAnimationIndex = 0;
     float mCurrentAnimationTime = 0.f;
+    Animations::AnimationBlendingMode mBlendingMode = Animations::AnimationBlendingMode::Crossfade;
     float mBlendFactor = 0.f;
     std::vector<Animations::AnimationMask> mMasks;
     int mCurrentMaskIndex = -1;

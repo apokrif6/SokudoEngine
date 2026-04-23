@@ -138,15 +138,24 @@ void Core::Component::MeshComponent::setSourceMesh(const std::string_view& path,
 
 float Core::Component::MeshComponent::getWeightForBone(const std::string& boneName, float globalBlendFactor)
 {
-    if (mCurrentMaskIndex == -1)
+    if (mBlendingMode == Animations::AnimationBlendingMode::Crossfade)
     {
         return globalBlendFactor;
     }
-
-    const Animations::AnimationMask& mask = mMasks[mCurrentMaskIndex];
-    if (const auto it = mask.boneWeights.find(boneName); it != mask.boneWeights.end())
+    if (mBlendingMode == Animations::AnimationBlendingMode::Masked)
     {
-        return it->second;
+        if (mCurrentMaskIndex == -1)
+        {
+            return 0.f;
+        }
+
+        const Animations::AnimationMask& mask = mMasks[mCurrentMaskIndex];
+        if (const auto it = mask.boneWeights.find(boneName); it != mask.boneWeights.end())
+        {
+            return it->second;
+        }
+
+        return 0.f;
     }
 
     return 0.f;
