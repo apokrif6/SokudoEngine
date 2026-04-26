@@ -14,6 +14,7 @@ Core::Resources::MeshData Core::Assets::ModelLoader::loadMeshFromFile(const std:
                                                                       Renderer::VkRenderData& renderData)
 {
     Assimp::Importer importer{};
+    importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
     importer.ReadFile(fileName, aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_JoinIdenticalVertices |
                                     aiProcess_TransformUVCoords | aiProcess_GlobalScale | aiProcess_CalcTangentSpace);
 

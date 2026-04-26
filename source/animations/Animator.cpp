@@ -140,7 +140,7 @@ void Core::Animations::Animator::readNodeHierarchyClip(const AnimationClip& clip
     }
     else
     {
-        nodeTransform = glm::mat4(1.f);
+        nodeTransform = node.localTransform;
     }
 
     const glm::mat4 globalTransform = parentTransform * nodeTransform;
@@ -182,7 +182,7 @@ void Core::Animations::Animator::readNodeHierarchyBlend(const AnimationClip& cli
     }
     else
     {
-        nodeTransform = glm::mat4(1.f);
+        nodeTransform = node.localTransform;
     }
 
     glm::mat4 globalTransform = parentTransform * nodeTransform;
