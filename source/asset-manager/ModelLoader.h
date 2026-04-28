@@ -18,18 +18,23 @@ public:
                                            std::vector<Resources::PrimitiveData>& outAllPrimitives);
 
 private:
+    static void buildGlobalBoneIndexMap(const aiScene* scene,
+                                        std::unordered_map<std::string, int>& outGlobalBoneIndexMap);
+
     static void processNodeHierarchy(Resources::MeshNode& outNode, aiNode* node, const aiScene* scene,
-                                     Renderer::VkRenderData& renderData, const std::string& baseDir);
+                                     Renderer::VkRenderData& renderData, const std::string& baseDir,
+                                     const std::unordered_map<std::string, int>& globalBoneIndexMap);
 
     static void processMesh(std::vector<Resources::PrimitiveData>& outPrimitives, const aiMesh* mesh,
-                            const aiMaterial* material, Renderer::VkRenderData& renderData, const std::string& baseDir);
+                            const aiMaterial* material, Renderer::VkRenderData& renderData, const std::string& baseDir,
+                            const std::unordered_map<std::string, int>& globalBoneIndexMap);
 
-    static void processBones(Resources::PrimitiveData& primitiveData, const aiMesh* mesh);
+    static void processBones(Resources::PrimitiveData& primitiveData, const aiMesh* mesh,
+                             const std::unordered_map<std::string, int>& globalBoneIndexMap);
 
-    static void processSingleBone(Resources::PrimitiveData& primitiveData, const aiBone* bone);
+    static void processSingleBone(Resources::PrimitiveData& primitiveData, const aiBone* bone,
+                                  const std::unordered_map<std::string, int>& globalBoneIndexMap);
 
     static void setVertexBoneData(Renderer::Vertex& vertex, int id, float weight);
-
-    static int getBoneID(Resources::PrimitiveData& primitiveData, const aiBone* bone);
 };
 } // namespace Core::Assets

@@ -26,11 +26,17 @@ Core::Resources::MeshData Core::Assets::ModelLoader::loadMeshFromFile(const std:
         return {};
     }
 
+    Resources::MeshData mesh;
+
     const std::string baseDir = Utils::FileUtils::getParentDirectory(fileName);
 
-    Resources::MeshData mesh;
-    processNodeHierarchy(mesh.rootNode, scene->mRootNode, scene, renderData, baseDir);
+    std::unordered_map<std::string, int> globalBoneIndexMap;
+    buildGlobalBoneIndexMap(scene, globalBoneIndexMap);
+
+    processNodeHierarchy(mesh.rootNode, scene->mRootNode, scene, renderData, baseDir, globalBoneIndexMap);
+
     mesh.skeletonData.rootNode = Animations::AnimationsUtils::buildBoneHierarchy(scene->mRootNode);
+
     return mesh;
 }
 
@@ -56,9 +62,26 @@ void Core::Assets::ModelLoader::collectPrimitivesRecursive(const Resources::Mesh
         collectPrimitivesRecursive(child, globalTransform, outAllPrimitives);
     }
 }
+void Core::Assets::ModelLoader::buildGlobalBoneIndexMap(const aiScene* scene,
+                                                        std::unordered_map<std::string, int>& outGlobalBoneIndexMap)
+{
+    int nextID = 0;
+    for (unsigned int i = 0; i < scene->mNumMeshes; ++i)
+    {
+        const aiMesh* mesh = scene->mMeshes[i];
+        for (unsigned int b = 0; b < mesh->mNumBones; ++b)
+        {
+            if (std::string name = mesh->mBones[b]->mName.C_Str(); !outGlobalBoneIndexMap.contains(name))
+            {
+                outGlobalBoneIndexMap[name] = nextID++;
+            }
+        }
+    }
+}
 
 void Core::Assets::ModelLoader::processNodeHierarchy(Resources::MeshNode& outNode, aiNode* node, const aiScene* scene,
-                                                     Renderer::VkRenderData& renderData, const std::string& baseDir)
+                                                     Renderer::VkRenderData& renderData, const std::string& baseDir,
+                                                     const std::unordered_map<std::string, int>& globalBoneIndexMap)
 {
     outNode.name = node->mName.C_Str();
 
@@ -69,20 +92,21 @@ void Core::Assets::ModelLoader::processNodeHierarchy(Resources::MeshNode& outNod
         const aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
         const aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
-        processMesh(outNode.primitives, mesh, material, renderData, baseDir);
+        processMesh(outNode.primitives, mesh, material, renderData, baseDir, globalBoneIndexMap);
     }
 
     for (size_t i = 0; i < node->mNumChildren; ++i)
     {
         Resources::MeshNode childNode;
-        processNodeHierarchy(childNode, node->mChildren[i], scene, renderData, baseDir);
+        processNodeHierarchy(childNode, node->mChildren[i], scene, renderData, baseDir, globalBoneIndexMap);
         outNode.children.push_back(std::move(childNode));
     }
 }
 
 void Core::Assets::ModelLoader::processMesh(std::vector<Resources::PrimitiveData>& outPrimitives, const aiMesh* mesh,
                                             const aiMaterial* material, Renderer::VkRenderData& renderData,
-                                            const std::string& baseDir)
+                                            const std::string& baseDir,
+                                            const std::unordered_map<std::string, int>& globalBoneIndexMap)
 {
     Resources::PrimitiveData primitiveData;
     Renderer::MaterialInfo materialInfo = {};
@@ -329,34 +353,42 @@ void Core::Assets::ModelLoader::processMesh(std::vector<Resources::PrimitiveData
 
     if (mesh->HasBones())
     {
-        processBones(primitiveData, mesh);
+        processBones(primitiveData, mesh, globalBoneIndexMap);
     }
 
     outPrimitives.emplace_back(std::move(primitiveData));
 }
 
-void Core::Assets::ModelLoader::processBones(Resources::PrimitiveData& primitiveData, const aiMesh* mesh)
+void Core::Assets::ModelLoader::processBones(Resources::PrimitiveData& primitiveData, const aiMesh* mesh,
+                                             const std::unordered_map<std::string, int>& globalBoneIndexMap)
 {
+    primitiveData.bones.bones.resize(globalBoneIndexMap.size());
+    primitiveData.bones.finalTransforms.resize(globalBoneIndexMap.size(), glm::mat4(1.0f));
+
     for (unsigned int i = 0; i < mesh->mNumBones; i++)
     {
-        processSingleBone(primitiveData, mesh->mBones[i]);
+        processSingleBone(primitiveData, mesh->mBones[i], globalBoneIndexMap);
     }
 
     primitiveData.bones.finalTransforms.resize(primitiveData.bones.bones.size(), glm::mat4(1.0));
 }
 
-void Core::Assets::ModelLoader::processSingleBone(Resources::PrimitiveData& primitiveData, const aiBone* bone)
+void Core::Assets::ModelLoader::processSingleBone(Resources::PrimitiveData& primitiveData, const aiBone* bone,
+                                                  const std::unordered_map<std::string, int>& globalBoneIndexMap)
 {
-    Logger::log(1, "Bone '%s': num vertices affected by this bone: %d\n", bone->mName.C_Str(), bone->mNumWeights);
+    const std::string boneName = bone->mName.C_Str();
+    const int boneID = globalBoneIndexMap.at(boneName);
 
-    int boneID = getBoneID(primitiveData, bone);
-    Logger::log(1, "bone id %d\n", boneID);
+    Logger::log(1, "Bone '%s': num vertices affected by this bone: %d\n", boneName.c_str(), bone->mNumWeights);
 
-    aiVertexWeight* weights = bone->mWeights;
-    for (int boneWeight = 0; boneWeight < bone->mNumWeights; ++boneWeight)
+    primitiveData.bones.boneNameToIndexMap[boneName] = boneID;
+    primitiveData.bones.bones[boneID] =
+        Animations::Bone{Animations::AnimationsUtils::convertMatrixToGlm(bone->mOffsetMatrix)};
+
+    for (unsigned int boneWeight = 0; boneWeight < bone->mNumWeights; ++boneWeight)
     {
-        unsigned int vertexID = weights[boneWeight].mVertexId;
-        float weight = weights[boneWeight].mWeight;
+        const unsigned int vertexID = bone->mWeights[boneWeight].mVertexId;
+        const float weight = bone->mWeights[boneWeight].mWeight;
         setVertexBoneData(primitiveData.vertices[vertexID], boneID, weight);
     }
 }
@@ -372,27 +404,4 @@ void Core::Assets::ModelLoader::setVertexBoneData(Renderer::Vertex& vertex, int 
             break;
         }
     }
-}
-
-int Core::Assets::ModelLoader::getBoneID(Resources::PrimitiveData& primitiveData, const aiBone* bone)
-{
-    int boneID;
-    const std::string boneName = bone->mName.C_Str();
-
-    if (!primitiveData.bones.boneNameToIndexMap.contains(boneName))
-    {
-        boneID = static_cast<int>(primitiveData.bones.bones.size());
-        Animations::Bone newBone;
-        primitiveData.bones.bones.emplace_back(newBone);
-    }
-    else
-    {
-        boneID = primitiveData.bones.boneNameToIndexMap[boneName];
-    }
-
-    primitiveData.bones.boneNameToIndexMap[boneName] = boneID;
-    primitiveData.bones.bones[boneID] =
-        Animations::Bone{Animations::AnimationsUtils::convertMatrixToGlm(bone->mOffsetMatrix)};
-
-    return boneID;
 }
