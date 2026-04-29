@@ -21,11 +21,11 @@ public:
     // in update?
     void removeObject(const std::shared_ptr<SceneObject>& object, Renderer::VkRenderData& renderData);
 
-    virtual void update(Renderer::VkRenderData& renderData, float deltaTime) override;
+    void update(Renderer::VkRenderData& renderData, float deltaTime) override;
 
-    virtual System::DrawLayer getDrawLayer() const override { return System::DrawLayer::World; }
+    [[nodiscard]] System::DrawLayer getDrawLayer() const override { return System::DrawLayer::World; }
 
-    virtual void draw(Renderer::VkRenderData& renderData) override;
+    void draw(Renderer::VkRenderData& renderData) override;
 
     void cleanup(Renderer::VkRenderData& renderData);
 
@@ -33,7 +33,37 @@ public:
 
     [[nodiscard]] SceneObjectSelection& getSceneObjectSelection() { return sceneObjectSelection; }
 
+    template <typename T> T* findComponentInScene()
+    {
+        for (auto& object : mObjects)
+        {
+            if (T* component = findComponentRecursive<T>(object.get()))
+            {
+                return component;
+            }
+        }
+        return nullptr;
+    }
+
 private:
+    template <typename T> T* findComponentRecursive(SceneObject* object)
+    {
+        if (T* component = object->getComponent<T>())
+        {
+            return component;
+        }
+
+        for (auto& child : object->getChildren())
+        {
+            if (T* foundComponent = findComponentRecursive<T>(child.get()))
+            {
+                return foundComponent;
+            }
+        }
+
+        return nullptr;
+    }
+
     std::vector<std::shared_ptr<SceneObject>> mObjects;
 
     SceneObjectSelection sceneObjectSelection;

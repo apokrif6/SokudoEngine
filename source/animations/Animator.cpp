@@ -1,5 +1,7 @@
 #include "Animator.h"
 #include "AnimationsUtils.h"
+#include "components/IKTargetComponent.h"
+#include "ik/IKSolverCCD.h"
 
 void Core::Animations::Animator::update(Renderer::VkRenderData& renderData, float deltaTime)
 {
@@ -30,6 +32,7 @@ void Core::Animations::Animator::updateBonesTransform(Component::MeshComponent* 
         BonesInfo& bonesInfo = primitive.getBonesInfo();
         const size_t bonesInfoSize = bonesInfo.bones.size();
         bonesInfo.finalTransforms.resize(bonesInfoSize, glm::mat4(1.0));
+        bonesInfo.localTransforms.resize(bonesInfoSize, glm::mat4(1.0f));
 
         if (!mesh->hasAnimations())
         {
@@ -55,9 +58,19 @@ void Core::Animations::Animator::updateBonesTransform(Component::MeshComponent* 
             readNodeHierarchyClip(clipA, timeA, skeleton.getRootNode(), glm::mat4(1.0f), bonesInfo);
         }
 
+        if (auto* IKTargetComponent = mesh->getIKTarget())
+        {
+            glm::vec3 worldTarget = IKTargetComponent->getTargetWorldPosition();
+            for (const auto& solver : mesh->getIKSolvers())
+            {
+                solver->setTarget(worldTarget);
+                solver->solve(bonesInfo, skeleton.getRootNode());
+            }
+        }
+
         for (size_t i = 0; i < bonesInfoSize; ++i)
         {
-            bonesInfo.finalTransforms[i] = bonesInfo.bones[i].finalTransform;
+            bonesInfo.finalTransforms[i] = bonesInfo.bones[i].animatedGlobalTransform * bonesInfo.bones[i].offset;
         }
     }
 }
@@ -149,7 +162,7 @@ void Core::Animations::Animator::readNodeHierarchyClip(const AnimationClip& clip
     {
         const int boneIndex = bonesInfo.boneNameToIndexMap[nodeName];
         bonesInfo.bones[boneIndex].animatedGlobalTransform = globalTransform;
-        bonesInfo.bones[boneIndex].finalTransform = globalTransform * bonesInfo.bones[boneIndex].offset;
+        bonesInfo.localTransforms[boneIndex] = nodeTransform;
     }
 
     for (const BoneNode& child : node.children)
@@ -191,7 +204,7 @@ void Core::Animations::Animator::readNodeHierarchyBlend(const AnimationClip& cli
     {
         const int boneIndex = bonesInfo.boneNameToIndexMap[nodeName];
         bonesInfo.bones[boneIndex].animatedGlobalTransform = globalTransform;
-        bonesInfo.bones[boneIndex].finalTransform = globalTransform * bonesInfo.bones[boneIndex].offset;
+        bonesInfo.localTransforms[boneIndex] = nodeTransform;
     }
 
     for (const BoneNode& child : node.children)

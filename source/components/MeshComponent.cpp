@@ -161,6 +161,40 @@ float Core::Component::MeshComponent::getWeightForBone(const std::string& boneNa
     return 0.f;
 }
 
+void Core::Component::MeshComponent::TEST_setIKTargetAndCreateTestSolver()
+{
+    mIKTarget = Engine::getInstance().getSystem<Scene::Scene>()->findComponentInScene<IKTargetComponent>();
+
+    if (!mIKTarget)
+    {
+        return;
+    }
+
+    mIKSolvers.clear();
+
+    std::vector<int> chainIndices;
+    const int rightHandIndex = getBoneIndex("mixamorig:RightHand");
+    const int rightForeArmIndex = getBoneIndex("mixamorig:RightForeArm");
+    const int rightArmIndex = getBoneIndex("mixamorig:RightArm");
+    const int rightShoulderIndex = getBoneIndex("mixamorig:RightShoulder");
+
+    if (rightHandIndex == -1 || rightForeArmIndex == -1 || rightArmIndex == -1 || rightShoulderIndex == -1)
+    {
+        Logger::log(1, "Not all bones found in skeleton, cannot create IK solver");
+        return;
+    }
+
+    chainIndices.push_back(rightHandIndex);
+    chainIndices.push_back(rightForeArmIndex);
+    chainIndices.push_back(rightArmIndex);
+    chainIndices.push_back(rightShoulderIndex);
+
+    auto solver = std::make_unique<Animations::IKSolverCCD>(chainIndices, 10);
+
+    mIKSolvers.push_back(std::move(solver));
+    Logger::log(1, "LookAt IKSolver added to MeshComponent");
+}
+
 void Core::Component::MeshComponent::loadAnimationFromFile(const std::string_view& filePath)
 {
     Animations::AnimationClip clip = Animations::AnimationsUtils::loadAnimationFromFile(filePath);
@@ -248,4 +282,23 @@ void Core::Component::MeshComponent::deserialize(const YAML::Node& node)
             }
         }
     }
+}
+
+int Core::Component::MeshComponent::getBoneIndex(const std::string& boneName)
+{
+    // TODO
+    // it should be moved to Skeleton class
+    if (mPrimitives.empty())
+    {
+        return -1;
+    }
+
+    const auto& boneMap = mPrimitives[0].getBonesInfo().boneNameToIndexMap;
+
+    if (const auto it = boneMap.find(boneName); it != boneMap.end())
+    {
+        return it->second;
+    }
+
+    return -1;
 }

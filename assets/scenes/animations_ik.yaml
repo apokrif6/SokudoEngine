@@ -1,0 +1,46 @@
+objects:
+  - name: InverseKinematicsObject
+    components:
+      - type: TransformComponent
+        data:
+          transform:
+            position:
+              - 0
+              - 0
+              - 0
+            rotation:
+              - 0
+              - 0
+              - 0
+            scale:
+              - 1
+              - 1
+              - 1
+      - type: MeshComponent
+        data:
+          meshFile: assets/mixamo/models/FemaleModel.fbx
+          nodeName: ""
+          primitiveIndex: -1
+          animations:
+            - assets/mixamo/animations/StandingIdleAnimation.fbx
+          shouldPlayAnimation: true
+          currentAnimationIndex: 0
+  - name: InverseKinematicTargetObject
+    components:
+      - type: TransformComponent
+        data:
+          transform:
+            position:
+              - -0.88843888
+              - 1.22150445
+              - 0.978201985
+            rotation:
+              - 0
+              - 0
+              - 0
+            scale:
+              - 1
+              - 1
+              - 1
+      - type: IKTargetComponent
+        data: ~

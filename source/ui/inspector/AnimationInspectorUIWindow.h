@@ -143,6 +143,11 @@ class AnimationInspectorUIWindow : public UIWindow<AnimationInspectorUIWindow>
             ImGui::Unindent();
         }
 
+        if (ImGui::Button("Find and set IK Target"))
+        {
+            meshComponent->TEST_setIKTargetAndCreateTestSolver();
+        }
+
         return true;
     }
 };

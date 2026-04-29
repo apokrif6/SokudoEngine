@@ -1,6 +1,8 @@
 #pragma once
 
+#include "IKTargetComponent.h"
 #include "animations/Skeleton.h"
+#include "animations/ik/IKSolverCCD.h"
 #include "scene/objects/SceneObject.h"
 #include <utility>
 #include <vector>
@@ -119,6 +121,17 @@ public:
 
     [[nodiscard]] float getWeightForBone(const std::string& boneName, float globalBlendFactor);
 
+    [[nodiscard]] const std::vector<std::unique_ptr<Animations::IKSolverCCD>>& getIKSolvers() const
+    {
+        return mIKSolvers;
+    }
+
+    [[nodiscard]] IKTargetComponent* getIKTarget() const { return mIKTarget; }
+
+    // TODO
+    // just for tests. should be replaced with proper component selector
+    void TEST_setIKTargetAndCreateTestSolver();
+
     [[nodiscard]] Animations::AnimationClip& getCurrentAnimation() { return mAnimations[mCurrentAnimationIndex]; }
 
     [[nodiscard]] std::string_view getMeshFilePath() const { return mMeshFilePath; }
@@ -133,6 +146,8 @@ public:
 
     void deserialize(const YAML::Node& node) override;
 
+    [[nodiscard]] int getBoneIndex(const std::string& boneName);
+
 private:
     std::vector<Renderer::Primitive> mPrimitives;
     Animations::Skeleton mSkeleton;
@@ -146,10 +161,14 @@ private:
     uint16_t mCurrentAnimationIndex = 0;
     uint16_t mTargetAnimationIndex = 0;
     float mCurrentAnimationTime = 0.f;
+
     Animations::AnimationBlendingMode mBlendingMode = Animations::AnimationBlendingMode::Crossfade;
     float mBlendFactor = 0.f;
     std::vector<Animations::AnimationMask> mMasks;
     int mCurrentMaskIndex = -1;
+
+    std::vector<std::unique_ptr<Animations::IKSolverCCD>> mIKSolvers;
+    IKTargetComponent* mIKTarget = nullptr;
 #pragma endregion
     // metadata for serialization
     // probably should be moved to other place (I don't know where exactly)

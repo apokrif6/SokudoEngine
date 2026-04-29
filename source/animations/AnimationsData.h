@@ -25,13 +25,9 @@ struct Bone
 {
     glm::mat4 offset{};
     glm::mat4 animatedGlobalTransform{};
-    glm::mat4 finalTransform{};
 
     Bone() = default;
-    explicit Bone(const glm::mat4& inOffset)
-        : offset(inOffset), animatedGlobalTransform(glm::mat4(0.0)), finalTransform(glm::mat4(0.0))
-    {
-    }
+    explicit Bone(const glm::mat4& inOffset) : offset(inOffset), animatedGlobalTransform(glm::mat4(0.0)) {}
 };
 
 struct BonesInfo
@@ -40,6 +36,7 @@ struct BonesInfo
     std::map<std::string, int> boneNameToIndexMap;
     std::vector<Bone> bones;
     std::vector<glm::mat4> finalTransforms;
+    std::vector<glm::mat4> localTransforms;
 };
 
 struct BoneTransform

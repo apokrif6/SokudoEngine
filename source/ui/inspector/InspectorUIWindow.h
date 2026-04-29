@@ -1,5 +1,6 @@
 #pragma once
 
+#include "IKTargetComponentInspectorUIWindow.h"
 #include "ui/UIWindow.h"
 #include "imgui.h"
 #include "MeshComponentInspectorUIWindow.h"
@@ -9,6 +10,7 @@
 #include "SpriteComponentInspectorUIWindow.h"
 #include "components/PointLightComponent.h"
 #include "components/SpriteComponent.h"
+#include "components/IKTargetComponent.h"
 #include "engine/Engine.h"
 
 namespace Core::UI
@@ -69,6 +71,14 @@ class InspectorUIWindow : public UIWindow<InspectorUIWindow>
                 }
             }
 
+            if (auto* IKTargetComponent = selectedObject->getComponent<Component::IKTargetComponent>())
+            {
+                if (ImGui::CollapsingHeader("IK Target Component", ImGuiTreeNodeFlags_DefaultOpen))
+                {
+                    IKTargetComponentInspectorUIWindow::renderBody();
+                }
+            }
+
             if (ImGui::BeginPopupContextWindow("AddComponentContext", ImGuiPopupFlags_MouseButtonRight))
             {
                 if (ImGui::MenuItem("Rotating Component"))
@@ -100,6 +110,14 @@ class InspectorUIWindow : public UIWindow<InspectorUIWindow>
                     if (!selectedObject->getComponent<Component::SpriteComponent>())
                     {
                         selectedObject->addComponent<Component::SpriteComponent>();
+                    }
+                }
+
+                if (ImGui::MenuItem("IK Target Component"))
+                {
+                    if (!selectedObject->getComponent<Component::IKTargetComponent>())
+                    {
+                        selectedObject->addComponent<Component::IKTargetComponent>();
                     }
                 }
 
