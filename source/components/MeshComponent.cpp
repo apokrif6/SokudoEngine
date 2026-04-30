@@ -17,14 +17,12 @@ void buildDebugSkeletonLines(const Core::Animations::Skeleton& skeleton, const C
                              const glm::mat4& meshTransform = glm::mat4(1.f))
 {
     glm::mat4 currentTransform;
-    if (bonesInfo.boneNameToIndexMap.contains(node.name))
+
+    auto& boneMap = skeleton.getSkeletonData()->boneNameToIndexMap;
+    if (const auto it = boneMap.find(node.name); it != boneMap.end())
     {
-        int boneIndex = bonesInfo.boneNameToIndexMap.at(node.name);
+        const int boneIndex = it->second;
         currentTransform = meshTransform * bonesInfo.bones[boneIndex].animatedGlobalTransform;
-    }
-    else
-    {
-        currentTransform = parentTransform * node.localTransform;
     }
 
     const glm::vec3 parentPos = glm::vec3(parentTransform * glm::vec4(0, 0, 0, 1));
@@ -173,10 +171,10 @@ void Core::Component::MeshComponent::TEST_setIKTargetAndCreateTestSolver()
     mIKSolvers.clear();
 
     std::vector<int> chainIndices;
-    const int rightHandIndex = getBoneIndex("mixamorig:RightHand");
-    const int rightForeArmIndex = getBoneIndex("mixamorig:RightForeArm");
-    const int rightArmIndex = getBoneIndex("mixamorig:RightArm");
-    const int rightShoulderIndex = getBoneIndex("mixamorig:RightShoulder");
+    const int rightHandIndex = mSkeleton.getBoneIndex("mixamorig:RightHand");
+    const int rightForeArmIndex = mSkeleton.getBoneIndex("mixamorig:RightForeArm");
+    const int rightArmIndex = mSkeleton.getBoneIndex("mixamorig:RightArm");
+    const int rightShoulderIndex = mSkeleton.getBoneIndex("mixamorig:RightShoulder");
 
     if (rightHandIndex == -1 || rightForeArmIndex == -1 || rightArmIndex == -1 || rightShoulderIndex == -1)
     {
@@ -282,23 +280,4 @@ void Core::Component::MeshComponent::deserialize(const YAML::Node& node)
             }
         }
     }
-}
-
-int Core::Component::MeshComponent::getBoneIndex(const std::string& boneName)
-{
-    // TODO
-    // it should be moved to Skeleton class
-    if (mPrimitives.empty())
-    {
-        return -1;
-    }
-
-    const auto& boneMap = mPrimitives[0].getBonesInfo().boneNameToIndexMap;
-
-    if (const auto it = boneMap.find(boneName); it != boneMap.end())
-    {
-        return it->second;
-    }
-
-    return -1;
 }

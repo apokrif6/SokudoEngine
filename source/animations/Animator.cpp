@@ -51,11 +51,12 @@ void Core::Animations::Animator::updateBonesTransform(Component::MeshComponent* 
             const float timeB = timeA / clipA.duration * clipB.duration;
 
             readNodeHierarchyBlend(clipA, timeA, clipB, timeB, mesh, skeleton.getRootNode(), glm::mat4(1.0f),
-                                   bonesInfo);
+                                   *skeleton.getSkeletonData(), bonesInfo);
         }
         else
         {
-            readNodeHierarchyClip(clipA, timeA, skeleton.getRootNode(), glm::mat4(1.0f), bonesInfo);
+            readNodeHierarchyClip(clipA, timeA, skeleton.getRootNode(), glm::mat4(1.0f), *skeleton.getSkeletonData(),
+                                  bonesInfo);
         }
 
         if (auto* IKTargetComponent = mesh->getIKTarget())
@@ -64,7 +65,7 @@ void Core::Animations::Animator::updateBonesTransform(Component::MeshComponent* 
             for (const auto& solver : mesh->getIKSolvers())
             {
                 solver->setTarget(worldTarget);
-                solver->solve(bonesInfo, skeleton.getRootNode());
+                solver->solve(*skeleton.getSkeletonData(), bonesInfo, skeleton.getRootNode());
             }
         }
 
@@ -140,8 +141,9 @@ glm::vec3 Core::Animations::Animator::interpolateScaleClip(const std::vector<Key
     return interpolatePositionClip(keyframes, animationTime);
 }
 
-void Core::Animations::Animator::readNodeHierarchyClip(const AnimationClip& clip, float animationTime,
+void Core::Animations::Animator::readNodeHierarchyClip(const AnimationClip& clip, const float animationTime,
                                                        const BoneNode& node, const glm::mat4& parentTransform,
+                                                       const Resources::SkeletonData& skeletonData,
                                                        BonesInfo& bonesInfo)
 {
     const std::string nodeName = node.name;
@@ -158,23 +160,26 @@ void Core::Animations::Animator::readNodeHierarchyClip(const AnimationClip& clip
 
     const glm::mat4 globalTransform = parentTransform * nodeTransform;
 
-    if (bonesInfo.boneNameToIndexMap.contains(nodeName))
+    auto& boneMap = skeletonData.boneNameToIndexMap;
+    if (const auto it = boneMap.find(nodeName); it != boneMap.end())
     {
-        const int boneIndex = bonesInfo.boneNameToIndexMap[nodeName];
+        const int boneIndex = it->second;
         bonesInfo.bones[boneIndex].animatedGlobalTransform = globalTransform;
         bonesInfo.localTransforms[boneIndex] = nodeTransform;
     }
 
     for (const BoneNode& child : node.children)
     {
-        readNodeHierarchyClip(clip, animationTime, child, globalTransform, bonesInfo);
+        readNodeHierarchyClip(clip, animationTime, child, globalTransform, skeletonData, bonesInfo);
     }
 }
 
-void Core::Animations::Animator::readNodeHierarchyBlend(const AnimationClip& clipA, float animationTimeA,
-                                                        const AnimationClip& clipB, float animationTimeB,
+void Core::Animations::Animator::readNodeHierarchyBlend(const AnimationClip& clipA, const float animationTimeA,
+                                                        const AnimationClip& clipB, const float animationTimeB,
                                                         Component::MeshComponent* meshComponent, const BoneNode& node,
-                                                        const glm::mat4& parentTransform, BonesInfo& bonesInfo)
+                                                        const glm::mat4& parentTransform,
+                                                        const Resources::SkeletonData& skeletonData,
+                                                        BonesInfo& bonesInfo)
 {
     const std::string& nodeName = node.name;
     float weight = meshComponent->getWeightForBone(nodeName, meshComponent->getBlendFactor());
@@ -200,9 +205,10 @@ void Core::Animations::Animator::readNodeHierarchyBlend(const AnimationClip& cli
 
     glm::mat4 globalTransform = parentTransform * nodeTransform;
 
-    if (bonesInfo.boneNameToIndexMap.contains(nodeName))
+    auto& boneMap = skeletonData.boneNameToIndexMap;
+    if (const auto it = boneMap.find(nodeName); it != boneMap.end())
     {
-        const int boneIndex = bonesInfo.boneNameToIndexMap[nodeName];
+        const int boneIndex = it->second;
         bonesInfo.bones[boneIndex].animatedGlobalTransform = globalTransform;
         bonesInfo.localTransforms[boneIndex] = nodeTransform;
     }
@@ -210,7 +216,7 @@ void Core::Animations::Animator::readNodeHierarchyBlend(const AnimationClip& cli
     for (const BoneNode& child : node.children)
     {
         readNodeHierarchyBlend(clipA, animationTimeA, clipB, animationTimeB, meshComponent, child, globalTransform,
-                               bonesInfo);
+                               skeletonData, bonesInfo);
     }
 }
 

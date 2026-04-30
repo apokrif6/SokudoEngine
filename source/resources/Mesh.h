@@ -29,6 +29,7 @@ struct MeshNode
 struct SkeletonData
 {
     Animations::BoneNode rootNode;
+    std::unordered_map<std::string, int> boneNameToIndexMap;
 };
 
 struct MeshData

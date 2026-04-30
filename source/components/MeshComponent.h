@@ -146,8 +146,6 @@ public:
 
     void deserialize(const YAML::Node& node) override;
 
-    [[nodiscard]] int getBoneIndex(const std::string& boneName);
-
 private:
     std::vector<Renderer::Primitive> mPrimitives;
     Animations::Skeleton mSkeleton;

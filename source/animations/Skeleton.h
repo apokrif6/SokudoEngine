@@ -15,7 +15,11 @@ class Skeleton
 public:
     void setData(const Resources::SkeletonData* skeletonData) { mSkeletonData = skeletonData; }
 
+    [[nodiscard]] const Resources::SkeletonData* getSkeletonData() const { return mSkeletonData; }
+
     [[nodiscard]] const BoneNode& getRootNode() const { return mSkeletonData->rootNode; }
+
+    [[nodiscard]] int getBoneIndex(const std::string& boneName);
 
     void initDebug(Renderer::VkRenderData& renderData);
 

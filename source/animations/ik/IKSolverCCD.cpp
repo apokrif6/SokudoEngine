@@ -1,7 +1,9 @@
 #include "IKSolverCCD.h"
 #include "animations/AnimationsData.h"
+#include "resources/Mesh.h"
 
-void Core::Animations::IKSolverCCD::solve(BonesInfo& bonesInfo, const BoneNode& rootNode)
+void Core::Animations::IKSolverCCD::solve(const Resources::SkeletonData& skeletonData, BonesInfo& bonesInfo,
+                                          const BoneNode& rootNode)
 {
     if (mChainIndices.size() < 2)
     {
@@ -35,7 +37,7 @@ void Core::Animations::IKSolverCCD::solve(BonesInfo& bonesInfo, const BoneNode& 
                                       glm::rotate(glm::mat4(1.0f), angle, rotAxis) *
                                       glm::translate(glm::mat4(1.0f), -jointPosition);
 
-            applyRotationToHierarchy(rootNode, jointIndex, rotationWorld, bonesInfo, false);
+            applyRotationToHierarchy(skeletonData, rootNode, jointIndex, rotationWorld, bonesInfo, false);
         }
 
         if (const auto effectorPosition = glm::vec3(bonesInfo.bones[effectorIndex].animatedGlobalTransform[3]);
@@ -46,14 +48,15 @@ void Core::Animations::IKSolverCCD::solve(BonesInfo& bonesInfo, const BoneNode& 
     }
 }
 
-void Core::Animations::IKSolverCCD::applyRotationToHierarchy(const BoneNode& node, int targetBoneIndex,
+void Core::Animations::IKSolverCCD::applyRotationToHierarchy(const Resources::SkeletonData& skeletonData,
+                                                             const BoneNode& node, int targetBoneIndex,
                                                              const glm::mat4& rotation, BonesInfo& bonesInfo,
                                                              bool found)
 {
     if (!found)
     {
-        if (const auto it = bonesInfo.boneNameToIndexMap.find(node.name);
-            it != bonesInfo.boneNameToIndexMap.end() && it->second == targetBoneIndex)
+        if (const auto it = skeletonData.boneNameToIndexMap.find(node.name);
+            it != skeletonData.boneNameToIndexMap.end() && it->second == targetBoneIndex)
         {
             found = true;
         }
@@ -61,7 +64,8 @@ void Core::Animations::IKSolverCCD::applyRotationToHierarchy(const BoneNode& nod
 
     if (found)
     {
-        if (const auto it = bonesInfo.boneNameToIndexMap.find(node.name); it != bonesInfo.boneNameToIndexMap.end())
+        if (const auto it = skeletonData.boneNameToIndexMap.find(node.name);
+            it != skeletonData.boneNameToIndexMap.end())
         {
             const int index = it->second;
             bonesInfo.bones[index].animatedGlobalTransform = rotation * bonesInfo.bones[index].animatedGlobalTransform;
@@ -70,6 +74,6 @@ void Core::Animations::IKSolverCCD::applyRotationToHierarchy(const BoneNode& nod
 
     for (const auto& child : node.children)
     {
-        applyRotationToHierarchy(child, targetBoneIndex, rotation, bonesInfo, found);
+        applyRotationToHierarchy(skeletonData, child, targetBoneIndex, rotation, bonesInfo, found);
     }
 }

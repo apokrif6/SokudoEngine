@@ -36,6 +36,7 @@ Core::Resources::MeshData Core::Assets::ModelLoader::loadMeshFromFile(const std:
     processNodeHierarchy(mesh.rootNode, scene->mRootNode, scene, renderData, baseDir, globalBoneIndexMap);
 
     mesh.skeletonData.rootNode = Animations::AnimationsUtils::buildBoneHierarchy(scene->mRootNode);
+    mesh.skeletonData.boneNameToIndexMap = globalBoneIndexMap;
 
     return mesh;
 }
@@ -381,7 +382,6 @@ void Core::Assets::ModelLoader::processSingleBone(Resources::PrimitiveData& prim
 
     Logger::log(1, "Bone '%s': num vertices affected by this bone: %d\n", boneName.c_str(), bone->mNumWeights);
 
-    primitiveData.bones.boneNameToIndexMap[boneName] = boneID;
     primitiveData.bones.bones[boneID] =
         Animations::Bone{Animations::AnimationsUtils::convertMatrixToGlm(bone->mOffsetMatrix)};
 

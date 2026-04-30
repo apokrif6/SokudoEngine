@@ -142,7 +142,7 @@ class AnimationSequenceUIWindow : public UIWindow<AnimationSequenceUIWindow>
         bool isActualBone = false;
         if (!meshComponent->getPrimitives().empty())
         {
-            const auto& bonesMap = meshComponent->getPrimitives()[0].getBonesInfo().boneNameToIndexMap;
+            const auto& bonesMap = meshComponent->getSkeleton().getSkeletonData()->boneNameToIndexMap;
             if (const auto it = bonesMap.find(node.name); it != bonesMap.end())
             {
                 isActualBone = true;

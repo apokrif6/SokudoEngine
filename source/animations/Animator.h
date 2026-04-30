@@ -1,6 +1,5 @@
 #pragma once
 
-#include "assimp/scene.h"
 #include "vk-renderer/VkRenderData.h"
 #include "components/MeshComponent.h"
 #include "system/System.h"
@@ -36,11 +35,13 @@ private:
     glm::vec3 interpolateScaleClip(const std::vector<KeyframeVec3>& keyframes, float animationTime);
 
     void readNodeHierarchyClip(const AnimationClip& clip, float animationTime, const BoneNode& node,
-                               const glm::mat4& parentTransform, BonesInfo& bonesInfo);
+                               const glm::mat4& parentTransform, const Resources::SkeletonData& skeletonData,
+                               BonesInfo& bonesInfo);
 
     void readNodeHierarchyBlend(const AnimationClip& clipA, float animationTimeA, const AnimationClip& clipB,
                                 float animationTimeB, Component::MeshComponent* meshComponent, const BoneNode& node,
-                                const glm::mat4& parentTransform, BonesInfo& bonesInfo);
+                                const glm::mat4& parentTransform, const Resources::SkeletonData& skeletonData,
+                                BonesInfo& bonesInfo);
 
     BoneTransform getBoneTransform(const AnimationChannel* channel, float time);
 
