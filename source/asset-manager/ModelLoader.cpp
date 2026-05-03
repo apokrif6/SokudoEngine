@@ -33,10 +33,15 @@ Core::Resources::MeshData Core::Assets::ModelLoader::loadMeshFromFile(const std:
     std::unordered_map<std::string, int> globalBoneIndexMap;
     buildGlobalBoneIndexMap(scene, globalBoneIndexMap);
 
+    std::vector<int> boneParents;
+    boneParents.resize(globalBoneIndexMap.size(), -1);
+    fillBoneParents(scene->mRootNode, -1, globalBoneIndexMap, boneParents);
+
     processNodeHierarchy(mesh.rootNode, scene->mRootNode, scene, renderData, baseDir, globalBoneIndexMap);
 
     mesh.skeletonData.rootNode = Animations::AnimationsUtils::buildBoneHierarchy(scene->mRootNode);
     mesh.skeletonData.boneNameToIndexMap = globalBoneIndexMap;
+    mesh.skeletonData.boneParents = boneParents;
 
     return mesh;
 }
@@ -77,6 +82,25 @@ void Core::Assets::ModelLoader::buildGlobalBoneIndexMap(const aiScene* scene,
                 outGlobalBoneIndexMap[name] = nextID++;
             }
         }
+    }
+}
+void Core::Assets::ModelLoader::fillBoneParents(const aiNode* node, int parentIndex,
+                                                const std::unordered_map<std::string, int>& globalBoneIndexMap,
+                                                std::vector<int>& outParents)
+{
+    const std::string name = node->mName.C_Str();
+    int currentIndex = -1;
+
+    if (const auto it = globalBoneIndexMap.find(name); it != globalBoneIndexMap.end())
+    {
+        currentIndex = it->second;
+        outParents[currentIndex] = parentIndex;
+    }
+
+    for (unsigned int i = 0; i < node->mNumChildren; ++i)
+    {
+        fillBoneParents(node->mChildren[i], currentIndex != -1 ? currentIndex : parentIndex, globalBoneIndexMap,
+                        outParents);
     }
 }
 

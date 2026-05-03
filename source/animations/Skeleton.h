@@ -21,6 +21,8 @@ public:
 
     [[nodiscard]] int getBoneIndex(const std::string& boneName);
 
+    [[nodiscard]] std::vector<int> buildBonesChain(int startIndex, int endIndex);
+
     void initDebug(Renderer::VkRenderData& renderData);
 
     void updateDebug(Renderer::VkRenderData& renderData, const std::vector<Renderer::Debug::DebugBone>& bones) const;

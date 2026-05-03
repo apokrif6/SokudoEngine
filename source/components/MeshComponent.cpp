@@ -159,38 +159,9 @@ float Core::Component::MeshComponent::getWeightForBone(const std::string& boneNa
     return 0.f;
 }
 
-void Core::Component::MeshComponent::TEST_setIKTargetAndCreateTestSolver()
+void Core::Component::MeshComponent::TEST_findAndSetIKTarget()
 {
     mIKTarget = Engine::getInstance().getSystem<Scene::Scene>()->findComponentInScene<IKTargetComponent>();
-
-    if (!mIKTarget)
-    {
-        return;
-    }
-
-    mIKSolvers.clear();
-
-    std::vector<int> chainIndices;
-    const int rightHandIndex = mSkeleton.getBoneIndex("mixamorig:RightHand");
-    const int rightForeArmIndex = mSkeleton.getBoneIndex("mixamorig:RightForeArm");
-    const int rightArmIndex = mSkeleton.getBoneIndex("mixamorig:RightArm");
-    const int rightShoulderIndex = mSkeleton.getBoneIndex("mixamorig:RightShoulder");
-
-    if (rightHandIndex == -1 || rightForeArmIndex == -1 || rightArmIndex == -1 || rightShoulderIndex == -1)
-    {
-        Logger::log(1, "Not all bones found in skeleton, cannot create IK solver");
-        return;
-    }
-
-    chainIndices.push_back(rightHandIndex);
-    chainIndices.push_back(rightForeArmIndex);
-    chainIndices.push_back(rightArmIndex);
-    chainIndices.push_back(rightShoulderIndex);
-
-    auto solver = std::make_unique<Animations::IKSolverCCD>(chainIndices, 10);
-
-    mIKSolvers.push_back(std::move(solver));
-    Logger::log(1, "LookAt IKSolver added to MeshComponent");
 }
 
 void Core::Component::MeshComponent::loadAnimationFromFile(const std::string_view& filePath)

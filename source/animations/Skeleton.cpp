@@ -18,6 +18,29 @@ int Core::Animations::Skeleton::getBoneIndex(const std::string& boneName)
     return -1;
 }
 
+std::vector<int> Core::Animations::Skeleton::buildBonesChain(const int startIndex, const int endIndex)
+{
+    if (!mSkeletonData)
+    {
+        return {};
+    }
+
+    std::vector<int> chain;
+    int currentIndex = endIndex;
+
+    while (currentIndex != -1)
+    {
+        chain.push_back(currentIndex);
+        if (currentIndex == startIndex)
+        {
+            return chain;
+        }
+        currentIndex = mSkeletonData->boneParents[currentIndex];
+    }
+
+    return {};
+}
+
 void Core::Animations::Skeleton::initDebug(Renderer::VkRenderData& renderData)
 {
     if (!debugDraw)

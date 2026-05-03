@@ -21,6 +21,10 @@ private:
     static void buildGlobalBoneIndexMap(const aiScene* scene,
                                         std::unordered_map<std::string, int>& outGlobalBoneIndexMap);
 
+    static void fillBoneParents(const aiNode* node, int parentIndex,
+                                const std::unordered_map<std::string, int>& globalBoneIndexMap,
+                                std::vector<int>& outParents);
+
     static void processNodeHierarchy(Resources::MeshNode& outNode, aiNode* node, const aiScene* scene,
                                      Renderer::VkRenderData& renderData, const std::string& baseDir,
                                      const std::unordered_map<std::string, int>& globalBoneIndexMap);
