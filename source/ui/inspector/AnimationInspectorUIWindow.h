@@ -4,6 +4,7 @@
 #include "imgui.h"
 #include "string"
 #include "nfd.hpp"
+#include "animation/AnimationInspectorInverseKinematicsUIWindow.h"
 
 namespace Core::UI
 {
@@ -68,7 +69,8 @@ class AnimationInspectorUIWindow : public UIWindow<AnimationInspectorUIWindow>
 
         ImGui::PopItemWidth();
 
-        ImGui::Spacing();
+        ImGui::SeparatorText("Blending");
+
         bool shouldBlend = meshComponent->shouldBlendAnimations();
         if (ImGui::Checkbox("Enable Blending", &shouldBlend))
         {
@@ -143,10 +145,7 @@ class AnimationInspectorUIWindow : public UIWindow<AnimationInspectorUIWindow>
             ImGui::Unindent();
         }
 
-        if (ImGui::Button("Find and set IK Target"))
-        {
-            meshComponent->TEST_setIKTargetAndCreateTestSolver();
-        }
+        AnimationInspectorInverseKinematicsUIWindow::renderBody(meshComponent);
 
         return true;
     }

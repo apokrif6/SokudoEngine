@@ -29,6 +29,8 @@ public:
 
     void setMaxIterations(const unsigned int maxIterations) { mMaxIterations = maxIterations; }
 
+    [[nodiscard]] unsigned int getMaxIterations() const { return mMaxIterations; }
+
     [[nodiscard]] std::vector<int> getChainIndices() const { return mChainIndices; }
 
 protected:
