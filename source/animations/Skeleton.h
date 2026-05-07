@@ -19,7 +19,9 @@ public:
 
     [[nodiscard]] const BoneNode& getRootNode() const { return mSkeletonData->rootNode; }
 
-    [[nodiscard]] int getBoneIndex(const std::string& boneName);
+    [[nodiscard]] int getBoneIndex(const std::string& boneName) const;
+
+    [[nodiscard]] std::string getBoneName(int boneIndex) const;
 
     [[nodiscard]] std::vector<int> buildBonesChain(int startIndex, int endIndex);
 

@@ -1,7 +1,7 @@
 #include "Skeleton.h"
 #include "vk-renderer/debug/Skeleton.h"
 
-int Core::Animations::Skeleton::getBoneIndex(const std::string& boneName)
+int Core::Animations::Skeleton::getBoneIndex(const std::string& boneName) const
 {
     if (!mSkeletonData)
     {
@@ -16,6 +16,23 @@ int Core::Animations::Skeleton::getBoneIndex(const std::string& boneName)
     }
 
     return -1;
+}
+std::string Core::Animations::Skeleton::getBoneName(const int boneIndex) const
+{
+    if (!mSkeletonData)
+    {
+        return "";
+    }
+
+    for (const auto& [name, index] : mSkeletonData->boneNameToIndexMap)
+    {
+        if (index == boneIndex)
+        {
+            return name;
+        }
+    }
+
+    return "";
 }
 
 std::vector<int> Core::Animations::Skeleton::buildBonesChain(const int startIndex, const int endIndex)

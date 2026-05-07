@@ -25,15 +25,22 @@ class AnimationInspectorInverseKinematicsUIWindow : public UIWindow<AnimationIns
         {
             for (int i = 0; i < solvers.size(); ++i)
             {
+                const auto& solver = solvers[i];
+                const auto& chain = solver->getChainIndices();
+
+                const std::string startBone = meshComponent->getSkeleton().getBoneName(chain.back());
+                const std::string endBone = meshComponent->getSkeleton().getBoneName(chain.front());
+
                 ImGui::PushID(i);
                 if (ImGui::TreeNodeEx(reinterpret_cast<void*>(static_cast<intptr_t>(i)),
                                       ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed,
-                                      "CCD Solver - %zu bones", solvers[i]->getChainIndices().size()))
+                                      "CCD Solver - %zu bones {%s} -> {%s}", chain.size(), startBone.c_str(),
+                                      endBone.c_str()))
                 {
-                    int iterations = static_cast<int>(solvers[i]->getMaxIterations());
+                    int iterations = static_cast<int>(solver->getMaxIterations());
                     if (ImGui::SliderInt("Iterations", &iterations, 1, 50))
                     {
-                        solvers[i]->setMaxIterations(iterations);
+                        solver->setMaxIterations(iterations);
                     }
                     if (ImGui::Button("Remove Solver", ImVec2(-1, 0)))
                     {
