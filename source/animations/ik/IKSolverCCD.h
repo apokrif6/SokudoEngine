@@ -9,7 +9,8 @@ struct BonesInfo;
 class IKSolverCCD : public IIKSolver
 {
 public:
-    IKSolverCCD(const std::vector<int>& chainIndices, const unsigned maxIterations, const float threshold = 0.001f)
+    explicit IKSolverCCD(const std::vector<int>& chainIndices, const unsigned maxIterations = 10,
+                         const float threshold = 0.001f)
         : IIKSolver(chainIndices, maxIterations, threshold)
     {
     }

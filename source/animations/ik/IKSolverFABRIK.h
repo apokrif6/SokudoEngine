@@ -9,7 +9,8 @@ struct BonesInfo;
 class IKSolverFABRIK : public IIKSolver
 {
 public:
-    IKSolverFABRIK(const std::vector<int>& chainIndices, const unsigned maxIterations, const float threshold = 0.001f)
+    explicit IKSolverFABRIK(const std::vector<int>& chainIndices, const unsigned maxIterations = 10,
+                            const float threshold = 0.001f)
         : IIKSolver(chainIndices, maxIterations, threshold)
     {
     }

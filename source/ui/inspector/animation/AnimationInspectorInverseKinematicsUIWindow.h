@@ -146,11 +146,11 @@ class AnimationInspectorInverseKinematicsUIWindow : public UIWindow<AnimationIns
 
                     if (solveType == Animations::AnimationSolverType::FABRIK)
                     {
-                        newSolver = std::make_unique<Animations::IKSolverFABRIK>(chain, 15);
+                        newSolver = std::make_unique<Animations::IKSolverFABRIK>(chain);
                     }
                     else
                     {
-                        newSolver = std::make_unique<Animations::IKSolverCCD>(chain, 15);
+                        newSolver = std::make_unique<Animations::IKSolverCCD>(chain);
                     }
                     meshComponent->addIKSolver(std::move(newSolver));
 
