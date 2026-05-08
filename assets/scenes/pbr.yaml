@@ -1,5 +1,6 @@
 objects:
-  - name: PBR Object
+  - uuid: 4658890833833054621
+    name: PBR Object
     components:
       - type: TransformComponent
         data:
@@ -29,7 +30,8 @@ objects:
             - 0
             - 30
             - 0
-  - name: Point Light Object
+  - uuid: 10183425901998756852
+    name: Point Light Object
     components:
       - type: TransformComponent
         data:

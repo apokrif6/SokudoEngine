@@ -1,5 +1,6 @@
 objects:
-  - name: InverseKinematicsObject
+  - uuid: 4800047369365807623
+    name: InverseKinematicsObject
     components:
       - type: TransformComponent
         data:
@@ -25,7 +26,8 @@ objects:
             - assets/mixamo/animations/StandingIdleAnimation.fbx
           shouldPlayAnimation: true
           currentAnimationIndex: 0
-  - name: InverseKinematicTargetObject
+  - uuid: 5261874092426160869
+    name: InverseKinematicTargetObject
     components:
       - type: TransformComponent
         data:

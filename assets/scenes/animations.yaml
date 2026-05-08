@@ -1,5 +1,6 @@
 objects:
-  - name: RootNode
+  - uuid: 8138034108214603098
+    name: RootNode
     components:
       - type: TransformComponent
         data:
@@ -25,7 +26,8 @@ objects:
             - assets/mixamo/animations/AngryAnimation.fbx
           shouldPlayAnimation: true
           currentAnimationIndex: 0
-  - name: RootNode
+  - uuid: 17346592880371465054
+    name: RootNode
     components:
       - type: TransformComponent
         data:
@@ -51,7 +53,8 @@ objects:
             - assets/mixamo/animations/BoxingAnimation.fbx
           shouldPlayAnimation: true
           currentAnimationIndex: 0
-  - name: RootNode
+  - uuid: 12384112393606762698
+    name: RootNode
     components:
       - type: TransformComponent
         data:
@@ -77,7 +80,8 @@ objects:
             - assets/mixamo/animations/HipHopDancingAnimation.fbx
           shouldPlayAnimation: true
           currentAnimationIndex: 0
-  - name: RootNode
+  - uuid: 5846959187028146246
+    name: RootNode
     components:
       - type: TransformComponent
         data:
@@ -103,4 +107,4 @@ objects:
             - assets/mixamo/animations/StandingIdleAnimation.fbx
             - assets/mixamo/animations/StandingReactDeathBackwardAnimation.fbx
           shouldPlayAnimation: true
-          currentAnimationIndex: 1
+          currentAnimationIndex: 0
