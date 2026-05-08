@@ -21,9 +21,6 @@ class TransformInspectorUIWindow : public UIWindow<TransformInspectorUIWindow>
             return true;
         }
 
-        ImGui::Text("Selected: %s", selectedObject->getName().c_str());
-        ImGui::Separator();
-
         glm::vec3 position = transformComponent->getPosition();
         if (ImGui::DragFloat3("Position", &position.x, 0.1f))
         {

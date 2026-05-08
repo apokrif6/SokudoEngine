@@ -6,14 +6,19 @@
 #include "vk-renderer/VkRenderData.h"
 #include "yaml-cpp/node/node.h"
 #include "serialization/Serializable.h"
+#include <random>
 
 namespace Core::Scene
 {
 class SceneObject final : public Serialization::ISerializable
 {
 public:
-    explicit SceneObject(std::string name) : mName(std::move(name)) {}
-    virtual ~SceneObject() = default;
+    explicit SceneObject(std::string name) : mName(std::move(name)), mUUID(generateUUID()) {}
+    ~SceneObject() override = default;
+
+    [[nodiscard]] uint64_t getUUID() const { return mUUID; }
+
+    void setUUID(const uint64_t uuid) { mUUID = uuid; }
 
     template <typename T, typename... Args> T* addComponent(Args&&... args)
     {
@@ -68,5 +73,18 @@ protected:
     SceneObject* mParent = nullptr;
     std::vector<std::shared_ptr<SceneObject>> mChildren;
     std::vector<std::unique_ptr<Component::Component>> mComponents;
+
+private:
+    uint64_t mUUID;
+
+    // TODO
+    // use stduuid
+    static uint64_t generateUUID()
+    {
+        static std::random_device randomDevice;
+        static std::mt19937_64 generator(randomDevice());
+        static std::uniform_int_distribution<uint64_t> distribution;
+        return distribution(generator);
+    }
 };
 } // namespace Core::Scene

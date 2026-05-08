@@ -21,6 +21,12 @@ public:
     // in update?
     void removeObject(const std::shared_ptr<SceneObject>& object, Renderer::VkRenderData& renderData);
 
+    void registerObjectRecursive(const std::shared_ptr<SceneObject>& object);
+
+    void unregisterObjectRecursive(const SceneObject* object);
+
+    [[nodiscard]] std::shared_ptr<SceneObject> findObjectByUUID(uint64_t uuid);
+
     void update(Renderer::VkRenderData& renderData, float deltaTime) override;
 
     [[nodiscard]] System::DrawLayer getDrawLayer() const override { return System::DrawLayer::World; }
@@ -65,6 +71,8 @@ private:
     }
 
     std::vector<std::shared_ptr<SceneObject>> mObjects;
+
+    std::unordered_map<uint64_t, std::weak_ptr<SceneObject>> mUUIDToObjects;
 
     SceneObjectSelection sceneObjectSelection;
 

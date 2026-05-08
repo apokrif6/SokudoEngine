@@ -49,6 +49,7 @@ void Core::Scene::SceneObject::cleanup(Renderer::VkRenderData& renderData)
 YAML::Node Core::Scene::SceneObject::serialize() const
 {
     YAML::Node node;
+    node["uuid"] = mUUID;
     node["name"] = mName;
 
     YAML::Node componentsNode;
@@ -76,6 +77,7 @@ YAML::Node Core::Scene::SceneObject::serialize() const
 
 void Core::Scene::SceneObject::deserialize(const YAML::Node& node)
 {
+    mUUID = node["uuid"].as<uint64_t>();
     mName = node["name"].as<std::string>();
 
     if (const auto componentsNode = node["components"])

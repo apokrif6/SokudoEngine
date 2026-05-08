@@ -24,13 +24,17 @@ class InspectorUIWindow : public UIWindow<InspectorUIWindow>
         ImGui::Begin("Inspector");
 
         auto* scene = Engine::getInstance().getSystem<Scene::Scene>();
-        auto objects = scene->getObjects();
         auto& selection = scene->getSceneObjectSelection();
 
         // TODO
         // probably some abstraction is needed :)
-        if (auto selectedObject = selection.selectedObject.lock())
+        if (const auto selectedObject = selection.selectedObject.lock())
         {
+            ImGui::TextDisabled("(SceneObject UUID: %llu)", selectedObject->getUUID());
+
+            ImGui::Separator();
+            ImGui::Spacing();
+
             if (auto* transformComponent = selectedObject->getComponent<Component::TransformComponent>())
             {
                 if (ImGui::CollapsingHeader("Transform Component", ImGuiTreeNodeFlags_DefaultOpen))
