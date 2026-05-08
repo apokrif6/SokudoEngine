@@ -2,7 +2,7 @@
 
 #include "IKTargetComponent.h"
 #include "animations/Skeleton.h"
-#include "animations/ik/IKSolverCCD.h"
+#include "animations/ik/IIKSolver.h"
 #include "scene/objects/SceneObject.h"
 #include <utility>
 #include <vector>

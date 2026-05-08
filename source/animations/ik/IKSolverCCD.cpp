@@ -47,33 +47,3 @@ void Core::Animations::IKSolverCCD::solve(const Resources::SkeletonData& skeleto
         }
     }
 }
-
-void Core::Animations::IKSolverCCD::applyRotationToHierarchy(const Resources::SkeletonData& skeletonData,
-                                                             const BoneNode& node, int targetBoneIndex,
-                                                             const glm::mat4& rotation, BonesInfo& bonesInfo,
-                                                             bool found)
-{
-    if (!found)
-    {
-        if (const auto it = skeletonData.boneNameToIndexMap.find(node.name);
-            it != skeletonData.boneNameToIndexMap.end() && it->second == targetBoneIndex)
-        {
-            found = true;
-        }
-    }
-
-    if (found)
-    {
-        if (const auto it = skeletonData.boneNameToIndexMap.find(node.name);
-            it != skeletonData.boneNameToIndexMap.end())
-        {
-            const int index = it->second;
-            bonesInfo.bones[index].animatedGlobalTransform = rotation * bonesInfo.bones[index].animatedGlobalTransform;
-        }
-    }
-
-    for (const auto& child : node.children)
-    {
-        applyRotationToHierarchy(skeletonData, child, targetBoneIndex, rotation, bonesInfo, found);
-    }
-}

@@ -132,4 +132,10 @@ enum class AnimationBlendingMode : uint8_t
     Crossfade,
     Masked
 };
+
+enum class AnimationSolverType : uint8_t
+{
+    CCD,
+    FABRIK
+};
 } // namespace Core::Animations

@@ -2,6 +2,8 @@
 
 #include "ui/UIWindow.h"
 #include "imgui.h"
+#include "animations/ik/IKSolverCCD.h"
+#include "animations/ik/IKSolverFABRIK.h"
 #include <ranges>
 #include <vector>
 #include <string>
@@ -28,14 +30,17 @@ class AnimationInspectorInverseKinematicsUIWindow : public UIWindow<AnimationIns
                 const auto& solver = solvers[i];
                 const auto& chain = solver->getChainIndices();
 
+                const std::string solverTypePrefix =
+                    solver->getType() == Animations::AnimationSolverType::FABRIK ? "FABRIK" : "CCD";
+
                 const std::string startBone = meshComponent->getSkeleton().getBoneName(chain.back());
                 const std::string endBone = meshComponent->getSkeleton().getBoneName(chain.front());
 
                 ImGui::PushID(i);
                 if (ImGui::TreeNodeEx(reinterpret_cast<void*>(static_cast<intptr_t>(i)),
                                       ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed,
-                                      "CCD Solver - %zu bones {%s} -> {%s}", chain.size(), startBone.c_str(),
-                                      endBone.c_str()))
+                                      "%s Solver - %zu bones {%s} -> {%s}", solverTypePrefix.c_str(), chain.size(),
+                                      startBone.c_str(), endBone.c_str()))
                 {
                     int iterations = static_cast<int>(solver->getMaxIterations());
                     if (ImGui::SliderInt("Iterations", &iterations, 1, 50))
@@ -115,6 +120,18 @@ class AnimationInspectorInverseKinematicsUIWindow : public UIWindow<AnimationIns
 
             ImGui::Separator();
 
+            ImGui::Text("Solver:");
+            static auto solveType = Animations::AnimationSolverType::FABRIK;
+            if (ImGui::RadioButton("FABRIK", solveType == Animations::AnimationSolverType::FABRIK))
+            {
+                solveType = Animations::AnimationSolverType::FABRIK;
+            }
+            ImGui::SameLine();
+            if (ImGui::RadioButton("CCD", solveType == Animations::AnimationSolverType::CCD))
+            {
+                solveType = Animations::AnimationSolverType::CCD;
+            }
+
             const bool canCreate = startIndex != -1 && endIndex != -1;
             if (!canCreate)
             {
@@ -125,7 +142,16 @@ class AnimationInspectorInverseKinematicsUIWindow : public UIWindow<AnimationIns
                 if (const std::vector<int> chain = meshComponent->getSkeleton().buildBonesChain(startIndex, endIndex);
                     !chain.empty())
                 {
-                    auto newSolver = std::make_unique<Animations::IKSolverCCD>(chain, 15);
+                    std::unique_ptr<Animations::IIKSolver> newSolver;
+
+                    if (solveType == Animations::AnimationSolverType::FABRIK)
+                    {
+                        newSolver = std::make_unique<Animations::IKSolverFABRIK>(chain, 15);
+                    }
+                    else
+                    {
+                        newSolver = std::make_unique<Animations::IKSolverCCD>(chain, 15);
+                    }
                     meshComponent->addIKSolver(std::move(newSolver));
 
                     startIndex = -1;

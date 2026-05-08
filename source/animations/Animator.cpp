@@ -1,7 +1,6 @@
 #include "Animator.h"
 #include "AnimationsUtils.h"
 #include "components/IKTargetComponent.h"
-#include "ik/IKSolverCCD.h"
 
 void Core::Animations::Animator::update(Renderer::VkRenderData& renderData, float deltaTime)
 {
@@ -59,7 +58,9 @@ void Core::Animations::Animator::updateBonesTransform(Component::MeshComponent* 
                                   bonesInfo);
         }
 
-        if (auto* IKTargetComponent = mesh->getIKTarget())
+        // TODO
+        // should create AnimationGraph and move those to AnimationGraph stack
+        if (const auto* IKTargetComponent = mesh->getIKTarget())
         {
             glm::vec3 worldTarget = IKTargetComponent->getTargetWorldPosition();
             for (const auto& solver : mesh->getIKSolvers())
