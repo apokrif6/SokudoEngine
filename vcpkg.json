@@ -49,6 +49,9 @@
     },
     {
       "name": "nativefiledialog-extended"
+    },
+    {
+      "name": "stduuid"
     }
   ],
   "overrides": [
