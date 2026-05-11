@@ -1,5 +1,5 @@
 objects:
-  - uuid: 4658890833833054621
+  - uuid: f295d107-5e59-48e2-9e8e-7ee23230880c
     name: PBR Object
     components:
       - type: TransformComponent
@@ -11,7 +11,7 @@ objects:
               - 0
             rotation:
               - 90.0000076
-              - 1858.45471
+              - 1977.33838
               - 0
             scale:
               - 1
@@ -30,7 +30,7 @@ objects:
             - 0
             - 30
             - 0
-  - uuid: 10183425901998756852
+  - uuid: d82f9fda-1fed-42cb-a957-cac30d65d8a6
     name: Point Light Object
     components:
       - type: TransformComponent
