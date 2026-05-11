@@ -7,6 +7,7 @@
 #include "yaml-cpp/node/node.h"
 #include "serialization/Serializable.h"
 #include <random>
+#include "uuid.h"
 
 namespace Core::Scene
 {
@@ -16,9 +17,9 @@ public:
     explicit SceneObject(std::string name) : mName(std::move(name)), mUUID(generateUUID()) {}
     ~SceneObject() override = default;
 
-    [[nodiscard]] uint64_t getUUID() const { return mUUID; }
+    [[nodiscard]] uuids::uuid getUUID() const { return mUUID; }
 
-    void setUUID(const uint64_t uuid) { mUUID = uuid; }
+    void setUUID(const uuids::uuid uuid) { mUUID = uuid; }
 
     template <typename T, typename... Args> T* addComponent(Args&&... args)
     {
@@ -75,16 +76,19 @@ protected:
     std::vector<std::unique_ptr<Component::Component>> mComponents;
 
 private:
-    uint64_t mUUID;
+    uuids::uuid mUUID;
 
-    // TODO
-    // use stduuid
-    static uint64_t generateUUID()
+    static uuids::uuid generateUUID()
     {
         static std::random_device randomDevice;
-        static std::mt19937_64 generator(randomDevice());
-        static std::uniform_int_distribution<uint64_t> distribution;
-        return distribution(generator);
+        static std::array<int, std::mt19937::state_size> seed_data;
+        std::ranges::generate(seed_data, std::ref(randomDevice));
+        std::seed_seq seedSequence(std::begin(seed_data), std::end(seed_data));
+        static std::mt19937 generator(seedSequence);
+
+        static uuids::uuid_random_generator randomGenerator(generator);
+
+        return randomGenerator();
     }
 };
 } // namespace Core::Scene

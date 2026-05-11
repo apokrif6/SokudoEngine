@@ -3,6 +3,7 @@
 #include <algorithm>
 #include "components/ComponentFactory.h"
 #include "components/TransformComponent.h"
+#include "serialization/UUIDSerializationConverter.h"
 
 void Core::Scene::SceneObject::update(Renderer::VkRenderData& renderData)
 {
@@ -77,14 +78,14 @@ YAML::Node Core::Scene::SceneObject::serialize() const
 
 void Core::Scene::SceneObject::deserialize(const YAML::Node& node)
 {
-    mUUID = node["uuid"].as<uint64_t>();
+    mUUID = node["uuid"].as<uuids::uuid>();
     mName = node["name"].as<std::string>();
 
     if (const auto componentsNode = node["components"])
     {
         for (const auto& componentNode : componentsNode)
         {
-            const std::string type = componentNode["type"].as<std::string>();
+            const auto type = componentNode["type"].as<std::string>();
 
             auto component = Component::ComponentFactory::create(type);
             component->setOwner(this);

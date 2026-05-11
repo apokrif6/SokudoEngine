@@ -72,7 +72,7 @@ void Core::Scene::Scene::unregisterObjectRecursive(const SceneObject* object)
     }
 }
 
-std::shared_ptr<Core::Scene::SceneObject> Core::Scene::Scene::findObjectByUUID(uint64_t uuid)
+std::shared_ptr<Core::Scene::SceneObject> Core::Scene::Scene::findObjectByUUID(const uuids::uuid uuid)
 {
     if (const auto it = mUUIDToObjects.find(uuid); it != mUUIDToObjects.end())
     {

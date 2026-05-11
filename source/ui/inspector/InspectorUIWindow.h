@@ -30,7 +30,7 @@ class InspectorUIWindow : public UIWindow<InspectorUIWindow>
         // probably some abstraction is needed :)
         if (const auto selectedObject = selection.selectedObject.lock())
         {
-            ImGui::TextDisabled("(SceneObject UUID: %llu)", selectedObject->getUUID());
+            ImGui::TextDisabled("(SceneObject UUID: %s)", uuids::to_string(selectedObject->getUUID()).c_str());
 
             ImGui::Separator();
             ImGui::Spacing();

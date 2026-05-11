@@ -25,7 +25,7 @@ public:
 
     void unregisterObjectRecursive(const SceneObject* object);
 
-    [[nodiscard]] std::shared_ptr<SceneObject> findObjectByUUID(uint64_t uuid);
+    [[nodiscard]] std::shared_ptr<SceneObject> findObjectByUUID(uuids::uuid uuid);
 
     void update(Renderer::VkRenderData& renderData, float deltaTime) override;
 
@@ -72,7 +72,7 @@ private:
 
     std::vector<std::shared_ptr<SceneObject>> mObjects;
 
-    std::unordered_map<uint64_t, std::weak_ptr<SceneObject>> mUUIDToObjects;
+    std::unordered_map<uuids::uuid, std::weak_ptr<SceneObject>> mUUIDToObjects;
 
     SceneObjectSelection sceneObjectSelection;
 
