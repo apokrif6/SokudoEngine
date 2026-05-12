@@ -88,11 +88,10 @@ void Core::Scene::SceneObject::deserialize(const YAML::Node& node)
             const auto type = componentNode["type"].as<std::string>();
 
             auto component = Component::ComponentFactory::create(type);
-            component->setOwner(this);
-            component->onAdded();
+
             component->deserialize(componentNode["data"]);
 
-            mComponents.push_back(std::move(component));
+            addComponentInternal(std::move(component));
         }
     }
 
@@ -100,7 +99,7 @@ void Core::Scene::SceneObject::deserialize(const YAML::Node& node)
     {
         for (const auto& childNode : childrenNode)
         {
-            auto child = std::make_shared<SceneObject>("");
+            auto child = std::make_shared<SceneObject>("", mScene);
             child->deserialize(childNode);
             addChild(child);
         }
@@ -117,4 +116,22 @@ void Core::Scene::SceneObject::removeChild(SceneObject* child)
 {
     mChildren.erase(std::remove_if(mChildren.begin(), mChildren.end(), [&](const auto& c) { return c.get() == child; }),
                     mChildren.end());
+}
+
+void Core::Scene::SceneObject::addComponentInternal(std::unique_ptr<Component::Component> component)
+{
+    component->setOwner(this);
+
+    Component::Component* ptr = component.get();
+
+    mComponents.emplace_back(std::move(component));
+
+    registerComponentInternal(ptr);
+
+    ptr->onAdded();
+}
+
+void Core::Scene::SceneObject::registerComponentInternal(Component::Component* component) const
+{
+    mScene->registerComponent(component);
 }

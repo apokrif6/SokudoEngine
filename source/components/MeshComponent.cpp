@@ -159,11 +159,6 @@ float Core::Component::MeshComponent::getWeightForBone(const std::string& boneNa
     return 0.f;
 }
 
-void Core::Component::MeshComponent::TEST_findAndSetIKTarget()
-{
-    mIKTarget = Engine::getInstance().getSystem<Scene::Scene>()->findComponentInScene<IKTargetComponent>();
-}
-
 void Core::Component::MeshComponent::loadAnimationFromFile(const std::string_view& filePath)
 {
     Animations::AnimationClip clip = Animations::AnimationsUtils::loadAnimationFromFile(filePath);
@@ -179,7 +174,7 @@ void Core::Component::MeshComponent::loadAnimationFromFile(const std::string_vie
             mShouldPlayAnimation = true;
         }
 
-        Logger::log(1, "Animation %s loaded and added for mesh %s", filePath.data(), getOwner()->getName().c_str());
+        Logger::log(1, "Animation %s loaded and added for mesh %s", filePath.data(), uuids::to_string(getUUID()).c_str());
     }
 }
 

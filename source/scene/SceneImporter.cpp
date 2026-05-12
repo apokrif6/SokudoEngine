@@ -13,9 +13,10 @@ Core::Scene::SceneImporter::createObjectFromNode(const Resources::MeshNode& node
                                                  const Resources::SkeletonData& skeletonData,
                                                  const std::string_view& filePath, bool shouldMergeMeshes)
 {
+    auto scene = Engine::getInstance().getSystem<Scene>();
     if (shouldMergeMeshes)
     {
-        auto rootObject = std::make_shared<SceneObject>(std::string(node.name));
+        auto rootObject = std::make_shared<SceneObject>(node.name, scene);
         rootObject->addComponent<Component::TransformComponent>();
 
         auto* meshComp = rootObject->addComponent<Component::MeshComponent>(&skeletonData);
@@ -34,7 +35,7 @@ Core::Scene::SceneImporter::createObjectFromNode(const Resources::MeshNode& node
         return rootObject;
     }
 
-    auto sceneObject = std::make_shared<SceneObject>(node.name);
+    auto sceneObject = std::make_shared<SceneObject>(node.name, scene);
 
     auto* transformComponent = sceneObject->addComponent<Component::TransformComponent>();
     glm::vec3 scale;
@@ -54,7 +55,7 @@ Core::Scene::SceneImporter::createObjectFromNode(const Resources::MeshNode& node
         for (uint32_t i = 0; i < node.primitives.size(); ++i)
         {
             std::string partName = node.name + "_index_" + std::to_string(i);
-            auto partObject = std::make_shared<SceneObject>(partName);
+            auto partObject = std::make_shared<SceneObject>(partName, scene);
 
             partObject->addComponent<Component::TransformComponent>();
 

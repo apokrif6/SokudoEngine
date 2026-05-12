@@ -1,9 +1,15 @@
 #include "IKSolverFABRIK.h"
 #include "animations/AnimationsData.h"
+#include "engine/Engine.h"
 
 void Core::Animations::IKSolverFABRIK::solve(const Resources::SkeletonData& skeletonData, BonesInfo& bonesInfo,
                                              const BoneNode& rootNode)
 {
+    if (!mTarget)
+    {
+        return;
+    }
+
     if (mChainIndices.size() < 2)
     {
         return;
@@ -29,20 +35,26 @@ void Core::Animations::IKSolverFABRIK::solve(const Resources::SkeletonData& skel
         totalLength += length;
     }
 
-    if (glm::distance(positions.back(), mTargetPosition) > totalLength)
+    // TODO
+    // create SceneContext to not access scene via Engine
+    auto* scene = Engine::getInstance().getSystem<Scene::Scene>();
+
+    if (glm::distance(positions.back(), mTarget.resolve(scene)->getTargetWorldPosition()) > totalLength)
     {
         for (size_t i = positions.size() - 1; i > 0; --i)
         {
-            const float distanceToTarget = glm::distance(mTargetPosition, positions[i]);
+            const float distanceToTarget =
+                glm::distance(mTarget.resolve(scene)->getTargetWorldPosition(), positions[i]);
             const float boneLengthRatio = lengths[i - 1] / distanceToTarget;
-            positions[i - 1] = (1.0f - boneLengthRatio) * positions[i] + boneLengthRatio * mTargetPosition;
+            positions[i - 1] = (1.0f - boneLengthRatio) * positions[i] +
+                               boneLengthRatio * mTarget.resolve(scene)->getTargetWorldPosition();
         }
     }
     else
     {
         for (unsigned int iteration = 0; iteration < mMaxIterations; ++iteration)
         {
-            positions[0] = mTargetPosition;
+            positions[0] = mTarget.resolve(scene)->getTargetWorldPosition();
             for (size_t i = 0; i < positions.size() - 1; ++i)
             {
                 const float currentDistance = glm::distance(positions[i + 1], positions[i]);
@@ -58,7 +70,7 @@ void Core::Animations::IKSolverFABRIK::solve(const Resources::SkeletonData& skel
                 positions[i - 1] = (1.0f - stretchingRatio) * positions[i] + stretchingRatio * positions[i - 1];
             }
 
-            if (glm::distance(positions[0], mTargetPosition) < mThreshold)
+            if (glm::distance(positions[0], mTarget.resolve(scene)->getTargetWorldPosition()) < mThreshold)
             {
                 break;
             }

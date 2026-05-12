@@ -1,7 +1,7 @@
 #pragma once
 
+#include "core/IUUIDObject.h"
 #include <string>
-
 #include "components/Component.h"
 #include "vk-renderer/VkRenderData.h"
 #include "yaml-cpp/node/node.h"
@@ -11,13 +11,18 @@
 
 namespace Core::Scene
 {
-class SceneObject final : public Serialization::ISerializable
+class Scene;
+
+class SceneObject final : public Serialization::ISerializable, public IUUIDObject
 {
 public:
-    explicit SceneObject(std::string name) : mName(std::move(name)), mUUID(generateUUID()) {}
+    explicit SceneObject(std::string name, Scene* scene)
+        : mName(std::move(name)), mScene(scene), mUUID(UUID::generateUUID())
+    {
+    }
     ~SceneObject() override = default;
 
-    [[nodiscard]] uuids::uuid getUUID() const { return mUUID; }
+    [[nodiscard]] const uuids::uuid& getUUID() const override { return mUUID; }
 
     void setUUID(const uuids::uuid uuid) { mUUID = uuid; }
 
@@ -28,10 +33,8 @@ public:
         auto component = std::make_unique<T>(std::forward<Args>(args)...);
         T* ptr = component.get();
 
-        ptr->setOwner(this);
-        ptr->onAdded();
+        addComponentInternal(std::move(component));
 
-        mComponents.emplace_back(std::move(component));
         return ptr;
     }
 
@@ -45,6 +48,12 @@ public:
             }
         }
         return nullptr;
+    }
+
+    [[nodiscard]]
+    const std::vector<std::unique_ptr<Component::Component>>& getComponents() const
+    {
+        return mComponents;
     }
 
     void update(Renderer::VkRenderData& renderData);
@@ -71,6 +80,7 @@ public:
 
 protected:
     std::string mName;
+    Scene* mScene = nullptr;
     SceneObject* mParent = nullptr;
     std::vector<std::shared_ptr<SceneObject>> mChildren;
     std::vector<std::unique_ptr<Component::Component>> mComponents;
@@ -78,17 +88,8 @@ protected:
 private:
     uuids::uuid mUUID;
 
-    static uuids::uuid generateUUID()
-    {
-        static std::random_device randomDevice;
-        static std::array<int, std::mt19937::state_size> seed_data;
-        std::ranges::generate(seed_data, std::ref(randomDevice));
-        std::seed_seq seedSequence(std::begin(seed_data), std::end(seed_data));
-        static std::mt19937 generator(seedSequence);
+    void addComponentInternal(std::unique_ptr<Component::Component> component);
 
-        static uuids::uuid_random_generator randomGenerator(generator);
-
-        return randomGenerator();
-    }
+    void registerComponentInternal(Component::Component* component) const;
 };
 } // namespace Core::Scene

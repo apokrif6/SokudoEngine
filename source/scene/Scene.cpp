@@ -15,7 +15,7 @@ void Core::Scene::Scene::addObject(std::shared_ptr<SceneObject> object)
 
 std::shared_ptr<Core::Scene::SceneObject> Core::Scene::Scene::createObject(const std::string& name)
 {
-    auto newObject = std::make_shared<SceneObject>(name);
+    auto newObject = std::make_shared<SceneObject>(name, this);
     newObject->addComponent<Component::TransformComponent>();
     addObject(newObject);
 
@@ -42,6 +42,7 @@ void Core::Scene::Scene::removeObject(const std::shared_ptr<SceneObject>& object
         mObjects.erase(std::remove(mObjects.begin(), mObjects.end(), object), mObjects.end());
     }
 }
+
 void Core::Scene::Scene::registerObjectRecursive(const std::shared_ptr<SceneObject>& object)
 {
     if (!object)
@@ -49,7 +50,12 @@ void Core::Scene::Scene::registerObjectRecursive(const std::shared_ptr<SceneObje
         return;
     }
 
-    mUUIDToObjects[object->getUUID()] = object;
+    mUUIDToSceneObjects[object->getUUID()] = object.get();
+
+    for (const auto& component : object->getComponents())
+    {
+        registerComponent(component.get());
+    }
 
     for (const auto& child : object->getChildren())
     {
@@ -64,7 +70,12 @@ void Core::Scene::Scene::unregisterObjectRecursive(const SceneObject* object)
         return;
     }
 
-    mUUIDToObjects.erase(object->getUUID());
+    mUUIDToSceneObjects.erase(object->getUUID());
+
+    for (const auto& component : object->getComponents())
+    {
+        unregisterComponent(component.get());
+    }
 
     for (const auto& child : object->getChildren())
     {
@@ -72,19 +83,14 @@ void Core::Scene::Scene::unregisterObjectRecursive(const SceneObject* object)
     }
 }
 
-std::shared_ptr<Core::Scene::SceneObject> Core::Scene::Scene::findObjectByUUID(const uuids::uuid uuid)
+void Core::Scene::Scene::registerComponent(Component::Component* component)
 {
-    if (const auto it = mUUIDToObjects.find(uuid); it != mUUIDToObjects.end())
-    {
-        if (auto sharedObject = it->second.lock())
-        {
-            return sharedObject;
-        }
+    mUUIDToComponents[component->getUUID()] = component;
+}
 
-        mUUIDToObjects.erase(it);
-    }
-
-    return nullptr;
+void Core::Scene::Scene::unregisterComponent(Component::Component* component)
+{
+    mUUIDToComponents.erase(component->getUUID());
 }
 
 void Core::Scene::Scene::update(Renderer::VkRenderData& renderData, float deltaTime)
@@ -116,5 +122,6 @@ void Core::Scene::Scene::cleanup(Renderer::VkRenderData& renderData)
         object->cleanup(renderData);
     }
     mObjects.clear();
-    mUUIDToObjects.clear();
+    mUUIDToSceneObjects.clear();
+    mUUIDToComponents.clear();
 }

@@ -60,14 +60,9 @@ void Core::Animations::Animator::updateBonesTransform(Component::MeshComponent* 
 
         // TODO
         // should create AnimationGraph and move those to AnimationGraph stack
-        if (const auto* IKTargetComponent = mesh->getIKTarget())
+        for (const auto& solver : mesh->getIKSolvers())
         {
-            glm::vec3 worldTarget = IKTargetComponent->getTargetWorldPosition();
-            for (const auto& solver : mesh->getIKSolvers())
-            {
-                solver->setTarget(worldTarget);
-                solver->solve(*skeleton.getSkeletonData(), bonesInfo, skeleton.getRootNode());
-            }
+            solver->solve(*skeleton.getSkeletonData(), bonesInfo, skeleton.getRootNode());
         }
 
         for (size_t i = 0; i < bonesInfoSize; ++i)

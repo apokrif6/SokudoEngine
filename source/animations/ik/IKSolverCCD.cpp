@@ -1,16 +1,26 @@
 #include "IKSolverCCD.h"
 #include "animations/AnimationsData.h"
+#include "engine/Engine.h"
 #include "resources/Mesh.h"
 
 void Core::Animations::IKSolverCCD::solve(const Resources::SkeletonData& skeletonData, BonesInfo& bonesInfo,
                                           const BoneNode& rootNode)
 {
+    if (!mTarget)
+    {
+        return;
+    }
+
     if (mChainIndices.size() < 2)
     {
         return;
     }
 
     const int effectorIndex = mChainIndices.front();
+
+    // TODO
+    // create SceneContext to not access scene via Engine
+    auto* scene = Engine::getInstance().getSystem<Scene::Scene>();
 
     for (unsigned int iteration = 0; iteration < mMaxIterations; ++iteration)
     {
@@ -22,7 +32,7 @@ void Core::Animations::IKSolverCCD::solve(const Resources::SkeletonData& skeleto
             auto effectorPosition = glm::vec3(bonesInfo.bones[effectorIndex].animatedGlobalTransform[3]);
 
             glm::vec3 jointToEffector = glm::normalize(effectorPosition - jointPosition);
-            glm::vec3 jointToTarget = glm::normalize(mTargetPosition - jointPosition);
+            glm::vec3 jointToTarget = glm::normalize(mTarget.resolve(scene)->getTargetWorldPosition() - jointPosition);
 
             const float cosAngle = glm::dot(jointToEffector, jointToTarget);
             if (cosAngle > 0.9999f)
@@ -41,7 +51,7 @@ void Core::Animations::IKSolverCCD::solve(const Resources::SkeletonData& skeleto
         }
 
         if (const auto effectorPosition = glm::vec3(bonesInfo.bones[effectorIndex].animatedGlobalTransform[3]);
-            glm::distance(effectorPosition, mTargetPosition) < mThreshold)
+            glm::distance(effectorPosition, mTarget.resolve(scene)->getTargetWorldPosition()) < mThreshold)
         {
             break;
         }

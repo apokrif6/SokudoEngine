@@ -4,6 +4,8 @@
 #include "imgui.h"
 #include "animations/ik/IKSolverCCD.h"
 #include "animations/ik/IKSolverFABRIK.h"
+#include "ui/ComponentPickerUIWindow.h"
+
 #include <ranges>
 #include <vector>
 #include <string>
@@ -54,6 +56,12 @@ class AnimationInspectorInverseKinematicsUIWindow : public UIWindow<AnimationIns
                         ImGui::PopID();
                         break;
                     }
+                    ComponentPicker::Render<Component::IKTargetComponent>(
+                        "Target", solver->getTargetUUID(), Engine::getInstance().getSystem<Scene::Scene>(),
+                        [&](const uuids::uuid& selectedUUID)
+                        {
+                            solver->setTargetUUID(selectedUUID);
+                        });
                     ImGui::TreePop();
                 }
                 ImGui::PopID();
@@ -173,11 +181,6 @@ class AnimationInspectorInverseKinematicsUIWindow : public UIWindow<AnimationIns
             }
 
             ImGui::EndPopup();
-        }
-
-        if (ImGui::Button("Find and set IK Target", ImVec2(-1, 0)))
-        {
-            meshComponent->TEST_findAndSetIKTarget();
         }
 
         return true;

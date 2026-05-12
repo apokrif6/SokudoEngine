@@ -8,6 +8,8 @@
 #include "system/Updatable.h"
 #include "system/Drawable.h"
 
+#include <ranges>
+
 namespace Core::Scene
 {
 class Scene : public System::ISystem, public System::IUpdatable, public System::IDrawable
@@ -25,7 +27,9 @@ public:
 
     void unregisterObjectRecursive(const SceneObject* object);
 
-    [[nodiscard]] std::shared_ptr<SceneObject> findObjectByUUID(uuids::uuid uuid);
+    void registerComponent(Component::Component* component);
+
+    void unregisterComponent(Component::Component* component);
 
     void update(Renderer::VkRenderData& renderData, float deltaTime) override;
 
@@ -51,6 +55,43 @@ public:
         return nullptr;
     }
 
+    template <typename T = SceneObject> T* findSceneObjectByUUID(const uuids::uuid& uuid)
+    {
+        const auto it = mUUIDToSceneObjects.find(uuid);
+        if (it == mUUIDToSceneObjects.end())
+        {
+            return nullptr;
+        }
+
+        return dynamic_cast<T*>(it->second);
+    }
+
+    template <typename T = Component::Component> T* findComponentByUUID(const uuids::uuid& uuid)
+    {
+        const auto it = mUUIDToComponents.find(uuid);
+        if (it == mUUIDToComponents.end())
+        {
+            return nullptr;
+        }
+
+        return dynamic_cast<T*>(it->second);
+    }
+
+    template <typename T> std::vector<T*> getAllComponentsOfType()
+    {
+        std::vector<T*> result;
+
+        for (auto& component : mUUIDToComponents | std::views::values)
+        {
+            if (auto castedComponent = dynamic_cast<T*>(component))
+            {
+                result.push_back(castedComponent);
+            }
+        }
+
+        return result;
+    }
+
 private:
     template <typename T> T* findComponentRecursive(SceneObject* object)
     {
@@ -72,7 +113,8 @@ private:
 
     std::vector<std::shared_ptr<SceneObject>> mObjects;
 
-    std::unordered_map<uuids::uuid, std::weak_ptr<SceneObject>> mUUIDToObjects;
+    std::unordered_map<uuids::uuid, Component::Component*> mUUIDToComponents;
+    std::unordered_map<uuids::uuid, SceneObject*> mUUIDToSceneObjects;
 
     SceneObjectSelection sceneObjectSelection;
 

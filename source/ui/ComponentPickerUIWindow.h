@@ -11,20 +11,20 @@ class ComponentPicker
 {
 public:
     template <typename T>
-    static void Render(const std::string& label, uint64_t& currentUUID, Scene::Scene* scene,
-                       const std::function<void(uint64_t)> onSelectedCallback)
+    static void Render(const std::string& label, const uuids::uuid& currentUUID, Scene::Scene* scene,
+                       const std::function<void(const uuids::uuid&)>& onSelectedCallback)
     {
         std::string targetLabel = "None (Click to select)";
 
-        if (currentUUID != 0)
+        if (!currentUUID.is_nil())
         {
-            if (const auto object = scene->findObjectByUUID(currentUUID))
+            if (const auto object = scene->findComponentByUUID(currentUUID))
             {
-                targetLabel = object->getName();
+                targetLabel = object->getOwner()->getName();
             }
             else
             {
-                targetLabel = "Missing Object (" + std::to_string(currentUUID) + ")";
+                targetLabel = "Missing component";
             }
         }
 
@@ -39,41 +39,34 @@ public:
 
         if (ImGui::BeginPopup(popupID.c_str()))
         {
-            ImGui::TextDisabled("Select Object with %s", typeid(T).name());
+            ImGui::TextDisabled("Components of type %s", typeid(T).name());
             ImGui::Separator();
 
-            const auto objects = scene->getObjects();
-
-            std::function<void(const std::vector<std::shared_ptr<Scene::SceneObject>>&)> drawLevel;
-            drawLevel = [&](const std::vector<std::shared_ptr<Scene::SceneObject>>& levelObjects)
+            for (const auto components = scene->getAllComponentsOfType<T>(); auto* component : components)
             {
-                for (auto& object : levelObjects)
+                if (!component || !component->getOwner())
                 {
-                    if (object->getComponent<T>())
-                    {
-                        if (const bool isSelected = currentUUID == object->getUUID();
-                            ImGui::Selectable(object->getName().c_str(), isSelected))
-                        {
-                            currentUUID = object->getUUID();
-                            onSelectedCallback(currentUUID);
-                            ImGui::CloseCurrentPopup();
-                        }
-                    }
-
-                    if (!object->getChildren().empty())
-                    {
-                        drawLevel(object->getChildren());
-                    }
+                    continue;
                 }
-            };
 
-            drawLevel(objects);
+                const auto& owner = component->getOwner();
+
+                const bool selected = component->getUUID() == currentUUID;
+
+                std::string labelText = owner->getName() + " [" + std::string(typeid(T).name()) + "]";
+
+                if (ImGui::Selectable(labelText.c_str(), selected))
+                {
+                    onSelectedCallback(component->getUUID());
+                    ImGui::CloseCurrentPopup();
+                }
+            }
 
             ImGui::Separator();
-            if (ImGui::Selectable("Clear Selection", currentUUID == 0))
+
+            if (ImGui::Selectable("Clear", currentUUID.is_nil()))
             {
-                currentUUID = 0;
-                onSelectedCallback(currentUUID);
+                onSelectedCallback(uuids::uuid{});
                 ImGui::CloseCurrentPopup();
             }
 

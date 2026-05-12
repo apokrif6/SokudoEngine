@@ -17,7 +17,7 @@ Core::Scene::Scene Core::Scene::Serialization::deserializeScene(const YAML::Node
     Scene scene;
     for (const auto& objectNode : node["objects"])
     {
-        auto sceneObject = std::make_shared<SceneObject>("");
+        auto sceneObject = std::make_shared<SceneObject>("", &scene);
         sceneObject->deserialize(objectNode);
         scene.addObject(sceneObject);
     }

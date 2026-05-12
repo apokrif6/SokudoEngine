@@ -133,12 +133,6 @@ public:
         }
     }
 
-    [[nodiscard]] IKTargetComponent* getIKTarget() const { return mIKTarget; }
-
-    // TODO
-    // just for tests. should be replaced with proper component selector
-    void TEST_findAndSetIKTarget();
-
     [[nodiscard]] Animations::AnimationClip& getCurrentAnimation() { return mAnimations[mCurrentAnimationIndex]; }
 
     [[nodiscard]] std::string_view getMeshFilePath() const { return mMeshFilePath; }
@@ -173,7 +167,6 @@ private:
     int mCurrentMaskIndex = -1;
 
     std::vector<std::unique_ptr<Animations::IIKSolver>> mIKSolvers;
-    IKTargetComponent* mIKTarget = nullptr;
 #pragma endregion
     // metadata for serialization
     // probably should be moved to other place (I don't know where exactly)

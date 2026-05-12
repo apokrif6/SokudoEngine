@@ -1,7 +1,9 @@
 #pragma once
 
+#include "core/IUUIDObject.h"
 #include "serialization/Serializable.h"
 #include "vk-renderer/VkRenderData.h"
+#include "uuid.h"
 
 namespace Core::Scene
 {
@@ -10,13 +12,16 @@ class SceneObject;
 
 namespace Core::Component
 {
-class Component : public Serialization::ISerializable
+class Component : public Serialization::ISerializable, public IUUIDObject
 {
 public:
-    virtual ~Component() = default;
+    Component() : mUUID(UUID::generateUUID()) {}
+    ~Component() override = default;
+
+    [[nodiscard]] const uuids::uuid& getUUID() const override { return mUUID; }
 
     void setOwner(Scene::SceneObject* owner) { mOwner = owner; }
-    Scene::SceneObject* getOwner() const { return mOwner; }
+    [[nodiscard]] Scene::SceneObject* getOwner() const { return mOwner; }
 
     [[nodiscard]] virtual std::string_view getTypeName() const = 0;
 
@@ -28,6 +33,7 @@ public:
     virtual void cleanup(Renderer::VkRenderData& renderData) {}
 
 protected:
+    uuids::uuid mUUID;
     Scene::SceneObject* mOwner = nullptr;
 };
 } // namespace Core::Component

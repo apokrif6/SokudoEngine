@@ -1,7 +1,13 @@
 #pragma once
 
+#include "components/IKTargetComponent.h"
+#include "core/ComponentReference.h"
+#include "core/SceneObjectReference.h"
+
 #include <vector>
 #include "resources/Mesh.h"
+#include "scene/objects/SceneObject.h"
+
 #include <glm/fwd.hpp>
 #include <glm/vec3.hpp>
 
@@ -31,7 +37,11 @@ public:
 
     virtual void solve(const Resources::SkeletonData& skeletonData, BonesInfo& bonesInfo, const BoneNode& rootNode) = 0;
 
-    void setTarget(const glm::vec3& target) { mTargetPosition = target; }
+    void setTarget(Component::IKTargetComponent* target) { mTarget.set(target); }
+
+    void setTargetUUID(const uuids::uuid& uuid) { mTarget = ComponentReference<Component::IKTargetComponent>(uuid); }
+
+    [[nodiscard]] const uuids::uuid& getTargetUUID() const { return mTarget.uuid(); }
 
     void setMaxIterations(const unsigned int maxIterations) { mMaxIterations = maxIterations; }
 
@@ -71,7 +81,7 @@ protected:
     }
 
     std::vector<int> mChainIndices;
-    glm::vec3 mTargetPosition{0.0f};
+    ComponentReference<Component::IKTargetComponent> mTarget;
     unsigned int mMaxIterations = 15;
     float mThreshold = 0.001f;
 };
