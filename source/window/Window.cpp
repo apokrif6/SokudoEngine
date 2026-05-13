@@ -7,7 +7,12 @@
 #include <GLFW/glfw3native.h>
 #endif
 
-bool Core::Application::Window::init(int width, int height, const std::string& title)
+/**
+ * GLFW_MAXIMIZED is set, so we create a window with the smallest available size
+ */
+constexpr int placeholderWindowSize = 1;
+
+bool Core::Application::Window::init(const std::string& title)
 {
     if (!glfwInit())
     {
@@ -24,8 +29,9 @@ bool Core::Application::Window::init(int width, int height, const std::string& t
 
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
 
-    mWindow = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
+    mWindow = glfwCreateWindow(placeholderWindowSize, placeholderWindowSize, title.c_str(), nullptr, nullptr);
     if (!mWindow)
     {
         Logger::log(1, "%s: Could not create window\n", __FUNCTION__);

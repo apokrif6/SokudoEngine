@@ -14,7 +14,7 @@ namespace Core::Application
 class Window
 {
 public:
-    bool init(int width, int height, const std::string& title);
+    bool init(const std::string& title);
 
     GLFWwindow* getGLFWwindow() const { return mWindow; }
 

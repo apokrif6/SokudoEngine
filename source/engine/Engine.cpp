@@ -9,10 +9,13 @@
 void Core::Engine::init()
 {
     Application::Window* applicationWindow = new Application::Window();
-    applicationWindow->init(1280, 900, "Sokudo Engine");
+    applicationWindow->init("Sokudo Engine");
+
+    int width, height;
+    glfwGetFramebufferSize(applicationWindow->getGLFWwindow(), &width, &height);
 
     auto* renderer = createSystem<Renderer::VkRenderer>(applicationWindow->getGLFWwindow());
-    if (!renderer->init(1280, 900))
+    if (!renderer->init(width, height))
     {
         Logger::log(1, "%s error: could not init renderer", __FUNCTION__);
         return;
