@@ -28,20 +28,25 @@ private:
 
     void updateBonesTransform(Component::MeshComponent* mesh);
 
+    void buildGlobalTransforms(const Pose& pose, const BoneNode& rootNode, const Resources::SkeletonData& skeletonData,
+                               BonesInfo& bonesInfo);
+
+    void buildGlobalTransformsRecursive(const Pose& pose, const BoneNode& node, const glm::mat4& parentTransform,
+                                        const Resources::SkeletonData& skeletonData, BonesInfo& bonesInfo);
+
+    [[nodiscard]] Pose sampleClip(const AnimationClip& clip, float time, const Resources::SkeletonData& skeletonData,
+                                  const BoneNode& rootNode);
+
+    [[nodiscard]] Pose blendPoses(const Pose& poseA, const Pose& poseB, float blendFactor);
+
+    void sampleClipRecursive(const AnimationClip& clip, float time, const BoneNode& node,
+                             const Resources::SkeletonData& skeletonData, Pose& pose);
+
     glm::vec3 interpolatePositionClip(const std::vector<KeyframeVec3>& keyframes, float animationTime);
 
     glm::quat interpolateRotationClip(const std::vector<KeyframeQuat>& keyframes, float animationTime);
 
     glm::vec3 interpolateScaleClip(const std::vector<KeyframeVec3>& keyframes, float animationTime);
-
-    void readNodeHierarchyClip(const AnimationClip& clip, float animationTime, const BoneNode& node,
-                               const glm::mat4& parentTransform, const Resources::SkeletonData& skeletonData,
-                               BonesInfo& bonesInfo);
-
-    void readNodeHierarchyBlend(const AnimationClip& clipA, float animationTimeA, const AnimationClip& clipB,
-                                float animationTimeB, Component::MeshComponent* meshComponent, const BoneNode& node,
-                                const glm::mat4& parentTransform, const Resources::SkeletonData& skeletonData,
-                                BonesInfo& bonesInfo);
 
     BoneTransform getBoneTransform(const AnimationChannel* channel, float time);
 

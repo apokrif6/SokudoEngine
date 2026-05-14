@@ -138,4 +138,9 @@ enum class AnimationSolverType : uint8_t
     CCD,
     FABRIK
 };
+
+struct Pose
+{
+    std::vector<BoneTransform> localTransforms;
+};
 } // namespace Core::Animations
