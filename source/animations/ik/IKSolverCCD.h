@@ -17,6 +17,6 @@ public:
 
     [[nodiscard]] AnimationSolverType getType() const override { return AnimationSolverType::CCD; }
 
-    void solve(const Resources::SkeletonData& skeletonData, BonesInfo& bonesInfo, const BoneNode& rootNode) override;
+    void solve(const Resources::SkeletonData& skeletonData, Pose& pose) override;
 };
 } // namespace Core::Animations

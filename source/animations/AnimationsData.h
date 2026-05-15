@@ -143,4 +143,9 @@ struct Pose
 {
     std::vector<BoneTransform> localTransforms;
 };
+
+struct PoseGlobalData
+{
+    std::vector<glm::mat4> globalTransforms;
+};
 } // namespace Core::Animations

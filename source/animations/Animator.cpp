@@ -61,14 +61,14 @@ void Core::Animations::Animator::updateBonesTransform(Component::MeshComponent* 
             pose = sampleClip(clipA, timeA, *skeleton.getSkeletonData(), skeleton.getRootNode());
         }
 
-        buildGlobalTransforms(pose, skeleton.getRootNode(), *skeleton.getSkeletonData(), bonesInfo);
-
         // TODO
         // should create AnimationGraph and move those to AnimationGraph stack
         for (const auto& solver : mesh->getIKSolvers())
         {
-            solver->solve(*skeleton.getSkeletonData(), bonesInfo, skeleton.getRootNode());
+            solver->solve(*skeleton.getSkeletonData(), pose);
         }
+
+        buildGlobalTransforms(pose, skeleton.getRootNode(), *skeleton.getSkeletonData(), bonesInfo);
 
         for (size_t i = 0; i < bonesInfoSize; ++i)
         {

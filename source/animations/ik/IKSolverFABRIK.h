@@ -17,10 +17,6 @@ public:
 
     [[nodiscard]] AnimationSolverType getType() const override { return AnimationSolverType::FABRIK; }
 
-    void solve(const Resources::SkeletonData& skeletonData, BonesInfo& bonesInfo, const BoneNode& rootNode) override;
-
-private:
-    void updateFullHierarchy(const Resources::SkeletonData& skeletonData, const BoneNode& node,
-                             const glm::mat4& parentTransform, BonesInfo& bonesInfo);
+    void solve(const Resources::SkeletonData& skeletonData, Pose& pose) override;
 };
 } // namespace Core::Animations

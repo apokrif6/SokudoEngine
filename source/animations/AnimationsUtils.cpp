@@ -78,3 +78,39 @@ Core::Animations::BoneNode Core::Animations::AnimationsUtils::buildBoneHierarchy
 
     return boneNode;
 }
+
+void Core::Animations::AnimationsUtils::buildPoseGlobalTransforms(const Pose& pose, const BoneNode& rootNode,
+                                                              const Resources::SkeletonData& skeletonData,
+                                                              PoseGlobalData& outData)
+{
+    buildPoseGlobalTransformsRecursive(pose, rootNode, glm::mat4(1.0f), skeletonData, outData);
+}
+
+void Core::Animations::AnimationsUtils::buildPoseGlobalTransformsRecursive(const Pose& pose, const BoneNode& node,
+                                                                       const glm::mat4& parentTransform,
+                                                                       const Resources::SkeletonData& skeletonData,
+                                                                       PoseGlobalData& outData)
+{
+    glm::mat4 localTransform = node.localTransform;
+    glm::mat4 globalTransform;
+
+    if (const auto it = skeletonData.boneNameToIndexMap.find(node.name); it != skeletonData.boneNameToIndexMap.end())
+    {
+        const int boneIndex = it->second;
+
+        localTransform = pose.localTransforms[boneIndex].toMatrix();
+
+        globalTransform = parentTransform * localTransform;
+
+        outData.globalTransforms[boneIndex] = globalTransform;
+    }
+    else
+    {
+        globalTransform = parentTransform * localTransform;
+    }
+
+    for (const auto& child : node.children)
+    {
+        buildPoseGlobalTransformsRecursive(pose, child, globalTransform, skeletonData, outData);
+    }
+}

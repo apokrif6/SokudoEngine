@@ -8,6 +8,10 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 
+namespace Core::Resources
+{
+struct SkeletonData;
+}
 namespace Core::Animations
 {
 class AnimationsUtils
@@ -54,5 +58,11 @@ public:
     static AnimationClip loadAnimationFromFile(const std::string_view& filePath);
 
     static BoneNode buildBoneHierarchy(const aiNode* node);
+
+    static void buildPoseGlobalTransforms(const Pose& pose, const BoneNode& rootNode,
+                                      const Resources::SkeletonData& skeletonData, PoseGlobalData& outData);
+
+    static void buildPoseGlobalTransformsRecursive(const Pose& pose, const BoneNode& node, const glm::mat4& parentTransform,
+                                               const Resources::SkeletonData& skeletonData, PoseGlobalData& outData);
 };
 } // namespace Core::Animations

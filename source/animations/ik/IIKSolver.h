@@ -35,7 +35,7 @@ public:
 
     [[nodiscard]] virtual AnimationSolverType getType() const = 0;
 
-    virtual void solve(const Resources::SkeletonData& skeletonData, BonesInfo& bonesInfo, const BoneNode& rootNode) = 0;
+    virtual void solve(const Resources::SkeletonData& skeletonData, Pose& pose) = 0;
 
     void setTarget(Component::IKTargetComponent* target) { mTarget.set(target); }
 

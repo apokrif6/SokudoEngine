@@ -1,10 +1,10 @@
 #include "IKSolverCCD.h"
 #include "animations/AnimationsData.h"
+#include "animations/AnimationsUtils.h"
 #include "engine/Engine.h"
 #include "resources/Mesh.h"
 
-void Core::Animations::IKSolverCCD::solve(const Resources::SkeletonData& skeletonData, BonesInfo& bonesInfo,
-                                          const BoneNode& rootNode)
+void Core::Animations::IKSolverCCD::solve(const Resources::SkeletonData& skeletonData, Pose& pose)
 {
     if (!mTarget)
     {
@@ -21,39 +21,63 @@ void Core::Animations::IKSolverCCD::solve(const Resources::SkeletonData& skeleto
     // TODO
     // create SceneContext to not access scene via Engine
     auto* scene = Engine::getInstance().getSystem<Scene::Scene>();
+    const glm::vec3 targetPosition = mTarget.resolve(scene)->getTargetWorldPosition();
 
-    for (unsigned int iteration = 0; iteration < mMaxIterations; ++iteration)
+    PoseGlobalData globals;
+    globals.globalTransforms.resize(skeletonData.boneNameToIndexMap.size());
+
+    for (uint32_t iteration = 0; iteration < mMaxIterations; ++iteration)
     {
+        AnimationsUtils::buildPoseGlobalTransforms(pose, skeletonData.rootNode, skeletonData, globals);
+
+        auto effectorPosition = glm::vec3(globals.globalTransforms[effectorIndex][3]);
+
+        if (glm::distance(effectorPosition, targetPosition) < mThreshold)
+        {
+            break;
+        }
+
+        // TODO
+        // implement constraints
         for (size_t i = 1; i < mChainIndices.size(); ++i)
         {
             const int jointIndex = mChainIndices[i];
 
-            auto jointPosition = glm::vec3(bonesInfo.bones[jointIndex].animatedGlobalTransform[3]);
-            auto effectorPosition = glm::vec3(bonesInfo.bones[effectorIndex].animatedGlobalTransform[3]);
+            auto jointPosition = glm::vec3(globals.globalTransforms[jointIndex][3]);
+            effectorPosition = glm::vec3(globals.globalTransforms[effectorIndex][3]);
 
-            glm::vec3 jointToEffector = glm::normalize(effectorPosition - jointPosition);
-            glm::vec3 jointToTarget = glm::normalize(mTarget.resolve(scene)->getTargetWorldPosition() - jointPosition);
+            glm::vec3 toEffector = glm::normalize(effectorPosition - jointPosition);
 
-            const float cosAngle = glm::dot(jointToEffector, jointToTarget);
-            if (cosAngle > 0.9999f)
+            glm::vec3 toTarget = glm::normalize(targetPosition - jointPosition);
+
+            float dot = glm::clamp(glm::dot(toEffector, toTarget), -1.0f, 1.0f);
+
+            if (dot > 0.9999f)
             {
                 continue;
             }
 
-            const float angle = acos(glm::clamp(cosAngle, -1.0f, 1.0f));
-            glm::vec3 rotAxis = glm::normalize(glm::cross(jointToEffector, jointToTarget));
+            float angle = acos(dot);
 
-            glm::mat4 rotationWorld = glm::translate(glm::mat4(1.0f), jointPosition) *
-                                      glm::rotate(glm::mat4(1.0f), angle, rotAxis) *
-                                      glm::translate(glm::mat4(1.0f), -jointPosition);
+            glm::vec3 axis = glm::normalize(glm::cross(toEffector, toTarget));
 
-            applyRotationToHierarchy(skeletonData, rootNode, jointIndex, rotationWorld, bonesInfo, false);
-        }
+            glm::quat worldDelta = glm::angleAxis(angle, axis);
 
-        if (const auto effectorPosition = glm::vec3(bonesInfo.bones[effectorIndex].animatedGlobalTransform[3]);
-            glm::distance(effectorPosition, mTarget.resolve(scene)->getTargetWorldPosition()) < mThreshold)
-        {
-            break;
+            int parentIndex = skeletonData.boneParents[jointIndex];
+
+            glm::quat parentWorldRot(1, 0, 0, 0);
+
+            if (parentIndex >= 0)
+            {
+                glm::mat4 parentGlobal = globals.globalTransforms[parentIndex];
+
+                parentWorldRot = glm::quat_cast(parentGlobal);
+            }
+
+            glm::quat localDelta = glm::inverse(parentWorldRot) * worldDelta * parentWorldRot;
+
+            pose.localTransforms[jointIndex].rotation =
+                glm::normalize(localDelta * pose.localTransforms[jointIndex].rotation);
         }
     }
 }

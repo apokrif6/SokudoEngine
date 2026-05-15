@@ -1,9 +1,9 @@
 #include "IKSolverFABRIK.h"
 #include "animations/AnimationsData.h"
+#include "animations/AnimationsUtils.h"
 #include "engine/Engine.h"
 
-void Core::Animations::IKSolverFABRIK::solve(const Resources::SkeletonData& skeletonData, BonesInfo& bonesInfo,
-                                             const BoneNode& rootNode)
+void Core::Animations::IKSolverFABRIK::solve(const Resources::SkeletonData& skeletonData, Pose& pose)
 {
     if (!mTarget)
     {
@@ -15,131 +15,108 @@ void Core::Animations::IKSolverFABRIK::solve(const Resources::SkeletonData& skel
         return;
     }
 
+    auto* scene = Engine::getInstance().getSystem<Scene::Scene>();
+    const glm::vec3 target = mTarget.resolve(scene)->getTargetWorldPosition();
+
+    PoseGlobalData globals;
+    globals.globalTransforms.resize(skeletonData.boneNameToIndexMap.size());
+
+    AnimationsUtils::buildPoseGlobalTransforms(pose, skeletonData.rootNode, skeletonData, globals);
+
     std::vector<glm::vec3> positions;
-    std::vector<float> lengths;
+    positions.reserve(mChainIndices.size());
 
     for (const int index : mChainIndices)
     {
-        positions.push_back(glm::vec3(bonesInfo.bones[index].animatedGlobalTransform[3]));
+        positions.push_back(glm::vec3(globals.globalTransforms[index][3]));
     }
+
+    std::vector<float> lengths;
+    lengths.reserve(positions.size() - 1);
+
+    float totalLength = 0.0f;
 
     for (size_t i = 0; i < positions.size() - 1; ++i)
     {
-        lengths.push_back(glm::distance(positions[i], positions[i + 1]));
-    }
-
-    const glm::vec3 rootPosition = positions.back();
-    float totalLength = 0;
-    for (const float length : lengths)
-    {
+        float length = glm::distance(positions[i], positions[i + 1]);
+        lengths.push_back(length);
         totalLength += length;
     }
 
-    // TODO
-    // create SceneContext to not access scene via Engine
-    auto* scene = Engine::getInstance().getSystem<Scene::Scene>();
-
-    if (glm::distance(positions.back(), mTarget.resolve(scene)->getTargetWorldPosition()) > totalLength)
+    if (const glm::vec3 rootPosition = positions.back(); glm::distance(rootPosition, target) > totalLength)
     {
         for (size_t i = positions.size() - 1; i > 0; --i)
         {
-            const float distanceToTarget =
-                glm::distance(mTarget.resolve(scene)->getTargetWorldPosition(), positions[i]);
-            const float boneLengthRatio = lengths[i - 1] / distanceToTarget;
-            positions[i - 1] = (1.0f - boneLengthRatio) * positions[i] +
-                               boneLengthRatio * mTarget.resolve(scene)->getTargetWorldPosition();
+            glm::vec3 direction = glm::normalize(target - positions[i]);
+
+            positions[i - 1] = positions[i] + direction * lengths[i - 1];
         }
     }
     else
     {
-        for (unsigned int iteration = 0; iteration < mMaxIterations; ++iteration)
+        for (uint32_t iteration = 0; iteration < mMaxIterations; ++iteration)
         {
-            positions[0] = mTarget.resolve(scene)->getTargetWorldPosition();
+            positions[0] = target;
+
             for (size_t i = 0; i < positions.size() - 1; ++i)
             {
-                const float currentDistance = glm::distance(positions[i + 1], positions[i]);
-                const float stretchingRatio = lengths[i] / currentDistance;
-                positions[i + 1] = (1.0f - stretchingRatio) * positions[i] + stretchingRatio * positions[i + 1];
+                glm::vec3 direction = glm::normalize(positions[i + 1] - positions[i]);
+
+                positions[i + 1] = positions[i] + direction * lengths[i];
             }
 
             positions.back() = rootPosition;
+
             for (size_t i = positions.size() - 1; i > 0; --i)
             {
-                const float currentDistance = glm::distance(positions[i - 1], positions[i]);
-                const float stretchingRatio = lengths[i - 1] / currentDistance;
-                positions[i - 1] = (1.0f - stretchingRatio) * positions[i] + stretchingRatio * positions[i - 1];
+                glm::vec3 direction = glm::normalize(positions[i - 1] - positions[i]);
+
+                positions[i - 1] = positions[i] + direction * lengths[i - 1];
             }
 
-            if (glm::distance(positions[0], mTarget.resolve(scene)->getTargetWorldPosition()) < mThreshold)
+            if (glm::distance(positions[0], target) < mThreshold)
             {
                 break;
             }
         }
     }
 
-    for (size_t i = mChainIndices.size() - 1; i > 0; --i)
+    AnimationsUtils::buildPoseGlobalTransforms(pose, skeletonData.rootNode, skeletonData, globals);
+
+    for (size_t i = 1; i < mChainIndices.size(); ++i)
     {
-        const int currentBoneIndex = mChainIndices[i];
-        const int childBoneIndex = mChainIndices[i - 1];
+        int joint = mChainIndices[i];
+        int child = mChainIndices[i - 1];
 
-        glm::vec3 currentBoneDirection =
-            glm::normalize(glm::vec3(bonesInfo.bones[childBoneIndex].animatedGlobalTransform[3]) -
-                           glm::vec3(bonesInfo.bones[currentBoneIndex].animatedGlobalTransform[3]));
-        glm::vec3 targetBoneDirection = glm::normalize(positions[i - 1] - positions[i]);
+        glm::vec3 currentDir = glm::normalize(glm::vec3(globals.globalTransforms[child][3]) -
+                                              glm::vec3(globals.globalTransforms[joint][3]));
 
-        if (const float dot = glm::dot(currentBoneDirection, targetBoneDirection); dot < 0.9999f)
+        glm::vec3 targetDir = glm::normalize(positions[i - 1] - positions[i]);
+
+        float dot = glm::clamp(glm::dot(currentDir, targetDir), -1.0f, 1.0f);
+
+        if (dot > 0.9999f)
         {
-            const float angle = acos(glm::clamp(dot, -1.0f, 1.0f));
-            glm::vec3 axis = glm::normalize(glm::cross(currentBoneDirection, targetBoneDirection));
-            glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), angle, axis);
-
-            applyRotationToHierarchy(skeletonData, rootNode, currentBoneIndex, rotation, bonesInfo, false);
+            continue;
         }
 
-        bonesInfo.bones[currentBoneIndex].animatedGlobalTransform[3] = glm::vec4(positions[i], 1.0f);
-    }
+        float angle = acos(dot);
 
-    const int effectorIdx = mChainIndices.front();
-    bonesInfo.bones[effectorIdx].animatedGlobalTransform[3] = glm::vec4(positions[0], 1.0f);
+        glm::vec3 axis = glm::normalize(glm::cross(currentDir, targetDir));
 
-    updateFullHierarchy(skeletonData, rootNode, glm::mat4(1.0f), bonesInfo);
-}
+        glm::quat worldDelta = glm::angleAxis(angle, axis);
 
-void Core::Animations::IKSolverFABRIK::updateFullHierarchy(const Resources::SkeletonData& skeletonData,
-                                                           const BoneNode& node, const glm::mat4& parentTransform,
-                                                           BonesInfo& bonesInfo)
-{
-    glm::mat4 currentGlobalTransform;
+        int parent = skeletonData.boneParents[joint];
 
-    if (const auto it = skeletonData.boneNameToIndexMap.find(node.name); it != skeletonData.boneNameToIndexMap.end())
-    {
-        const int index = it->second;
+        glm::quat parentRot(1, 0, 0, 0);
 
-        currentGlobalTransform = bonesInfo.bones[index].animatedGlobalTransform;
-
-        bool isIKBone = false;
-        for (const int chainIndex : mChainIndices)
+        if (parent >= 0)
         {
-            if (chainIndex == index)
-            {
-                isIKBone = true;
-                break;
-            }
+            parentRot = glm::quat_cast(globals.globalTransforms[parent]);
         }
 
-        if (!isIKBone)
-        {
-            currentGlobalTransform = parentTransform * bonesInfo.localTransforms[index];
-            bonesInfo.bones[index].animatedGlobalTransform = currentGlobalTransform;
-        }
-    }
-    else
-    {
-        currentGlobalTransform = parentTransform * node.localTransform;
-    }
+        glm::quat localDelta = glm::inverse(parentRot) * worldDelta * parentRot;
 
-    for (const auto& child : node.children)
-    {
-        updateFullHierarchy(skeletonData, child, currentGlobalTransform, bonesInfo);
+        pose.localTransforms[joint].rotation = glm::normalize(localDelta * pose.localTransforms[joint].rotation);
     }
 }
