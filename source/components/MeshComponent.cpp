@@ -1,8 +1,10 @@
 #include "MeshComponent.h"
-#include <functional>
+#include "animations/AnimInstance.h"
 #include "vk-renderer/buffers/UniformBuffer.h"
 #include "engine/Engine.h"
 #include "animations/AnimationsUtils.h"
+#include "animations/anim-graph/AnimGraph.h"
+#include "animations/anim-graph/nodes/AnimGraphClipNode.h"
 #include "asset-manager/AssetManager.h"
 #include "asset-manager/ModelLoader.h"
 #include "asset-manager/assets/MeshAsset.h"
@@ -55,6 +57,11 @@ void Core::Component::MeshComponent::onAdded()
     Logger::log(1, "%s: Mesh %s added for owner", __FUNCTION__, getOwner()->getName().c_str());
 
     Engine::getInstance().getSystem<Animations::Animator>()->addMesh(this);
+
+    mAnimGraph = std::make_shared<Animations::AnimGraph>();
+    const auto clipNode = std::make_shared<Animations::AnimGraphClipNode>(&mAnimations[mCurrentAnimationIndex]);
+    mAnimGraph->setRoot(clipNode);
+    mAnimInstance = std::make_unique<Animations::AnimInstance>(mAnimGraph);
 }
 
 void Core::Component::MeshComponent::onRemoved()
@@ -134,6 +141,20 @@ void Core::Component::MeshComponent::setSourceMesh(const std::string_view& path,
     mPrimitiveIndex = primitiveIndex;
 }
 
+void Core::Component::MeshComponent::setCurrentAnimationIndex(const uint32_t index)
+{
+    if (index < mAnimations.size())
+    {
+        mCurrentAnimationIndex = index;
+
+        // TODO
+        // remove after AnimGraph Editor and Asset will be implemented, for now we just need some graph to test
+        // animations
+        const auto clipNode = std::make_shared<Animations::AnimGraphClipNode>(&mAnimations[mCurrentAnimationIndex]);
+        mAnimGraph->setRoot(clipNode);
+    }
+}
+
 float Core::Component::MeshComponent::getWeightForBone(const std::string& boneName, float globalBlendFactor)
 {
     if (mBlendingMode == Animations::AnimationBlendingMode::Crossfade)
@@ -174,7 +195,8 @@ void Core::Component::MeshComponent::loadAnimationFromFile(const std::string_vie
             mShouldPlayAnimation = true;
         }
 
-        Logger::log(1, "Animation %s loaded and added for mesh %s", filePath.data(), uuids::to_string(getUUID()).c_str());
+        Logger::log(1, "Animation %s loaded and added for mesh %s", filePath.data(),
+                    uuids::to_string(getUUID()).c_str());
     }
 }
 

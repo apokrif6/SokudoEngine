@@ -1,14 +1,14 @@
 #pragma once
 
-#include "IKTargetComponent.h"
+#include "animations/AnimInstance.h"
 #include "animations/Skeleton.h"
+#include "animations/anim-graph/AnimGraph.h"
 #include "animations/ik/IIKSolver.h"
 #include "scene/objects/SceneObject.h"
 #include <utility>
 #include <vector>
 #include "vk-renderer/Primitive.h"
 
-// should be moved to Component folder, and renamed to MeshComponent
 namespace Core::Component
 {
 // right now every mesh is a skeletal mesh
@@ -44,6 +44,8 @@ public:
 
     [[nodiscard]] Animations::Skeleton& getSkeleton() { return mSkeleton; }
 
+    [[nodiscard]] std::unique_ptr<Animations::AnimInstance>& getAnimInstance() { return mAnimInstance; }
+
     [[nodiscard]] const std::vector<Animations::AnimationClip>& getAnimations() const { return mAnimations; }
 
     [[nodiscard]] bool hasAnimations() const { return !mAnimations.empty(); }
@@ -72,13 +74,7 @@ public:
 
     [[nodiscard]] uint16_t getCurrentAnimationIndex() const { return mCurrentAnimationIndex; }
 
-    void setCurrentAnimationIndex(uint32_t index)
-    {
-        if (index < mAnimations.size())
-        {
-            mCurrentAnimationIndex = index;
-        }
-    }
+    void setCurrentAnimationIndex(uint32_t index);
 
     [[nodiscard]] uint16_t getTargetAnimationIndex() const { return mTargetAnimationIndex; }
 
@@ -151,6 +147,11 @@ private:
     std::vector<Renderer::Primitive> mPrimitives;
     Animations::Skeleton mSkeleton;
 #pragma region Animation
+    // TODO
+    // remove later
+    std::shared_ptr<Animations::AnimGraph> mAnimGraph;
+    std::unique_ptr<Animations::AnimInstance> mAnimInstance;
+
     // TODO
     // I guess it should be moved to global animation manager, and mesh should store only shared pointers
     std::vector<Animations::AnimationClip> mAnimations;

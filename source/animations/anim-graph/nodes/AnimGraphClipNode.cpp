@@ -5,5 +5,5 @@
 
 Core::Animations::Pose Core::Animations::AnimGraphClipNode::evaluate(AnimationContext& context)
 {
-    return Animator::sampleClip(*mClip, mTime, *context.skeletonData, context.skeletonData->rootNode);
+    return Animator::sampleClip(*mClip, context.currentTime, *context.skeletonData, context.skeletonData->rootNode);
 }

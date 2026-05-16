@@ -1,4 +1,6 @@
 #include "Animator.h"
+
+#include "AnimInstance.h"
 #include "AnimationsUtils.h"
 #include "anim-graph/AnimationContext.h"
 
@@ -7,6 +9,11 @@ void Core::Animations::Animator::update(Renderer::VkRenderData& renderData, floa
     mAnimationBonesTransformCalculationTimer.start();
     for (Component::MeshComponent* mesh : mMeshes)
     {
+        if (mesh->getAnimInstance() == nullptr)
+        {
+            return;
+        }
+
         if (!mesh->hasAnimations() || !mesh->shouldPlayAnimation())
         {
             continue;
@@ -26,10 +33,6 @@ void Core::Animations::Animator::update(Renderer::VkRenderData& renderData, floa
 
 void Core::Animations::Animator::updateBonesTransform(Component::MeshComponent* mesh)
 {
-    // TODO
-    // waiting for AnimInstance
-    return;
-
     for (Renderer::Primitive& primitive : mesh->getPrimitives())
     {
         BonesInfo& bonesInfo = primitive.getBonesInfo();
@@ -40,9 +43,10 @@ void Core::Animations::Animator::updateBonesTransform(Component::MeshComponent* 
         const Skeleton& skeleton = mesh->getSkeleton();
 
         AnimationContext context;
+        context.currentTime = mesh->getCurrentAnimationTime();
         context.skeletonData = skeleton.getSkeletonData();
 
-        Pose pose;
+        Pose pose = mesh->getAnimInstance()->evaluate(context);
 
         buildGlobalTransforms(pose, skeleton.getRootNode(), *skeleton.getSkeletonData(), bonesInfo);
 
