@@ -1,5 +1,6 @@
 #include "Animator.h"
 #include "AnimationsUtils.h"
+#include "anim-graph/AnimationContext.h"
 
 void Core::Animations::Animator::update(Renderer::VkRenderData& renderData, float deltaTime)
 {
@@ -25,6 +26,10 @@ void Core::Animations::Animator::update(Renderer::VkRenderData& renderData, floa
 
 void Core::Animations::Animator::updateBonesTransform(Component::MeshComponent* mesh)
 {
+    // TODO
+    // waiting for AnimInstance
+    return;
+
     for (Renderer::Primitive& primitive : mesh->getPrimitives())
     {
         BonesInfo& bonesInfo = primitive.getBonesInfo();
@@ -32,41 +37,12 @@ void Core::Animations::Animator::updateBonesTransform(Component::MeshComponent* 
         bonesInfo.finalTransforms.resize(bonesInfoSize, glm::mat4(1.0));
         bonesInfo.localTransforms.resize(bonesInfoSize, glm::mat4(1.0f));
 
-        if (!mesh->hasAnimations())
-        {
-            continue;
-        }
-
-        const auto& animations = mesh->getAnimations();
         const Skeleton& skeleton = mesh->getSkeleton();
 
-        const AnimationClip& clipA = animations[mesh->getCurrentAnimationIndex()];
-        const float timeA = mesh->getCurrentAnimationTime();
+        AnimationContext context;
+        context.skeletonData = skeleton.getSkeletonData();
 
         Pose pose;
-
-        if (mesh->shouldBlendAnimations())
-        {
-            const AnimationClip& clipB = animations[mesh->getTargetAnimationIndex()];
-            const float timeB = timeA / clipA.duration * clipB.duration;
-
-            Pose poseA = sampleClip(clipA, timeA, *skeleton.getSkeletonData(), skeleton.getRootNode());
-
-            Pose poseB = sampleClip(clipB, timeB, *skeleton.getSkeletonData(), skeleton.getRootNode());
-
-            pose = blendPoses(poseA, poseB, mesh->getBlendFactor());
-        }
-        else
-        {
-            pose = sampleClip(clipA, timeA, *skeleton.getSkeletonData(), skeleton.getRootNode());
-        }
-
-        // TODO
-        // should create AnimationGraph and move those to AnimationGraph stack
-        for (const auto& solver : mesh->getIKSolvers())
-        {
-            solver->solve(*skeleton.getSkeletonData(), pose);
-        }
 
         buildGlobalTransforms(pose, skeleton.getRootNode(), *skeleton.getSkeletonData(), bonesInfo);
 
@@ -76,6 +52,7 @@ void Core::Animations::Animator::updateBonesTransform(Component::MeshComponent* 
         }
     }
 }
+
 void Core::Animations::Animator::buildGlobalTransforms(const Pose& pose, const BoneNode& rootNode,
                                                        const Resources::SkeletonData& skeletonData,
                                                        BonesInfo& bonesInfo)

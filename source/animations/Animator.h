@@ -23,6 +23,11 @@ public:
         }
     }
 
+    [[nodiscard]] static Pose sampleClip(const AnimationClip& clip, float time,
+                                         const Resources::SkeletonData& skeletonData, const BoneNode& rootNode);
+
+    [[nodiscard]] static Pose blendPoses(const Pose& poseA, const Pose& poseB, float blendFactor);
+
 private:
     std::vector<Component::MeshComponent*> mMeshes;
 
@@ -34,23 +39,19 @@ private:
     void buildGlobalTransformsRecursive(const Pose& pose, const BoneNode& node, const glm::mat4& parentTransform,
                                         const Resources::SkeletonData& skeletonData, BonesInfo& bonesInfo);
 
-    [[nodiscard]] Pose sampleClip(const AnimationClip& clip, float time, const Resources::SkeletonData& skeletonData,
-                                  const BoneNode& rootNode);
+    static void sampleClipRecursive(const AnimationClip& clip, float time, const BoneNode& node,
+                                    const Resources::SkeletonData& skeletonData, Pose& pose);
 
-    [[nodiscard]] Pose blendPoses(const Pose& poseA, const Pose& poseB, float blendFactor);
+    static glm::vec3 interpolatePositionClip(const std::vector<KeyframeVec3>& keyframes, float animationTime);
 
-    void sampleClipRecursive(const AnimationClip& clip, float time, const BoneNode& node,
-                             const Resources::SkeletonData& skeletonData, Pose& pose);
+    static glm::quat interpolateRotationClip(const std::vector<KeyframeQuat>& keyframes, float animationTime);
 
-    glm::vec3 interpolatePositionClip(const std::vector<KeyframeVec3>& keyframes, float animationTime);
+    static glm::vec3 interpolateScaleClip(const std::vector<KeyframeVec3>& keyframes, float animationTime);
 
-    glm::quat interpolateRotationClip(const std::vector<KeyframeQuat>& keyframes, float animationTime);
+    static BoneTransform getBoneTransform(const AnimationChannel* channel, float time);
 
-    glm::vec3 interpolateScaleClip(const std::vector<KeyframeVec3>& keyframes, float animationTime);
-
-    BoneTransform getBoneTransform(const AnimationChannel* channel, float time);
-
-    BoneTransform blendTransforms(const BoneTransform& transformA, const BoneTransform& transformB, float blendFactor);
+    static BoneTransform blendTransforms(const BoneTransform& transformA, const BoneTransform& transformB,
+                                         float blendFactor);
 
     Timer mAnimationBonesTransformCalculationTimer;
 };
