@@ -1,4 +1,4 @@
-if (TARGET imgui_node_editor::imgui_node_editor)
+if (TARGET imgui-node-editor::imgui-node-editor)
     return()
 endif ()
 
@@ -7,32 +7,29 @@ get_target_property(_IMGUI_INC imgui::imgui INTERFACE_INCLUDE_DIRECTORIES)
 
 set(IMGUI_NODE_EDITOR_ROOT_DIR "${_IMGUI_INC}/imgui-node-editor")
 
-set(imgui-node-editor-Sources
-        ${IMGUI_NODE_EDITOR_ROOT_DIR}/crude_json.h
-        ${IMGUI_NODE_EDITOR_ROOT_DIR}/imgui_bezier_math.h
-        ${IMGUI_NODE_EDITOR_ROOT_DIR}/imgui_bezier_math.inl
-        ${IMGUI_NODE_EDITOR_ROOT_DIR}/imgui_canvas.h
-        ${IMGUI_NODE_EDITOR_ROOT_DIR}/imgui_extra_math.h
-        ${IMGUI_NODE_EDITOR_ROOT_DIR}/imgui_extra_math.inl
-        ${IMGUI_NODE_EDITOR_ROOT_DIR}/imgui_node_editor_internal.h
-        ${IMGUI_NODE_EDITOR_ROOT_DIR}/imgui_node_editor_internal.inl
-        ${IMGUI_NODE_EDITOR_ROOT_DIR}/imgui_node_editor.h
+find_library(IMGUI_NODE_EDITOR_LIB
+        NAMES imgui-node-editor imgui_node_editor
+        PATHS "${_IMGUI_INC}/../lib"
+        "${_IMGUI_INC}/../debug/lib"
 )
 
-add_library(imgui-node-editor STATIC ${imgui-node-editor-Sources})
+if (NOT IMGUI_NODE_EDITOR_LIB)
+    message(FATAL_ERROR "Не удалось найти библиотеку imgui-node-editor в vcpkg!")
+endif ()
 
-target_include_directories(imgui-node-editor PUBLIC
-        ${IMGUI_NODE_EDITOR_ROOT_DIR}
+add_library(imgui-node-editor STATIC IMPORTED GLOBAL)
+
+set_target_properties(imgui-node-editor PROPERTIES
+        IMPORTED_LOCATION "${IMGUI_NODE_EDITOR_LIB}"
+        INTERFACE_INCLUDE_DIRECTORIES "${IMGUI_NODE_EDITOR_ROOT_DIR}"
 )
 
-target_link_libraries(imgui-node-editor PUBLIC imgui::imgui)
+target_link_libraries(imgui-node-editor INTERFACE imgui::imgui)
 
 add_library(imgui-node-editor::imgui-node-editor ALIAS imgui-node-editor)
-
-source_group(TREE ${IMGUI_NODE_EDITOR_ROOT_DIR} FILES ${imgui-node-editor-Sources})
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(
         imgui-node-editor
-        REQUIRED_VARS IMGUI_NODE_EDITOR_ROOT_DIR
+        REQUIRED_VARS IMGUI_NODE_EDITOR_ROOT_DIR IMGUI_NODE_EDITOR_LIB
 )
