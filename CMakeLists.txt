@@ -17,6 +17,8 @@ endif ()
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${ENGINE_RESOURCES})
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(Vulkan REQUIRED)
@@ -29,6 +31,7 @@ find_package(unofficial-spirv-reflect REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(nfd REQUIRED)
 find_package(stduuid REQUIRED)
+find_package(imgui-node-editor REQUIRED)
 
 file(GLOB GLSL_SOURCE_FILES
         shaders/*.frag
@@ -77,6 +80,7 @@ set(DEPENDENCIES
         yaml-cpp
         nfd::nfd
         stduuid
+        imgui-node-editor::imgui-node-editor
 )
 
 if (NOT MSVC)
