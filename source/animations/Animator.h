@@ -31,7 +31,7 @@ public:
 private:
     std::vector<Component::MeshComponent*> mMeshes;
 
-    void updateBonesTransform(Component::MeshComponent* mesh);
+    void updateBonesTransform(Component::MeshComponent* mesh, float deltaTime);
 
     void buildGlobalTransforms(const Pose& pose, const BoneNode& rootNode, const Resources::SkeletonData& skeletonData,
                                BonesInfo& bonesInfo);

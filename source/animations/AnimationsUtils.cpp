@@ -80,16 +80,16 @@ Core::Animations::BoneNode Core::Animations::AnimationsUtils::buildBoneHierarchy
 }
 
 void Core::Animations::AnimationsUtils::buildPoseGlobalTransforms(const Pose& pose, const BoneNode& rootNode,
-                                                              const Resources::SkeletonData& skeletonData,
-                                                              PoseGlobalData& outData)
+                                                                  const Resources::SkeletonData& skeletonData,
+                                                                  PoseGlobalData& outData)
 {
     buildPoseGlobalTransformsRecursive(pose, rootNode, glm::mat4(1.0f), skeletonData, outData);
 }
 
 void Core::Animations::AnimationsUtils::buildPoseGlobalTransformsRecursive(const Pose& pose, const BoneNode& node,
-                                                                       const glm::mat4& parentTransform,
-                                                                       const Resources::SkeletonData& skeletonData,
-                                                                       PoseGlobalData& outData)
+                                                                           const glm::mat4& parentTransform,
+                                                                           const Resources::SkeletonData& skeletonData,
+                                                                           PoseGlobalData& outData)
 {
     glm::mat4 localTransform = node.localTransform;
     glm::mat4 globalTransform;

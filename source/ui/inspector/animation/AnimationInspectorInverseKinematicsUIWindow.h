@@ -58,10 +58,7 @@ class AnimationInspectorInverseKinematicsUIWindow : public UIWindow<AnimationIns
                     }
                     ComponentPicker::Render<Component::IKTargetComponent>(
                         "Target", solver->getTargetUUID(), Engine::getInstance().getSystem<Scene::Scene>(),
-                        [&](const uuids::uuid& selectedUUID)
-                        {
-                            solver->setTargetUUID(selectedUUID);
-                        });
+                        [&](const uuids::uuid& selectedUUID) { solver->setTargetUUID(selectedUUID); });
                     ImGui::TreePop();
                 }
                 ImGui::PopID();

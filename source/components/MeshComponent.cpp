@@ -59,8 +59,6 @@ void Core::Component::MeshComponent::onAdded()
     Engine::getInstance().getSystem<Animations::Animator>()->addMesh(this);
 
     mAnimGraph = std::make_shared<Animations::AnimGraph>();
-    const auto clipNode = std::make_shared<Animations::AnimGraphClipNode>(&mAnimations[mCurrentAnimationIndex]);
-    mAnimGraph->setRoot(clipNode);
     mAnimInstance = std::make_unique<Animations::AnimInstance>(mAnimGraph);
 }
 
@@ -141,20 +139,6 @@ void Core::Component::MeshComponent::setSourceMesh(const std::string_view& path,
     mPrimitiveIndex = primitiveIndex;
 }
 
-void Core::Component::MeshComponent::setCurrentAnimationIndex(const uint32_t index)
-{
-    if (index < mAnimations.size())
-    {
-        mCurrentAnimationIndex = index;
-
-        // TODO
-        // remove after AnimGraph Editor and Asset will be implemented, for now we just need some graph to test
-        // animations
-        const auto clipNode = std::make_shared<Animations::AnimGraphClipNode>(&mAnimations[mCurrentAnimationIndex]);
-        mAnimGraph->setRoot(clipNode);
-    }
-}
-
 float Core::Component::MeshComponent::getWeightForBone(const std::string& boneName, float globalBlendFactor)
 {
     if (mBlendingMode == Animations::AnimationBlendingMode::Crossfade)
@@ -191,7 +175,6 @@ void Core::Component::MeshComponent::loadAnimationFromFile(const std::string_vie
 
         if (mAnimations.size() == 1)
         {
-            mCurrentAnimationIndex = 0;
             mShouldPlayAnimation = true;
         }
 
@@ -212,7 +195,6 @@ YAML::Node Core::Component::MeshComponent::serialize() const
         node["animations"].push_back(animPath);
     }
     node["shouldPlayAnimation"] = mShouldPlayAnimation;
-    node["currentAnimationIndex"] = mCurrentAnimationIndex;
 
     return node;
 }
@@ -220,7 +202,6 @@ YAML::Node Core::Component::MeshComponent::serialize() const
 void Core::Component::MeshComponent::deserialize(const YAML::Node& node)
 {
     mShouldPlayAnimation = node["shouldPlayAnimation"].as<bool>();
-    mCurrentAnimationIndex = node["currentAnimationIndex"].as<uint16_t>();
 
     mPrimitives.clear();
     mAnimationFiles.clear();

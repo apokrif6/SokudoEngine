@@ -1,6 +1,7 @@
 #pragma once
 
 #include "anim-graph/AnimGraph.h"
+#include "anim-graph/nodes/AnimGraphNodeRuntime.h"
 
 #include <string>
 #include <unordered_map>
@@ -27,11 +28,15 @@ public:
     [[nodiscard]] float getFloat(AnimParamID id) const;
     [[nodiscard]] bool getBool(AnimParamID id) const;
 
+    [[nodiscard]] AnimGraphNodeRuntime& getRuntime(const AnimGraph::NodeID id) { return mNodeRuntime[id]; }
+
 private:
     std::shared_ptr<AnimGraph> mGraph;
 
     std::unordered_map<uint32_t, float> mFloatParameters;
     std::unordered_map<uint32_t, bool> mBoolParameters;
+
+    std::unordered_map<AnimGraph::NodeID, AnimGraphNodeRuntime> mNodeRuntime;
 };
 
 } // namespace Core::Animations

@@ -39,8 +39,6 @@ class AnimationSequenceUIWindow : public UIWindow<AnimationSequenceUIWindow>
             return true;
         }
 
-        drawGeneralInfo(meshComponent);
-
         ImGui::Separator();
 
         bool shouldDrawDebugSkeleton = meshComponent->shouldDrawDebugSkeleton();
@@ -90,48 +88,6 @@ class AnimationSequenceUIWindow : public UIWindow<AnimationSequenceUIWindow>
         ImGui::End();
 
         return true;
-    }
-
-    static void drawGeneralInfo(Component::MeshComponent* meshComponent)
-    {
-        const auto& animations = meshComponent->getAnimations();
-        const int currentIndex = meshComponent->getCurrentAnimationIndex();
-        const auto& currentClip = animations[currentIndex];
-        float timeInTicks = meshComponent->getCurrentAnimationTime();
-        const float duration = currentClip.duration;
-        const std::string overlay = std::format("{:.1f} / {:.1f}", timeInTicks, duration);
-
-        ImGui::BulletText("Clip Name: %s", currentClip.name.c_str());
-        ImGui::BulletText("Duration: %.2f ticks", duration);
-        ImGui::BulletText("Ticks Per Second: %.1f", currentClip.ticksPerSecond);
-
-        ImGui::Text("Timeline (Ticks)");
-        if (ImGui::SliderFloat("##TimelineSlider", &timeInTicks, 0.0f, duration, overlay.c_str()))
-        {
-            meshComponent->setShouldPlayAnimation(false);
-            meshComponent->setAnimationTime(timeInTicks);
-        }
-
-        if (meshComponent->shouldPlayAnimation())
-        {
-            if (ImGui::Button("Pause"))
-            {
-                meshComponent->setShouldPlayAnimation(false);
-            }
-        }
-        else
-        {
-            if (ImGui::Button("Play"))
-            {
-                meshComponent->setShouldPlayAnimation(true);
-            }
-        }
-
-        ImGui::SameLine();
-        if (ImGui::Button("Reset"))
-        {
-            meshComponent->setAnimationTime(0.0f);
-        }
     }
 
     static void drawBoneNodeRecursive(const Animations::BoneNode& node, Component::MeshComponent* meshComponent)

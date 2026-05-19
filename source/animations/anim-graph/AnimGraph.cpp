@@ -4,5 +4,12 @@
 
 Core::Animations::Pose Core::Animations::AnimGraph::evaluate(AnimationContext& context) const
 {
-    return mRoot->evaluate(context);
+    const AnimGraphNode* root = getNode(mRoot);
+
+    if (root == nullptr)
+    {
+        return {};
+    }
+
+    return root->evaluate(context);
 }

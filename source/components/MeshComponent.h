@@ -46,6 +46,8 @@ public:
 
     [[nodiscard]] std::unique_ptr<Animations::AnimInstance>& getAnimInstance() { return mAnimInstance; }
 
+    [[nodiscard]] std::shared_ptr<Animations::AnimGraph>& getAnimGraph() { return mAnimGraph; }
+
     [[nodiscard]] const std::vector<Animations::AnimationClip>& getAnimations() const { return mAnimations; }
 
     [[nodiscard]] bool hasAnimations() const { return !mAnimations.empty(); }
@@ -66,15 +68,7 @@ public:
 
     void setShouldDrawDebugSkeleton(bool shouldDraw) { mShouldDrawDebugSkeleton = shouldDraw; }
 
-    [[nodiscard]] float getCurrentAnimationTime() const { return mCurrentAnimationTime; }
-
-    void setAnimationTime(float time) { mCurrentAnimationTime = time; }
-
     void setSourceMesh(const std::string_view& path, uint32_t primitiveIndex);
-
-    [[nodiscard]] uint16_t getCurrentAnimationIndex() const { return mCurrentAnimationIndex; }
-
-    void setCurrentAnimationIndex(uint32_t index);
 
     [[nodiscard]] uint16_t getTargetAnimationIndex() const { return mTargetAnimationIndex; }
 
@@ -129,8 +123,6 @@ public:
         }
     }
 
-    [[nodiscard]] Animations::AnimationClip& getCurrentAnimation() { return mAnimations[mCurrentAnimationIndex]; }
-
     [[nodiscard]] std::string_view getMeshFilePath() const { return mMeshFilePath; }
 
     [[nodiscard]] int32_t getPrimitiveIndex() const { return mPrimitiveIndex; }
@@ -158,9 +150,7 @@ private:
     bool mShouldPlayAnimation = false;
     bool mShouldBlendAnimations = false;
     bool mShouldDrawDebugSkeleton = false;
-    uint16_t mCurrentAnimationIndex = 0;
     uint16_t mTargetAnimationIndex = 0;
-    float mCurrentAnimationTime = 0.f;
 
     Animations::AnimationBlendingMode mBlendingMode = Animations::AnimationBlendingMode::Crossfade;
     float mBlendFactor = 0.f;

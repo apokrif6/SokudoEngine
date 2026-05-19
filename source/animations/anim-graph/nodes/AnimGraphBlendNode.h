@@ -13,15 +13,11 @@ public:
 
     void setB(std::shared_ptr<AnimGraphNode> nodeB) { mNodeB = std::move(nodeB); }
 
-    void setAlpha(const float alpha) { mAlpha = alpha; }
-
-    Pose evaluate(AnimationContext& context) override;
+    Pose evaluate(AnimationContext& context) const override;
 
 private:
     std::shared_ptr<AnimGraphNode> mNodeA;
     std::shared_ptr<AnimGraphNode> mNodeB;
-
-    float mAlpha = 0.f;
 };
 
 } // namespace Core::Animations

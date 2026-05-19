@@ -194,6 +194,8 @@ void Core::Renderer::UserInterface::update(VkRenderData& renderData, float delta
     UI::MiscUIWindow::renderBody();
     UI::ViewportUIWindow::renderBody();
 
+    Editor::Animations::AnimGraphEditorWindow::draw();
+
     ImGui::EndFrame();
 }
 

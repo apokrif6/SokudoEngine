@@ -12,7 +12,7 @@ public:
 
     void addSolver(std::unique_ptr<IIKSolver> solver) { mSolvers.push_back(std::move(solver)); }
 
-    Pose evaluate(AnimationContext& context) override;
+    Pose evaluate(AnimationContext& context) const override;
 
 private:
     std::shared_ptr<AnimGraphNode> mInput;

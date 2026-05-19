@@ -60,9 +60,11 @@ public:
     static BoneNode buildBoneHierarchy(const aiNode* node);
 
     static void buildPoseGlobalTransforms(const Pose& pose, const BoneNode& rootNode,
-                                      const Resources::SkeletonData& skeletonData, PoseGlobalData& outData);
+                                          const Resources::SkeletonData& skeletonData, PoseGlobalData& outData);
 
-    static void buildPoseGlobalTransformsRecursive(const Pose& pose, const BoneNode& node, const glm::mat4& parentTransform,
-                                               const Resources::SkeletonData& skeletonData, PoseGlobalData& outData);
+    static void buildPoseGlobalTransformsRecursive(const Pose& pose, const BoneNode& node,
+                                                   const glm::mat4& parentTransform,
+                                                   const Resources::SkeletonData& skeletonData,
+                                                   PoseGlobalData& outData);
 };
 } // namespace Core::Animations

@@ -10,9 +10,12 @@ class AnimInstance;
 struct AnimationContext
 {
     float deltaTime = 0.f;
-    float currentTime = 0.f;
 
     AnimInstance* instance = nullptr;
     const Resources::SkeletonData* skeletonData = nullptr;
+
+    // TODO
+    // implement something like AnimationsDatabase and store only reference to it in context
+    const std::vector<AnimationClip>* animations = nullptr;
 };
 } // namespace Core::Animations

@@ -2,7 +2,7 @@
 
 #include "animations/anim-graph/AnimationContext.h"
 
-Core::Animations::Pose Core::Animations::AnimGraphIKNode::evaluate(AnimationContext& context)
+Core::Animations::Pose Core::Animations::AnimGraphIKNode::evaluate(AnimationContext& context) const
 {
     Pose pose = mInput->evaluate(context);
 

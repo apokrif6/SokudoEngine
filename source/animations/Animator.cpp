@@ -4,12 +4,12 @@
 #include "AnimationsUtils.h"
 #include "anim-graph/AnimationContext.h"
 
-void Core::Animations::Animator::update(Renderer::VkRenderData& renderData, float deltaTime)
+void Core::Animations::Animator::update(Renderer::VkRenderData& renderData, const float deltaTime)
 {
     mAnimationBonesTransformCalculationTimer.start();
     for (Component::MeshComponent* mesh : mMeshes)
     {
-        if (mesh->getAnimInstance() == nullptr)
+        if (mesh->getAnimInstance() == nullptr || mesh->getAnimGraph()->getRoot().is_nil())
         {
             return;
         }
@@ -19,34 +19,29 @@ void Core::Animations::Animator::update(Renderer::VkRenderData& renderData, floa
             continue;
         }
 
-        const auto& clip = mesh->getAnimations()[mesh->getCurrentAnimationIndex()];
-        const float ticksPerSecond = clip.ticksPerSecond != 0 ? clip.ticksPerSecond : 30.0f;
-
-        const float newTime = mesh->getCurrentAnimationTime() + deltaTime * ticksPerSecond;
-        mesh->setAnimationTime(fmod(newTime, clip.duration));
-
-        updateBonesTransform(mesh);
+        updateBonesTransform(mesh, deltaTime);
     }
 
     renderData.rdAnimationBonesTransformCalculationTime = mAnimationBonesTransformCalculationTimer.stop();
 }
 
-void Core::Animations::Animator::updateBonesTransform(Component::MeshComponent* mesh)
+void Core::Animations::Animator::updateBonesTransform(Component::MeshComponent* mesh, const float deltaTime)
 {
+    const Skeleton& skeleton = mesh->getSkeleton();
+
+    AnimationContext context;
+    context.deltaTime = deltaTime;
+    context.skeletonData = skeleton.getSkeletonData();
+    context.animations = &mesh->getAnimations();
+
+    const Pose pose = mesh->getAnimInstance()->evaluate(context);
+
     for (Renderer::Primitive& primitive : mesh->getPrimitives())
     {
         BonesInfo& bonesInfo = primitive.getBonesInfo();
         const size_t bonesInfoSize = bonesInfo.bones.size();
         bonesInfo.finalTransforms.resize(bonesInfoSize, glm::mat4(1.0));
         bonesInfo.localTransforms.resize(bonesInfoSize, glm::mat4(1.0f));
-
-        const Skeleton& skeleton = mesh->getSkeleton();
-
-        AnimationContext context;
-        context.currentTime = mesh->getCurrentAnimationTime();
-        context.skeletonData = skeleton.getSkeletonData();
-
-        Pose pose = mesh->getAnimInstance()->evaluate(context);
 
         buildGlobalTransforms(pose, skeleton.getRootNode(), *skeleton.getSkeletonData(), bonesInfo);
 
