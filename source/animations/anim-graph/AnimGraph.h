@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AnimGraphLink.h"
 #include "nodes/AnimGraphNode.h"
 #include <memory>
 #include "uuid.h"
@@ -10,15 +11,6 @@ class AnimGraph
 {
 public:
     using NodeID = uuids::uuid;
-
-    NodeID addNode(std::shared_ptr<AnimGraphNode> node)
-    {
-        const NodeID id = generateUUID();
-
-        mNodes[id] = std::move(node);
-
-        return id;
-    }
 
     template <typename T, typename... Args> std::shared_ptr<T> createNode(Args&&... args)
     {
@@ -31,38 +23,32 @@ public:
 
     void removeNode(const NodeID& id) { mNodes.erase(id); }
 
-    AnimGraphNode* getNode(const NodeID& id)
-    {
-        if (const auto it = mNodes.find(id); it != mNodes.end())
-        {
-            return it->second.get();
-        }
+    [[nodiscard]] AnimGraphNode* getNode(const NodeID& id);
 
-        return nullptr;
-    }
-
-    [[nodiscard]] const AnimGraphNode* getNode(const NodeID& id) const
-    {
-        if (const auto it = mNodes.find(id); it != mNodes.end())
-        {
-            return it->second.get();
-        }
-
-        return nullptr;
-    }
+    [[nodiscard]] const AnimGraphNode* getNode(const NodeID& id) const;
 
     [[nodiscard]] const std::unordered_map<NodeID, std::shared_ptr<AnimGraphNode>>& getNodes() const { return mNodes; }
 
-    void setRoot(const NodeID& id) { mRoot = id; }
+    void addLink(const AnimGraphLink& link) { mLinks.push_back(link); }
 
-    [[nodiscard]] const NodeID& getRoot() const { return mRoot; }
+    [[nodiscard]] const std::vector<AnimGraphLink>& getLinks() const { return mLinks; }
+
+    [[nodiscard]] const AnimGraphLink* findLinkByInputPin(PinID pin) const;
+
+    [[nodiscard]] const AnimGraphNode* findNodeByPin(PinID pin) const;
+
+    void setOutputNode(const NodeID& id) { mOutputNode = id; }
+
+    [[nodiscard]] const NodeID& getOutputNode() const { return mOutputNode; }
 
     Pose evaluate(AnimationContext& context) const;
 
 private:
-    NodeID mRoot;
+    NodeID mOutputNode;
 
     std::unordered_map<NodeID, std::shared_ptr<AnimGraphNode>> mNodes;
+
+    std::vector<AnimGraphLink> mLinks;
 };
 
 } // namespace Core::Animations

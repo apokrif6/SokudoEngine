@@ -8,11 +8,13 @@ namespace Core::Animations
 class AnimGraphOutputPoseNode final : public AnimGraphNode
 {
 public:
-    explicit AnimGraphOutputPoseNode(std::shared_ptr<AnimGraphNode> input) : mInput(std::move(input)) {}
+    explicit AnimGraphOutputPoseNode();
 
     Pose evaluate(AnimationContext& context) const override;
 
+    [[nodiscard]] PinID getInputPin() const { return mInputPin; }
+
 private:
-    std::shared_ptr<AnimGraphNode> mInput;
+    PinID mInputPin{};
 };
 } // namespace Core::Animations

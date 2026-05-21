@@ -1,6 +1,8 @@
 #pragma once
 
 #include "uuid.h"
+#include "animations/anim-graph/AnimGraphPin.h"
+
 #include <variant>
 
 namespace Core::Animations
@@ -41,10 +43,38 @@ public:
         return nullptr;
     }
 
+    [[nodiscard]] const std::vector<AnimGraphPin>& getInputs() const { return mInputs; }
+
+    [[nodiscard]] const std::vector<AnimGraphPin>& getOutputs() const { return mOutputs; }
+
 protected:
     virtual void onPropertyChanged(const std::string&) {}
 
+    PinID createInputPin(const AnimGraphValueType type)
+    {
+        const PinID id = sNextPinID++;
+
+        mInputs.push_back({id, AnimGraphPinKind::Input, type});
+
+        return id;
+    }
+
+    PinID createOutputPin(const AnimGraphValueType type)
+    {
+        const PinID id = sNextPinID++;
+
+        mOutputs.push_back({id, AnimGraphPinKind::Output, type});
+
+        return id;
+    }
+
+    std::vector<AnimGraphPin> mInputs;
+
+    std::vector<AnimGraphPin> mOutputs;
+
 private:
+    inline static PinID sNextPinID = 1;
+
     uuids::uuid mUUID = generateUUID();
 
     std::unordered_map<std::string, PropertyValue> mProperties;

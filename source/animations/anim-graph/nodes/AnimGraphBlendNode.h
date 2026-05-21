@@ -9,15 +9,21 @@ namespace Core::Animations
 class AnimGraphBlendNode final : public AnimGraphNode
 {
 public:
-    void setA(std::shared_ptr<AnimGraphNode> nodeA) { mNodeA = std::move(nodeA); }
+    AnimGraphBlendNode();
 
-    void setB(std::shared_ptr<AnimGraphNode> nodeB) { mNodeB = std::move(nodeB); }
+    [[nodiscard]] PinID getInputAPin() const { return mInputA; }
+
+    [[nodiscard]] PinID getInputBPin() const { return mInputB; }
+
+    [[nodiscard]] PinID getOutputPin() const { return mOutputPin; }
 
     Pose evaluate(AnimationContext& context) const override;
 
 private:
-    std::shared_ptr<AnimGraphNode> mNodeA;
-    std::shared_ptr<AnimGraphNode> mNodeB;
+    PinID mInputA{};
+    PinID mInputB{};
+
+    PinID mOutputPin{};
 };
 
 } // namespace Core::Animations

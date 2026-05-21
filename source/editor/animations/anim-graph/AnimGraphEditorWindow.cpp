@@ -3,6 +3,7 @@
 #include "imgui.h"
 #include "animations/anim-graph/nodes/AnimGraphBlendNode.h"
 #include "animations/anim-graph/nodes/AnimGraphClipNode.h"
+#include "animations/anim-graph/nodes/AnimGraphOutputPoseNode.h"
 #include "components/MeshComponent.h"
 
 namespace ed = ax::NodeEditor;
@@ -13,6 +14,36 @@ void Editor::Animations::AnimGraphEditorWindow::open(Core::Component::MeshCompon
 {
     mCurrentMeshComponent = meshComponent;
     mIsOpen = true;
+
+    if (!meshComponent)
+    {
+        return;
+    }
+
+    const auto graph = meshComponent->getAnimGraph();
+
+    if (!graph)
+    {
+        return;
+    }
+
+    bool hasOutput = false;
+
+    for (const auto& node : graph->getNodes() | std::views::values)
+    {
+        if (dynamic_cast<Core::Animations::AnimGraphOutputPoseNode*>(node.get()))
+        {
+            hasOutput = true;
+            break;
+        }
+    }
+
+    if (!hasOutput)
+    {
+        const auto output = graph->createNode<Core::Animations::AnimGraphOutputPoseNode>();
+
+        graph->setOutputNode(output->getUUID());
+    }
 }
 
 void Editor::Animations::AnimGraphEditorWindow::draw()
@@ -43,8 +74,6 @@ void Editor::Animations::AnimGraphEditorWindow::draw()
         node->setProperty("clipIndex", 0);
 
         CreateEditorNode(node->getUUID());
-
-        animGraph->setRoot(node->getUUID());
     }
 
     ImGui::SameLine();
@@ -151,6 +180,11 @@ void Editor::Animations::AnimGraphEditorWindow::draw()
             {
                 blendNode->setProperty("alpha", alpha);
             }
+        }
+
+        if (auto* outputPoseNode = dynamic_cast<Core::Animations::AnimGraphOutputPoseNode*>(node.get()))
+        {
+            ImGui::TextColored(ImVec4(0.6f, 0.f, 1.f, 1.f), "Output Pose Node");
         }
 
         ImGui::Separator();

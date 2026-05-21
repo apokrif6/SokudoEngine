@@ -28,8 +28,14 @@ public:
 
     [[nodiscard]] static Pose blendPoses(const Pose& poseA, const Pose& poseB, float blendFactor);
 
+    [[nodiscard]] static Pose createReferencePose(const Resources::SkeletonData& skeletonData,
+                                                  const BoneNode& rootNode);
+
 private:
     std::vector<Component::MeshComponent*> mMeshes;
+
+    static void buildReferencePoseRecursive(const BoneNode& node, const Resources::SkeletonData& skeletonData,
+                                            Pose& pose);
 
     void updateBonesTransform(Component::MeshComponent* mesh, float deltaTime);
 

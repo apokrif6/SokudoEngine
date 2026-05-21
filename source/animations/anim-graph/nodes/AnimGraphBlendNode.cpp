@@ -2,22 +2,50 @@
 
 #include "animations/AnimationsData.h"
 #include "animations/Animator.h"
+#include "animations/anim-graph/AnimGraphLink.h"
+#include "animations/anim-graph/AnimationContext.h"
+
+Core::Animations::AnimGraphBlendNode::AnimGraphBlendNode()
+{
+    mInputA = createInputPin(AnimGraphValueType::Pose);
+
+    mInputB = createInputPin(AnimGraphValueType::Pose);
+
+    mOutputPin = createOutputPin(AnimGraphValueType::Pose);
+
+    setProperty("alpha", 0.5f);
+}
 
 Core::Animations::Pose Core::Animations::AnimGraphBlendNode::evaluate(AnimationContext& context) const
 {
-    if (!mNodeA || !mNodeB)
+    const auto* graph = context.graph;
+    if (!graph)
     {
         return {};
     }
 
+    const auto* linkA = graph->findLinkByInputPin(mInputA);
+    const auto* linkB = graph->findLinkByInputPin(mInputB);
+    if (!linkA || !linkB)
+    {
+        return {};
+    }
+
+    const auto* nodeA = graph->findNodeByPin(linkA->startPin);
+    const auto* nodeB = graph->findNodeByPin(linkB->startPin);
+    if (!nodeA || !nodeB)
+    {
+        return {};
+    }
+
+    const Pose poseA = nodeA->evaluate(context);
+    const Pose poseB = nodeB->evaluate(context);
+
     float alpha = 0.5f;
-    if (auto* property = getProperty("alpha"))
+    if (const auto* property = getProperty("alpha"))
     {
         alpha = std::get<float>(*property);
     }
-
-    const Pose poseA = mNodeA->evaluate(context);
-    const Pose poseB = mNodeB->evaluate(context);
 
     return Animator::blendPoses(poseA, poseB, alpha);
 }

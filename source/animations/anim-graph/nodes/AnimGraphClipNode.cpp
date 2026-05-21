@@ -3,6 +3,8 @@
 #include "animations/Animator.h"
 #include "animations/anim-graph/AnimationContext.h"
 
+Core::Animations::AnimGraphClipNode::AnimGraphClipNode() { mOutputPin = createOutputPin(AnimGraphValueType::Pose); }
+
 Core::Animations::Pose Core::Animations::AnimGraphClipNode::evaluate(AnimationContext& context) const
 {
     auto& runtime = context.instance->getRuntime(getUUID());
