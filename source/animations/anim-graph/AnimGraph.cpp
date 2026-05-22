@@ -38,7 +38,7 @@ const Core::Animations::AnimGraphLink* Core::Animations::AnimGraph::findLinkByIn
     return nullptr;
 }
 
-const Core::Animations::AnimGraphNode* Core::Animations::AnimGraph::findNodeByPin(PinID pin) const
+const Core::Animations::AnimGraphNode* Core::Animations::AnimGraph::findNodeByPin(const PinID pin) const
 {
     for (const auto& [id, node] : mNodes)
     {
@@ -52,6 +52,12 @@ const Core::Animations::AnimGraphNode* Core::Animations::AnimGraph::findNodeByPi
     }
 
     return nullptr;
+}
+
+void Core::Animations::AnimGraph::removeLinksByPin(PinID pinId)
+{
+    std::erase_if(mLinks,
+                  [pinId](const AnimGraphLink& link) { return link.startPin == pinId || link.endPin == pinId; });
 }
 
 Core::Animations::Pose Core::Animations::AnimGraph::evaluate(AnimationContext& context) const

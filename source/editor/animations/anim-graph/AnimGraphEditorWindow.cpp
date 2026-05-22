@@ -67,29 +67,42 @@ void Editor::Animations::AnimGraphEditorWindow::draw()
 
     ImGui::Begin("AnimGraph Editor", &mIsOpen);
 
-    if (ImGui::Button("Add Clip Node"))
-    {
-        const auto node = animGraph->createNode<Core::Animations::AnimGraphClipNode>();
-
-        node->setProperty("clipIndex", 0);
-
-        CreateEditorNode(node->getUUID());
-    }
-
-    ImGui::SameLine();
-
-    if (ImGui::Button("Add Blend Node"))
-    {
-        const auto node = animGraph->createNode<Core::Animations::AnimGraphBlendNode>();
-
-        node->setProperty("alpha", 0.5f);
-
-        CreateEditorNode(node->getUUID());
-    }
-
-    ImGui::Separator();
-
     ed::Begin("AnimGraph");
+
+    const auto openPopupPosition = ImGui::GetMousePos();
+
+    ed::Suspend();
+    if (ed::ShowBackgroundContextMenu())
+    {
+        ImGui::OpenPopup("GraphContextMenu");
+    }
+
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8, 8));
+
+    if (ImGui::BeginPopup("GraphContextMenu"))
+    {
+        if (ImGui::MenuItem("Add Clip Node"))
+        {
+            const auto node = animGraph->createNode<Core::Animations::AnimGraphClipNode>();
+            node->setProperty("clipIndex", 0);
+
+            createEditorNode(node->getUUID());
+            ed::SetNodePosition(mEditorNodes[node->getUUID()].NodeId, openPopupPosition);
+        }
+
+        if (ImGui::MenuItem("Add Blend Node"))
+        {
+            const auto node = animGraph->createNode<Core::Animations::AnimGraphBlendNode>();
+            node->setProperty("alpha", 0.5f);
+
+            createEditorNode(node->getUUID());
+            ed::SetNodePosition(mEditorNodes[node->getUUID()].NodeId, openPopupPosition);
+        }
+
+        ImGui::EndPopup();
+    }
+    ImGui::PopStyleVar();
+    ed::Resume();
 
     for (auto& [uuid, node] : animGraph->getNodes())
     {
@@ -100,21 +113,14 @@ void Editor::Animations::AnimGraphEditorWindow::draw()
 
         if (!mEditorNodes.contains(uuid))
         {
-            CreateEditorNode(uuid);
+            createEditorNode(uuid);
         }
 
         const auto& editorData = mEditorNodes[uuid];
 
         ed::BeginNode(editorData.NodeId);
 
-        ed::BeginPin(editorData.InputPinId, ed::PinKind::Input);
-        ImGui::Text("-> In");
-        ed::EndPin();
-
-        ImGui::Spacing();
-
-        ImGui::Text("Node");
-        ImGui::TextWrapped("%s", uuids::to_string(uuid).c_str());
+        ImGui::Text("%s", uuids::to_string(uuid).c_str());
 
         ImGui::Separator();
 
@@ -187,14 +193,118 @@ void Editor::Animations::AnimGraphEditorWindow::draw()
             ImGui::TextColored(ImVec4(0.6f, 0.f, 1.f, 1.f), "Output Pose Node");
         }
 
-        ImGui::Separator();
+        ImGui::Spacing();
 
-        ed::BeginPin(editorData.OutputPinId, ed::PinKind::Output);
-        ImGui::Text("Out ->");
-        ed::EndPin();
+        ImGui::BeginGroup();
+
+        for (const auto& inputPin : editorData.InputPins)
+        {
+            ed::BeginPin(inputPin.EditorId, ed::PinKind::Input);
+
+            ImGui::Text("-> In");
+
+            ed::EndPin();
+        }
+
+        ImGui::EndGroup();
+
+        ImGui::SameLine();
+
+        ImGui::Dummy(ImVec2(120, 0));
+
+        ImGui::SameLine();
+
+        ImGui::BeginGroup();
+
+        for (const auto& outputPin : editorData.OutputPins)
+        {
+            ed::BeginPin(outputPin.EditorId, ed::PinKind::Output);
+
+            ImGui::Text("Out ->");
+
+            ed::EndPin();
+        }
+
+        ImGui::EndGroup();
 
         ed::EndNode();
     }
+
+    for (const auto& link : mEditorLinks)
+    {
+        ed::Link(link.linkId, link.StartPinId, link.EndPinId);
+    }
+
+    if (ed::BeginCreate())
+    {
+        ed::PinId startPinId;
+        ed::PinId endPinId;
+
+        if (ed::QueryNewLink(&startPinId, &endPinId))
+        {
+            if (startPinId && endPinId)
+            {
+                const auto* startNodeUuid = findNodeByPin(startPinId.Get());
+                const auto* endNodeUuid = findNodeByPin(endPinId.Get());
+
+                if (!startNodeUuid || !endNodeUuid)
+                {
+                    ed::RejectNewItem();
+                }
+                else
+                {
+                    const auto& startNode = mEditorNodes[*startNodeUuid];
+                    const auto& endNode = mEditorNodes[*endNodeUuid];
+
+                    const bool startIsInput = containsPin(startNode.InputPins, startPinId.Get());
+                    const bool endIsInput = containsPin(endNode.InputPins, endPinId.Get());
+
+                    if (startIsInput == endIsInput)
+                    {
+                        ed::RejectNewItem(ImColor(255, 0, 0), 2.f);
+                    }
+                    else
+                    {
+                        Core::Animations::PinID inputEditorPin;
+                        Core::Animations::PinID outputEditorPin;
+
+                        if (startIsInput)
+                        {
+                            inputEditorPin = startPinId.Get();
+                            outputEditorPin = endPinId.Get();
+                        }
+                        else
+                        {
+                            inputEditorPin = endPinId.Get();
+                            outputEditorPin = startPinId.Get();
+                        }
+
+                        if (ed::AcceptNewItem())
+                        {
+                            removeLinksConnectedToPin(inputEditorPin, animGraph.get());
+
+                            Core::Animations::AnimGraphLink runtimeLink{};
+
+                            runtimeLink.id = generateEditorId();
+                            runtimeLink.startPin = findRuntimePin(outputEditorPin);
+                            runtimeLink.endPin = findRuntimePin(inputEditorPin);
+
+                            animGraph->addLink(runtimeLink);
+
+                            EditorLinkData editorLink{};
+                            editorLink.linkId = runtimeLink.id;
+                            editorLink.StartPinId = outputEditorPin;
+                            editorLink.EndPinId = inputEditorPin;
+
+                            mEditorLinks.push_back(editorLink);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    ed::EndCreate();
 
     ed::End();
 
@@ -227,17 +337,97 @@ void Editor::Animations::AnimGraphEditorWindow::draw()
     ed::SetCurrentEditor(nullptr);
 }
 
-void Editor::Animations::AnimGraphEditorWindow::CreateEditorNode(const uuids::uuid& uuid)
+void Editor::Animations::AnimGraphEditorWindow::createEditorNode(const uuids::uuid& uuid)
 {
     if (mEditorNodes.contains(uuid))
     {
         return;
     }
 
+    const auto animGraph = mCurrentMeshComponent->getAnimGraph();
+
+    const auto* node = animGraph->getNode(uuid);
+
+    if (!node)
+    {
+        return;
+    }
+
     EditorNodeData data{};
-    data.NodeId = mNextId++;
-    data.InputPinId = mNextId++;
-    data.OutputPinId = mNextId++;
+
+    data.NodeId = generateEditorId();
+
+    if (const auto* clipNode = dynamic_cast<const Core::Animations::AnimGraphClipNode*>(node))
+    {
+        data.OutputPins.push_back({.EditorId = generateEditorId(), .RuntimePinId = clipNode->getOutputPin()});
+    }
+
+    else if (const auto* blendNode = dynamic_cast<const Core::Animations::AnimGraphBlendNode*>(node))
+    {
+        data.InputPins.push_back({.EditorId = generateEditorId(), .RuntimePinId = blendNode->getInputAPin()});
+        data.InputPins.push_back({.EditorId = generateEditorId(), .RuntimePinId = blendNode->getInputBPin()});
+        data.OutputPins.push_back({.EditorId = generateEditorId(), .RuntimePinId = blendNode->getOutputPin()});
+    }
+
+    else if (const auto* outputNode = dynamic_cast<const Core::Animations::AnimGraphOutputPoseNode*>(node))
+    {
+        data.InputPins.push_back({.EditorId = generateEditorId(), .RuntimePinId = outputNode->getInputPin()});
+    }
 
     mEditorNodes[uuid] = data;
 }
+
+const uuids::uuid* Editor::Animations::AnimGraphEditorWindow::findNodeByPin(const Core::Animations::PinID editorPinId)
+{
+    for (const auto& [uuid, data] : mEditorNodes)
+    {
+        if (containsPin(data.InputPins, editorPinId) || containsPin(data.OutputPins, editorPinId))
+        {
+            return &uuid;
+        }
+    }
+
+    return nullptr;
+}
+
+Core::Animations::PinID
+Editor::Animations::AnimGraphEditorWindow::findRuntimePin(const Core::Animations::PinID editorPinId)
+{
+    for (const auto& [uuid, node] : mEditorNodes)
+    {
+        for (const auto& pin : node.InputPins)
+        {
+            if (pin.EditorId == editorPinId)
+            {
+                return pin.RuntimePinId;
+            }
+        }
+
+        for (const auto& pin : node.OutputPins)
+        {
+            if (pin.EditorId == editorPinId)
+            {
+                return pin.RuntimePinId;
+            }
+        }
+    }
+
+    return {};
+}
+
+bool Editor::Animations::AnimGraphEditorWindow::containsPin(const std::vector<EditorPinData>& pins,
+                                                            const uint64_t editorPinId)
+{
+    return std::ranges::any_of(pins, [editorPinId](const EditorPinData& pin) { return pin.EditorId == editorPinId; });
+}
+
+void Editor::Animations::AnimGraphEditorWindow::removeLinksConnectedToPin(Core::Animations::PinID editorPinId,
+                                                                          Core::Animations::AnimGraph* animGraph)
+{
+    std::erase_if(mEditorLinks, [editorPinId](const EditorLinkData& link)
+                  { return link.StartPinId == editorPinId || link.EndPinId == editorPinId; });
+
+    animGraph->removeLinksByPin(findRuntimePin(editorPinId));
+}
+
+uint64_t Editor::Animations::AnimGraphEditorWindow::generateEditorId() { return mNextEditorId++; }

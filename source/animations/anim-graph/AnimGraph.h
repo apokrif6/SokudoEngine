@@ -37,6 +37,8 @@ public:
 
     [[nodiscard]] const AnimGraphNode* findNodeByPin(PinID pin) const;
 
+    void removeLinksByPin(PinID pinId);
+
     void setOutputNode(const NodeID& id) { mOutputNode = id; }
 
     [[nodiscard]] const NodeID& getOutputNode() const { return mOutputNode; }
