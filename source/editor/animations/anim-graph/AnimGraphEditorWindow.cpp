@@ -120,6 +120,8 @@ void Editor::Animations::AnimGraphEditorWindow::draw()
 
         ed::BeginNode(editorData.NodeId);
 
+        ImGui::PushID(static_cast<int>(editorData.NodeId));
+
         ImGui::Text("%s", uuids::to_string(uuid).c_str());
 
         ImGui::Separator();
@@ -226,6 +228,8 @@ void Editor::Animations::AnimGraphEditorWindow::draw()
         }
 
         ImGui::EndGroup();
+
+        ImGui::PopID();
 
         ed::EndNode();
     }
