@@ -12,6 +12,7 @@ bool Core::UI::SceneUIWindow::getBody()
 {
     if (!ImGui::Begin("Scene"))
     {
+        ImGui::End();
         return false;
     }
 

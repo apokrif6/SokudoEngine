@@ -18,6 +18,7 @@ class MiscUIWindow : public UIWindow<MiscUIWindow>
     {
         if (!ImGui::Begin("Misc"))
         {
+            ImGui::End();
             return false;
         }
 

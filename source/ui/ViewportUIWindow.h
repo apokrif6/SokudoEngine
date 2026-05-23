@@ -17,6 +17,7 @@ class ViewportUIWindow : public UIWindow<ViewportUIWindow>
     {
         if (!ImGui::Begin("Viewport"))
         {
+            ImGui::End();
             return false;
         }
 
