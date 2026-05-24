@@ -1,6 +1,7 @@
 #pragma once
 
 #include "uuid.h"
+#include <algorithm>
 
 namespace Core
 {

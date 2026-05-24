@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <cstring>
 #include "vulkan/vulkan_core.h"
 
 namespace Core::Renderer::Debug
