@@ -10,6 +10,7 @@
 #include <array>
 #include <complex.h>
 #include "descriptors/DescriptorLayoutCache.h"
+#include <memory>
 
 namespace Core::Assets
 {
