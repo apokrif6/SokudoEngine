@@ -39,38 +39,54 @@ public:
 
         if (ImGui::BeginPopup(popupID.c_str()))
         {
-            ImGui::TextDisabled("Components of type %s", typeid(T).name());
-            ImGui::Separator();
+            DrawPopupContent<T>(currentUUID, scene, onSelectedCallback);
+            ImGui::EndPopup();
+        }
+    }
 
-            for (const auto components = scene->getAllComponentsOfType<T>(); auto* component : components)
+    template <typename T>
+    static void RenderOnlyPopup(const std::string& popupID, const uuids::uuid& currentUUID, Scene::Scene* scene,
+                                const std::function<void(const uuids::uuid&)>& onSelectedCallback)
+    {
+        if (ImGui::BeginPopup(popupID.c_str()))
+        {
+            DrawPopupContent<T>(currentUUID, scene, onSelectedCallback);
+            ImGui::EndPopup();
+        }
+    }
+
+private:
+    template <typename T>
+    static void DrawPopupContent(const uuids::uuid& currentUUID, Scene::Scene* scene,
+                                 const std::function<void(const uuids::uuid&)>& onSelectedCallback)
+    {
+        ImGui::TextDisabled("Components of type %s", typeid(T).name());
+        ImGui::Separator();
+
+        for (const auto components = scene->getAllComponentsOfType<T>(); auto* component : components)
+        {
+            if (!component || !component->getOwner())
             {
-                if (!component || !component->getOwner())
-                {
-                    continue;
-                }
-
-                const auto& owner = component->getOwner();
-
-                const bool selected = component->getUUID() == currentUUID;
-
-                std::string labelText = owner->getName() + " [" + std::string(typeid(T).name()) + "]";
-
-                if (ImGui::Selectable(labelText.c_str(), selected))
-                {
-                    onSelectedCallback(component->getUUID());
-                    ImGui::CloseCurrentPopup();
-                }
+                continue;
             }
 
-            ImGui::Separator();
+            const auto& owner = component->getOwner();
+            const bool selected = component->getUUID() == currentUUID;
+            std::string labelText = owner->getName() + " [" + std::string(typeid(T).name()) + "]";
 
-            if (ImGui::Selectable("Clear", currentUUID.is_nil()))
+            if (ImGui::Selectable(labelText.c_str(), selected))
             {
-                onSelectedCallback(uuids::uuid{});
+                onSelectedCallback(component->getUUID());
                 ImGui::CloseCurrentPopup();
             }
+        }
 
-            ImGui::EndPopup();
+        ImGui::Separator();
+
+        if (ImGui::Selectable("Clear", currentUUID.is_nil()))
+        {
+            onSelectedCallback(uuids::uuid{});
+            ImGui::CloseCurrentPopup();
         }
     }
 };

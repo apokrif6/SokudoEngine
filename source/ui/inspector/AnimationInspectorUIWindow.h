@@ -43,8 +43,6 @@ class AnimationInspectorUIWindow : public UIWindow<AnimationInspectorUIWindow>
             return true;
         }
 
-        AnimationInspectorInverseKinematicsUIWindow::renderBody(meshComponent);
-
         if (ImGui::Button("Edit Anim Graph"))
         {
             if (meshComponent->getAnimGraph())

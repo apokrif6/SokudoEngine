@@ -3,9 +3,12 @@
 #include "imgui.h"
 #include "animations/anim-graph/nodes/AnimGraphBlendNode.h"
 #include "animations/anim-graph/nodes/AnimGraphClipNode.h"
+#include "animations/anim-graph/nodes/AnimGraphIKNode.h"
 #include "animations/anim-graph/nodes/AnimGraphOutputPoseNode.h"
 #include "components/MeshComponent.h"
 #include "editor/styles/NodeEditorStyle.h"
+#include "engine/Engine.h"
+#include "ui/inspector/animation/AnimationInspectorInverseKinematicsUIWindow.h"
 
 namespace ed = ax::NodeEditor;
 
@@ -102,6 +105,14 @@ void Editor::Animations::AnimGraphEditorWindow::draw()
             ed::SetNodePosition(mEditorNodes[node->getUUID()].NodeId, openPopupPosition);
         }
 
+        if (ImGui::MenuItem("Add IK Node"))
+        {
+            const auto node = animGraph->createNode<Core::Animations::AnimGraphIKNode>();
+
+            createEditorNode(node->getUUID());
+            ed::SetNodePosition(mEditorNodes[node->getUUID()].NodeId, openPopupPosition);
+        }
+
         ImGui::EndPopup();
     }
     ImGui::PopStyleVar();
@@ -132,6 +143,10 @@ void Editor::Animations::AnimGraphEditorWindow::draw()
         else if (dynamic_cast<Core::Animations::AnimGraphBlendNode*>(node.get()))
         {
             ImGui::TextColored(ImVec4(0.3f, 0.7f, 1.f, 1.f), "Blend");
+        }
+        else if (dynamic_cast<Core::Animations::AnimGraphIKNode*>(node.get()))
+        {
+            ImGui::TextColored(ImVec4(0.9f, 0.6f, 0.2f, 1.f), "IK Solver");
         }
         else if (dynamic_cast<Core::Animations::AnimGraphOutputPoseNode*>(node.get()))
         {
@@ -203,6 +218,30 @@ void Editor::Animations::AnimGraphEditorWindow::draw()
             if (ImGui::SliderFloat("Alpha", &alpha, 0.0f, 1.0f))
             {
                 blendNode->setProperty("alpha", alpha);
+            }
+        }
+
+        if (auto* IKNode = dynamic_cast<Core::Animations::AnimGraphIKNode*>(node.get()))
+        {
+            ImGui::Separator();
+
+            bool signalFromNode = false;
+            int targetPickerSolverIndex = -1;
+
+            Core::UI::AnimationInspectorInverseKinematicsUIWindow::renderBody(
+                IKNode->getSolvers(), mCurrentMeshComponent, signalFromNode, targetPickerSolverIndex);
+
+            if (signalFromNode)
+            {
+                mIKSolverPopupOpenRequest = true;
+                mIKSolverPopupRequestNode = uuid;
+            }
+
+            if (targetPickerSolverIndex != -1)
+            {
+                mIKTargetPickerOpenRequest = true;
+                mIKTargetPickerRequestNode = uuid;
+                mIKTargetPickerRequestSolverIndex = targetPickerSolverIndex;
             }
         }
 
@@ -343,6 +382,44 @@ void Editor::Animations::AnimGraphEditorWindow::draw()
         ImGui::EndPopup();
     }
 
+    if (mIKSolverPopupOpenRequest)
+    {
+        ImGui::OpenPopup("CreateIKSolverPopup");
+        mIKSolverPopupOpenRequest = false;
+    }
+
+    if (const auto targetNode = animGraph->getNode(mIKSolverPopupRequestNode))
+    {
+        if (auto* IKNode = dynamic_cast<Core::Animations::AnimGraphIKNode*>(targetNode))
+        {
+            Core::UI::AnimationInspectorInverseKinematicsUIWindow::drawModal(IKNode->getSolvers(),
+                                                                             mCurrentMeshComponent);
+        }
+    }
+
+    if (mIKTargetPickerOpenRequest)
+    {
+        ImGui::OpenPopup("IKNodeTargetDropdownPopup");
+        mIKTargetPickerOpenRequest = false;
+    }
+
+    if (const auto targetNode = animGraph->getNode(mIKTargetPickerRequestNode))
+    {
+        if (auto* IKNode = dynamic_cast<Core::Animations::AnimGraphIKNode*>(targetNode))
+        {
+            if (const auto& solvers = IKNode->getSolvers();
+                mIKTargetPickerRequestSolverIndex >= 0 && mIKTargetPickerRequestSolverIndex < solvers.size())
+            {
+                auto& solver = solvers[mIKTargetPickerRequestSolverIndex];
+
+                Core::UI::ComponentPicker::RenderOnlyPopup<Core::Component::IKTargetComponent>(
+                    "IKNodeTargetDropdownPopup", solver->getTargetUUID(),
+                    Core::Engine::getInstance().getSystem<Core::Scene::Scene>(),
+                    [&](const uuids::uuid& selectedUUID) { solver->setTargetUUID(selectedUUID); });
+            }
+        }
+    }
+
     ed::SetCurrentEditor(nullptr);
 }
 
@@ -370,14 +447,17 @@ void Editor::Animations::AnimGraphEditorWindow::createEditorNode(const uuids::uu
     {
         data.OutputPins.push_back({.EditorId = generateEditorId(), .RuntimePinId = clipNode->getOutputPin()});
     }
-
     else if (const auto* blendNode = dynamic_cast<const Core::Animations::AnimGraphBlendNode*>(node))
     {
         data.InputPins.push_back({.EditorId = generateEditorId(), .RuntimePinId = blendNode->getInputAPin()});
         data.InputPins.push_back({.EditorId = generateEditorId(), .RuntimePinId = blendNode->getInputBPin()});
         data.OutputPins.push_back({.EditorId = generateEditorId(), .RuntimePinId = blendNode->getOutputPin()});
     }
-
+    else if (const auto* IKNode = dynamic_cast<const Core::Animations::AnimGraphIKNode*>(node))
+    {
+        data.InputPins.push_back({.EditorId = generateEditorId(), .RuntimePinId = IKNode->getInputPin()});
+        data.OutputPins.push_back({.EditorId = generateEditorId(), .RuntimePinId = IKNode->getOutputPin()});
+    }
     else if (const auto* outputNode = dynamic_cast<const Core::Animations::AnimGraphOutputPoseNode*>(node))
     {
         data.InputPins.push_back({.EditorId = generateEditorId(), .RuntimePinId = outputNode->getInputPin()});

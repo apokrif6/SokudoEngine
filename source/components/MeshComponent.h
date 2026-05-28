@@ -111,18 +111,6 @@ public:
 
     [[nodiscard]] float getWeightForBone(const std::string& boneName, float globalBlendFactor);
 
-    [[nodiscard]] const std::vector<std::unique_ptr<Animations::IIKSolver>>& getIKSolvers() const { return mIKSolvers; }
-
-    void addIKSolver(std::unique_ptr<Animations::IIKSolver> solver) { mIKSolvers.push_back(std::move(solver)); }
-
-    void removeIKSolver(const size_t index)
-    {
-        if (index < mIKSolvers.size())
-        {
-            mIKSolvers.erase(mIKSolvers.begin() + index);
-        }
-    }
-
     [[nodiscard]] std::string_view getMeshFilePath() const { return mMeshFilePath; }
 
     [[nodiscard]] int32_t getPrimitiveIndex() const { return mPrimitiveIndex; }
@@ -156,8 +144,6 @@ private:
     float mBlendFactor = 0.f;
     std::vector<Animations::AnimationMask> mMasks;
     int mCurrentMaskIndex = -1;
-
-    std::vector<std::unique_ptr<Animations::IIKSolver>> mIKSolvers;
 #pragma endregion
     // metadata for serialization
     // probably should be moved to other place (I don't know where exactly)

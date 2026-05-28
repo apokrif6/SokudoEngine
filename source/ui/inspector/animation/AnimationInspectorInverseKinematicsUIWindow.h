@@ -5,7 +5,7 @@
 #include "animations/ik/IKSolverCCD.h"
 #include "animations/ik/IKSolverFABRIK.h"
 #include "ui/ComponentPickerUIWindow.h"
-
+#include "engine/Engine.h"
 #include <ranges>
 #include <vector>
 #include <string>
@@ -17,11 +17,18 @@ class AnimationInspectorInverseKinematicsUIWindow : public UIWindow<AnimationIns
 {
     friend class UIWindow;
 
-    static bool getBody(Component::MeshComponent* meshComponent)
+    static bool getBody(std::vector<std::unique_ptr<Animations::IIKSolver>>& solvers,
+                        Component::MeshComponent* meshComponent, bool& openPopupSignal,
+                        int& openTargetPickerSolverIndexSignal)
     {
-        ImGui::SeparatorText("InverseKinematics");
+        if (!meshComponent)
+        {
+            return false;
+        }
 
-        if (auto& solvers = meshComponent->getIKSolvers(); solvers.empty())
+        const auto& skeleton = meshComponent->getSkeleton();
+
+        if (solvers.empty())
         {
             ImGui::TextDisabled("No active IK solvers.");
         }
@@ -35,8 +42,8 @@ class AnimationInspectorInverseKinematicsUIWindow : public UIWindow<AnimationIns
                 const std::string solverTypePrefix =
                     solver->getType() == Animations::AnimationSolverType::FABRIK ? "FABRIK" : "CCD";
 
-                const std::string startBone = meshComponent->getSkeleton().getBoneName(chain.back());
-                const std::string endBone = meshComponent->getSkeleton().getBoneName(chain.front());
+                const std::string startBone = skeleton.getBoneName(chain.back());
+                const std::string endBone = skeleton.getBoneName(chain.front());
 
                 ImGui::PushID(i);
                 if (ImGui::TreeNodeEx(reinterpret_cast<void*>(static_cast<intptr_t>(i)),
@@ -49,16 +56,34 @@ class AnimationInspectorInverseKinematicsUIWindow : public UIWindow<AnimationIns
                     {
                         solver->setMaxIterations(iterations);
                     }
-                    if (ImGui::Button("Remove Solver", ImVec2(-1, 0)))
+                    if (ImGui::Button("Remove Solver"))
                     {
-                        meshComponent->removeIKSolver(i);
+                        solvers.erase(solvers.begin() + i);
                         ImGui::TreePop();
                         ImGui::PopID();
                         break;
                     }
-                    ComponentPicker::Render<Component::IKTargetComponent>(
-                        "Target", solver->getTargetUUID(), Engine::getInstance().getSystem<Scene::Scene>(),
-                        [&](const uuids::uuid& selectedUUID) { solver->setTargetUUID(selectedUUID); });
+
+                    std::string targetLabel = "None (Click to select)";
+
+                    if (!solver->getTargetUUID().is_nil())
+                    {
+                        if (const auto object = Engine::getInstance().getSystem<Scene::Scene>()->findComponentByUUID(
+                                solver->getTargetUUID()))
+                        {
+                            targetLabel = object->getOwner()->getName();
+                        }
+                        else
+                        {
+                            targetLabel = "Missing component";
+                        }
+                    }
+
+                    if (ImGui::Button(targetLabel.c_str()))
+                    {
+                        openTargetPickerSolverIndexSignal = i;
+                    }
+
                     ImGui::TreePop();
                 }
                 ImGui::PopID();
@@ -66,15 +91,27 @@ class AnimationInspectorInverseKinematicsUIWindow : public UIWindow<AnimationIns
         }
 
         ImGui::Spacing();
-        if (ImGui::Button("Add New IK Chain...", ImVec2(-1, 0)))
+        if (ImGui::Button("Add New IK Chain..."))
         {
-            ImGui::OpenPopup("CreateIKSolverPopup");
+            openPopupSignal = true;
         }
+
+        return true;
+    }
+
+public:
+    static void drawModal(std::vector<std::unique_ptr<Animations::IIKSolver>>& solvers,
+                          Component::MeshComponent* meshComponent)
+    {
+        if (!meshComponent)
+        {
+            return;
+        }
+
+        const auto& skeletonData = meshComponent->getSkeleton().getSkeletonData();
 
         if (ImGui::BeginPopupModal("CreateIKSolverPopup", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
         {
-            const auto& skeletonData = meshComponent->getSkeleton().getSkeletonData();
-
             static int startIndex = -1;
             static int endIndex = -1;
 
@@ -117,7 +154,6 @@ class AnimationInspectorInverseKinematicsUIWindow : public UIWindow<AnimationIns
                 {
                     ImGui::TextDisabled("Select Root bone first...");
                 }
-
                 ImGui::EndChild();
 
                 ImGui::EndTable();
@@ -142,13 +178,13 @@ class AnimationInspectorInverseKinematicsUIWindow : public UIWindow<AnimationIns
             {
                 ImGui::BeginDisabled();
             }
+
             if (ImGui::Button("Create", ImVec2(120, 0)))
             {
                 if (const std::vector<int> chain = meshComponent->getSkeleton().buildBonesChain(startIndex, endIndex);
                     !chain.empty())
                 {
                     std::unique_ptr<Animations::IIKSolver> newSolver;
-
                     if (solveType == Animations::AnimationSolverType::FABRIK)
                     {
                         newSolver = std::make_unique<Animations::IKSolverFABRIK>(chain);
@@ -157,7 +193,8 @@ class AnimationInspectorInverseKinematicsUIWindow : public UIWindow<AnimationIns
                     {
                         newSolver = std::make_unique<Animations::IKSolverCCD>(chain);
                     }
-                    meshComponent->addIKSolver(std::move(newSolver));
+
+                    solvers.push_back(std::move(newSolver));
 
                     startIndex = -1;
                     endIndex = -1;
@@ -179,8 +216,6 @@ class AnimationInspectorInverseKinematicsUIWindow : public UIWindow<AnimationIns
 
             ImGui::EndPopup();
         }
-
-        return true;
     }
 
     static void drawBoneHierarchy(const Animations::BoneNode& node, int& selectedIndex,

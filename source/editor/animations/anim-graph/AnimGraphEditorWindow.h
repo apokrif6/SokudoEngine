@@ -57,8 +57,17 @@ private:
     inline static std::vector<EditorLinkData> mEditorLinks{};
     inline static uint64_t mNextEditorId = 1;
 
+#pragma region Popups
     inline static UI::PopupRequest mClipSelectorPopup{};
     inline static bool mClipSelectorPopupOpen = false;
     inline static uuids::uuid mClipSelectorPopupOpenNode;
+
+    inline static bool mIKSolverPopupOpenRequest = false;
+    inline static uuids::uuid mIKSolverPopupRequestNode;
+
+    inline static bool mIKTargetPickerOpenRequest = false;
+    inline static uuids::uuid mIKTargetPickerRequestNode;
+    inline static int mIKTargetPickerRequestSolverIndex = -1;
+#pragma endregion
 };
 } // namespace Editor::Animations

@@ -8,14 +8,30 @@ namespace Core::Animations
 class AnimGraphIKNode final : public AnimGraphNode
 {
 public:
-    explicit AnimGraphIKNode(std::shared_ptr<AnimGraphNode> input) : mInput(std::move(input)) {}
+    explicit AnimGraphIKNode();
+
+    [[nodiscard]] PinID getInputPin() const { return mInputPin; }
+
+    [[nodiscard]] PinID getOutputPin() const { return mOutputPin; }
 
     void addSolver(std::unique_ptr<IIKSolver> solver) { mSolvers.push_back(std::move(solver)); }
+
+    void removeSolver(const size_t index)
+    {
+        if (index < mSolvers.size())
+        {
+            mSolvers.erase(mSolvers.begin() + index);
+        }
+    }
+
+    std::vector<std::unique_ptr<IIKSolver>>& getSolvers() { return mSolvers; }
 
     Pose evaluate(AnimationContext& context) const override;
 
 private:
-    std::shared_ptr<AnimGraphNode> mInput;
+    PinID mInputPin{};
+
+    PinID mOutputPin{};
 
     std::vector<std::unique_ptr<IIKSolver>> mSolvers;
 };
