@@ -5,6 +5,7 @@
 #include "animations/anim-graph/nodes/AnimGraphClipNode.h"
 #include "animations/anim-graph/nodes/AnimGraphOutputPoseNode.h"
 #include "components/MeshComponent.h"
+#include "editor/styles/NodeEditorStyle.h"
 
 namespace ed = ax::NodeEditor;
 
@@ -69,6 +70,8 @@ void Editor::Animations::AnimGraphEditorWindow::draw()
 
     ed::Begin("AnimGraph");
 
+    UI::NodeEditorStyle::push();
+
     const auto openPopupPosition = ImGui::GetMousePos();
 
     ed::Suspend();
@@ -122,13 +125,27 @@ void Editor::Animations::AnimGraphEditorWindow::draw()
 
         ImGui::PushID(static_cast<int>(editorData.NodeId));
 
-        ImGui::Text("%s", uuids::to_string(uuid).c_str());
+        if (dynamic_cast<Core::Animations::AnimGraphClipNode*>(node.get()))
+        {
+            ImGui::TextColored(ImVec4(0.3f, 1.f, 0.3f, 1.f), "Clip");
+        }
+        else if (dynamic_cast<Core::Animations::AnimGraphBlendNode*>(node.get()))
+        {
+            ImGui::TextColored(ImVec4(0.3f, 0.7f, 1.f, 1.f), "Blend");
+        }
+        else if (dynamic_cast<Core::Animations::AnimGraphOutputPoseNode*>(node.get()))
+        {
+            ImGui::TextColored(ImVec4(0.8f, 0.4f, 1.f, 1.f), "Output Pose");
+        }
 
         ImGui::Separator();
 
+        ImGui::BeginGroup();
+
+        ImGui::PushItemWidth(220.0f);
+
         if (const auto* clipNode = dynamic_cast<Core::Animations::AnimGraphClipNode*>(node.get()))
         {
-            ImGui::TextColored(ImVec4(0, 1, 0, 1), "Clip Node");
             const auto& clips = mCurrentMeshComponent->getAnimations();
             int clipIndex = 0;
             if (auto* property = clipNode->getProperty("clipIndex"))
@@ -175,8 +192,6 @@ void Editor::Animations::AnimGraphEditorWindow::draw()
 
         if (auto* blendNode = dynamic_cast<Core::Animations::AnimGraphBlendNode*>(node.get()))
         {
-            ImGui::TextColored(ImVec4(0, 0.7f, 1, 1), "Blend Node");
-
             float alpha = 0.5f;
 
             if (auto* property = blendNode->getProperty("alpha"))
@@ -184,15 +199,11 @@ void Editor::Animations::AnimGraphEditorWindow::draw()
                 alpha = std::get<float>(*property);
             }
 
+            ImGui::SetNextItemWidth(140.f);
             if (ImGui::SliderFloat("Alpha", &alpha, 0.0f, 1.0f))
             {
                 blendNode->setProperty("alpha", alpha);
             }
-        }
-
-        if (auto* outputPoseNode = dynamic_cast<Core::Animations::AnimGraphOutputPoseNode*>(node.get()))
-        {
-            ImGui::TextColored(ImVec4(0.6f, 0.f, 1.f, 1.f), "Output Pose Node");
         }
 
         ImGui::Spacing();
@@ -202,30 +213,22 @@ void Editor::Animations::AnimGraphEditorWindow::draw()
         for (const auto& inputPin : editorData.InputPins)
         {
             ed::BeginPin(inputPin.EditorId, ed::PinKind::Input);
+            ImGui::Text("In");
+            ed::EndPin();
+        }
 
-            ImGui::Text("-> In");
+        ImGui::SameLine(160);
 
+        for (const auto& outputPin : editorData.OutputPins)
+        {
+            ed::BeginPin(outputPin.EditorId, ed::PinKind::Output);
+            ImGui::Text("Out");
             ed::EndPin();
         }
 
         ImGui::EndGroup();
 
-        ImGui::SameLine();
-
-        ImGui::Dummy(ImVec2(120, 0));
-
-        ImGui::SameLine();
-
-        ImGui::BeginGroup();
-
-        for (const auto& outputPin : editorData.OutputPins)
-        {
-            ed::BeginPin(outputPin.EditorId, ed::PinKind::Output);
-
-            ImGui::Text("Out ->");
-
-            ed::EndPin();
-        }
+        ImGui::PopItemWidth();
 
         ImGui::EndGroup();
 
@@ -309,6 +312,8 @@ void Editor::Animations::AnimGraphEditorWindow::draw()
     }
 
     ed::EndCreate();
+
+    UI::NodeEditorStyle::pop();
 
     ed::End();
 
