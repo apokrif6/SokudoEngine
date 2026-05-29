@@ -42,6 +42,8 @@ Core::Resources::MeshData Core::Assets::ModelLoader::loadMeshFromFile(const std:
     mesh.skeletonData.rootNode = Animations::AnimationsUtils::buildBoneHierarchy(scene->mRootNode);
     mesh.skeletonData.boneNameToIndexMap = globalBoneIndexMap;
     mesh.skeletonData.boneParents = boneParents;
+    mesh.skeletonData.referencePose =
+        Animations::AnimationsUtils::createReferencePose(mesh.skeletonData, mesh.skeletonData.rootNode);
 
     return mesh;
 }

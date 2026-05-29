@@ -16,13 +16,13 @@ Core::Animations::Pose Core::Animations::AnimGraphOutputPoseNode::evaluate(Anima
     const auto* link = context.graph->findLinkByInputPin(mInputPin);
     if (!link)
     {
-        return Animator::createReferencePose(*context.skeletonData, context.skeletonData->rootNode);
+        return context.skeletonData->referencePose;
     }
 
     const auto* node = context.graph->findNodeByPin(link->startPin);
     if (!node)
     {
-        return Animator::createReferencePose(*context.skeletonData, context.skeletonData->rootNode);
+        return context.skeletonData->referencePose;
     }
 
     return node->evaluate(context);

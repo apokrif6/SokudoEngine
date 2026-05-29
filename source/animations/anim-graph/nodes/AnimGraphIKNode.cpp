@@ -14,19 +14,19 @@ Core::Animations::Pose Core::Animations::AnimGraphIKNode::evaluate(AnimationCont
     const auto* graph = context.graph;
     if (!graph)
     {
-        return {};
+        return context.skeletonData->referencePose;
     }
 
     const auto* link = graph->findLinkByInputPin(mInputPin);
     if (!link)
     {
-        return {};
+        return context.skeletonData->referencePose;
     }
 
     const auto* sourceNode = graph->findNodeByPin(link->startPin);
     if (!sourceNode)
     {
-        return {};
+        return context.skeletonData->referencePose;
     }
 
     Pose pose = sourceNode->evaluate(context);

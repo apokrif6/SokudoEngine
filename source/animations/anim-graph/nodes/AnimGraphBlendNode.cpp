@@ -21,21 +21,21 @@ Core::Animations::Pose Core::Animations::AnimGraphBlendNode::evaluate(AnimationC
     const auto* graph = context.graph;
     if (!graph)
     {
-        return {};
+        return context.skeletonData->referencePose;
     }
 
     const auto* linkA = graph->findLinkByInputPin(mInputA);
     const auto* linkB = graph->findLinkByInputPin(mInputB);
     if (!linkA || !linkB)
     {
-        return {};
+        return context.skeletonData->referencePose;
     }
 
     const auto* nodeA = graph->findNodeByPin(linkA->startPin);
     const auto* nodeB = graph->findNodeByPin(linkB->startPin);
     if (!nodeA || !nodeB)
     {
-        return {};
+        return context.skeletonData->referencePose;
     }
 
     const Pose poseA = nodeA->evaluate(context);

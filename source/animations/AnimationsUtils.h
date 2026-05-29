@@ -66,5 +66,12 @@ public:
                                                    const glm::mat4& parentTransform,
                                                    const Resources::SkeletonData& skeletonData,
                                                    PoseGlobalData& outData);
+
+    [[nodiscard]] static Pose createReferencePose(const Resources::SkeletonData& skeletonData,
+                                                  const BoneNode& rootNode);
+
+private:
+    static void buildReferencePoseRecursive(const BoneNode& node, const Resources::SkeletonData& skeletonData,
+                                            Pose& pose);
 };
 } // namespace Core::Animations

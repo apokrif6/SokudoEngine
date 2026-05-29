@@ -31,6 +31,7 @@ struct SkeletonData
     Animations::BoneNode rootNode;
     std::unordered_map<std::string, int> boneNameToIndexMap;
     std::vector<int> boneParents;
+    Animations::Pose referencePose;
 };
 
 struct MeshData

@@ -11,7 +11,7 @@ Core::Animations::Pose Core::Animations::AnimGraphClipNode::evaluate(AnimationCo
 
     if (!context.animations || context.animations->empty())
     {
-        return {};
+        return context.skeletonData->referencePose;
     }
 
     int clipIndex = -1;
@@ -22,7 +22,7 @@ Core::Animations::Pose Core::Animations::AnimGraphClipNode::evaluate(AnimationCo
 
     if (clipIndex < 0 || clipIndex >= context.animations->size())
     {
-        return {};
+        return context.skeletonData->referencePose;
     }
 
     const auto& clip = (*context.animations)[clipIndex];

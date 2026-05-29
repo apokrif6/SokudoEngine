@@ -134,36 +134,6 @@ Core::Animations::Pose Core::Animations::Animator::blendPoses(const Pose& poseA,
     return result;
 }
 
-Core::Animations::Pose Core::Animations::Animator::createReferencePose(const Resources::SkeletonData& skeletonData,
-                                                                       const BoneNode& rootNode)
-{
-    Pose pose;
-
-    const size_t boneCount = skeletonData.boneNameToIndexMap.size();
-
-    pose.localTransforms.resize(boneCount);
-
-    buildReferencePoseRecursive(rootNode, skeletonData, pose);
-
-    return pose;
-}
-
-void Core::Animations::Animator::buildReferencePoseRecursive(const BoneNode& node,
-                                                             const Resources::SkeletonData& skeletonData, Pose& pose)
-{
-    if (const auto it = skeletonData.boneNameToIndexMap.find(node.name); it != skeletonData.boneNameToIndexMap.end())
-    {
-        const int boneIndex = it->second;
-
-        pose.localTransforms[boneIndex] = BoneTransform{node.localTransform};
-    }
-
-    for (const auto& child : node.children)
-    {
-        buildReferencePoseRecursive(child, skeletonData, pose);
-    }
-}
-
 void Core::Animations::Animator::sampleClipRecursive(const AnimationClip& clip, const float time, const BoneNode& node,
                                                      const Resources::SkeletonData& skeletonData, Pose& pose)
 {

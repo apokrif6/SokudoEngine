@@ -114,3 +114,35 @@ void Core::Animations::AnimationsUtils::buildPoseGlobalTransformsRecursive(const
         buildPoseGlobalTransformsRecursive(pose, child, globalTransform, skeletonData, outData);
     }
 }
+
+Core::Animations::Pose
+Core::Animations::AnimationsUtils::createReferencePose(const Resources::SkeletonData& skeletonData,
+                                                       const BoneNode& rootNode)
+{
+    Pose pose;
+
+    const size_t boneCount = skeletonData.boneNameToIndexMap.size();
+
+    pose.localTransforms.resize(boneCount);
+
+    buildReferencePoseRecursive(rootNode, skeletonData, pose);
+
+    return pose;
+}
+
+void Core::Animations::AnimationsUtils::buildReferencePoseRecursive(const BoneNode& node,
+                                                                    const Resources::SkeletonData& skeletonData,
+                                                                    Pose& pose)
+{
+    if (const auto it = skeletonData.boneNameToIndexMap.find(node.name); it != skeletonData.boneNameToIndexMap.end())
+    {
+        const int boneIndex = it->second;
+
+        pose.localTransforms[boneIndex] = BoneTransform{node.localTransform};
+    }
+
+    for (const auto& child : node.children)
+    {
+        buildReferencePoseRecursive(child, skeletonData, pose);
+    }
+}
