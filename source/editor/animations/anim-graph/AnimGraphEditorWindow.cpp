@@ -6,6 +6,7 @@
 #include "animations/anim-graph/nodes/AnimGraphIKNode.h"
 #include "animations/anim-graph/nodes/AnimGraphOutputPoseNode.h"
 #include "components/MeshComponent.h"
+#include "editor/elements/Elements.h"
 #include "editor/styles/NodeEditorStyle.h"
 #include "engine/Engine.h"
 #include "ui/inspector/animation/AnimationInspectorInverseKinematicsUIWindow.h"
@@ -153,11 +154,13 @@ void Editor::Animations::AnimGraphEditorWindow::draw()
             ImGui::TextColored(ImVec4(0.8f, 0.4f, 1.f, 1.f), "Output Pose");
         }
 
-        ImGui::Separator();
+        const float nodeContentWidth = ed::GetNodeSize(editorData.NodeId).x - ImGui::GetStyle().WindowPadding.x * 2.0f;
+
+        UI::Elements::nodeSeparator(nodeContentWidth);
 
         ImGui::BeginGroup();
 
-        ImGui::PushItemWidth(220.0f);
+        ImGui::PushItemWidth(nodeContentWidth);
 
         if (const auto* clipNode = dynamic_cast<Core::Animations::AnimGraphClipNode*>(node.get()))
         {
@@ -223,8 +226,6 @@ void Editor::Animations::AnimGraphEditorWindow::draw()
 
         if (auto* IKNode = dynamic_cast<Core::Animations::AnimGraphIKNode*>(node.get()))
         {
-            ImGui::Separator();
-
             bool signalFromNode = false;
             int targetPickerSolverIndex = -1;
 
