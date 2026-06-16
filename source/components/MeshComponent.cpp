@@ -86,8 +86,6 @@ void Core::Component::MeshComponent::update(Renderer::VkRenderData& renderData)
 
     for (auto& primitive : mPrimitives)
     {
-        primitive.uploadVertexBuffer(renderData);
-        primitive.uploadIndexBuffer(renderData);
         primitive.uploadUniformBuffer(renderData, worldMatrix);
 
         if (shouldDrawDebugSkeleton())

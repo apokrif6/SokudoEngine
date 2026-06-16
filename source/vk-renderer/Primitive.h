@@ -31,10 +31,6 @@ public:
               const MaterialInfo& materialInfo, VkDescriptorSet materialDescriptorSet,
               const Animations::BonesInfo& bonesInfo, VkRenderData& renderData);
 
-    void uploadVertexBuffer(VkRenderData& renderData);
-
-    void uploadIndexBuffer(VkRenderData& renderData);
-
     void uploadUniformBuffer(VkRenderData& renderData, const glm::mat4& modelMatrix);
 
     void draw(const VkRenderData& renderData, PrimitiveRenderType renderType = PBR);

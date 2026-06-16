@@ -23,12 +23,16 @@ void Core::Renderer::Primitive::createVertexBuffer(VkRenderData& renderData)
 {
     VertexBuffer::init(renderData, primitiveRenderData.rdModelVertexBufferData,
                        mVertexBufferData.size() * sizeof(Vertex), "Primitive");
+
+    VertexBuffer::uploadData(renderData, primitiveRenderData.rdModelVertexBufferData, mVertexBufferData);
 }
 
 void Core::Renderer::Primitive::createIndexBuffer(VkRenderData& renderData)
 {
     IndexBuffer::init(renderData, primitiveRenderData.rdModelIndexBufferData,
                       static_cast<int64_t>(mIndexBufferData.size()), "Primitive");
+
+    IndexBuffer::uploadData(renderData, primitiveRenderData.rdModelIndexBufferData, mIndexBufferData);
 }
 
 void Core::Renderer::Primitive::createMaterialBuffer(VkRenderData& renderData)
@@ -42,16 +46,6 @@ void Core::Renderer::Primitive::createPrimitiveDataBuffer(VkRenderData& renderDa
 {
     UniformBuffer::init(renderData, mPrimitiveDataUBO, sizeof(PrimitiveData), "Primitive Data",
                         DescriptorLayoutType::PrimitiveData);
-}
-
-void Core::Renderer::Primitive::uploadVertexBuffer(VkRenderData& renderData)
-{
-    VertexBuffer::uploadData(renderData, primitiveRenderData.rdModelVertexBufferData, mVertexBufferData);
-}
-
-void Core::Renderer::Primitive::uploadIndexBuffer(VkRenderData& renderData)
-{
-    IndexBuffer::uploadData(renderData, primitiveRenderData.rdModelIndexBufferData, mIndexBufferData);
 }
 
 void Core::Renderer::Primitive::uploadUniformBuffer(VkRenderData& renderData, const glm::mat4& modelMatrix)

@@ -64,9 +64,6 @@ void Core::Component::SpriteComponent::loadSpriteFromFile(const std::string& pat
 
     mPrimitive = std::make_unique<Renderer::Primitive>(data.vertices, data.indices, data.textures, data.material,
                                                        data.materialDescriptorSet, Animations::BonesInfo{}, renderData);
-
-    mPrimitive->uploadVertexBuffer(renderData);
-    mPrimitive->uploadIndexBuffer(renderData);
 }
 
 void Core::Component::SpriteComponent::createSpritePrimitiveData(const std::string& spritePath,
