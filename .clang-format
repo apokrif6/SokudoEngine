@@ -22,3 +22,4 @@ BraceWrapping:
   BeforeWhile: true
   IndentBraces: false
 InsertBraces: true
+SeparateDefinitionBlocks: Always
