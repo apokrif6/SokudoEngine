@@ -32,6 +32,7 @@ void Core::Animations::Animator::updateBonesTransform(Component::MeshComponent* 
     AnimationContext context;
     context.deltaTime = deltaTime;
     context.skeletonData = skeleton.getSkeletonData();
+    context.meshComponent = mesh;
     context.animations = &mesh->getAnimations();
 
     const Pose pose = mesh->getAnimInstance()->evaluate(context);
@@ -118,7 +119,8 @@ Core::Animations::Pose Core::Animations::Animator::sampleClip(const AnimationCli
     return pose;
 }
 
-Core::Animations::Pose Core::Animations::Animator::blendPoses(const Pose& poseA, const Pose& poseB, float blendFactor)
+Core::Animations::Pose Core::Animations::Animator::blendPoses(const Pose& poseA, const Pose& poseB,
+                                                              const float blendFactor)
 {
     Pose result;
 
@@ -129,6 +131,41 @@ Core::Animations::Pose Core::Animations::Animator::blendPoses(const Pose& poseA,
     for (size_t i = 0; i < boneCount; ++i)
     {
         result.localTransforms[i] = blendTransforms(poseA.localTransforms[i], poseB.localTransforms[i], blendFactor);
+    }
+
+    return result;
+}
+
+Core::Animations::Pose Core::Animations::Animator::blendMaskedPoses(const Pose& poseA, const Pose& poseB,
+                                                                    const Resources::SkeletonData& skeletonData,
+                                                                    const AnimationMask& mask, const float alpha)
+{
+    Pose result;
+
+    const size_t boneCount = poseA.localTransforms.size();
+
+    result.localTransforms.resize(boneCount);
+
+    for (size_t i = 0; i < boneCount; ++i)
+    {
+        result.localTransforms[i] = poseA.localTransforms[i];
+    }
+
+    for (const auto& [boneName, weight] : mask.boneWeights)
+    {
+        auto boneIt = skeletonData.boneNameToIndexMap.find(boneName);
+
+        if (boneIt == skeletonData.boneNameToIndexMap.end())
+        {
+            continue;
+        }
+
+        const int boneIndex = boneIt->second;
+
+        const float finalWeight = glm::clamp(weight * alpha, 0.f, 1.f);
+
+        result.localTransforms[boneIndex] =
+            blendTransforms(poseA.localTransforms[boneIndex], poseB.localTransforms[boneIndex], finalWeight);
     }
 
     return result;

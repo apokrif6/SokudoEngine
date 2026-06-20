@@ -28,6 +28,10 @@ public:
 
     [[nodiscard]] static Pose blendPoses(const Pose& poseA, const Pose& poseB, float blendFactor);
 
+    [[nodiscard]] static Pose blendMaskedPoses(const Pose& poseA, const Pose& poseB,
+                                               const Resources::SkeletonData& skeletonData, const AnimationMask& mask,
+                                               float alpha);
+
 private:
     std::vector<Component::MeshComponent*> mMeshes;
 

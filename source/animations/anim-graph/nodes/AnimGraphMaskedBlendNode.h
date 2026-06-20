@@ -4,11 +4,10 @@
 
 namespace Core::Animations
 {
-
-class AnimGraphBlendNode final : public AnimGraphNode
+class AnimGraphMaskedBlendNode final : public AnimGraphNode
 {
 public:
-    AnimGraphBlendNode();
+    AnimGraphMaskedBlendNode();
 
     [[nodiscard]] PinID getInputAPin() const { return mInputA; }
 

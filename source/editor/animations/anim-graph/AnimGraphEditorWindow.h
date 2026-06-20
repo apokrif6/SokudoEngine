@@ -8,6 +8,7 @@ namespace Core::Component
 {
 class MeshComponent;
 }
+
 // TODO
 // use CRTP pattern for UIWindow<>, but with state management
 namespace Editor::Animations
@@ -17,12 +18,14 @@ struct EditorPinData
     uint64_t EditorId = 0;
     Core::Animations::PinID RuntimePinId{};
 };
+
 struct EditorNodeData
 {
     uint64_t NodeId;
     std::vector<EditorPinData> InputPins;
     std::vector<EditorPinData> OutputPins;
 };
+
 struct EditorLinkData
 {
     uint64_t linkId = 0;
@@ -61,6 +64,10 @@ private:
     inline static UI::PopupRequest mClipSelectorPopup{};
     inline static bool mClipSelectorPopupOpen = false;
     inline static uuids::uuid mClipSelectorPopupOpenNode;
+
+    inline static UI::PopupRequest mMaskSelectorPopup{};
+    inline static bool mMaskSelectorPopupOpen = false;
+    inline static uuids::uuid mMaskSelectorPopupNode;
 
     inline static bool mIKSolverPopupOpenRequest = false;
     inline static uuids::uuid mIKSolverPopupRequestNode;

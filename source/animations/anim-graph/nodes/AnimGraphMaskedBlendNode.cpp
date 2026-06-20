@@ -1,11 +1,11 @@
-#include "AnimGraphBlendNode.h"
+#include "AnimGraphMaskedBlendNode.h"
 
 #include "animations/AnimationsData.h"
 #include "animations/Animator.h"
 #include "animations/anim-graph/AnimGraphLink.h"
 #include "animations/anim-graph/AnimationContext.h"
 
-Core::Animations::AnimGraphBlendNode::AnimGraphBlendNode()
+Core::Animations::AnimGraphMaskedBlendNode::AnimGraphMaskedBlendNode()
 {
     mInputA = createInputPin(AnimGraphValueType::Pose);
 
@@ -14,7 +14,7 @@ Core::Animations::AnimGraphBlendNode::AnimGraphBlendNode()
     mOutputPin = createOutputPin(AnimGraphValueType::Pose);
 }
 
-Core::Animations::Pose Core::Animations::AnimGraphBlendNode::evaluate(AnimationContext& context) const
+Core::Animations::Pose Core::Animations::AnimGraphMaskedBlendNode::evaluate(AnimationContext& context) const
 {
     const auto* graph = context.graph;
     if (!graph)
@@ -45,5 +45,18 @@ Core::Animations::Pose Core::Animations::AnimGraphBlendNode::evaluate(AnimationC
         alpha = std::get<float>(*property);
     }
 
-    return Animator::blendPoses(poseA, poseB, alpha);
+    int maskIndex = -1;
+    if (const auto* property = getProperty("maskIndex"))
+    {
+        maskIndex = std::get<int>(*property);
+    }
+
+    if (maskIndex < 0 || maskIndex >= context.meshComponent->getMasksCount())
+    {
+        return context.skeletonData->referencePose;
+    }
+
+    const auto& mask = context.meshComponent->getMask(maskIndex);
+
+    return Animator::blendMaskedPoses(poseA, poseB, *context.skeletonData, mask, alpha);
 }

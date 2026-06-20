@@ -4,6 +4,7 @@
 #include "animations/anim-graph/nodes/AnimGraphBlendNode.h"
 #include "animations/anim-graph/nodes/AnimGraphClipNode.h"
 #include "animations/anim-graph/nodes/AnimGraphIKNode.h"
+#include "animations/anim-graph/nodes/AnimGraphMaskedBlendNode.h"
 #include "animations/anim-graph/nodes/AnimGraphOutputPoseNode.h"
 #include "components/MeshComponent.h"
 #include "editor/elements/Elements.h"
@@ -106,6 +107,16 @@ void Editor::Animations::AnimGraphEditorWindow::draw()
             ed::SetNodePosition(mEditorNodes[node->getUUID()].NodeId, openPopupPosition);
         }
 
+        if (ImGui::MenuItem("Add Masked Blend Node"))
+        {
+            const auto node = animGraph->createNode<Core::Animations::AnimGraphMaskedBlendNode>();
+            node->setProperty("alpha", 0.5f);
+            node->setProperty("maskIndex", -1);
+
+            createEditorNode(node->getUUID());
+            ed::SetNodePosition(mEditorNodes[node->getUUID()].NodeId, openPopupPosition);
+        }
+
         if (ImGui::MenuItem("Add IK Node"))
         {
             const auto node = animGraph->createNode<Core::Animations::AnimGraphIKNode>();
@@ -144,6 +155,10 @@ void Editor::Animations::AnimGraphEditorWindow::draw()
         else if (dynamic_cast<Core::Animations::AnimGraphBlendNode*>(node.get()))
         {
             ImGui::TextColored(ImVec4(0.3f, 0.7f, 1.f, 1.f), "Blend");
+        }
+        else if (dynamic_cast<Core::Animations::AnimGraphMaskedBlendNode*>(node.get()))
+        {
+            ImGui::TextColored(ImVec4(0.3f, 1.f, 0.7f, 1.f), "Masked Blend");
         }
         else if (dynamic_cast<Core::Animations::AnimGraphIKNode*>(node.get()))
         {
@@ -221,6 +236,62 @@ void Editor::Animations::AnimGraphEditorWindow::draw()
             if (ImGui::SliderFloat("Alpha", &alpha, 0.0f, 1.0f))
             {
                 blendNode->setProperty("alpha", alpha);
+            }
+        }
+
+        if (auto* maskedBlendNode = dynamic_cast<Core::Animations::AnimGraphMaskedBlendNode*>(node.get()))
+        {
+            float alpha = 0.5f;
+            if (auto* property = maskedBlendNode->getProperty("alpha"))
+            {
+                alpha = std::get<float>(*property);
+            }
+
+            ImGui::SetNextItemWidth(140.f);
+            if (ImGui::SliderFloat("Alpha", &alpha, 0.0f, 1.0f))
+            {
+                maskedBlendNode->setProperty("alpha", alpha);
+            }
+
+            int maskIndex = -1;
+            if (auto* property = maskedBlendNode->getProperty("maskIndex"))
+            {
+                maskIndex = std::get<int>(*property);
+            }
+
+            const char* currentMaskName =
+                maskIndex == -1 ? "None (Global)" : mCurrentMeshComponent->getMaskName(maskIndex).c_str();
+
+            if (ImGui::Button(currentMaskName))
+            {
+                mMaskSelectorPopupOpen = true;
+                mMaskSelectorPopupNode = uuid;
+
+                mMaskSelectorPopup.id = "MaskSelector";
+
+                mMaskSelectorPopup.items.clear();
+
+                mMaskSelectorPopup.items.push_back("None (Global)");
+
+                for (int i = 0; i < mCurrentMeshComponent->getMasksCount(); i++)
+                {
+                    mMaskSelectorPopup.items.push_back(mCurrentMeshComponent->getMaskName(i));
+                }
+
+                mMaskSelectorPopup.onSelect = [uuid, animGraph](int index)
+                {
+                    const auto it = animGraph->getNodes().find(uuid);
+
+                    if (it == animGraph->getNodes().end())
+                    {
+                        return;
+                    }
+
+                    if (auto* node = dynamic_cast<Core::Animations::AnimGraphMaskedBlendNode*>(it->second.get()))
+                    {
+                        node->setProperty("maskIndex", index - 1);
+                    }
+                };
             }
         }
 
@@ -383,6 +454,30 @@ void Editor::Animations::AnimGraphEditorWindow::draw()
         ImGui::EndPopup();
     }
 
+    if (mMaskSelectorPopupOpen)
+    {
+        ImGui::OpenPopup("MaskSelector");
+        mMaskSelectorPopupOpen = false;
+    }
+
+    if (ImGui::BeginPopup(mMaskSelectorPopup.id.c_str()))
+    {
+        for (int i = 0; i < mMaskSelectorPopup.items.size(); i++)
+        {
+            if (ImGui::Selectable(mMaskSelectorPopup.items[i].c_str()))
+            {
+                if (mMaskSelectorPopup.onSelect)
+                {
+                    mMaskSelectorPopup.onSelect(i);
+                }
+
+                ImGui::CloseCurrentPopup();
+            }
+        }
+
+        ImGui::EndPopup();
+    }
+
     if (mIKSolverPopupOpenRequest)
     {
         ImGui::OpenPopup("CreateIKSolverPopup");
@@ -453,6 +548,12 @@ void Editor::Animations::AnimGraphEditorWindow::createEditorNode(const uuids::uu
         data.InputPins.push_back({.EditorId = generateEditorId(), .RuntimePinId = blendNode->getInputAPin()});
         data.InputPins.push_back({.EditorId = generateEditorId(), .RuntimePinId = blendNode->getInputBPin()});
         data.OutputPins.push_back({.EditorId = generateEditorId(), .RuntimePinId = blendNode->getOutputPin()});
+    }
+    else if (const auto* maskedBlendNode = dynamic_cast<const Core::Animations::AnimGraphMaskedBlendNode*>(node))
+    {
+        data.InputPins.push_back({.EditorId = generateEditorId(), .RuntimePinId = maskedBlendNode->getInputAPin()});
+        data.InputPins.push_back({.EditorId = generateEditorId(), .RuntimePinId = maskedBlendNode->getInputBPin()});
+        data.OutputPins.push_back({.EditorId = generateEditorId(), .RuntimePinId = maskedBlendNode->getOutputPin()});
     }
     else if (const auto* IKNode = dynamic_cast<const Core::Animations::AnimGraphIKNode*>(node))
     {
