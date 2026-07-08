@@ -4,6 +4,22 @@
 #include "AnimationsUtils.h"
 #include "anim-graph/AnimationContext.h"
 
+namespace
+{
+const Core::Animations::AnimationChannel* findChannel(const Core::Animations::AnimationClip& clip,
+                                                      const std::string& boneName)
+{
+    for (const auto& channel : clip.channels)
+    {
+        if (channel.boneName == boneName)
+        {
+            return &channel;
+        }
+    }
+    return nullptr;
+}
+}
+
 void Core::Animations::Animator::update(Renderer::VkRenderData& renderData, const float deltaTime)
 {
     mAnimationBonesTransformCalculationTimer.start();
@@ -91,19 +107,6 @@ void Core::Animations::Animator::buildGlobalTransformsRecursive(const Pose& pose
     }
 }
 
-const Core::Animations::AnimationChannel* findChannel(const Core::Animations::AnimationClip& clip,
-                                                      const std::string& boneName)
-{
-    for (const auto& channel : clip.channels)
-    {
-        if (channel.boneName == boneName)
-        {
-            return &channel;
-        }
-    }
-    return nullptr;
-}
-
 Core::Animations::Pose Core::Animations::Animator::sampleClip(const AnimationClip& clip, const float time,
                                                               const Resources::SkeletonData& skeletonData,
                                                               const BoneNode& rootNode)
@@ -174,7 +177,7 @@ Core::Animations::Pose Core::Animations::Animator::blendMaskedPoses(const Pose& 
 void Core::Animations::Animator::sampleClipRecursive(const AnimationClip& clip, const float time, const BoneNode& node,
                                                      const Resources::SkeletonData& skeletonData, Pose& pose)
 {
-    BoneTransform localTransform;
+    BoneTransform localTransform{};
 
     if (const AnimationChannel* channel = findChannel(clip, node.name))
     {
