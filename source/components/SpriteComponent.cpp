@@ -54,9 +54,14 @@ void Core::Component::SpriteComponent::deserialize(const YAML::Node& node)
 
 void Core::Component::SpriteComponent::loadSpriteFromFile(const std::string& path)
 {
-    mSpriteFilePath = mSpriteFilePath = Utils::FileUtils::getRelativePath(path);
-
     auto& renderData = Engine::getInstance().getRenderData();
+
+    if (mPrimitive)
+    {
+        mPrimitive->cleanup(renderData);
+    }
+
+    mSpriteFilePath = mSpriteFilePath = Utils::FileUtils::getRelativePath(path);
 
     Resources::PrimitiveData data;
 
