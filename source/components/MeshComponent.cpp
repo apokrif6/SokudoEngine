@@ -8,6 +8,7 @@
 #include "asset-manager/AssetManager.h"
 #include "asset-manager/ModelLoader.h"
 #include "asset-manager/assets/MeshAsset.h"
+#include "asset-manager/assets/AnimationAsset.h"
 #include "components/TransformComponent.h"
 #include "tools/Logger.h"
 #include "utils/FileUtils.h"
@@ -164,21 +165,27 @@ float Core::Component::MeshComponent::getWeightForBone(const std::string& boneNa
 
 void Core::Component::MeshComponent::loadAnimationFromFile(const std::string_view& filePath)
 {
-    Animations::AnimationClip clip = Animations::AnimationsUtils::loadAnimationFromFile(filePath);
+    auto animation = Assets::AssetManager::getInstance().getOrCreate<Assets::AnimationAsset>(filePath.data());
 
-    if (!clip.channels.empty())
+    if (!animation)
     {
-        mAnimationFiles.push_back(Utils::FileUtils::getRelativePath(filePath));
-        mAnimations.push_back(std::move(clip));
-
-        if (mAnimations.size() == 1)
-        {
-            mShouldPlayAnimation = true;
-        }
-
-        Logger::log(1, "Animation %s loaded and added for mesh %s", filePath.data(),
-                    uuids::to_string(getUUID()).c_str());
+        return;
     }
+
+    if (animation->getAnimation().channels.empty())
+    {
+        return;
+    }
+
+    mAnimationFiles.push_back(Utils::FileUtils::getRelativePath(filePath));
+    mAnimations.push_back(std::move(animation));
+
+    if (mAnimations.size() == 1)
+    {
+        mShouldPlayAnimation = true;
+    }
+
+    Logger::log(1, "Animation %s loaded and added for mesh %s", filePath.data(), uuids::to_string(getUUID()).c_str());
 }
 
 YAML::Node Core::Component::MeshComponent::serialize() const

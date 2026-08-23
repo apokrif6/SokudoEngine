@@ -2,6 +2,7 @@
 
 #include "animations/Animator.h"
 #include "animations/anim-graph/AnimationContext.h"
+#include "asset-manager/assets/AnimationAsset.h"
 
 Core::Animations::AnimGraphClipNode::AnimGraphClipNode() { mOutputPin = createOutputPin(AnimGraphValueType::Pose); }
 
@@ -9,7 +10,7 @@ Core::Animations::Pose Core::Animations::AnimGraphClipNode::evaluate(AnimationCo
 {
     auto& runtime = context.instance->getRuntime(getUUID());
 
-    if (!context.animations || context.animations->empty())
+    if (context.animationAssets.empty())
     {
         return context.skeletonData->referencePose;
     }
@@ -20,12 +21,12 @@ Core::Animations::Pose Core::Animations::AnimGraphClipNode::evaluate(AnimationCo
         clipIndex = std::get<int>(*property);
     }
 
-    if (clipIndex < 0 || clipIndex >= context.animations->size())
+    if (clipIndex < 0 || clipIndex >= context.animationAssets.size())
     {
         return context.skeletonData->referencePose;
     }
 
-    const auto& clip = (*context.animations)[clipIndex];
+    const auto& clip = context.animationAssets[clipIndex]->getAnimation();
 
     const float ticksPerSecond = clip.ticksPerSecond != 0 ? clip.ticksPerSecond : 30.f;
 

@@ -9,6 +9,11 @@
 #include <vector>
 #include "vk-renderer/Primitive.h"
 
+namespace Core::Assets
+{
+class AnimationAsset;
+}
+
 namespace Core::Component
 {
 // right now every mesh is a skeletal mesh
@@ -48,7 +53,7 @@ public:
 
     [[nodiscard]] std::shared_ptr<Animations::AnimGraph>& getAnimGraph() { return mAnimGraph; }
 
-    [[nodiscard]] const std::vector<Animations::AnimationClip>& getAnimations() const { return mAnimations; }
+    [[nodiscard]] const std::vector<std::shared_ptr<Assets::AnimationAsset>>& getAnimationAssets() const { return mAnimations; }
 
     [[nodiscard]] bool hasAnimations() const { return !mAnimations.empty(); }
 
@@ -132,9 +137,7 @@ private:
     std::shared_ptr<Animations::AnimGraph> mAnimGraph;
     std::unique_ptr<Animations::AnimInstance> mAnimInstance;
 
-    // TODO
-    // I guess it should be moved to global animation manager, and mesh should store only shared pointers
-    std::vector<Animations::AnimationClip> mAnimations;
+    std::vector<std::shared_ptr<Assets::AnimationAsset>> mAnimations;
     bool mShouldPlayAnimation = false;
     bool mShouldBlendAnimations = false;
     bool mShouldDrawDebugSkeleton = false;

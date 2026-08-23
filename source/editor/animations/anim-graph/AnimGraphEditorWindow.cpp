@@ -6,6 +6,7 @@
 #include "animations/anim-graph/nodes/AnimGraphIKNode.h"
 #include "animations/anim-graph/nodes/AnimGraphMaskedBlendNode.h"
 #include "animations/anim-graph/nodes/AnimGraphOutputPoseNode.h"
+#include "asset-manager/assets/AnimationAsset.h"
 #include "components/MeshComponent.h"
 #include "editor/elements/Elements.h"
 #include "editor/styles/NodeEditorStyle.h"
@@ -179,19 +180,19 @@ void Editor::Animations::AnimGraphEditorWindow::draw()
 
         if (const auto* clipNode = dynamic_cast<Core::Animations::AnimGraphClipNode*>(node.get()))
         {
-            const auto& clips = mCurrentMeshComponent->getAnimations();
+            const auto& animationAssets = mCurrentMeshComponent->getAnimationAssets();
             int clipIndex = 0;
             if (auto* property = clipNode->getProperty("clipIndex"))
             {
                 clipIndex = std::get<int>(*property);
             }
-            if (clips.empty())
+            if (animationAssets.empty())
             {
                 ImGui::TextDisabled("No animations loaded");
             }
             else
             {
-                if (const char* currentLabel = clips[clipIndex].name.c_str(); ImGui::Button(currentLabel))
+                if (const char* currentLabel = animationAssets[clipIndex]->getAnimation().name.c_str(); ImGui::Button(currentLabel))
                 {
                     mClipSelectorPopupOpen = true;
                     mClipSelectorPopupOpenNode = uuid;
@@ -199,11 +200,11 @@ void Editor::Animations::AnimGraphEditorWindow::draw()
                     mClipSelectorPopup.id = "ClipSelector";
 
                     mClipSelectorPopup.items.clear();
-                    mClipSelectorPopup.items.reserve(clips.size());
+                    mClipSelectorPopup.items.reserve(animationAssets.size());
 
-                    for (auto& clip : clips)
+                    for (auto& clip : animationAssets)
                     {
-                        mClipSelectorPopup.items.push_back(clip.name);
+                        mClipSelectorPopup.items.push_back(clip->getAnimation().name);
                     }
 
                     mClipSelectorPopup.onSelect = [uuid, animGraph](int index)

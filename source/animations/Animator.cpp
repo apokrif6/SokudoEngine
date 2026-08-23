@@ -49,7 +49,7 @@ void Core::Animations::Animator::updateBonesTransform(Component::MeshComponent* 
     context.deltaTime = deltaTime;
     context.skeletonData = skeleton.getSkeletonData();
     context.meshComponent = mesh;
-    context.animations = &mesh->getAnimations();
+    context.animationAssets = mesh->getAnimationAssets();
 
     const Pose pose = mesh->getAnimInstance()->evaluate(context);
 

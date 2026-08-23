@@ -10,6 +10,11 @@ namespace Core::Component
 class MeshComponent;
 }
 
+namespace Core::Assets
+{
+class AnimationAsset;
+}
+
 namespace Core::Animations
 {
 class AnimGraph;
@@ -28,8 +33,6 @@ struct AnimationContext
     // I don't know do I like it here. probably not
     Component::MeshComponent* meshComponent = nullptr;
 
-    // TODO
-    // implement something like AnimationsDatabase and store only reference to it in context
-    const std::vector<AnimationClip>* animations = nullptr;
+    std::vector<std::shared_ptr<Assets::AnimationAsset>> animationAssets{};
 };
 } // namespace Core::Animations
