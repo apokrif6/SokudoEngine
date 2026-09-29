@@ -1,6 +1,5 @@
 #pragma once
 
-#include "ui/UIWindow.h"
 #include "imgui.h"
 #include "string"
 #include "nfd.hpp"
@@ -9,9 +8,10 @@
 
 namespace Core::UI
 {
-class AnimationInspectorUIWindow : public UIWindow<AnimationInspectorUIWindow>
+class AnimationInspectorUIWindow : public UIPermanentWindow<AnimationInspectorUIWindow>
 {
     friend class UIWindow;
+    friend class UIPermanentWindow;
 
     static bool getBody(Component::MeshComponent* meshComponent)
     {

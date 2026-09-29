@@ -1,16 +1,17 @@
 #pragma once
 
 #include "imgui.h"
-#include "ui/UIWindow.h"
+#include "../window/base/UIWindow.h"
 #include "engine/Engine.h"
 #include "components/SpriteComponent.h"
 #include "nfd.hpp"
 
 namespace Core::UI
 {
-class SpriteComponentInspectorUIWindow : public UIWindow<SpriteComponentInspectorUIWindow>
+class SpriteComponentInspectorUIWindow : public UIPermanentWindow<SpriteComponentInspectorUIWindow>
 {
     friend class UIWindow;
+    friend class UIPermanentWindow;
 
     static bool getBody()
     {

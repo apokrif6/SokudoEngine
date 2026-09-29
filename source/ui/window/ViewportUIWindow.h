@@ -1,17 +1,18 @@
 #pragma once
 
 #include <ImGuizmo.h>
-#include "UIWindow.h"
 #include "imgui.h"
+#include "components/TransformComponent.h"
 #include "engine/Engine.h"
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtx/matrix_decompose.hpp"
 
 namespace Core::UI
 {
-class ViewportUIWindow : public UIWindow<ViewportUIWindow>
+class ViewportUIWindow : public UIPermanentWindow<ViewportUIWindow>
 {
     friend class UIWindow;
+    friend class UIPermanentWindow;
 
     static bool getBody()
     {

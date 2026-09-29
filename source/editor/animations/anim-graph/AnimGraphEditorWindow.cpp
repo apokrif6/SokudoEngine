@@ -12,6 +12,7 @@
 #include "editor/styles/NodeEditorStyle.h"
 #include "engine/Engine.h"
 #include "ui/inspector/animation/AnimationInspectorInverseKinematicsUIWindow.h"
+#include "ui/window/ComponentPickerUIWindow.h"
 
 namespace ed = ax::NodeEditor;
 
@@ -20,7 +21,6 @@ static ed::EditorContext* g_Context = nullptr;
 void Editor::Animations::AnimGraphEditorWindow::open(Core::Component::MeshComponent* meshComponent)
 {
     mCurrentMeshComponent = meshComponent;
-    mIsOpen = true;
 
     if (!meshComponent)
     {
@@ -51,14 +51,22 @@ void Editor::Animations::AnimGraphEditorWindow::open(Core::Component::MeshCompon
 
         graph->setOutputNode(output->getUUID());
     }
+
+    UIManagedWindow::open();
 }
 
 void Editor::Animations::AnimGraphEditorWindow::draw()
 {
+    if (!isOpen())
+    {
+        return;
+    }
+
     const auto animGraph = mCurrentMeshComponent ? mCurrentMeshComponent->getAnimGraph() : nullptr;
 
-    if (!mIsOpen || !animGraph)
+    if (!animGraph)
     {
+        close();
         return;
     }
 
@@ -72,7 +80,7 @@ void Editor::Animations::AnimGraphEditorWindow::draw()
 
     ed::SetCurrentEditor(g_Context);
 
-    ImGui::Begin("AnimGraph Editor", &mIsOpen);
+    ImGui::Begin("AnimGraph Editor", &openState());
 
     ed::Begin("AnimGraph");
 
@@ -192,7 +200,8 @@ void Editor::Animations::AnimGraphEditorWindow::draw()
             }
             else
             {
-                if (const char* currentLabel = animationAssets[clipIndex]->getAnimation().name.c_str(); ImGui::Button(currentLabel))
+                if (const char* currentLabel = animationAssets[clipIndex]->getAnimation().name.c_str();
+                    ImGui::Button(currentLabel))
                 {
                     mClipSelectorPopupOpen = true;
                     mClipSelectorPopupOpenNode = uuid;

@@ -1,11 +1,10 @@
 #pragma once
 
-#include "ui/UIWindow.h"
 #include "imgui.h"
 #include "animations/ik/IKSolverCCD.h"
 #include "animations/ik/IKSolverFABRIK.h"
-#include "ui/ComponentPickerUIWindow.h"
 #include "engine/Engine.h"
+#include "ui/window/base/UIPermanentWindow.h"
 #include <ranges>
 #include <vector>
 #include <string>
@@ -13,9 +12,11 @@
 
 namespace Core::UI
 {
-class AnimationInspectorInverseKinematicsUIWindow : public UIWindow<AnimationInspectorInverseKinematicsUIWindow>
+class AnimationInspectorInverseKinematicsUIWindow
+    : public UIPermanentWindow<AnimationInspectorInverseKinematicsUIWindow>
 {
     friend class UIWindow;
+    friend class UIPermanentWindow;
 
     static bool getBody(std::vector<std::unique_ptr<Animations::IIKSolver>>& solvers,
                         Component::MeshComponent* meshComponent, bool& openPopupSignal,

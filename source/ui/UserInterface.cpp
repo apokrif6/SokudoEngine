@@ -6,13 +6,13 @@
 #include "events/input-events/KeyEvent.h"
 #include "vk-renderer/buffers/CommandBuffer.h"
 #include "tools/Logger.h"
-#include "ui/ProfilingUIWindow.h"
-#include "ui/AnimationSequenceUIWindow.h"
-#include "ui/SceneUIWindow.h"
+#include "window/ProfilingUIWindow.h"
+#include "window/AnimationSequenceUIWindow.h"
+#include "window/SceneUIWindow.h"
+#include "window/MiscUIWindow.h"
+#include "window/ViewportUIWindow.h"
 #include "imgui_internal.h"
 #include "inspector/InspectorUIWindow.h"
-#include "MiscUIWindow.h"
-#include "ViewportUIWindow.h"
 #include "tools/ColorConverter.h"
 
 bool Core::Renderer::UserInterface::init(VkRenderData& renderData)

@@ -1,17 +1,18 @@
 #pragma once
 
-#include "ui/UIWindow.h"
 #include "imgui.h"
 #include "engine/Engine.h"
 #include "scene/Scene.h"
 #include "components/MeshComponent.h"
 #include "animations/AnimationsData.h"
+#include "base/UIPermanentWindow.h"
 
 namespace Core::UI
 {
-class AnimationSequenceUIWindow : public UIWindow<AnimationSequenceUIWindow>
+class AnimationSequenceUIWindow : public UIPermanentWindow<AnimationSequenceUIWindow>
 {
     friend class UIWindow;
+    friend class UIPermanentWindow;
 
     static bool getBody()
     {

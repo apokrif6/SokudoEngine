@@ -1,6 +1,5 @@
 #pragma once
 
-#include "UIWindow.h"
 #include "imgui.h"
 #include "glm/gtx/string_cast.hpp"
 #include "nfd.hpp"
@@ -10,9 +9,10 @@
 
 namespace Core::UI
 {
-class MiscUIWindow : public UIWindow<MiscUIWindow>
+class MiscUIWindow : public UIPermanentWindow<MiscUIWindow>
 {
     friend class UIWindow;
+    friend class UIPermanentWindow;
 
     static bool getBody()
     {

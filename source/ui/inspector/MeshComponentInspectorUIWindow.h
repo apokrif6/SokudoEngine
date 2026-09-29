@@ -3,14 +3,14 @@
 #include "AnimationInspectorUIWindow.h"
 #include "imgui.h"
 #include "components/MeshComponent.h"
-#include "ui/UIWindow.h"
 #include "engine/Engine.h"
 
 namespace Core::UI
 {
-class MeshComponentInspectorUIWindow : public UIWindow<MeshComponentInspectorUIWindow>
+class MeshComponentInspectorUIWindow : public UIPermanentWindow<MeshComponentInspectorUIWindow>
 {
     friend class UIWindow;
+    friend class UIPermanentWindow;
 
     static bool getBody()
     {

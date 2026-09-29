@@ -1,16 +1,17 @@
 #pragma once
 
-#include "UIWindow.h"
 #include "imgui.h"
 #include "string"
+#include "base/UIPermanentWindow.h"
 #include "engine/Engine.h"
 #include "profiling/PlotBuffer.h"
 
 namespace Core::UI
 {
-class ProfilingUIWindow : public UIWindow<ProfilingUIWindow>
+class ProfilingUIWindow : public UIPermanentWindow<ProfilingUIWindow>
 {
     friend class UIWindow;
+    friend class UIPermanentWindow;
 
     static bool getBody()
     {

@@ -16,11 +16,6 @@ public:
     }
 
 protected:
-    struct ValidateInterface
-    {
-        ValidateInterface() { (void)&Derived::getBody; }
-    };
-
-    inline static const ValidateInterface validator{};
+    UIWindow() = default;
 };
 } // namespace Core::UI

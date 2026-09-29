@@ -1,14 +1,14 @@
 #pragma once
 
 #include "components/TransformComponent.h"
-#include "ui/UIWindow.h"
 #include "engine/Engine.h"
 
 namespace Core::UI
 {
-class TransformInspectorUIWindow : public UIWindow<TransformInspectorUIWindow>
+class TransformInspectorUIWindow : public UIPermanentWindow<TransformInspectorUIWindow>
 {
     friend class UIWindow;
+    friend class UIPermanentWindow;
 
     static bool getBody()
     {

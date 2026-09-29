@@ -1,16 +1,17 @@
 #pragma once
 
 #include "components/PointLightComponent.h"
-#include "ui/UIWindow.h"
+#include "../window/base/UIWindow.h"
 #include "engine/Engine.h"
 #include "scene/Scene.h"
 #include "tools/ColorConverter.h"
 
 namespace Core::UI
 {
-class PointLightComponentInspectorUIWindow : public UIWindow<PointLightComponentInspectorUIWindow>
+class PointLightComponentInspectorUIWindow : public UIPermanentWindow<PointLightComponentInspectorUIWindow>
 {
     friend class UIWindow;
+    friend class UIPermanentWindow;
 
     static bool getBody()
     {

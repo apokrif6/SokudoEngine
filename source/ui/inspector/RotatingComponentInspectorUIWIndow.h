@@ -1,14 +1,15 @@
 #pragma once
 
 #include "components/RotatingComponent.h"
-#include "ui/UIWindow.h"
+#include "../window/base/UIWindow.h"
 #include "engine/Engine.h"
 
 namespace Core::UI
 {
-class RotatingComponentInspectorUIWindow : public UIWindow<RotatingComponentInspectorUIWindow>
+class RotatingComponentInspectorUIWindow : public UIPermanentWindow<RotatingComponentInspectorUIWindow>
 {
     friend class UIWindow;
+    friend class UIPermanentWindow;
 
     static bool getBody()
     {

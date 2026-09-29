@@ -2,15 +2,16 @@
 
 #include <vector>
 #include <memory>
-#include "UIWindow.h"
 #include "string"
+#include "base/UIPermanentWindow.h"
 #include "scene/SceneEditor.h"
 
 namespace Core::UI
 {
-class SceneUIWindow : public UIWindow<SceneUIWindow>
+class SceneUIWindow : public UIPermanentWindow<SceneUIWindow>
 {
     friend class UIWindow;
+    friend class UIPermanentWindow;
 
     static bool getBody();
 

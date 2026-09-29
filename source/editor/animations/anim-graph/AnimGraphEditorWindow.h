@@ -3,14 +3,13 @@
 #include "animations/anim-graph/AnimGraph.h"
 #include "imgui_node_editor.h"
 #include "editor/popup/PopupRequest.h"
+#include "../../../ui/window/base/UIManagedWindow.h"
 
 namespace Core::Component
 {
 class MeshComponent;
 }
 
-// TODO
-// use CRTP pattern for UIWindow<>, but with state management
 namespace Editor::Animations
 {
 struct EditorPinData
@@ -33,7 +32,7 @@ struct EditorLinkData
     Core::Animations::PinID EndPinId{};
 };
 
-class AnimGraphEditorWindow
+class AnimGraphEditorWindow : public Core::UI::UIManagedWindow<AnimGraphEditorWindow>
 {
 public:
     static void draw();
@@ -53,7 +52,6 @@ private:
 
     static uint64_t generateEditorId();
 
-    inline static bool mIsOpen = false;
     inline static Core::Component::MeshComponent* mCurrentMeshComponent = nullptr;
 
     inline static std::unordered_map<uuids::uuid, EditorNodeData> mEditorNodes{};

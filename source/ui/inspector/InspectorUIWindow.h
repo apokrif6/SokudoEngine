@@ -1,7 +1,6 @@
 #pragma once
 
 #include "IKTargetComponentInspectorUIWindow.h"
-#include "ui/UIWindow.h"
 #include "imgui.h"
 #include "MeshComponentInspectorUIWindow.h"
 #include "RotatingComponentInspectorUIWIndow.h"
@@ -15,9 +14,10 @@
 
 namespace Core::UI
 {
-class InspectorUIWindow : public UIWindow<InspectorUIWindow>
+class InspectorUIWindow : public UIPermanentWindow<InspectorUIWindow>
 {
     friend class UIWindow;
+    friend class UIPermanentWindow;
 
     static bool getBody()
     {
