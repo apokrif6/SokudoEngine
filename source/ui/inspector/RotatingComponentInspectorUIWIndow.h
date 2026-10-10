@@ -1,7 +1,6 @@
 #pragma once
 
 #include "components/RotatingComponent.h"
-#include "../window/base/UIWindow.h"
 #include "engine/Engine.h"
 
 namespace Core::UI

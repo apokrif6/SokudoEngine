@@ -1,7 +1,6 @@
 #pragma once
 
 #include "imgui.h"
-#include "../window/base/UIWindow.h"
 #include "engine/Engine.h"
 #include "components/SpriteComponent.h"
 #include "nfd.hpp"

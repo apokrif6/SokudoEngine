@@ -1,7 +1,6 @@
 #pragma once
 
 #include "components/PointLightComponent.h"
-#include "../window/base/UIWindow.h"
 #include "engine/Engine.h"
 #include "scene/Scene.h"
 #include "tools/ColorConverter.h"

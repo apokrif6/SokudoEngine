@@ -1,15 +1,9 @@
 #pragma once
 
-#include "IKTargetComponentInspectorUIWindow.h"
 #include "imgui.h"
-#include "MeshComponentInspectorUIWindow.h"
-#include "RotatingComponentInspectorUIWIndow.h"
-#include "TransformInspectorUIWindow.h"
-#include "PointLightComponentInspectorUIWindow.h"
-#include "SpriteComponentInspectorUIWindow.h"
-#include "components/PointLightComponent.h"
-#include "components/SpriteComponent.h"
-#include "components/IKTargetComponent.h"
+
+#include "components/ComponentRegistry.h"
+#include "scene/objects/SceneObject.h"
 #include "engine/Engine.h"
 
 namespace Core::UI
@@ -26,8 +20,6 @@ class InspectorUIWindow : public UIPermanentWindow<InspectorUIWindow>
         auto* scene = Engine::getInstance().getSystem<Scene::Scene>();
         auto& selection = scene->getSceneObjectSelection();
 
-        // TODO
-        // probably some abstraction is needed :)
         if (const auto selectedObject = selection.selectedObject.lock())
         {
             ImGui::TextDisabled("(SceneObject UUID: %s)", uuids::to_string(selectedObject->getUUID()).c_str());
@@ -35,93 +27,36 @@ class InspectorUIWindow : public UIPermanentWindow<InspectorUIWindow>
             ImGui::Separator();
             ImGui::Spacing();
 
-            if (auto* transformComponent = selectedObject->getComponent<Component::TransformComponent>())
+            for (const auto& descriptor : Component::ComponentRegistry::getAll())
             {
-                if (ImGui::CollapsingHeader("Transform Component", ImGuiTreeNodeFlags_DefaultOpen))
+                if (!descriptor.contains(*selectedObject))
                 {
-                    TransformInspectorUIWindow::renderBody();
+                    continue;
                 }
-            }
 
-            if (auto* rotatingComponent = selectedObject->getComponent<Component::RotatingComponent>())
-            {
-                if (ImGui::CollapsingHeader("Rotating Component", ImGuiTreeNodeFlags_DefaultOpen))
+                if (ImGui::CollapsingHeader(descriptor.name.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
                 {
-                    RotatingComponentInspectorUIWindow::renderBody();
-                }
-            }
-
-            if (auto* meshComponent = selectedObject->getComponent<Component::MeshComponent>())
-            {
-                if (ImGui::CollapsingHeader("Mesh Component", ImGuiTreeNodeFlags_DefaultOpen))
-                {
-                    MeshComponentInspectorUIWindow::renderBody();
-                }
-            }
-
-            if (auto* spriteComponent = selectedObject->getComponent<Component::SpriteComponent>())
-            {
-                if (ImGui::CollapsingHeader("Sprite Component", ImGuiTreeNodeFlags_DefaultOpen))
-                {
-                    SpriteComponentInspectorUIWindow::renderBody();
-                }
-            }
-
-            if (auto* pointLightComponent = selectedObject->getComponent<Component::PointLightComponent>())
-            {
-                if (ImGui::CollapsingHeader("Point Light Component", ImGuiTreeNodeFlags_DefaultOpen))
-                {
-                    PointLightComponentInspectorUIWindow::renderBody();
-                }
-            }
-
-            if (auto* IKTargetComponent = selectedObject->getComponent<Component::IKTargetComponent>())
-            {
-                if (ImGui::CollapsingHeader("IK Target Component", ImGuiTreeNodeFlags_DefaultOpen))
-                {
-                    IKTargetComponentInspectorUIWindow::renderBody();
+                    descriptor.renderInspector();
                 }
             }
 
             if (ImGui::BeginPopupContextWindow("AddComponentContext", ImGuiPopupFlags_MouseButtonRight))
             {
-                if (ImGui::MenuItem("Rotating Component"))
+                for (const auto& descriptor : Component::ComponentRegistry::getAll())
                 {
-                    if (!selectedObject->getComponent<Component::RotatingComponent>())
+                    if (!descriptor.addable)
                     {
-                        selectedObject->addComponent<Component::RotatingComponent>();
+                        continue;
                     }
-                }
 
-                if (ImGui::MenuItem("Mesh Component"))
-                {
-                    if (!selectedObject->getComponent<Component::MeshComponent>())
+                    if (const bool alreadyExists = descriptor.contains(*selectedObject))
                     {
-                        selectedObject->addComponent<Component::MeshComponent>();
+                        continue;
                     }
-                }
 
-                if (ImGui::MenuItem("Point Light Component"))
-                {
-                    if (!selectedObject->getComponent<Component::PointLightComponent>())
+                    if (ImGui::MenuItem(descriptor.name.c_str()))
                     {
-                        selectedObject->addComponent<Component::PointLightComponent>();
-                    }
-                }
-
-                if (ImGui::MenuItem("Sprite Component"))
-                {
-                    if (!selectedObject->getComponent<Component::SpriteComponent>())
-                    {
-                        selectedObject->addComponent<Component::SpriteComponent>();
-                    }
-                }
-
-                if (ImGui::MenuItem("IK Target Component"))
-                {
-                    if (!selectedObject->getComponent<Component::IKTargetComponent>())
-                    {
-                        selectedObject->addComponent<Component::IKTargetComponent>();
+                        descriptor.add(*selectedObject);
                     }
                 }
 
@@ -134,7 +69,6 @@ class InspectorUIWindow : public UIPermanentWindow<InspectorUIWindow>
         }
 
         ImGui::End();
-
         return true;
     }
 };

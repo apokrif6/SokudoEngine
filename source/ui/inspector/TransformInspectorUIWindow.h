@@ -2,6 +2,9 @@
 
 #include "components/TransformComponent.h"
 #include "engine/Engine.h"
+#include "ui/window/base/UIPermanentWindow.h"
+
+#include <imgui.h>
 
 namespace Core::UI
 {

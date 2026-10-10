@@ -1,8 +1,8 @@
 #include "SceneObject.h"
 #include "yaml-cpp/node/node.h"
 #include <algorithm>
-#include "components/ComponentFactory.h"
-#include "components/TransformComponent.h"
+#include "components/ComponentRegistry.h"
+#include "scene/Scene.h"
 #include "serialization/UUIDSerializationConverter.h"
 
 void Core::Scene::SceneObject::update(Renderer::VkRenderData& renderData)
@@ -87,7 +87,7 @@ void Core::Scene::SceneObject::deserialize(const YAML::Node& node)
         {
             const auto type = componentNode["type"].as<std::string>();
 
-            auto component = Component::ComponentFactory::create(type);
+            auto component = Component::ComponentRegistry::create(type);
 
             component->deserialize(componentNode["data"]);
 

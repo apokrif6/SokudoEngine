@@ -12,6 +12,7 @@
 #include "window/MiscUIWindow.h"
 #include "window/ViewportUIWindow.h"
 #include "imgui_internal.h"
+#include "editor/animations/anim-graph/AnimGraphEditorWindow.h"
 #include "inspector/InspectorUIWindow.h"
 #include "tools/ColorConverter.h"
 

@@ -1,7 +1,8 @@
 #include "Engine.h"
 
 #include "asset-manager/AssetManager.h"
-#include "components/ComponentFactory.h"
+#include "components/ComponentRegistration.h"
+#include "components/ComponentRegistry.h"
 #include "tools/Logger.h"
 #include "ui/UserInterface.h"
 #include "window/Window.h"
@@ -31,7 +32,7 @@ void Core::Engine::init()
     createSystem<Scene::Scene>();
     createSystem<Animations::Animator>();
 
-    Component::ComponentFactory::registerAll();
+    Component::registerBuiltinComponents();
 
     applicationWindow->bindInputs();
     applicationWindow->mainLoop();

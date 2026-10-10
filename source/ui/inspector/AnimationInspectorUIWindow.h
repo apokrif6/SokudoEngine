@@ -5,6 +5,7 @@
 #include "nfd.hpp"
 #include "animation/AnimationInspectorInverseKinematicsUIWindow.h"
 #include "editor/animations/anim-graph/AnimGraphEditorWindow.h"
+#include "tools/Logger.h"
 
 namespace Core::UI
 {
