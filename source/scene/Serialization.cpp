@@ -12,21 +12,22 @@ YAML::Node Core::Scene::Serialization::serialize(const Scene& scene)
     return sceneNode;
 }
 
-Core::Scene::Scene Core::Scene::Serialization::deserializeScene(const YAML::Node& node)
+void Core::Scene::Serialization::deserializeScene(Scene& scene, const YAML::Node& node)
 {
-    Scene scene;
-    for (const auto& objectNode : node["objects"])
+    if (const auto objectsNode = node["objects"])
     {
-        auto sceneObject = std::make_shared<SceneObject>("", &scene);
-        sceneObject->deserialize(objectNode);
-        scene.addObject(sceneObject);
+        for (const auto& objectNode : objectsNode)
+        {
+            const auto sceneObject = std::make_shared<SceneObject>("", &scene);
+            sceneObject->deserialize(objectNode);
+            scene.addObject(sceneObject);
+        }
     }
-    return scene;
 }
 
 void Core::Scene::Serialization::saveSceneToFile(const Scene& scene, const std::string& filename)
 {
-    YAML::Node sceneNode = serialize(scene);
+    const YAML::Node sceneNode = serialize(scene);
     std::ofstream fout(filename, std::ios::out | std::ios::trunc);
     if (fout.is_open())
     {
@@ -35,14 +36,16 @@ void Core::Scene::Serialization::saveSceneToFile(const Scene& scene, const std::
     }
 }
 
-Core::Scene::Scene Core::Scene::Serialization::loadSceneFromFile(const std::string& filename)
+bool Core::Scene::Serialization::loadSceneFromFile(Scene& scene, const std::string& filename)
 {
     std::ifstream fin(filename);
     if (!fin.is_open())
     {
-        return Scene{};
+        return false;
     }
 
     const YAML::Node sceneNode = YAML::Load(fin);
-    return deserializeScene(sceneNode);
+    deserializeScene(scene, sceneNode);
+
+    return true;
 }

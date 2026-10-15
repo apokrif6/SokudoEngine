@@ -96,12 +96,20 @@ bool Core::UI::SceneUIWindow::getBody()
             {
                 ScopedEngineState pause{EngineState::Loading};
 
-                const Scene::Scene loadedScene =
-                    Scene::Serialization::loadSceneFromFile("assets/scenes/" + selectedSceneFile);
+                auto* scene = Engine::getInstance().getSystem<Scene::Scene>();
 
-                Engine::getInstance().getSystem<Scene::Scene>()->cleanup(Engine::getInstance().getRenderData());
-                *Engine::getInstance().getSystem<Scene::Scene>() = loadedScene;
-                showLoadDialog = false;
+                auto& renderData = Engine::getInstance().getRenderData();
+
+                if (const std::string filename = "assets/scenes/" + selectedSceneFile;
+                    std::filesystem::exists(filename))
+                {
+                    scene->cleanup(renderData);
+
+                    if (Scene::Serialization::loadSceneFromFile(*scene, filename))
+                    {
+                        showLoadDialog = false;
+                    }
+                }
             }
 
             ImGui::SameLine();

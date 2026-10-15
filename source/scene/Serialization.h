@@ -9,9 +9,9 @@ class Serialization
 {
 public:
     static YAML::Node serialize(const Scene& scene);
-    static Scene deserializeScene(const YAML::Node& node);
+    static void deserializeScene(Scene& scene, const YAML::Node& node);
 
     static void saveSceneToFile(const Scene& scene, const std::string& filename);
-    static Scene loadSceneFromFile(const std::string& filename);
+    static bool loadSceneFromFile(Scene& scene, const std::string& filename);
 };
 } // namespace Core::Scene
